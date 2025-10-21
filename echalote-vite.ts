@@ -16,11 +16,11 @@ window.Buffer = Buffer
 import { WebSocketDuplex } from './src/WebSocketDuplex'
 
 import { WalletWasm } from "@brumewallet/wallet.wasm";
-import { Ciphers, TlsClientDuplex } from "@hazae41/cadenas"
 import { Base16 } from "@hazae41/base16";
 import { Base58 } from "@hazae41/base58";
 import { Base64 } from "@hazae41/base64";
 import { Base64Url } from "@hazae41/base64url";
+import { Ciphers, TlsClientDuplex } from "@hazae41/cadenas"
 import { ChaCha20Poly1305 } from "@hazae41/chacha20poly1305";
 import { Circuit, Echalote, TorClientDuplex, createSnowflakeStream } from "@hazae41/echalote";
 import { Ed25519 } from "@hazae41/ed25519";
