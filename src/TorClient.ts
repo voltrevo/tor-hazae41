@@ -21,6 +21,9 @@ export interface TorClientOptions {
   snowflakeUrl: string;
   connectionTimeout?: number;
   circuitTimeout?: number;
+  createCircuitEarly?: boolean;
+  circuitUpdateInterval?: number | null;
+  circuitUpdateAdvance?: number;
   onLog?: (message: string, type?: 'info' | 'success' | 'error') => void;
 }
 
@@ -28,17 +31,40 @@ export class TorClient {
   private snowflakeUrl: string;
   private connectionTimeout: number;
   private circuitTimeout: number;
+  private createCircuitEarly: boolean;
+  private circuitUpdateInterval: number | null;
+  private circuitUpdateAdvance: number;
   private onLog?: (
     message: string,
     type?: 'info' | 'success' | 'error'
   ) => void;
   private static initialized = false;
 
+  // Circuit state management
+  private currentTor?: TorClientDuplex;
+  private currentCircuit?: Circuit;
+  private circuitPromise?: Promise<Circuit>;
+  private isUpdatingCircuit = false;
+  private updateDeadline = 0;
+  private updateTimer?: NodeJS.Timeout;
+  private updateLoopActive = false;
+
   constructor(options: TorClientOptions) {
     this.snowflakeUrl = options.snowflakeUrl;
     this.connectionTimeout = options.connectionTimeout ?? 15000;
     this.circuitTimeout = options.circuitTimeout ?? 90000;
+    this.createCircuitEarly = options.createCircuitEarly ?? true;
+    this.circuitUpdateInterval = options.circuitUpdateInterval ?? 10 * 60_000; // 10 minutes
+    this.circuitUpdateAdvance = options.circuitUpdateAdvance ?? 60_000; // 1 minute
     this.onLog = options.onLog;
+
+    // Create first circuit immediately if requested
+    if (this.createCircuitEarly) {
+      this.createFirstCircuit();
+    }
+
+    // Schedule regular circuit updates
+    this.scheduleCircuitUpdates();
   }
 
   private log(
@@ -164,6 +190,56 @@ export class TorClient {
     return circuit;
   }
 
+  private async getOrCreateCircuit(): Promise<Circuit> {
+    // If we're updating and past the deadline, wait for the new circuit
+    if (
+      this.isUpdatingCircuit &&
+      Date.now() >= this.updateDeadline &&
+      this.circuitPromise
+    ) {
+      this.log('Deadline passed, waiting for new circuit');
+      return await this.circuitPromise;
+    }
+
+    // If we have a current circuit and we're not updating, or we're within the deadline
+    if (
+      this.currentCircuit &&
+      (!this.isUpdatingCircuit || Date.now() < this.updateDeadline)
+    ) {
+      return this.currentCircuit;
+    }
+
+    // If we're already creating a circuit, wait for it
+    if (this.circuitPromise) {
+      return await this.circuitPromise;
+    }
+
+    // Create new circuit
+    return await this.createNewCircuit();
+  }
+
+  private async createNewCircuit(): Promise<Circuit> {
+    this.circuitPromise = (async () => {
+      const tor = await this.createTorConnection();
+      const circuit = await this.createCircuit(tor);
+
+      // Clean up old circuit
+      if (this.currentCircuit) {
+        this.currentCircuit[Symbol.dispose]();
+        this.log('Old circuit disposed');
+      }
+
+      this.currentTor = tor;
+      this.currentCircuit = circuit;
+      this.isUpdatingCircuit = false;
+      this.circuitPromise = undefined;
+
+      return circuit;
+    })();
+
+    return await this.circuitPromise;
+  }
+
   async fetch(url: string, options?: RequestInit): Promise<Response> {
     this.log(`Starting fetch request to ${url}`);
 
@@ -180,12 +256,8 @@ export class TorClient {
 
     this.log(`Target: ${hostname}:${port} (HTTPS: ${isHttps})`);
 
-    let tor: TorClientDuplex | undefined;
-    let circuit: Circuit | undefined;
-
     try {
-      tor = await this.createTorConnection();
-      circuit = await this.createCircuit(tor);
+      const circuit = await this.getOrCreateCircuit();
 
       this.log(`Opening connection to ${hostname}:${port}`);
       const ttcp = await circuit.openOrThrow(hostname, port);
@@ -222,12 +294,155 @@ export class TorClient {
       }
     } catch (error) {
       this.log(`Request failed: ${(error as Error).message}`, 'error');
-      throw error;
-    } finally {
-      if (circuit) {
-        circuit[Symbol.dispose]();
-        this.log('Circuit disposed');
+
+      // If circuit fails, clear it so next request will create a new one
+      if (this.currentCircuit) {
+        this.currentCircuit[Symbol.dispose]();
+        this.currentCircuit = undefined;
+        this.currentTor = undefined;
+        this.log('Circuit cleared due to error');
       }
+
+      throw error;
     }
+  }
+
+  /**
+   * Updates the circuit with a deadline for graceful transition.
+   * @param deadline Milliseconds to allow existing requests to use the old circuit. Defaults to 0.
+   */
+  async updateCircuit(deadline: number = 0): Promise<void> {
+    const newDeadline = Date.now() + deadline;
+
+    // If there's already an update in progress, handle it gracefully
+    if (this.isUpdatingCircuit) {
+      const currentDeadline = this.updateDeadline;
+      const moreAggressiveDeadline = Math.min(currentDeadline, newDeadline);
+
+      this.log(
+        `Update already in progress. Using more aggressive deadline: ` +
+          `${moreAggressiveDeadline - Date.now()}ms (current: ${
+            currentDeadline - Date.now()
+          }ms, new: ${newDeadline - Date.now()}ms)`
+      );
+
+      // Always update to the more aggressive deadline
+      this.updateDeadline = moreAggressiveDeadline;
+
+      // Wait for the current update to complete
+      this.log('Waiting for current update to complete with updated deadline');
+      if (this.circuitPromise) {
+        await this.circuitPromise;
+      }
+      return;
+    }
+
+    this.log(`Updating circuit with ${deadline}ms deadline`);
+
+    // Set the update state and deadline
+    this.isUpdatingCircuit = true;
+    this.updateDeadline = newDeadline;
+
+    try {
+      // Start creating the new circuit in the background
+      await this.createNewCircuit();
+      this.log('Circuit update completed successfully', 'success');
+    } catch (error) {
+      this.log(`Circuit update failed: ${(error as Error).message}`, 'error');
+      this.isUpdatingCircuit = false;
+      this.updateDeadline = 0;
+      throw error;
+    }
+  }
+
+  /**
+   * Waits for a circuit to be ready if one would be needed for requests.
+   */
+  async waitForCircuit(): Promise<void> {
+    await this.getOrCreateCircuit();
+  }
+
+  private async createFirstCircuit(): Promise<void> {
+    try {
+      this.log('Creating initial circuit');
+      await this.init();
+      await this.createNewCircuit();
+    } catch (error) {
+      this.log(
+        `Failed to create initial circuit: ${(error as Error).message}`,
+        'error'
+      );
+      // Don't throw - let it be created on first request
+    }
+  }
+
+  private scheduleCircuitUpdates() {
+    if (
+      this.circuitUpdateInterval === null ||
+      this.circuitUpdateInterval <= 0
+    ) {
+      this.log('Circuit auto-update disabled');
+      return;
+    }
+
+    this.log(
+      `Scheduled circuit updates every ${this.circuitUpdateInterval}ms with ${this.circuitUpdateAdvance}ms advance`
+    );
+
+    // Set the loop as active
+    this.updateLoopActive = true;
+
+    // Run the update loop in the background
+    (async () => {
+      while (this.updateLoopActive && this.circuitUpdateInterval !== null) {
+        try {
+          // Wait for the interval minus advance time
+          await new Promise<void>(resolve => {
+            this.updateTimer = setTimeout(() => {
+              resolve();
+            }, this.circuitUpdateInterval! - this.circuitUpdateAdvance);
+          });
+
+          // Check if we were disposed during the wait
+          if (!this.updateLoopActive) {
+            break;
+          }
+
+          this.log('Scheduled circuit update triggered');
+          await this.updateCircuit(this.circuitUpdateAdvance);
+        } catch (error) {
+          this.log(
+            `Scheduled circuit update failed: ${(error as Error).message}`,
+            'error'
+          );
+          // Continue the loop even if update failed
+        }
+      }
+    })();
+  }
+
+  /**
+   * Disposes the current circuit and clears all state.
+   */
+  dispose(): void {
+    // Stop the update loop
+    this.updateLoopActive = false;
+
+    // Clear the scheduled update timer
+    if (this.updateTimer) {
+      clearTimeout(this.updateTimer);
+      this.updateTimer = undefined;
+    }
+
+    if (this.currentCircuit) {
+      this.currentCircuit[Symbol.dispose]();
+      this.log('Circuit disposed');
+    }
+
+    this.currentCircuit = undefined;
+    this.currentTor = undefined;
+    this.circuitPromise = undefined;
+    this.isUpdatingCircuit = false;
+    this.updateDeadline = 0;
   }
 }
