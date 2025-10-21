@@ -32,7 +32,7 @@ export class TorClient {
     message: string,
     type?: 'info' | 'success' | 'error'
   ) => void;
-  private initialized = false;
+  private static initialized = false;
 
   constructor(options: TorClientOptions) {
     this.snowflakeUrl = options.snowflakeUrl;
@@ -50,8 +50,8 @@ export class TorClient {
     }
   }
 
-  private async initOrThrow(): Promise<void> {
-    if (this.initialized) return;
+  private async init(): Promise<void> {
+    if (TorClient.initialized) return;
 
     this.log('Initializing WASM modules');
     await WalletWasm.initBundled();
@@ -64,7 +64,7 @@ export class TorClient {
     Ed25519.set(await Ed25519.fromNativeOrWasm(WalletWasm));
     X25519.set(X25519.fromWasm(WalletWasm));
 
-    this.initialized = true;
+    TorClient.initialized = true;
     this.log('WASM modules initialized successfully', 'success');
   }
 
@@ -167,7 +167,7 @@ export class TorClient {
   async fetch(url: string, options?: RequestInit): Promise<Response> {
     this.log(`Starting fetch request to ${url}`);
 
-    await this.initOrThrow();
+    await this.init();
 
     const parsedUrl = new URL(url);
     const hostname = parsedUrl.hostname;
