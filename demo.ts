@@ -51,6 +51,39 @@ function clearOutput(): void {
   }
 }
 
+function setRequestOutput(
+  id: string,
+  message: string,
+  type: 'loading' | 'success' | 'error' | 'info' = 'info'
+): void {
+  const outputElement = document.getElementById(id);
+  if (!outputElement) return;
+
+  const colors = {
+    loading: '#0066cc',
+    success: '#28a745',
+    error: '#dc3545',
+    info: '#666666',
+  };
+
+  outputElement.style.color = colors[type];
+  outputElement.textContent = message;
+}
+
+function setButtonState(
+  buttonId: string,
+  disabled: boolean,
+  text?: string
+): void {
+  const button = document.getElementById(buttonId) as HTMLButtonElement;
+  if (!button) return;
+
+  button.disabled = disabled;
+  if (text) {
+    button.textContent = text;
+  }
+}
+
 function closeTorClient(): void {
   if (statusUpdateInterval) {
     clearInterval(statusUpdateInterval);
@@ -71,29 +104,53 @@ function closeTorClient(): void {
 }
 
 async function makeRequest(index: number): Promise<void> {
-  // Auto-create TorClient if not already open
-  if (!torClient) {
-    displayLog('🔧 TorClient not open. Creating automatically...', 'info');
-    await openTorClient();
-    if (!torClient) {
-      displayLog('❌ Failed to create TorClient automatically', 'error');
-      return;
-    }
-  }
+  const outputId = `output${index}`;
+  const buttonId = `btn${index}`;
 
-  const urlInput = document.getElementById(`url${index}`) as HTMLInputElement;
-  if (!urlInput) {
-    displayLog(`❌ URL input ${index} not found`, 'error');
-    return;
-  }
-
-  const url = urlInput.value.trim();
-  if (!url) {
-    displayLog(`❌ Please enter a URL in textbox ${index}`, 'error');
-    return;
-  }
+  // Clear output and show loading
+  setRequestOutput(outputId, '🔄 Loading...', 'loading');
+  setButtonState(buttonId, true, '⏳ Loading...');
 
   try {
+    // Auto-create TorClient if not already open
+    if (!torClient) {
+      setRequestOutput(
+        outputId,
+        '🔧 Creating TorClient automatically...',
+        'loading'
+      );
+      displayLog('🔧 TorClient not open. Creating automatically...', 'info');
+      await openTorClient();
+      if (!torClient) {
+        setRequestOutput(
+          outputId,
+          '❌ Failed to create TorClient automatically',
+          'error'
+        );
+        displayLog('❌ Failed to create TorClient automatically', 'error');
+        return;
+      }
+    }
+
+    const urlInput = document.getElementById(`url${index}`) as HTMLInputElement;
+    if (!urlInput) {
+      setRequestOutput(outputId, `❌ URL input ${index} not found`, 'error');
+      displayLog(`❌ URL input ${index} not found`, 'error');
+      return;
+    }
+
+    const url = urlInput.value.trim();
+    if (!url) {
+      setRequestOutput(
+        outputId,
+        `❌ Please enter a URL in textbox ${index}`,
+        'error'
+      );
+      displayLog(`❌ Please enter a URL in textbox ${index}`, 'error');
+      return;
+    }
+
+    setRequestOutput(outputId, `🌐 Making request to ${url}...`, 'loading');
     displayLog(`🌐 Making request ${index} to ${url}...`);
 
     const start = Date.now();
@@ -103,44 +160,64 @@ async function makeRequest(index: number): Promise<void> {
 
     displayLog(`✅ Request ${index} completed in ${duration}ms`, 'success');
 
-    // Log specific data based on the endpoint
+    // Format output based on the endpoint
+    let outputText = '';
     if (url.includes('/ip')) {
-      displayLog(`📍 IP: ${data.origin}`, 'success');
+      outputText = `✅ Success (${duration}ms)\n📍 IP: ${data.origin}`;
     } else if (url.includes('/user-agent')) {
-      displayLog(`🔍 User-Agent: ${data['user-agent']}`, 'success');
+      outputText = `✅ Success (${duration}ms)\n🔍 User-Agent: ${data['user-agent']}`;
     } else if (url.includes('/headers')) {
-      displayLog(
-        `📋 Headers count: ${Object.keys(data.headers).length}`,
-        'success'
-      );
+      outputText = `✅ Success (${duration}ms)\n📋 Headers count: ${Object.keys(data.headers).length}`;
     } else {
-      displayLog(
-        `📄 Response: ${JSON.stringify(data).substring(0, 100)}...`,
-        'success'
-      );
+      outputText = `✅ Success (${duration}ms)\n📄 Response: ${JSON.stringify(data).substring(0, 200)}${JSON.stringify(data).length > 200 ? '...' : ''}`;
     }
+
+    setRequestOutput(outputId, outputText, 'success');
   } catch (error) {
+    const errorText = `❌ Request failed: ${(error as Error).message}`;
+    setRequestOutput(outputId, errorText, 'error');
     displayLog(
       `❌ Request ${index} failed: ${(error as Error).message}`,
       'error'
     );
+  } finally {
+    // Re-enable button
+    setButtonState(buttonId, false, `🌐 Make Request ${index}`);
   }
 }
 
 async function makeIsolatedRequest(): Promise<void> {
-  const urlInput = document.getElementById('isolatedUrl') as HTMLInputElement;
-  if (!urlInput) {
-    displayLog('❌ Isolated URL input not found', 'error');
-    return;
-  }
+  const outputId = 'outputIsolated';
+  const buttonId = 'btnIsolated';
 
-  const url = urlInput.value.trim();
-  if (!url) {
-    displayLog('❌ Please enter a URL for isolated request', 'error');
-    return;
-  }
+  // Clear output and show loading
+  setRequestOutput(outputId, '🔄 Loading...', 'loading');
+  setButtonState(buttonId, true, '⏳ Loading...');
 
   try {
+    const urlInput = document.getElementById('isolatedUrl') as HTMLInputElement;
+    if (!urlInput) {
+      setRequestOutput(outputId, '❌ Isolated URL input not found', 'error');
+      displayLog('❌ Isolated URL input not found', 'error');
+      return;
+    }
+
+    const url = urlInput.value.trim();
+    if (!url) {
+      setRequestOutput(
+        outputId,
+        '❌ Please enter a URL for isolated request',
+        'error'
+      );
+      displayLog('❌ Please enter a URL for isolated request', 'error');
+      return;
+    }
+
+    setRequestOutput(
+      outputId,
+      '🔒 Creating temporary circuit and making request...',
+      'loading'
+    );
     displayLog('🔒 Making isolated request with temporary circuit...');
 
     const start = Date.now();
@@ -161,22 +238,27 @@ async function makeIsolatedRequest(): Promise<void> {
 
     displayLog(`🔒 Isolated request completed in ${duration}ms`, 'success');
 
-    // Log specific data based on the endpoint
+    // Format output based on the endpoint
+    let outputText = '';
     if (url.includes('/uuid')) {
-      displayLog(`🔒 UUID from isolated circuit: ${data.uuid}`, 'success');
+      outputText = `✅ Success (${duration}ms)\n🔒 UUID from isolated circuit: ${data.uuid}`;
     } else if (url.includes('/ip')) {
-      displayLog(`🔒 IP from isolated circuit: ${data.origin}`, 'success');
+      outputText = `✅ Success (${duration}ms)\n🔒 IP from isolated circuit: ${data.origin}`;
     } else {
-      displayLog(
-        `🔒 Response: ${JSON.stringify(data).substring(0, 100)}...`,
-        'success'
-      );
+      outputText = `✅ Success (${duration}ms)\n🔒 Response: ${JSON.stringify(data).substring(0, 200)}${JSON.stringify(data).length > 200 ? '...' : ''}`;
     }
+
+    setRequestOutput(outputId, outputText, 'success');
   } catch (error) {
+    const errorText = `❌ Isolated request failed: ${(error as Error).message}`;
+    setRequestOutput(outputId, errorText, 'error');
     displayLog(
       `❌ Isolated request failed: ${(error as Error).message}`,
       'error'
     );
+  } finally {
+    // Re-enable button
+    setButtonState(buttonId, false, '🔒 Make Isolated Request');
   }
 }
 

@@ -136,71 +136,155 @@
         "
       >
         <h3>Regular Requests (persistent circuit):</h3>
-        <div style="margin-bottom: 15px">
+        <div
+          style="
+            margin-bottom: 20px;
+            padding: 10px;
+            border: 1px solid #e0e0e0;
+            border-radius: 5px;
+          "
+        >
           <label
             for="url1"
             style="display: block; margin-bottom: 5px; font-weight: bold"
             >Request 1:</label
           >
-          <input
-            type="text"
-            id="url1"
-            value="https://httpbin.org/ip"
+          <div style="display: flex; align-items: center; margin-bottom: 10px">
+            <input
+              type="text"
+              id="url1"
+              value="https://httpbin.org/ip"
+              style="
+                flex: 1;
+                padding: 8px;
+                margin-right: 10px;
+                border: 1px solid #ddd;
+                border-radius: 3px;
+              "
+            />
+            <button
+              id="btn1"
+              onclick="makeRequest(1)"
+              style="padding: 8px 16px"
+            >
+              🌐 Make Request 1
+            </button>
+          </div>
+          <div
+            id="output1"
             style="
-              width: 70%;
-              padding: 8px;
-              margin-right: 10px;
-              border: 1px solid #ddd;
+              background: #f8f9fa;
+              padding: 10px;
               border-radius: 3px;
+              font-family: 'Courier New', monospace;
+              font-size: 12px;
+              border: 1px solid #e0e0e0;
+              min-height: 20px;
+              color: #666;
             "
-          />
-          <button onclick="makeRequest(1)" style="padding: 8px 16px">
-            🌐 Make Request 1
-          </button>
+          >
+            Ready to make request...
+          </div>
         </div>
-        <div style="margin-bottom: 15px">
+        <div
+          style="
+            margin-bottom: 20px;
+            padding: 10px;
+            border: 1px solid #e0e0e0;
+            border-radius: 5px;
+          "
+        >
           <label
             for="url2"
             style="display: block; margin-bottom: 5px; font-weight: bold"
             >Request 2:</label
           >
-          <input
-            type="text"
-            id="url2"
-            value="https://httpbin.org/user-agent"
+          <div style="display: flex; align-items: center; margin-bottom: 10px">
+            <input
+              type="text"
+              id="url2"
+              value="https://httpbin.org/user-agent"
+              style="
+                flex: 1;
+                padding: 8px;
+                margin-right: 10px;
+                border: 1px solid #ddd;
+                border-radius: 3px;
+              "
+            />
+            <button
+              id="btn2"
+              onclick="makeRequest(2)"
+              style="padding: 8px 16px"
+            >
+              🌐 Make Request 2
+            </button>
+          </div>
+          <div
+            id="output2"
             style="
-              width: 70%;
-              padding: 8px;
-              margin-right: 10px;
-              border: 1px solid #ddd;
+              background: #f8f9fa;
+              padding: 10px;
               border-radius: 3px;
+              font-family: 'Courier New', monospace;
+              font-size: 12px;
+              border: 1px solid #e0e0e0;
+              min-height: 20px;
+              color: #666;
             "
-          />
-          <button onclick="makeRequest(2)" style="padding: 8px 16px">
-            🌐 Make Request 2
-          </button>
+          >
+            Ready to make request...
+          </div>
         </div>
-        <div style="margin-bottom: 15px">
+        <div
+          style="
+            margin-bottom: 20px;
+            padding: 10px;
+            border: 1px solid #e0e0e0;
+            border-radius: 5px;
+          "
+        >
           <label
             for="url3"
             style="display: block; margin-bottom: 5px; font-weight: bold"
             >Request 3:</label
           >
-          <input
-            type="text"
-            id="url3"
-            value="https://httpbin.org/headers"
+          <div style="display: flex; align-items: center; margin-bottom: 10px">
+            <input
+              type="text"
+              id="url3"
+              value="https://httpbin.org/headers"
+              style="
+                flex: 1;
+                padding: 8px;
+                margin-right: 10px;
+                border: 1px solid #ddd;
+                border-radius: 3px;
+              "
+            />
+            <button
+              id="btn3"
+              onclick="makeRequest(3)"
+              style="padding: 8px 16px"
+            >
+              🌐 Make Request 3
+            </button>
+          </div>
+          <div
+            id="output3"
             style="
-              width: 70%;
-              padding: 8px;
-              margin-right: 10px;
-              border: 1px solid #ddd;
+              background: #f8f9fa;
+              padding: 10px;
               border-radius: 3px;
+              font-family: 'Courier New', monospace;
+              font-size: 12px;
+              border: 1px solid #e0e0e0;
+              min-height: 20px;
+              color: #666;
             "
-          />
-          <button onclick="makeRequest(3)" style="padding: 8px 16px">
-            🌐 Make Request 3
-          </button>
+          >
+            Ready to make request...
+          </div>
         </div>
       </div>
 
@@ -214,27 +298,55 @@
         "
       >
         <h3>Isolated Request (temporary circuit):</h3>
-        <div style="margin-bottom: 15px">
+        <div
+          style="
+            margin-bottom: 20px;
+            padding: 10px;
+            border: 1px solid #e0e0e0;
+            border-radius: 5px;
+          "
+        >
           <label
             for="isolatedUrl"
             style="display: block; margin-bottom: 5px; font-weight: bold"
             >Isolated Request:</label
           >
-          <input
-            type="text"
-            id="isolatedUrl"
-            value="https://httpbin.org/uuid"
+          <div style="display: flex; align-items: center; margin-bottom: 10px">
+            <input
+              type="text"
+              id="isolatedUrl"
+              value="https://httpbin.org/uuid"
+              style="
+                flex: 1;
+                padding: 8px;
+                margin-right: 10px;
+                border: 1px solid #ddd;
+                border-radius: 3px;
+              "
+            />
+            <button
+              id="btnIsolated"
+              onclick="makeIsolatedRequest()"
+              style="padding: 8px 16px"
+            >
+              🔒 Make Isolated Request
+            </button>
+          </div>
+          <div
+            id="outputIsolated"
             style="
-              width: 70%;
-              padding: 8px;
-              margin-right: 10px;
-              border: 1px solid #ddd;
+              background: #f8f9fa;
+              padding: 10px;
               border-radius: 3px;
+              font-family: 'Courier New', monospace;
+              font-size: 12px;
+              border: 1px solid #e0e0e0;
+              min-height: 20px;
+              color: #666;
             "
-          />
-          <button onclick="makeIsolatedRequest()" style="padding: 8px 16px">
-            🔒 Make Isolated Request
-          </button>
+          >
+            Ready to make request...
+          </div>
         </div>
       </div>
 
