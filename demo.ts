@@ -4,11 +4,11 @@ import { waitForWebSocket } from './src/WebSocketDuplex';
 
 declare global {
   interface Window {
-    startDemo: () => Promise<void>;
+    openTorClient: () => Promise<void>;
+    closeTorClient: () => void;
     clearOutput: () => void;
-    stopDemo: () => void;
+    makeRequest: (index: number) => Promise<void>;
     makeIsolatedRequest: () => Promise<void>;
-    makeConcurrentRequests: () => Promise<void>;
     triggerCircuitUpdate: () => Promise<void>;
   }
 }
@@ -17,7 +17,6 @@ declare global {
 type LogType = 'info' | 'success' | 'error';
 
 let isRunning = false;
-
 let torClient: TorClient | null = null;
 let statusUpdateInterval: NodeJS.Timeout | null = null;
 
@@ -38,17 +37,10 @@ function updateStatus(): void {
   const statusElement = document.getElementById('status');
   if (!statusElement || !torClient) return;
 
-  const status = torClient.getCircuitStatus();
-  const statusString = torClient.getStatusString();
+  const statusString = torClient.getCircuitStatusString();
 
   statusElement.innerHTML = `
     <div><strong>Circuit Status:</strong> ${statusString}</div>
-    <div><strong>Has Circuit:</strong> ${status.hasCircuit ? '✅' : '❌'}</div>
-    <div><strong>Is Creating:</strong> ${status.isCreating ? '🔄' : '❌'}</div>
-    <div><strong>Is Updating:</strong> ${status.isUpdating ? '🔄' : '❌'}</div>
-    ${status.isUpdating ? `<div><strong>Time to Deadline:</strong> ${Math.ceil(status.timeToDeadline / 1000)}s</div>` : ''}
-    <div><strong>Auto-Update Active:</strong> ${status.updateActive ? '✅' : '❌'}</div>
-    ${status.nextUpdateIn !== null ? `<div><strong>Update Interval:</strong> ${Math.ceil(status.nextUpdateIn / 1000)}s</div>` : ''}
   `;
 }
 
@@ -59,7 +51,7 @@ function clearOutput(): void {
   }
 }
 
-function stopDemo(): void {
+function closeTorClient(): void {
   if (statusUpdateInterval) {
     clearInterval(statusUpdateInterval);
     statusUpdateInterval = null;
@@ -72,20 +64,89 @@ function stopDemo(): void {
 
   const statusElement = document.getElementById('status');
   if (statusElement) {
-    statusElement.innerHTML = '<div><strong>Demo stopped</strong></div>';
+    statusElement.innerHTML = '<div><strong>TorClient closed</strong></div>';
   }
 
-  displayLog('🛑 Demo stopped', 'info');
+  displayLog('🛑 TorClient closed', 'info');
+}
+
+async function makeRequest(index: number): Promise<void> {
+  // Auto-create TorClient if not already open
+  if (!torClient) {
+    displayLog('🔧 TorClient not open. Creating automatically...', 'info');
+    await openTorClient();
+    if (!torClient) {
+      displayLog('❌ Failed to create TorClient automatically', 'error');
+      return;
+    }
+  }
+
+  const urlInput = document.getElementById(`url${index}`) as HTMLInputElement;
+  if (!urlInput) {
+    displayLog(`❌ URL input ${index} not found`, 'error');
+    return;
+  }
+
+  const url = urlInput.value.trim();
+  if (!url) {
+    displayLog(`❌ Please enter a URL in textbox ${index}`, 'error');
+    return;
+  }
+
+  try {
+    displayLog(`🌐 Making request ${index} to ${url}...`);
+
+    const start = Date.now();
+    const response = await torClient.fetch(url);
+    const data = await response.json();
+    const duration = Date.now() - start;
+
+    displayLog(`✅ Request ${index} completed in ${duration}ms`, 'success');
+
+    // Log specific data based on the endpoint
+    if (url.includes('/ip')) {
+      displayLog(`📍 IP: ${data.origin}`, 'success');
+    } else if (url.includes('/user-agent')) {
+      displayLog(`🔍 User-Agent: ${data['user-agent']}`, 'success');
+    } else if (url.includes('/headers')) {
+      displayLog(
+        `📋 Headers count: ${Object.keys(data.headers).length}`,
+        'success'
+      );
+    } else {
+      displayLog(
+        `📄 Response: ${JSON.stringify(data).substring(0, 100)}...`,
+        'success'
+      );
+    }
+  } catch (error) {
+    displayLog(
+      `❌ Request ${index} failed: ${(error as Error).message}`,
+      'error'
+    );
+  }
 }
 
 async function makeIsolatedRequest(): Promise<void> {
+  const urlInput = document.getElementById('isolatedUrl') as HTMLInputElement;
+  if (!urlInput) {
+    displayLog('❌ Isolated URL input not found', 'error');
+    return;
+  }
+
+  const url = urlInput.value.trim();
+  if (!url) {
+    displayLog('❌ Please enter a URL for isolated request', 'error');
+    return;
+  }
+
   try {
     displayLog('🔒 Making isolated request with temporary circuit...');
 
     const start = Date.now();
     const response = await TorClient.fetch(
       'wss://snowflake.torproject.net/',
-      'https://httpbin.org/uuid',
+      url,
       {
         connectionTimeout: 15000,
         circuitTimeout: 90000,
@@ -99,51 +160,21 @@ async function makeIsolatedRequest(): Promise<void> {
     const duration = Date.now() - start;
 
     displayLog(`🔒 Isolated request completed in ${duration}ms`, 'success');
-    displayLog(`🔒 UUID from isolated circuit: ${data.uuid}`, 'success');
+
+    // Log specific data based on the endpoint
+    if (url.includes('/uuid')) {
+      displayLog(`🔒 UUID from isolated circuit: ${data.uuid}`, 'success');
+    } else if (url.includes('/ip')) {
+      displayLog(`🔒 IP from isolated circuit: ${data.origin}`, 'success');
+    } else {
+      displayLog(
+        `🔒 Response: ${JSON.stringify(data).substring(0, 100)}...`,
+        'success'
+      );
+    }
   } catch (error) {
     displayLog(
       `❌ Isolated request failed: ${(error as Error).message}`,
-      'error'
-    );
-  }
-}
-
-async function makeConcurrentRequests(): Promise<void> {
-  if (!torClient) {
-    displayLog(
-      '❌ No persistent client available for concurrent requests',
-      'error'
-    );
-    return;
-  }
-
-  try {
-    displayLog('🔄 Making 3 concurrent requests through persistent circuit...');
-
-    const start = Date.now();
-    const requests = [
-      torClient.fetch('https://httpbin.org/ip'),
-      torClient.fetch('https://httpbin.org/user-agent'),
-      torClient.fetch('https://httpbin.org/headers'),
-    ];
-
-    const responses = await Promise.all(requests);
-    const results = await Promise.all(responses.map(r => r.json()));
-    const duration = Date.now() - start;
-
-    displayLog(
-      `🔄 All concurrent requests completed in ${duration}ms`,
-      'success'
-    );
-    displayLog(`🔄 IP: ${results[0].origin}`, 'success');
-    displayLog(`🔄 User-Agent: ${results[1]['user-agent']}`, 'success');
-    displayLog(
-      `🔄 Headers count: ${Object.keys(results[2].headers).length}`,
-      'success'
-    );
-  } catch (error) {
-    displayLog(
-      `❌ Concurrent requests failed: ${(error as Error).message}`,
       'error'
     );
   }
@@ -167,19 +198,19 @@ async function triggerCircuitUpdate(): Promise<void> {
   }
 }
 
-async function startDemo(): Promise<void> {
-  if (isRunning) return;
+async function openTorClient(): Promise<void> {
+  if (isRunning || torClient) return;
 
   isRunning = true;
 
   // Update button states
-  const startBtn = document.getElementById('startBtn') as HTMLButtonElement;
-  const stopBtn = document.getElementById('stopBtn') as HTMLButtonElement;
-  if (startBtn) startBtn.disabled = true;
-  if (stopBtn) stopBtn.disabled = false;
+  const openBtn = document.getElementById('openBtn') as HTMLButtonElement;
+  const closeBtn = document.getElementById('closeBtn') as HTMLButtonElement;
+  if (openBtn) openBtn.disabled = true;
+  if (closeBtn) closeBtn.disabled = false;
 
   try {
-    displayLog('🚀 Starting comprehensive TorClient demo...');
+    displayLog('🚀 Opening TorClient...');
 
     // Test basic WebSocket connectivity first
     displayLog('🔌 Testing basic WebSocket connectivity...');
@@ -220,52 +251,37 @@ async function startDemo(): Promise<void> {
     displayLog('⏳ Waiting for initial circuit to be ready...');
     await torClient.waitForCircuit();
 
-    displayLog('🎉 Persistent circuit is ready!', 'success');
+    displayLog('🎉 TorClient is ready!', 'success');
     displayLog(
-      '💡 Now you can use the buttons to test different features:',
+      '💡 Use the URL textboxes and request buttons to make requests',
       'info'
-    );
-    displayLog('  • Make Isolated Request - Creates temporary circuit', 'info');
-    displayLog(
-      '  • Make Concurrent Requests - Uses persistent circuit',
-      'info'
-    );
-    displayLog('  • Trigger Circuit Update - Forces circuit refresh', 'info');
-
-    // Make an initial request to demonstrate the persistent circuit
-    displayLog('🌐 Making initial request through persistent circuit...');
-    const response = await torClient.fetch('https://httpbin.org/ip');
-    const data = await response.json();
-    displayLog(
-      `📍 Your IP through persistent Tor circuit: ${data.origin}`,
-      'success'
     );
   } catch (error) {
     displayLog(
-      `❌ Demo initialization failed: ${(error as Error).message}`,
+      `❌ TorClient initialization failed: ${(error as Error).message}`,
       'error'
     );
     displayLog(`Stack trace: ${(error as Error).stack}`, 'error');
-    stopDemo();
+    closeTorClient();
   } finally {
-    if (startBtn) startBtn.disabled = false;
-    if (stopBtn) stopBtn.disabled = true;
+    if (openBtn) openBtn.disabled = false;
+    if (closeBtn) closeBtn.disabled = true;
   }
 }
 
 // Make functions globally available
-window.startDemo = startDemo;
-window.stopDemo = stopDemo;
+window.openTorClient = openTorClient;
+window.closeTorClient = closeTorClient;
 window.clearOutput = clearOutput;
+window.makeRequest = makeRequest;
 window.makeIsolatedRequest = makeIsolatedRequest;
-window.makeConcurrentRequests = makeConcurrentRequests;
 window.triggerCircuitUpdate = triggerCircuitUpdate;
 
 // Initial log
 displayLog('🌐 Vite browser environment ready');
 displayLog('📦 TorClient loaded successfully');
 displayLog('🔍 Verbose logging enabled for detailed progress tracking');
-displayLog("👆 Click 'Start Demo' to begin the comprehensive test!");
+displayLog("👆 Click 'Open TorClient' to begin!");
 displayLog(
-  '🎯 This demo will show circuit reuse, auto-updates, and isolated requests'
+  '🎯 This demo shows circuit reuse, auto-updates, and isolated requests'
 );

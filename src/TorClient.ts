@@ -48,6 +48,7 @@ export class TorClient {
   private updateDeadline = 0;
   private updateTimer?: NodeJS.Timeout;
   private updateLoopActive = false;
+  private nextUpdateTime = 0;
 
   constructor(options: TorClientOptions) {
     this.snowflakeUrl = options.snowflakeUrl;
@@ -448,32 +449,36 @@ export class TorClient {
       updateDeadline: this.updateDeadline,
       timeToDeadline: this.updateDeadline > now ? this.updateDeadline - now : 0,
       updateActive: this.updateLoopActive,
-      nextUpdateIn: this.circuitUpdateInterval
-        ? this.circuitUpdateInterval - this.circuitUpdateAdvance
-        : null,
+      nextUpdateIn:
+        this.nextUpdateTime > now ? this.nextUpdateTime - now : null,
     };
   }
 
   /**
    * Gets a human-readable status string for the current circuit state.
    */
-  getStatusString(): string {
+  getCircuitStatusString(): string {
     const status = this.getCircuitStatus();
 
     if (!status.hasCircuit && status.isCreating) {
-      return 'Creating circuit...';
+      return 'Creating...';
     }
 
     if (!status.hasCircuit) {
-      return 'No circuit';
+      return 'None';
     }
 
     if (status.isUpdating) {
       const timeLeft = Math.ceil(status.timeToDeadline / 1000);
-      return `Circuit ready, updating (${timeLeft}s until new circuit required)`;
+      return `Ready, updating (${timeLeft}s until new circuit required)`;
     }
 
-    return 'Circuit ready';
+    if (status.nextUpdateIn !== null && status.nextUpdateIn > 0) {
+      const timeLeft = Math.ceil(status.nextUpdateIn / 1000);
+      return `Ready (creating next circuit in ${timeLeft}s)`;
+    }
+
+    return 'Ready';
   }
 
   private scheduleCircuitUpdates() {
@@ -496,17 +501,25 @@ export class TorClient {
     (async () => {
       while (this.updateLoopActive && this.circuitUpdateInterval !== null) {
         try {
+          // Calculate next update time
+          const updateDelay =
+            this.circuitUpdateInterval! - this.circuitUpdateAdvance;
+          this.nextUpdateTime = Date.now() + updateDelay;
+
           // Wait for the interval minus advance time
           await new Promise<void>(resolve => {
             this.updateTimer = setTimeout(() => {
               resolve();
-            }, this.circuitUpdateInterval! - this.circuitUpdateAdvance);
+            }, updateDelay);
           });
 
           // Check if we were disposed during the wait
           if (!this.updateLoopActive) {
             break;
           }
+
+          // Clear next update time since we're starting the update now
+          this.nextUpdateTime = 0;
 
           this.log('Scheduled circuit update triggered');
           await this.updateCircuit(this.circuitUpdateAdvance);
@@ -533,6 +546,9 @@ export class TorClient {
       clearTimeout(this.updateTimer);
       this.updateTimer = undefined;
     }
+
+    // Clear timing state
+    this.nextUpdateTime = 0;
 
     if (this.currentCircuit) {
       this.currentCircuit[Symbol.dispose]();

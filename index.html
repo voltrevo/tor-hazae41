@@ -77,13 +77,11 @@
   </head>
   <body>
     <div class="container">
-      <h1>🌐 TorClient Comprehensive Demo</h1>
+      <h1>🌐 TorClient Demo</h1>
 
       <div class="description">
         <h3>What this demonstrates:</h3>
-        <p>
-          This comprehensive demo shows advanced TorClient features including:
-        </p>
+        <p>This demo shows advanced TorClient features including:</p>
         <ul>
           <li>
             🔄 <strong>Circuit Reuse:</strong> Persistent circuits that are
@@ -94,8 +92,8 @@
             every 2 minutes with graceful transition
           </li>
           <li>
-            🔀 <strong>Concurrent Requests:</strong> Multiple simultaneous
-            requests through the same circuit
+            🌐 <strong>Individual Requests:</strong> Make requests to custom
+            URLs using the persistent circuit
           </li>
           <li>
             🔒 <strong>Isolated Requests:</strong> Temporary circuits for
@@ -119,18 +117,128 @@
       </div>
 
       <div class="controls">
-        <button id="startBtn" onclick="startDemo()">🚀 Start Demo</button>
-        <button id="stopBtn" onclick="stopDemo()" disabled>🛑 Stop Demo</button>
-        <button onclick="clearOutput()">�️ Clear Output</button>
+        <button id="openBtn" onclick="openTorClient()">
+          🚀 Open TorClient
+        </button>
+        <button id="closeBtn" onclick="closeTorClient()" disabled>
+          🛑 Close TorClient
+        </button>
+        <button onclick="clearOutput()">🧹 Clear Output</button>
+      </div>
+
+      <div
+        class="request-section"
+        style="
+          margin: 20px 0;
+          padding: 15px;
+          background: #f8f9fa;
+          border-radius: 5px;
+        "
+      >
+        <h3>Regular Requests (persistent circuit):</h3>
+        <div style="margin-bottom: 15px">
+          <label
+            for="url1"
+            style="display: block; margin-bottom: 5px; font-weight: bold"
+            >Request 1:</label
+          >
+          <input
+            type="text"
+            id="url1"
+            value="https://httpbin.org/ip"
+            style="
+              width: 70%;
+              padding: 8px;
+              margin-right: 10px;
+              border: 1px solid #ddd;
+              border-radius: 3px;
+            "
+          />
+          <button onclick="makeRequest(1)" style="padding: 8px 16px">
+            🌐 Make Request 1
+          </button>
+        </div>
+        <div style="margin-bottom: 15px">
+          <label
+            for="url2"
+            style="display: block; margin-bottom: 5px; font-weight: bold"
+            >Request 2:</label
+          >
+          <input
+            type="text"
+            id="url2"
+            value="https://httpbin.org/user-agent"
+            style="
+              width: 70%;
+              padding: 8px;
+              margin-right: 10px;
+              border: 1px solid #ddd;
+              border-radius: 3px;
+            "
+          />
+          <button onclick="makeRequest(2)" style="padding: 8px 16px">
+            🌐 Make Request 2
+          </button>
+        </div>
+        <div style="margin-bottom: 15px">
+          <label
+            for="url3"
+            style="display: block; margin-bottom: 5px; font-weight: bold"
+            >Request 3:</label
+          >
+          <input
+            type="text"
+            id="url3"
+            value="https://httpbin.org/headers"
+            style="
+              width: 70%;
+              padding: 8px;
+              margin-right: 10px;
+              border: 1px solid #ddd;
+              border-radius: 3px;
+            "
+          />
+          <button onclick="makeRequest(3)" style="padding: 8px 16px">
+            🌐 Make Request 3
+          </button>
+        </div>
+      </div>
+
+      <div
+        class="request-section"
+        style="
+          margin: 20px 0;
+          padding: 15px;
+          background: #fff0f5;
+          border-radius: 5px;
+        "
+      >
+        <h3>Isolated Request (temporary circuit):</h3>
+        <div style="margin-bottom: 15px">
+          <label
+            for="isolatedUrl"
+            style="display: block; margin-bottom: 5px; font-weight: bold"
+            >Isolated Request:</label
+          >
+          <input
+            type="text"
+            id="isolatedUrl"
+            value="https://httpbin.org/uuid"
+            style="
+              width: 70%;
+              padding: 8px;
+              margin-right: 10px;
+              border: 1px solid #ddd;
+              border-radius: 3px;
+            "
+          />
+          <button onclick="makeIsolatedRequest()" style="padding: 8px 16px">
+            🔒 Make Isolated Request
+          </button>
+        </div>
       </div>
 
       <div class="controls">
-        <button onclick="makeIsolatedRequest()">
-          🔒 Make Isolated Request
-        </button>
-        <button onclick="makeConcurrentRequests()">
-          🔄 Make Concurrent Requests
-        </button>
         <button onclick="triggerCircuitUpdate()">
           ⚡ Trigger Circuit Update
         </button>
