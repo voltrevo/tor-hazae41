@@ -155,21 +155,34 @@ async function makeRequest(index: number): Promise<void> {
 
     const start = Date.now();
     const response = await torClient.fetch(url);
-    const data = await response.json();
+    const text = await response.text();
     const duration = Date.now() - start;
+
+    // Try to parse as JSON, fallback to text
+    let data;
+    let isJson = false;
+    try {
+      data = JSON.parse(text);
+      isJson = true;
+    } catch {
+      data = text;
+      isJson = false;
+    }
 
     displayLog(`✅ Request ${index} completed in ${duration}ms`, 'success');
 
-    // Format output based on the endpoint
+    // Format output based on the endpoint and data type
     let outputText = '';
-    if (url.includes('/ip')) {
+    if (isJson && url.includes('/ip') && data.origin) {
       outputText = `✅ Success (${duration}ms)\n📍 IP: ${data.origin}`;
-    } else if (url.includes('/user-agent')) {
+    } else if (isJson && url.includes('/user-agent') && data['user-agent']) {
       outputText = `✅ Success (${duration}ms)\n🔍 User-Agent: ${data['user-agent']}`;
-    } else if (url.includes('/headers')) {
+    } else if (isJson && url.includes('/headers') && data.headers) {
       outputText = `✅ Success (${duration}ms)\n📋 Headers count: ${Object.keys(data.headers).length}`;
+    } else if (isJson) {
+      outputText = `✅ Success (${duration}ms)\n📄 JSON Response: ${JSON.stringify(data).substring(0, 200)}${JSON.stringify(data).length > 200 ? '...' : ''}`;
     } else {
-      outputText = `✅ Success (${duration}ms)\n📄 Response: ${JSON.stringify(data).substring(0, 200)}${JSON.stringify(data).length > 200 ? '...' : ''}`;
+      outputText = `✅ Success (${duration}ms)\n📄 Text Response: ${text.substring(0, 500)}${text.length > 500 ? '...' : ''}`;
     }
 
     setRequestOutput(outputId, outputText, 'success');
@@ -233,19 +246,32 @@ async function makeIsolatedRequest(): Promise<void> {
       }
     );
 
-    const data = await response.json();
+    const text = await response.text();
     const duration = Date.now() - start;
+
+    // Try to parse as JSON, fallback to text
+    let data;
+    let isJson = false;
+    try {
+      data = JSON.parse(text);
+      isJson = true;
+    } catch {
+      data = text;
+      isJson = false;
+    }
 
     displayLog(`🔒 Isolated request completed in ${duration}ms`, 'success');
 
-    // Format output based on the endpoint
+    // Format output based on the endpoint and data type
     let outputText = '';
-    if (url.includes('/uuid')) {
+    if (isJson && url.includes('/uuid') && data.uuid) {
       outputText = `✅ Success (${duration}ms)\n🔒 UUID from isolated circuit: ${data.uuid}`;
-    } else if (url.includes('/ip')) {
+    } else if (isJson && url.includes('/ip') && data.origin) {
       outputText = `✅ Success (${duration}ms)\n🔒 IP from isolated circuit: ${data.origin}`;
+    } else if (isJson) {
+      outputText = `✅ Success (${duration}ms)\n🔒 JSON Response: ${JSON.stringify(data).substring(0, 200)}${JSON.stringify(data).length > 200 ? '...' : ''}`;
     } else {
-      outputText = `✅ Success (${duration}ms)\n🔒 Response: ${JSON.stringify(data).substring(0, 200)}${JSON.stringify(data).length > 200 ? '...' : ''}`;
+      outputText = `✅ Success (${duration}ms)\n🔒 Text Response: ${text.substring(0, 500)}${text.length > 500 ? '...' : ''}`;
     }
 
     setRequestOutput(outputId, outputText, 'success');
