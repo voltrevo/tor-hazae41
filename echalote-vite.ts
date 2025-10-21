@@ -13,7 +13,7 @@ declare global {
 window.Buffer = Buffer;
 
 // Import the WebSocketDuplex from the wallet's implementation
-import { WebSocketDuplex } from './src/WebSocketDuplex';
+import { waitForWebSocket, WebSocketDuplex } from './src/WebSocketDuplex';
 
 import { WalletWasm } from '@brumewallet/wallet.wasm';
 import { Ciphers, TlsClientDuplex } from '@hazae41/cadenas';
@@ -65,42 +65,6 @@ async function initOrThrow() {
   X25519.set(X25519.fromWasm(WalletWasm));
 }
 
-async function waitForWebSocket(
-  socket: WebSocket,
-  signal: AbortSignal = new AbortController().signal
-): Promise<void> {
-  return new Promise<void>((resolve, reject) => {
-    const onOpen = (): void => {
-      cleanup();
-      resolve();
-    };
-    const onError = (e: Event): void => {
-      cleanup();
-      reject(e);
-    };
-    const onClose = (e: CloseEvent): void => {
-      cleanup();
-      reject(e);
-    };
-    const onAbort = (): void => {
-      cleanup();
-      reject(new Error('Aborted'));
-    };
-
-    const cleanup = (): void => {
-      socket.removeEventListener('open', onOpen);
-      socket.removeEventListener('close', onClose);
-      socket.removeEventListener('error', onError);
-      signal.removeEventListener('abort', onAbort);
-    };
-
-    socket.addEventListener('open', onOpen, { passive: true });
-    socket.addEventListener('close', onClose, { passive: true });
-    socket.addEventListener('error', onError, { passive: true });
-    signal.addEventListener('abort', onAbort, { passive: true });
-  });
-}
-
 async function startExample(): Promise<void> {
   if (isRunning) return;
 
@@ -138,50 +102,10 @@ async function startExample(): Promise<void> {
 
     log('🌨️ Connecting to Snowflake bridge...');
 
-    // Create WebSocket connection to Snowflake bridge
-    const socket = new WebSocket('wss://snowflake.torproject.net/');
-    socket.binaryType = 'arraybuffer';
-
-    // Wait for WebSocket to open with timeout
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 15000); // 15 second timeout
-
-    try {
-      await waitForWebSocket(socket, controller.signal);
-      clearTimeout(timeoutId);
-      log('✅ Connected to Snowflake bridge!', 'success');
-
-      // Add WebSocket debugging
-      socket.addEventListener('message', (event: MessageEvent) => {
-        const size = event.data.byteLength || event.data.length;
-        log(`📨 WebSocket received ${size} bytes`);
-      });
-
-      socket.addEventListener('error', (error: Event) => {
-        log(`🔴 WebSocket error: ${error}`, 'error');
-      });
-
-      socket.addEventListener('close', (event: CloseEvent) => {
-        log(
-          `🔴 WebSocket closed: code=${event.code}, reason=${event.reason}`,
-          'error'
-        );
-      });
-    } catch (error) {
-      clearTimeout(timeoutId);
-      log(
-        `❌ Failed to connect to Snowflake bridge: ${(error as Error).message}`,
-        'error'
-      );
-      return;
-    }
-
-    // Create duplex stream from WebSocket
-    log('🔧 Creating WebSocketDuplex wrapper...');
-    const stream = new WebSocketDuplex(socket, {
-      shouldCloseOnError: true,
-      shouldCloseOnClose: true,
-    });
+    const stream = await WebSocketDuplex.connect(
+      'wss://snowflake.torproject.net/',
+      AbortSignal.timeout(15_000)
+    );
 
     // Create Snowflake stream and Tor client
     log('🌨️ Creating Snowflake stream...');
@@ -212,17 +136,8 @@ async function startExample(): Promise<void> {
     log('⏳ Waiting for Tor to be ready (this may take 30+ seconds)...');
     log('📝 This step performs the Tor handshake with the Snowflake bridge...');
 
-    try {
-      await tor.waitOrThrow(AbortSignal.timeout(90000)); // Increased to 90 seconds
-      log('✅ Tor client ready!', 'success');
-    } catch (error) {
-      log(`❌ Tor handshake failed: ${(error as Error).message}`, 'error');
-      log(`🔍 This could indicate:`, 'error');
-      log(`   • Snowflake bridge connection issues`, 'error');
-      log(`   • Tor protocol handshake problems`, 'error');
-      log(`   • Network interference or timeouts`, 'error');
-      throw error;
-    }
+    await tor.waitOrThrow(AbortSignal.timeout(90000));
+    log('✅ Tor client ready!', 'success');
 
     // Create circuit
     log('🔗 Creating circuit...');

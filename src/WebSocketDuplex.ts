@@ -1,6 +1,5 @@
 import { Opaque, Writable } from '@hazae41/binary';
 import { HalfDuplex } from '@hazae41/cascade';
-import { Future } from '@hazae41/future';
 
 export interface WebSocketDuplexParams {
   /**
@@ -68,6 +67,18 @@ export class WebSocketDuplex {
     );
   }
 
+  static async connect(
+    url: string,
+    signal: AbortSignal = new AbortController().signal
+  ) {
+    const socket = new WebSocket(url);
+    socket.binaryType = 'arraybuffer';
+
+    await waitForWebSocket(socket, signal);
+
+    return new WebSocketDuplex(socket);
+  }
+
   [Symbol.dispose]() {
     this.close();
   }
@@ -93,24 +104,38 @@ export class WebSocketDuplex {
   }
 }
 
-export async function createWebSocketDuplex(url: string) {
-  const socket = new WebSocket(url);
-  socket.binaryType = 'arraybuffer';
+export async function waitForWebSocket(
+  socket: WebSocket,
+  signal: AbortSignal = new AbortController().signal
+): Promise<void> {
+  return new Promise<void>((resolve, reject) => {
+    const onOpen = (): void => {
+      cleanup();
+      resolve();
+    };
+    const onError = (e: Event): void => {
+      cleanup();
+      reject(e);
+    };
+    const onClose = (e: CloseEvent): void => {
+      cleanup();
+      reject(e);
+    };
+    const onAbort = (): void => {
+      cleanup();
+      reject(new Error('Aborted'));
+    };
 
-  const future = new Future<void>();
+    const cleanup = (): void => {
+      socket.removeEventListener('open', onOpen);
+      socket.removeEventListener('close', onClose);
+      socket.removeEventListener('error', onError);
+      signal.removeEventListener('abort', onAbort);
+    };
 
-  const onOpen = () => future.resolve();
-  const onError = (e: Event) => future.reject(e);
-
-  try {
     socket.addEventListener('open', onOpen, { passive: true });
+    socket.addEventListener('close', onClose, { passive: true });
     socket.addEventListener('error', onError, { passive: true });
-
-    await future.promise;
-
-    return new WebSocketDuplex(socket);
-  } finally {
-    socket.removeEventListener('open', onOpen);
-    socket.removeEventListener('error', onError);
-  }
+    signal.addEventListener('abort', onAbort, { passive: true });
+  });
 }
