@@ -95,6 +95,12 @@ function closeTorClient(): void {
   }
   isRunning = false;
 
+  // Update button states
+  const openBtn = document.getElementById('openBtn') as HTMLButtonElement;
+  const closeBtn = document.getElementById('closeBtn') as HTMLButtonElement;
+  if (openBtn) openBtn.disabled = false;
+  if (closeBtn) closeBtn.disabled = true;
+
   const statusElement = document.getElementById('status');
   if (statusElement) {
     statusElement.innerHTML = '<div><strong>TorClient closed</strong></div>';
@@ -370,10 +376,7 @@ async function openTorClient(): Promise<void> {
       'error'
     );
     displayLog(`Stack trace: ${(error as Error).stack}`, 'error');
-    closeTorClient();
-  } finally {
-    if (openBtn) openBtn.disabled = false;
-    if (closeBtn) closeBtn.disabled = true;
+    closeTorClient(); // This will properly reset button states
   }
 }
 
