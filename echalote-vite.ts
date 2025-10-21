@@ -13,7 +13,7 @@ declare global {
 window.Buffer = Buffer
 
 // Import the WebSocketDuplex from the wallet's implementation
-import { WebSocketDuplex } from './src/libs/streams/websocket'
+import { WebSocketDuplex } from './src/WebSocketDuplex'
 
 import { WalletWasm } from "@brumewallet/wallet.wasm";
 import { Ciphers, TlsClientDuplex } from "@hazae41/cadenas"
