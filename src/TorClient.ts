@@ -49,6 +49,7 @@ export class TorClient {
   private updateTimer?: NodeJS.Timeout;
   private updateLoopActive = false;
   private nextUpdateTime = 0;
+  private circuitUsed = false;
 
   constructor(options: TorClientOptions) {
     this.snowflakeUrl = options.snowflakeUrl;
@@ -66,8 +67,8 @@ export class TorClient {
       });
     }
 
-    // Schedule regular circuit updates
-    this.scheduleCircuitUpdates();
+    // Note: Circuit updates are scheduled only after first use to avoid
+    // unnecessary circuit creation during periods of inactivity
   }
 
   private log(
@@ -234,6 +235,9 @@ export class TorClient {
       this.isUpdatingCircuit = false;
       this.circuitPromise = undefined;
 
+      // Note: circuitUsed flag is reset by the scheduled update process
+      // to ensure next use triggers new scheduling
+
       return circuit;
     })();
 
@@ -313,6 +317,13 @@ export class TorClient {
     try {
       const circuit = await this.getOrCreateCircuit();
 
+      // Schedule circuit updates on first use
+      if (!this.circuitUsed) {
+        this.circuitUsed = true;
+        this.scheduleCircuitUpdate();
+        this.log('Circuit used for first time, scheduling automatic updates');
+      }
+
       this.log(`Opening connection to ${hostname}:${port}`);
       const ttcp = await circuit.openOrThrow(hostname, port);
 
@@ -368,6 +379,18 @@ export class TorClient {
   async updateCircuit(deadline: number = 0): Promise<void> {
     const newDeadline = Date.now() + deadline;
 
+    // Abort any scheduled update since we're manually updating now
+    if (this.updateTimer) {
+      clearTimeout(this.updateTimer);
+      this.updateTimer = undefined;
+      this.log('Aborted scheduled circuit update due to manual update');
+    }
+
+    // Reset scheduling state - next use will trigger new scheduling
+    this.updateLoopActive = false;
+    this.circuitUsed = false;
+    this.nextUpdateTime = 0;
+
     // If there's already an update in progress, handle it gracefully
     if (this.isUpdatingCircuit) {
       const currentDeadline = this.updateDeadline;
@@ -415,6 +438,9 @@ export class TorClient {
         this.currentCircuit = circuit;
         this.isUpdatingCircuit = false;
         this.circuitPromise = undefined;
+
+        // Note: circuitUsed flag is reset by the scheduled update process
+        // to ensure next use triggers new scheduling
 
         return circuit;
       })();
@@ -481,7 +507,7 @@ export class TorClient {
     return 'Ready';
   }
 
-  private scheduleCircuitUpdates() {
+  private scheduleCircuitUpdate() {
     if (
       this.circuitUpdateInterval === null ||
       this.circuitUpdateInterval <= 0
@@ -490,48 +516,50 @@ export class TorClient {
       return;
     }
 
+    // If updates are already scheduled, don't schedule again
+    if (this.updateLoopActive) {
+      this.log('Circuit updates already scheduled');
+      return;
+    }
+
     this.log(
-      `Scheduled circuit updates every ${this.circuitUpdateInterval}ms with ${this.circuitUpdateAdvance}ms advance`
+      `Scheduled next circuit update in ${this.circuitUpdateInterval}ms with ${this.circuitUpdateAdvance}ms advance`
     );
 
     // Set the loop as active
     this.updateLoopActive = true;
 
-    // Run the update loop in the background
-    (async () => {
-      while (this.updateLoopActive && this.circuitUpdateInterval !== null) {
-        try {
-          // Calculate next update time
-          const updateDelay =
-            this.circuitUpdateInterval! - this.circuitUpdateAdvance;
-          this.nextUpdateTime = Date.now() + updateDelay;
+    // Schedule a single update, not a continuous loop
+    const updateDelay = this.circuitUpdateInterval! - this.circuitUpdateAdvance;
+    this.nextUpdateTime = Date.now() + updateDelay;
 
-          // Wait for the interval minus advance time
-          await new Promise<void>(resolve => {
-            this.updateTimer = setTimeout(() => {
-              resolve();
-            }, updateDelay);
-          });
-
-          // Check if we were disposed during the wait
-          if (!this.updateLoopActive) {
-            break;
-          }
-
-          // Clear next update time since we're starting the update now
-          this.nextUpdateTime = 0;
-
-          this.log('Scheduled circuit update triggered');
-          await this.updateCircuit(this.circuitUpdateAdvance);
-        } catch (error) {
-          this.log(
-            `Scheduled circuit update failed: ${(error as Error).message}`,
-            'error'
-          );
-          // Continue the loop even if update failed
-        }
+    this.updateTimer = setTimeout(async () => {
+      // Check if we were disposed during the wait
+      if (!this.updateLoopActive) {
+        return;
       }
-    })();
+
+      try {
+        // Clear next update time since we're starting the update now
+        this.nextUpdateTime = 0;
+
+        this.log('Scheduled circuit update triggered');
+        await this.updateCircuit(this.circuitUpdateAdvance);
+
+        // After update completes, reset the scheduling state
+        // The next use will trigger scheduling again
+        this.updateLoopActive = false;
+        this.circuitUsed = false;
+      } catch (error) {
+        this.log(
+          `Scheduled circuit update failed: ${(error as Error).message}`,
+          'error'
+        );
+        // Reset state on error too
+        this.updateLoopActive = false;
+        this.circuitUsed = false;
+      }
+    }, updateDelay);
   }
 
   /**
@@ -560,5 +588,6 @@ export class TorClient {
     this.circuitPromise = undefined;
     this.isUpdatingCircuit = false;
     this.updateDeadline = 0;
+    this.circuitUsed = false;
   }
 }
