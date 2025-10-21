@@ -60,7 +60,9 @@ export class TorClient {
 
     // Create first circuit immediately if requested
     if (this.createCircuitEarly) {
-      this.createFirstCircuit();
+      this.getOrCreateCircuit().catch(error => {
+        this.log(`Failed to create initial circuit: ${error.message}`, 'error');
+      });
     }
 
     // Schedule regular circuit updates
@@ -215,11 +217,8 @@ export class TorClient {
     }
 
     // Create new circuit
-    return await this.createNewCircuit();
-  }
-
-  private async createNewCircuit(): Promise<Circuit> {
     this.circuitPromise = (async () => {
+      await this.init();
       const tor = await this.createTorConnection();
       const circuit = await this.createCircuit(tor);
 
@@ -240,10 +239,64 @@ export class TorClient {
     return await this.circuitPromise;
   }
 
+  /**
+   * Makes a one-time fetch request through Tor with a temporary circuit.
+   * Creates a new TorClient with no auto-updates, makes the request, and
+   * disposes of the circuit. This is ideal for single requests where you
+   * don't need persistent circuit management.
+   *
+   * The circuit is created specifically for this request and disposed
+   * immediately after completion, providing maximum isolation but less
+   * efficiency for multiple requests.
+   *
+   * @param snowflakeUrl The Snowflake bridge WebSocket URL
+   * @param url The URL to fetch
+   * @param options Optional fetch options and TorClient configuration
+   * @returns Promise resolving to the fetch Response
+   */
+  static async fetch(
+    snowflakeUrl: string,
+    url: string,
+    options?: RequestInit & {
+      connectionTimeout?: number;
+      circuitTimeout?: number;
+      onLog?: (message: string, type?: 'info' | 'success' | 'error') => void;
+    }
+  ): Promise<Response> {
+    const { connectionTimeout, circuitTimeout, onLog, ...fetchOptions } =
+      options || {};
+
+    const client = new TorClient({
+      snowflakeUrl,
+      connectionTimeout,
+      circuitTimeout,
+      onLog,
+      createCircuitEarly: false, // Don't create circuit until needed
+      circuitUpdateInterval: null, // No auto-updates for one-time use
+      circuitUpdateAdvance: 0, // Not relevant for one-time use
+    });
+
+    try {
+      return await client.fetch(url, fetchOptions);
+    } finally {
+      client.dispose();
+    }
+  }
+
+  /**
+   * Makes a fetch request through Tor using this client's persistent circuit.
+   * The circuit is reused across multiple requests and automatically updated
+   * based on the configured update interval and advance settings.
+   *
+   * Use this method when you have multiple requests or want to maintain
+   * a long-lived Tor connection with automatic circuit management.
+   *
+   * @param url The URL to fetch
+   * @param options Optional fetch options
+   * @returns Promise resolving to the fetch Response
+   */
   async fetch(url: string, options?: RequestInit): Promise<Response> {
     this.log(`Starting fetch request to ${url}`);
-
-    await this.init();
 
     const parsedUrl = new URL(url);
     const hostname = parsedUrl.hostname;
@@ -344,8 +397,28 @@ export class TorClient {
     this.updateDeadline = newDeadline;
 
     try {
-      // Start creating the new circuit in the background
-      await this.createNewCircuit();
+      // Start creating the new circuit in the background while keeping the old one
+      // The old circuit will continue to serve requests until the deadline
+      this.circuitPromise = (async () => {
+        await this.init();
+        const tor = await this.createTorConnection();
+        const circuit = await this.createCircuit(tor);
+
+        // Clean up old circuit
+        if (this.currentCircuit) {
+          this.currentCircuit[Symbol.dispose]();
+          this.log('Old circuit disposed');
+        }
+
+        this.currentTor = tor;
+        this.currentCircuit = circuit;
+        this.isUpdatingCircuit = false;
+        this.circuitPromise = undefined;
+
+        return circuit;
+      })();
+
+      await this.circuitPromise;
       this.log('Circuit update completed successfully', 'success');
     } catch (error) {
       this.log(`Circuit update failed: ${(error as Error).message}`, 'error');
@@ -362,18 +435,45 @@ export class TorClient {
     await this.getOrCreateCircuit();
   }
 
-  private async createFirstCircuit(): Promise<void> {
-    try {
-      this.log('Creating initial circuit');
-      await this.init();
-      await this.createNewCircuit();
-    } catch (error) {
-      this.log(
-        `Failed to create initial circuit: ${(error as Error).message}`,
-        'error'
-      );
-      // Don't throw - let it be created on first request
+  /**
+   * Gets the current circuit status information.
+   * @returns Object containing circuit state, update status, and timing information
+   */
+  getCircuitStatus() {
+    const now = Date.now();
+    return {
+      hasCircuit: !!this.currentCircuit,
+      isCreating: !!this.circuitPromise && !this.currentCircuit,
+      isUpdating: this.isUpdatingCircuit,
+      updateDeadline: this.updateDeadline,
+      timeToDeadline: this.updateDeadline > now ? this.updateDeadline - now : 0,
+      updateActive: this.updateLoopActive,
+      nextUpdateIn: this.circuitUpdateInterval
+        ? this.circuitUpdateInterval - this.circuitUpdateAdvance
+        : null,
+    };
+  }
+
+  /**
+   * Gets a human-readable status string for the current circuit state.
+   */
+  getStatusString(): string {
+    const status = this.getCircuitStatus();
+
+    if (!status.hasCircuit && status.isCreating) {
+      return 'Creating circuit...';
     }
+
+    if (!status.hasCircuit) {
+      return 'No circuit';
+    }
+
+    if (status.isUpdating) {
+      const timeLeft = Math.ceil(status.timeToDeadline / 1000);
+      return `Circuit ready, updating (${timeLeft}s until new circuit required)`;
+    }
+
+    return 'Circuit ready';
   }
 
   private scheduleCircuitUpdates() {

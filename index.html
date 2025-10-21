@@ -32,6 +32,9 @@
       }
       .controls {
         margin-bottom: 20px;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
       }
       button {
         background: #1976d2;
@@ -41,7 +44,7 @@
         border-radius: 5px;
         cursor: pointer;
         font-size: 16px;
-        margin-right: 10px;
+        margin: 0;
       }
       button:hover:not(:disabled) {
         background: #1565c0;
@@ -74,32 +77,77 @@
   </head>
   <body>
     <div class="container">
-      <h1>🌐 TorClient Example</h1>
+      <h1>🌐 TorClient Comprehensive Demo</h1>
 
       <div class="description">
-        <h3>What this does:</h3>
+        <h3>What this demonstrates:</h3>
         <p>
-          This example demonstrates a complete TorClient implementation using
-          the @hazae41/echalote library. It:
+          This comprehensive demo shows advanced TorClient features including:
         </p>
         <ul>
-          <li>Connects to a Snowflake bridge (Tor's pluggable transport)</li>
-          <li>Establishes a Tor circuit through multiple relays</li>
-          <li>Makes an HTTPS request through the Tor network</li>
-          <li>Shows your IP address as seen through Tor</li>
+          <li>
+            🔄 <strong>Circuit Reuse:</strong> Persistent circuits that are
+            reused across multiple requests
+          </li>
+          <li>
+            ⏰ <strong>Auto-Updates:</strong> Circuits automatically refresh
+            every 2 minutes with graceful transition
+          </li>
+          <li>
+            🔀 <strong>Concurrent Requests:</strong> Multiple simultaneous
+            requests through the same circuit
+          </li>
+          <li>
+            🔒 <strong>Isolated Requests:</strong> Temporary circuits for
+            maximum privacy on single requests
+          </li>
+          <li>
+            📊 <strong>Live Status:</strong> Real-time circuit status and update
+            information
+          </li>
+          <li>
+            ⚡ <strong>Manual Updates:</strong> Force circuit refresh with
+            custom deadlines
+          </li>
         </ul>
       </div>
 
       <div class="warning">
-        <strong>⚠️ Note:</strong> This process can take 30-90 seconds depending
-        on network conditions and Tor relay availability.
+        <strong>⚠️ Note:</strong> Initial circuit creation can take 30-90
+        seconds. The demo uses 2-minute auto-updates for demonstration -
+        normally this would be 10 minutes.
       </div>
 
       <div class="controls">
-        <button id="startBtn" onclick="startExample()">
-          🚀 Start Full Tor Example
+        <button id="startBtn" onclick="startDemo()">🚀 Start Demo</button>
+        <button id="stopBtn" onclick="stopDemo()" disabled>🛑 Stop Demo</button>
+        <button onclick="clearOutput()">�️ Clear Output</button>
+      </div>
+
+      <div class="controls">
+        <button onclick="makeIsolatedRequest()">
+          🔒 Make Isolated Request
         </button>
-        <button onclick="clearOutput()">🗑️ Clear Output</button>
+        <button onclick="makeConcurrentRequests()">
+          🔄 Make Concurrent Requests
+        </button>
+        <button onclick="triggerCircuitUpdate()">
+          ⚡ Trigger Circuit Update
+        </button>
+      </div>
+
+      <div
+        id="status"
+        style="
+          background: #f0f8ff;
+          padding: 15px;
+          border-radius: 5px;
+          margin: 20px 0;
+          font-family: monospace;
+          border: 1px solid #ddd;
+        "
+      >
+        <strong>Circuit Status:</strong> Not started
       </div>
 
       <div id="output"></div>
