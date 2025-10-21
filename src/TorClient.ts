@@ -1,3 +1,5 @@
+import './bufferPolyfill';
+
 import { WalletWasm } from '@brumewallet/wallet.wasm';
 import { Ciphers, TlsClientDuplex } from '@hazae41/cadenas';
 import { ChaCha20Poly1305 } from '@hazae41/chacha20poly1305';

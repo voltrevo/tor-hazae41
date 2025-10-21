@@ -1,31 +1,13 @@
-// Import Buffer polyfill for browser compatibility
-import { Buffer } from 'buffer';
-
 // Import the TorClient abstraction
 import { TorClient } from './src/TorClient';
 import { waitForWebSocket } from './src/WebSocketDuplex';
 
-// Make Buffer globally available
 declare global {
   interface Window {
-    Buffer: typeof Buffer;
     startExample: () => Promise<void>;
     clearOutput: () => void;
   }
 }
-
-window.Buffer = Buffer;
-
-// Make Buffer globally available
-declare global {
-  interface Window {
-    Buffer: typeof Buffer;
-    startExample: () => Promise<void>;
-    clearOutput: () => void;
-  }
-}
-
-window.Buffer = Buffer;
 
 // Create debug loggers
 type LogType = 'info' | 'success' | 'error';
@@ -93,8 +75,8 @@ async function startExample(): Promise<void> {
     });
 
     // Make request through Tor
-    displayLog('� Making HTTPS request through Tor...');
-    displayLog('� This may take 30+ seconds for the initial connection...');
+    displayLog('🌐 Making HTTPS request through Tor...');
+    displayLog('⏳ This may take 30+ seconds for the initial connection...');
 
     const response = await torClient.fetch('https://httpbin.org/ip');
     const data = await response.json();
