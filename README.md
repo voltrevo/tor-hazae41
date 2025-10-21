@@ -62,6 +62,7 @@ This example was extracted from the [Brume Wallet](https://github.com/voltrevo/b
 ## Original Dependencies
 
 The original project contains many additional features. This extraction includes only:
+
 - `src/libs/streams/websocket.ts` - WebSocket duplex stream wrapper
 - `echalote-vite.ts` - Main Tor client example
 - Essential package dependencies for Tor functionality

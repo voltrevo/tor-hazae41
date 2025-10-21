@@ -1,26 +1,26 @@
-import { defineConfig } from 'vite'
+import { defineConfig } from 'vite';
 
 export default defineConfig({
   server: {
     port: 3000,
-    open: true
+    open: true,
   },
   build: {
-    target: 'esnext'
+    target: 'esnext',
   },
   define: {
     global: 'globalThis',
     // Add Buffer polyfill
-    Buffer: 'Buffer'
+    Buffer: 'Buffer',
   },
   optimizeDeps: {
     exclude: ['@hazae41/echalote', '@hazae41/cadenas', '@hazae41/fleche'],
-    include: ['buffer']
+    include: ['buffer'],
   },
   // Add polyfills for Node.js globals
   resolve: {
     alias: {
       buffer: 'buffer',
-    }
-  }
-})
+    },
+  },
+});
