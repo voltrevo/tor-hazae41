@@ -16,10 +16,6 @@ window.Buffer = Buffer;
 import { WebSocketDuplex } from './src/WebSocketDuplex';
 
 import { WalletWasm } from '@brumewallet/wallet.wasm';
-import { Base16 } from '@hazae41/base16';
-import { Base58 } from '@hazae41/base58';
-import { Base64 } from '@hazae41/base64';
-import { Base64Url } from '@hazae41/base64url';
 import { Ciphers, TlsClientDuplex } from '@hazae41/cadenas';
 import { ChaCha20Poly1305 } from '@hazae41/chacha20poly1305';
 import {
@@ -32,7 +28,6 @@ import { Ed25519 } from '@hazae41/ed25519';
 import { fetch } from '@hazae41/fleche';
 import { Keccak256 } from '@hazae41/keccak256';
 import { Ripemd160 } from '@hazae41/ripemd160';
-import { Secp256k1 } from '@hazae41/secp256k1';
 import { Sha1 } from '@hazae41/sha1';
 import { X25519 } from '@hazae41/x25519';
 
@@ -62,22 +57,12 @@ async function initOrThrow() {
   await WalletWasm.initBundled();
 
   Sha1.set(Sha1.fromWasm(WalletWasm));
-
   Keccak256.set(Keccak256.fromWasm(WalletWasm));
   Ripemd160.set(Ripemd160.fromWasm(WalletWasm));
-
-  Base16.set(Base16.fromWasm(WalletWasm));
-  Base64.set(Base64.fromWasm(WalletWasm));
-  Base58.set(Base58.fromWasm(WalletWasm));
-
-  Base64Url.set(Base64Url.fromWasm(WalletWasm));
-
-  Secp256k1.set(Secp256k1.fromWasm(WalletWasm));
+  ChaCha20Poly1305.set(ChaCha20Poly1305.fromWasm(WalletWasm));
 
   Ed25519.set(await Ed25519.fromNativeOrWasm(WalletWasm));
   X25519.set(X25519.fromWasm(WalletWasm));
-
-  ChaCha20Poly1305.set(ChaCha20Poly1305.fromWasm(WalletWasm));
 }
 
 async function waitForWebSocket(
