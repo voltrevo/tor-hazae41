@@ -2,9 +2,11 @@
 
 A Tor client implementation for the browser using [@hazae41/echalote](https://www.npmjs.com/package/@hazae41/echalote), featuring persistent circuit management, automatic updates, and a complete interactive demo.
 
+Instant demo: https://voltrevo.github.io/tor-hazae41/.
+
 ## ⚠️ Use at Your Own Risk
 
-The underlying implementation used is experimental software.
+The underlying Tor implementation is experimental software.
 
 ## Features
 
