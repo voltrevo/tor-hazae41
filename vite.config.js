@@ -1,12 +1,18 @@
 import { defineConfig } from 'vite';
 
-export default defineConfig({
+export default defineConfig(({ command }) => ({
+  // Base path for GitHub Pages deployment
+  // Will be '/' for local development and '/tor-hazae41/' for GitHub Pages
+  base: command === 'build' ? '/tor-hazae41/' : '/',
+
   server: {
     port: 3000,
     open: true,
   },
   build: {
     target: 'esnext',
+    outDir: 'dist',
+    sourcemap: false, // Disable sourcemaps for smaller build size
   },
   define: {
     global: 'globalThis',
@@ -23,4 +29,4 @@ export default defineConfig({
       buffer: 'buffer',
     },
   },
-});
+}));
