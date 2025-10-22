@@ -10,6 +10,7 @@ export default defineConfig({
   splitting: false,
   outDir: 'dist',
   target: 'es2022',
+  treeshake: false,
   external: [
     '@brumewallet/wallet.wasm',
     '@hazae41/binary',

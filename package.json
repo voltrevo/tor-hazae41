@@ -14,6 +14,7 @@
   },
   "files": [
     "dist",
+    "src",
     "README.md",
     "LICENSE"
   ],
@@ -34,7 +35,7 @@
     "url": "https://github.com/voltrevo/tor-hazae41.git"
   },
   "scripts": {
-    "build": "tsup",
+    "build": "tsup && tsc --emitDeclarationOnly --declarationMap --outDir dist",
     "build:demo": "vite build",
     "dev": "vite",
     "dev:lib": "tsup --watch",
