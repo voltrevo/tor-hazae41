@@ -1,11 +1,45 @@
 {
   "name": "tor-hazae41",
-  "version": "0.0.0",
-  "private": true,
+  "version": "0.1.0",
+  "description": "A TypeScript Tor client library for making anonymous HTTP requests through the Tor network via Snowflake bridges",
+  "main": "dist/index.js",
+  "module": "dist/index.mjs",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "keywords": [
+    "tor",
+    "proxy",
+    "anonymous",
+    "snowflake",
+    "privacy",
+    "onion",
+    "client",
+    "typescript"
+  ],
+  "author": "Andrew Morris",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/voltrevo/tor-hazae41.git"
+  },
   "scripts": {
+    "build": "tsup",
+    "build:demo": "vite build",
     "dev": "vite",
-    "build": "vite build",
+    "dev:lib": "tsup --watch",
     "preview": "vite preview",
+    "prepublishOnly": "npm run build",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "format": "prettier --write .",
@@ -23,28 +57,26 @@
     "@hazae41/keccak256": "^1.0.10",
     "@hazae41/ripemd160": "^1.0.3",
     "@hazae41/sha1": "^1.1.14",
-    "@hazae41/x25519": "^2.2.9",
-    "@tailwindcss/postcss": "^4.0.2",
-    "ethers": "^6.13.5",
-    "next": "15.1.6",
-    "react": "^19.0.0",
-    "react-dom": "^19.0.0"
+    "@hazae41/x25519": "^2.2.9"
   },
   "devDependencies": {
     "@eslint/js": "^9.38.0",
-    "@types/react": "19.0.8",
-    "@types/react-dom": "19.0.3",
+    "@tailwindcss/postcss": "^4.0.2",
+    "@types/node": "^22.0.0",
     "buffer": "^6.0.3",
     "eslint": "^9.38.0",
     "eslint-config-next": "15.1.6",
     "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-prettier": "^5.5.4",
+    "ethers": "^6.13.5",
     "globals": "^16.4.0",
     "jiti": "^2.6.1",
+    "next": "15.1.6",
     "postcss": "^8.5.1",
     "prettier": "^3.6.2",
     "tailwindcss": "^4.0.2",
     "tslib": "^2.8.1",
+    "tsup": "^8.3.5",
     "tsx": "^4.20.6",
     "typescript": "5.7.3",
     "typescript-eslint": "^8.46.2",

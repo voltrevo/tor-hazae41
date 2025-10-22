@@ -7,4 +7,7 @@ declare global {
   }
 }
 
-window.Buffer = Buffer;
+// Only set Buffer on window if we're in a browser environment
+if (typeof window !== 'undefined') {
+  window.Buffer = Buffer;
+}

@@ -1,8 +1,8 @@
 {
   "compilerOptions": {
-    "target": "ESNext",
+    "target": "ES2022",
     "useDefineForClassFields": true,
-    "lib": ["DOM", "DOM.Iterable", "ESNext"],
+    "lib": ["ES2022", "DOM"],
     "allowJs": false,
     "skipLibCheck": true,
     "esModuleInterop": false,
@@ -13,9 +13,12 @@
     "moduleResolution": "Node",
     "resolveJsonModule": true,
     "isolatedModules": true,
-    "noEmit": true,
-    "jsx": "preserve"
+    "declaration": true,
+    "declarationMap": true,
+    "outDir": "./dist",
+    "rootDir": "./src",
+    "types": ["node"]
   },
-  "include": ["src", "*.ts", "*.js"],
-  "references": []
+  "include": ["src/**/*"],
+  "exclude": ["node_modules", "dist", "demo.ts", "index.html", "public"]
 }
