@@ -38,7 +38,7 @@ jobs:
         run: npm ci
 
       - name: Build with Vite
-        run: npm run build
+        run: npm run build:demo
 
       - name: Setup Pages
         uses: actions/configure-pages@v4
