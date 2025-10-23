@@ -449,6 +449,44 @@
         <strong>Circuit Status:</strong> Not started
       </div>
 
+      <div
+        class="snowflake-config"
+        style="
+          margin: 20px 0;
+          padding: 15px;
+          background: #f8f9fa;
+          border-radius: 5px;
+          border: 1px solid #dee2e6;
+        "
+      >
+        <h3 style="margin-top: 0; margin-bottom: 10px">
+          Snowflake Configuration:
+        </h3>
+        <div style="display: flex; align-items: center; gap: 10px">
+          <label for="snowflakeUrl" style="font-weight: bold; min-width: 120px"
+            >Snowflake URL:</label
+          >
+          <input
+            type="text"
+            id="snowflakeUrl"
+            value="wss://snowflake.torproject.net/"
+            style="
+              flex: 1;
+              padding: 8px 12px;
+              border: 1px solid #ddd;
+              border-radius: 4px;
+              font-family: 'Courier New', monospace;
+              font-size: 14px;
+            "
+            placeholder="Enter Snowflake WebSocket URL"
+          />
+        </div>
+        <div style="margin-top: 8px; font-size: 12px; color: #666">
+          💡 Change this URL before opening TorClient to use a different
+          Snowflake proxy
+        </div>
+      </div>
+
       <div id="output"></div>
     </div>
 

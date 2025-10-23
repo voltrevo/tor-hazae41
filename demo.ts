@@ -232,25 +232,29 @@ async function makeIsolatedRequest(): Promise<void> {
       return;
     }
 
+    // Get Snowflake URL from input field
+    const snowflakeUrlInput = document.getElementById(
+      'snowflakeUrl'
+    ) as HTMLInputElement;
+    const snowflakeUrl =
+      snowflakeUrlInput?.value?.trim() || 'wss://snowflake.torproject.net/';
+
     setRequestOutput(
       outputId,
       '🔒 Creating temporary circuit and making request...',
       'loading'
     );
     displayLog('🔒 Making isolated request with temporary circuit...');
+    displayLog(`🔒 Using Snowflake URL: ${snowflakeUrl}`);
 
     const start = Date.now();
-    const response = await TorClient.fetch(
-      'wss://snowflake.torproject.net/',
-      url,
-      {
-        connectionTimeout: 15000,
-        circuitTimeout: 90000,
-        onLog: (message, type) => {
-          displayLog(`🔒 Isolated: ${message}`, type);
-        },
-      }
-    );
+    const response = await TorClient.fetch(snowflakeUrl, url, {
+      connectionTimeout: 15000,
+      circuitTimeout: 90000,
+      onLog: (message, type) => {
+        displayLog(`🔒 Isolated: ${message}`, type);
+      },
+    });
 
     const text = await response.text();
     const duration = Date.now() - start;
@@ -326,6 +330,15 @@ async function openTorClient(): Promise<void> {
   try {
     displayLog('🚀 Opening TorClient...');
 
+    // Get Snowflake URL from input field
+    const snowflakeUrlInput = document.getElementById(
+      'snowflakeUrl'
+    ) as HTMLInputElement;
+    const snowflakeUrl =
+      snowflakeUrlInput?.value?.trim() || 'wss://snowflake.torproject.net/';
+
+    displayLog(`🌨️ Using Snowflake URL: ${snowflakeUrl}`);
+
     // Test basic WebSocket connectivity first
     displayLog('🔌 Testing basic WebSocket connectivity...');
     const testSocket = new WebSocket('wss://echo.websocket.org/');
@@ -348,7 +361,7 @@ async function openTorClient(): Promise<void> {
       '🌨️ Creating persistent TorClient with 2-minute auto-updates...'
     );
     torClient = new TorClient({
-      snowflakeUrl: 'wss://snowflake.torproject.net/',
+      snowflakeUrl: snowflakeUrl,
       connectionTimeout: 15000,
       circuitTimeout: 90000,
       createCircuitEarly: true,
