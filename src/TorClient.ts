@@ -1,3 +1,4 @@
+import '@hazae41/symbol-dispose-polyfill';
 import './bufferPolyfill';
 
 import { WalletWasm } from '@brumewallet/wallet.wasm';
