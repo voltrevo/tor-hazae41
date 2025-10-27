@@ -81,6 +81,16 @@ export class TorClient {
     }
   }
 
+  private logError(
+    prefix: string,
+    error: unknown,
+    defaultMessage: string
+  ): void {
+    const errorMessage =
+      error instanceof Error ? error.message : String(error || defaultMessage);
+    this.log(`${prefix}: ${errorMessage}`, 'error');
+  }
+
   private async init(): Promise<void> {
     if (TorClient.initialized) return;
 
@@ -112,21 +122,27 @@ export class TorClient {
     const tor = new TorClientDuplex();
 
     this.log('Connecting streams');
-    tcp.outer.readable.pipeTo(tor.inner.writable).catch((error: Error) => {
-      this.log(`TCP -> Tor stream error: ${error.message}`, 'error');
+    tcp.outer.readable.pipeTo(tor.inner.writable).catch((error: unknown) => {
+      this.logError('TCP -> Tor stream error', error, 'Stream pipe error');
     });
 
-    tor.inner.readable.pipeTo(tcp.outer.writable).catch((error: Error) => {
-      this.log(`Tor -> TCP stream error: ${error.message}`, 'error');
+    tor.inner.readable.pipeTo(tcp.outer.writable).catch((error: unknown) => {
+      this.logError('Tor -> TCP stream error', error, 'Stream pipe error');
     });
 
     // Add event listeners for debugging
     tor.events.on('error', (error: unknown) => {
-      this.log(`Tor client error: ${error}`, 'error');
+      this.logError('Tor client error', error, 'Unknown error');
     });
 
     tor.events.on('close', (reason: unknown) => {
-      this.log(`Tor client closed: ${reason}`, 'error');
+      const reasonMessage =
+        reason instanceof Error
+          ? reason.message
+          : String(reason || 'Connection closed normally');
+      // Only log as error if there's an actual error reason
+      const logLevel = reason && reason !== undefined ? 'error' : 'info';
+      this.log(`Tor client closed: ${reasonMessage}`, logLevel);
     });
 
     this.log(`Waiting for Tor to be ready (timeout: ${this.circuitTimeout}ms)`);
@@ -585,6 +601,7 @@ export class TorClient {
     }
 
     this.currentCircuit = undefined;
+    this.currentTor?.close();
     this.currentTor = undefined;
     this.circuitPromise = undefined;
     this.isUpdatingCircuit = false;
