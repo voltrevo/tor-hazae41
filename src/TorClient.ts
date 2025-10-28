@@ -124,195 +124,6 @@ export class TorClient {
     // unnecessary circuit creation during periods of inactivity
   }
 
-  private log(
-    message: string,
-    type: 'info' | 'success' | 'error' = 'info'
-  ): void {
-    if (this.onLog) {
-      this.onLog(message, type);
-    }
-  }
-
-  private logError(
-    prefix: string,
-    error: unknown,
-    defaultMessage: string
-  ): void {
-    const errorMessage =
-      error instanceof Error ? error.message : String(error || defaultMessage);
-    this.log(`${prefix}: ${errorMessage}`, 'error');
-  }
-
-  private async init(): Promise<void> {
-    if (TorClient.initialized) return;
-
-    this.log('Initializing WASM modules');
-    await WalletWasm.initBundled();
-
-    Sha1.set(Sha1.fromWasm(WalletWasm));
-    Keccak256.set(Keccak256.fromWasm(WalletWasm));
-    Ripemd160.set(Ripemd160.fromWasm(WalletWasm));
-    ChaCha20Poly1305.set(ChaCha20Poly1305.fromWasm(WalletWasm));
-
-    Ed25519.set(await Ed25519.fromNativeOrWasm(WalletWasm));
-    X25519.set(X25519.fromWasm(WalletWasm));
-
-    TorClient.initialized = true;
-    this.log('WASM modules initialized successfully', 'success');
-  }
-
-  private async createTorConnection(): Promise<TorClientDuplex> {
-    this.log(`Connecting to Snowflake bridge at ${this.snowflakeUrl}`);
-
-    const stream = await WebSocketDuplex.connect(
-      this.snowflakeUrl,
-      AbortSignal.timeout(this.connectionTimeout)
-    );
-
-    this.log('Creating Snowflake stream');
-    const tcp = createSnowflakeStream(stream);
-    const tor = new TorClientDuplex();
-
-    this.log('Connecting streams');
-    tcp.outer.readable.pipeTo(tor.inner.writable).catch((error: unknown) => {
-      this.logError('TCP -> Tor stream error', error, 'Stream pipe error');
-    });
-
-    tor.inner.readable.pipeTo(tcp.outer.writable).catch((error: unknown) => {
-      this.logError('Tor -> TCP stream error', error, 'Stream pipe error');
-    });
-
-    // Add event listeners for debugging
-    tor.events.on('error', (error: unknown) => {
-      this.logError('Tor client error', error, 'Unknown error');
-    });
-
-    tor.events.on('close', (reason: unknown) => {
-      const reasonMessage =
-        reason instanceof Error
-          ? reason.message
-          : String(reason || 'Connection closed normally');
-      // Only log as error if there's an actual error reason
-      const logLevel = reason && reason !== undefined ? 'error' : 'info';
-      this.log(`Tor client closed: ${reasonMessage}`, logLevel);
-    });
-
-    this.log(`Waiting for Tor to be ready (timeout: ${this.circuitTimeout}ms)`);
-    await tor.waitOrThrow(AbortSignal.timeout(this.circuitTimeout));
-    this.log('Tor client ready!', 'success');
-
-    return tor;
-  }
-
-  private async createCircuit(tor: TorClientDuplex): Promise<Circuit> {
-    this.log('Creating circuit');
-    const circuit: Circuit = await tor.createOrThrow();
-    this.log('Circuit created successfully', 'success');
-
-    this.log('Fetching consensus');
-    const consensus = await Echalote.Consensus.fetchOrThrow(circuit);
-    this.log(
-      `Consensus fetched with ${consensus.microdescs.length} microdescs`,
-      'success'
-    );
-
-    this.log('Filtering relays');
-    const middles = consensus.microdescs.filter(
-      it =>
-        it.flags.includes('Fast') &&
-        it.flags.includes('Stable') &&
-        it.flags.includes('V2Dir')
-    );
-
-    const exits = consensus.microdescs.filter(
-      it =>
-        it.flags.includes('Fast') &&
-        it.flags.includes('Stable') &&
-        it.flags.includes('Exit') &&
-        !it.flags.includes('BadExit')
-    );
-
-    this.log(
-      `Found ${middles.length} middle relays and ${exits.length} exit relays`
-    );
-
-    if (middles.length === 0 || exits.length === 0) {
-      throw new Error('Not enough suitable relays found');
-    }
-
-    // Select middle relay and extend circuit
-    this.log('Extending circuit through middle relay');
-    const middle = middles[Math.floor(Math.random() * middles.length)];
-    const middle2 = await Echalote.Consensus.Microdesc.fetchOrThrow(
-      circuit,
-      middle
-    );
-    await circuit.extendOrThrow(middle2, AbortSignal.timeout(10000));
-    this.log('Extended through middle relay', 'success');
-
-    // Select exit relay and extend circuit
-    this.log('Extending circuit through exit relay');
-    const exit = exits[Math.floor(Math.random() * exits.length)];
-    const exit2 = await Echalote.Consensus.Microdesc.fetchOrThrow(
-      circuit,
-      exit
-    );
-    await circuit.extendOrThrow(exit2, AbortSignal.timeout(10000));
-    this.log('Extended through exit relay', 'success');
-
-    return circuit;
-  }
-
-  private async getOrCreateCircuit(): Promise<Circuit> {
-    // If we're updating and past the deadline, wait for the new circuit
-    if (
-      this.isUpdatingCircuit &&
-      Date.now() >= this.updateDeadline &&
-      this.circuitPromise
-    ) {
-      this.log('Deadline passed, waiting for new circuit');
-      return await this.circuitPromise;
-    }
-
-    // If we have a current circuit and we're not updating, or we're within the deadline
-    if (
-      this.currentCircuit &&
-      (!this.isUpdatingCircuit || Date.now() < this.updateDeadline)
-    ) {
-      return this.currentCircuit;
-    }
-
-    // If we're already creating a circuit, wait for it
-    if (this.circuitPromise) {
-      return await this.circuitPromise;
-    }
-
-    // Create new circuit
-    this.circuitPromise = (async () => {
-      await this.init();
-      const tor = await this.createTorConnection();
-      const circuit = await this.createCircuit(tor);
-
-      // Clean up old circuit
-      if (this.currentCircuit) {
-        this.currentCircuit[Symbol.dispose]();
-        this.log('Old circuit disposed');
-      }
-
-      this.currentTor = tor;
-      this.currentCircuit = circuit;
-      this.isUpdatingCircuit = false;
-      this.circuitPromise = undefined;
-
-      // Note: circuitUsed flag is reset by the scheduled update process
-      // to ensure next use triggers new scheduling
-
-      return circuit;
-    })();
-
-    return await this.circuitPromise;
-  }
-
   /**
    * Makes a one-time fetch request through Tor with a temporary circuit.
    * Creates a new TorClient with no auto-updates, makes the request, and
@@ -576,6 +387,233 @@ export class TorClient {
     return 'Ready';
   }
 
+  /**
+   * Closes the TorClient, cleaning up resources.
+   */
+  close(): void {
+    // Stop the update loop
+    this.updateLoopActive = false;
+
+    // Clear the scheduled update timer
+    if (this.updateTimer) {
+      clearTimeout(this.updateTimer);
+      this.updateTimer = undefined;
+    }
+
+    // Clear timing state
+    this.nextUpdateTime = 0;
+
+    if (this.currentCircuit) {
+      this.currentCircuit[Symbol.dispose]();
+      this.log('Circuit disposed');
+    }
+
+    this.currentCircuit = undefined;
+    this.currentTor?.close();
+    this.currentTor = undefined;
+    this.circuitPromise = undefined;
+    this.isUpdatingCircuit = false;
+    this.updateDeadline = 0;
+    this.circuitUsed = false;
+  }
+
+  /**
+   * Symbol.dispose implementation for automatic resource cleanup.
+   * Calls close() to clean up all resources.
+   */
+  [Symbol.dispose](): void {
+    this.close();
+  }
+
+  private log(
+    message: string,
+    type: 'info' | 'success' | 'error' = 'info'
+  ): void {
+    if (this.onLog) {
+      this.onLog(message, type);
+    }
+  }
+
+  private logError(
+    prefix: string,
+    error: unknown,
+    defaultMessage: string
+  ): void {
+    const errorMessage =
+      error instanceof Error ? error.message : String(error || defaultMessage);
+    this.log(`${prefix}: ${errorMessage}`, 'error');
+  }
+
+  private async init(): Promise<void> {
+    if (TorClient.initialized) return;
+
+    this.log('Initializing WASM modules');
+    await WalletWasm.initBundled();
+
+    Sha1.set(Sha1.fromWasm(WalletWasm));
+    Keccak256.set(Keccak256.fromWasm(WalletWasm));
+    Ripemd160.set(Ripemd160.fromWasm(WalletWasm));
+    ChaCha20Poly1305.set(ChaCha20Poly1305.fromWasm(WalletWasm));
+
+    Ed25519.set(await Ed25519.fromNativeOrWasm(WalletWasm));
+    X25519.set(X25519.fromWasm(WalletWasm));
+
+    TorClient.initialized = true;
+    this.log('WASM modules initialized successfully', 'success');
+  }
+
+  private async createTorConnection(): Promise<TorClientDuplex> {
+    this.log(`Connecting to Snowflake bridge at ${this.snowflakeUrl}`);
+
+    const stream = await WebSocketDuplex.connect(
+      this.snowflakeUrl,
+      AbortSignal.timeout(this.connectionTimeout)
+    );
+
+    this.log('Creating Snowflake stream');
+    const tcp = createSnowflakeStream(stream);
+    const tor = new TorClientDuplex();
+
+    this.log('Connecting streams');
+    tcp.outer.readable.pipeTo(tor.inner.writable).catch((error: unknown) => {
+      this.logError('TCP -> Tor stream error', error, 'Stream pipe error');
+    });
+
+    tor.inner.readable.pipeTo(tcp.outer.writable).catch((error: unknown) => {
+      this.logError('Tor -> TCP stream error', error, 'Stream pipe error');
+    });
+
+    // Add event listeners for debugging
+    tor.events.on('error', (error: unknown) => {
+      this.logError('Tor client error', error, 'Unknown error');
+    });
+
+    tor.events.on('close', (reason: unknown) => {
+      const reasonMessage =
+        reason instanceof Error
+          ? reason.message
+          : String(reason || 'Connection closed normally');
+      // Only log as error if there's an actual error reason
+      const logLevel = reason && reason !== undefined ? 'error' : 'info';
+      this.log(`Tor client closed: ${reasonMessage}`, logLevel);
+    });
+
+    this.log(`Waiting for Tor to be ready (timeout: ${this.circuitTimeout}ms)`);
+    await tor.waitOrThrow(AbortSignal.timeout(this.circuitTimeout));
+    this.log('Tor client ready!', 'success');
+
+    return tor;
+  }
+
+  private async createCircuit(tor: TorClientDuplex): Promise<Circuit> {
+    this.log('Creating circuit');
+    const circuit: Circuit = await tor.createOrThrow();
+    this.log('Circuit created successfully', 'success');
+
+    this.log('Fetching consensus');
+    const consensus = await Echalote.Consensus.fetchOrThrow(circuit);
+    this.log(
+      `Consensus fetched with ${consensus.microdescs.length} microdescs`,
+      'success'
+    );
+
+    this.log('Filtering relays');
+    const middles = consensus.microdescs.filter(
+      it =>
+        it.flags.includes('Fast') &&
+        it.flags.includes('Stable') &&
+        it.flags.includes('V2Dir')
+    );
+
+    const exits = consensus.microdescs.filter(
+      it =>
+        it.flags.includes('Fast') &&
+        it.flags.includes('Stable') &&
+        it.flags.includes('Exit') &&
+        !it.flags.includes('BadExit')
+    );
+
+    this.log(
+      `Found ${middles.length} middle relays and ${exits.length} exit relays`
+    );
+
+    if (middles.length === 0 || exits.length === 0) {
+      throw new Error('Not enough suitable relays found');
+    }
+
+    // Select middle relay and extend circuit
+    this.log('Extending circuit through middle relay');
+    const middle = middles[Math.floor(Math.random() * middles.length)];
+    const middle2 = await Echalote.Consensus.Microdesc.fetchOrThrow(
+      circuit,
+      middle
+    );
+    await circuit.extendOrThrow(middle2, AbortSignal.timeout(10000));
+    this.log('Extended through middle relay', 'success');
+
+    // Select exit relay and extend circuit
+    this.log('Extending circuit through exit relay');
+    const exit = exits[Math.floor(Math.random() * exits.length)];
+    const exit2 = await Echalote.Consensus.Microdesc.fetchOrThrow(
+      circuit,
+      exit
+    );
+    await circuit.extendOrThrow(exit2, AbortSignal.timeout(10000));
+    this.log('Extended through exit relay', 'success');
+
+    return circuit;
+  }
+
+  private async getOrCreateCircuit(): Promise<Circuit> {
+    // If we're updating and past the deadline, wait for the new circuit
+    if (
+      this.isUpdatingCircuit &&
+      Date.now() >= this.updateDeadline &&
+      this.circuitPromise
+    ) {
+      this.log('Deadline passed, waiting for new circuit');
+      return await this.circuitPromise;
+    }
+
+    // If we have a current circuit and we're not updating, or we're within the deadline
+    if (
+      this.currentCircuit &&
+      (!this.isUpdatingCircuit || Date.now() < this.updateDeadline)
+    ) {
+      return this.currentCircuit;
+    }
+
+    // If we're already creating a circuit, wait for it
+    if (this.circuitPromise) {
+      return await this.circuitPromise;
+    }
+
+    // Create new circuit
+    this.circuitPromise = (async () => {
+      await this.init();
+      const tor = await this.createTorConnection();
+      const circuit = await this.createCircuit(tor);
+
+      // Clean up old circuit
+      if (this.currentCircuit) {
+        this.currentCircuit[Symbol.dispose]();
+        this.log('Old circuit disposed');
+      }
+
+      this.currentTor = tor;
+      this.currentCircuit = circuit;
+      this.isUpdatingCircuit = false;
+      this.circuitPromise = undefined;
+
+      // Note: circuitUsed flag is reset by the scheduled update process
+      // to ensure next use triggers new scheduling
+
+      return circuit;
+    })();
+
+    return await this.circuitPromise;
+  }
+
   private scheduleCircuitUpdate() {
     if (
       this.circuitUpdateInterval === null ||
@@ -629,43 +667,5 @@ export class TorClient {
         this.circuitUsed = false;
       }
     }, updateDelay);
-  }
-
-  /**
-   * Closes the TorClient, cleaning up resources.
-   */
-  close(): void {
-    // Stop the update loop
-    this.updateLoopActive = false;
-
-    // Clear the scheduled update timer
-    if (this.updateTimer) {
-      clearTimeout(this.updateTimer);
-      this.updateTimer = undefined;
-    }
-
-    // Clear timing state
-    this.nextUpdateTime = 0;
-
-    if (this.currentCircuit) {
-      this.currentCircuit[Symbol.dispose]();
-      this.log('Circuit disposed');
-    }
-
-    this.currentCircuit = undefined;
-    this.currentTor?.close();
-    this.currentTor = undefined;
-    this.circuitPromise = undefined;
-    this.isUpdatingCircuit = false;
-    this.updateDeadline = 0;
-    this.circuitUsed = false;
-  }
-
-  /**
-   * Symbol.dispose implementation for automatic resource cleanup.
-   * Calls close() to clean up all resources.
-   */
-  [Symbol.dispose](): void {
-    this.close();
   }
 }
