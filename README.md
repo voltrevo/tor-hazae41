@@ -57,7 +57,7 @@ const response = await tor.fetch('https://httpbin.org/ip');
 const data = await response.json();
 console.log('Your Tor IP:', data.origin);
 
-tor.dispose();
+tor.close();
 ```
 
 ### One-time Requests (Maximum Privacy)
@@ -116,9 +116,9 @@ Waits for a circuit to be ready.
 
 Get current circuit status information.
 
-#### `dispose(): void`
+#### `close(): void`
 
-Cleanly disposes of resources.
+Closes connection, cleans up resources.
 
 ### Static Methods
 
@@ -143,7 +143,7 @@ const tor = new TorClient({
 const response1 = await tor.fetch('https://httpbin.org/ip');
 const response2 = await tor.fetch('https://httpbin.org/headers');
 
-tor.dispose();
+tor.close();
 ```
 
 ### Isolated Requests (Maximum Privacy)

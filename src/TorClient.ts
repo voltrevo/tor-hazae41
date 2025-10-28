@@ -18,16 +18,51 @@ import { Sha1 } from '@hazae41/sha1';
 import { X25519 } from '@hazae41/x25519';
 import { WebSocketDuplex } from './WebSocketDuplex';
 
+/**
+ * Configuration options for the TorClient.
+ */
 export interface TorClientOptions {
+  /** The Snowflake bridge WebSocket URL for Tor connections */
   snowflakeUrl: string;
+  /** Timeout in milliseconds for establishing initial connections (default: 15000) */
   connectionTimeout?: number;
+  /** Timeout in milliseconds for circuit creation and readiness (default: 90000) */
   circuitTimeout?: number;
+  /** Whether to create the first circuit immediately upon construction (default: true) */
   createCircuitEarly?: boolean;
+  /** Interval in milliseconds between automatic circuit updates, or null to disable (default: 600000 = 10 minutes) */
   circuitUpdateInterval?: number | null;
+  /** Time in milliseconds to allow old circuit usage before forcing new circuit during updates (default: 60000 = 1 minute) */
   circuitUpdateAdvance?: number;
+  /** Optional logging callback function */
   onLog?: (message: string, type?: 'info' | 'success' | 'error') => void;
 }
 
+/**
+ * A Tor client that provides secure, anonymous HTTP/HTTPS requests through the Tor network.
+ *
+ * Features:
+ * - Automatic circuit creation and updates
+ * - Persistent connections for multiple requests
+ * - Graceful circuit transitions with configurable deadlines
+ * - Support for both HTTP and HTTPS requests
+ * - Comprehensive logging and status monitoring
+ * - Resource cleanup and disposal
+ *
+ * @example
+ * ```typescript
+ * const client = new TorClient({
+ *   snowflakeUrl: 'wss://snowflake.torproject.net/',
+ *   onLog: (msg, type) => console.log(`[${type}] ${msg}`)
+ * });
+ *
+ * const response = await client.fetch('https://httpbin.org/ip');
+ * const data = await response.json();
+ * console.log('My Tor IP:', data.origin);
+ *
+ * client.dispose(); // Clean up when done
+ * ```
+ */
 export class TorClient {
   private snowflakeUrl: string;
   private connectionTimeout: number;
@@ -52,6 +87,23 @@ export class TorClient {
   private nextUpdateTime = 0;
   private circuitUsed = false;
 
+  /**
+   * Creates a new TorClient instance with the specified configuration.
+   *
+   * @example
+   * ```typescript
+   * const client = new TorClient({
+   *   snowflakeUrl: 'wss://snowflake.torproject.net/',
+   *   onLog: (msg, type) => console.log(`[${type}] ${msg}`)
+   * });
+   *
+   * const response = await client.fetch('https://httpbin.org/ip');
+   * const data = await response.json();
+   * console.log('My Tor IP:', data.origin);
+   *
+   * client.dispose(); // Clean up when done
+   * ```
+   */
   constructor(options: TorClientOptions) {
     this.snowflakeUrl = options.snowflakeUrl;
     this.connectionTimeout = options.connectionTimeout ?? 15000;
@@ -301,7 +353,7 @@ export class TorClient {
     try {
       return await client.fetch(url, fetchOptions);
     } finally {
-      client.dispose();
+      client.close();
     }
   }
 
@@ -580,9 +632,9 @@ export class TorClient {
   }
 
   /**
-   * Disposes the current circuit and clears all state.
+   * Closes the TorClient, cleaning up resources.
    */
-  dispose(): void {
+  close(): void {
     // Stop the update loop
     this.updateLoopActive = false;
 
@@ -607,5 +659,13 @@ export class TorClient {
     this.isUpdatingCircuit = false;
     this.updateDeadline = 0;
     this.circuitUsed = false;
+  }
+
+  /**
+   * Symbol.dispose implementation for automatic resource cleanup.
+   * Calls close() to clean up all resources.
+   */
+  [Symbol.dispose](): void {
+    this.close();
   }
 }
