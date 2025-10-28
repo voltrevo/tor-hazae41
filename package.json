@@ -1,6 +1,6 @@
 {
   "name": "tor-hazae41",
-  "version": "0.1.2",
+  "version": "0.2.0",
   "description": "A TypeScript Tor client library for making anonymous HTTP requests through the Tor network via Snowflake bridges",
   "main": "dist/index.js",
   "module": "dist/index.mjs",
