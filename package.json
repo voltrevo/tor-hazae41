@@ -1,6 +1,6 @@
 {
   "name": "tor-hazae41",
-  "version": "0.2.3",
+  "version": "0.2.4",
   "description": "A TypeScript Tor client library for making anonymous HTTP requests through the Tor network via Snowflake bridges",
   "main": "dist/index.js",
   "module": "dist/index.mjs",
@@ -66,7 +66,7 @@
     "@hazae41/chacha20poly1305.wasm": "^1.0.1",
     "@hazae41/cursor": "1.2.4",
     "@hazae41/disposer": "2.0.20",
-    "@hazae41/echalote": "0.4.18",
+    "@hazae41/echalote": "npm:hazae-echalote-with-fleche-pr1-fix@0.4.18",
     "@hazae41/ed25519": "2.1.22",
     "@hazae41/ed25519.wasm": "^1.0.11",
     "@hazae41/fleche": "npm:hazae-fleche-pr1-fix@1.4.6",
@@ -108,11 +108,5 @@
     "typescript": "5.7.3",
     "typescript-eslint": "^8.46.2",
     "vite": "^7.1.10"
-  },
-  "overrides": {
-    "@hazae41/fleche": "npm:hazae-fleche-pr1-fix@1.4.6",
-    "@hazae41/echalote": {
-      "@hazae41/fleche": "npm:hazae-fleche-pr1-fix@1.4.6"
-    }
   }
 }
