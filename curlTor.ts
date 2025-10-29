@@ -414,6 +414,14 @@ async function main() {
       stdout.write(headerBlock + '\n\n');
     }
     stdout.write(buf);
+
+    // Force flush of stdout buffer to ensure all data is written
+    // This is especially important for binary data or when piping output
+    stdout.write('');
+  }
+
+  if (opts.verbose) {
+    console.log('\n> done');
   }
 
   // Exit code like curl: non-zero on HTTP errors if --fail was used.
