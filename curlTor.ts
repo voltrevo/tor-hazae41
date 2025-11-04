@@ -26,7 +26,7 @@
 import { readFileSync, writeFileSync, existsSync } from 'node:fs';
 import { stdout, stderr } from 'node:process';
 
-import { TorClient } from './src/index.js';
+import { TorClient } from './src/TorClient';
 
 type Opts = {
   method?: string;
