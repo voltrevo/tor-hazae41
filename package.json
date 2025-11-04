@@ -96,6 +96,8 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.38.0",
+    "@hazae41/deimos": "^1.0.0",
+    "@hazae41/phobos": "^1.0.0",
     "@types/node": "^22.0.0",
     "buffer": "^6.0.3",
     "eslint": "^9.38.0",
