@@ -12,7 +12,7 @@ import {
 } from '../echalote';
 import { Ed25519Wasm } from '@hazae41/ed25519.wasm';
 import { Ed25519 } from '@hazae41/ed25519';
-import { fetch } from '@hazae41/fleche';
+import { fetch } from '../fleche';
 import { Sha3Wasm } from '@hazae41/sha3.wasm';
 import { Keccak256 } from '@hazae41/keccak256';
 import { RipemdWasm } from '@hazae41/ripemd.wasm';

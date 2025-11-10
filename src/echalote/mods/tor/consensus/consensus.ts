@@ -2,7 +2,7 @@ import { ASN1 } from '@hazae41/asn1';
 import { Base16 } from '@hazae41/base16';
 import { Base64 } from '@hazae41/base64';
 import { Bytes } from '@hazae41/bytes';
-import { fetch } from '@hazae41/fleche';
+import { fetch } from '../../../../fleche';
 import { RsaWasm } from '@hazae41/rsa.wasm';
 import { OIDs, X509 } from '@hazae41/x509';
 import { Mutable } from '../../../libs/typescript/typescript';
