@@ -59,7 +59,6 @@
     "@hazae41/chacha20poly1305": "1.0.8",
     "@hazae41/chacha20poly1305.wasm": "1.0.1",
     "@hazae41/cursor": "1.2.4",
-    "@hazae41/echalote": "npm:hazae-echalote-with-fleche-pr1-fix@0.4.19",
     "@hazae41/ed25519": "2.1.22",
     "@hazae41/ed25519.wasm": "1.0.11",
     "@hazae41/fleche": "npm:hazae-fleche-pr1-fix@1.4.6",

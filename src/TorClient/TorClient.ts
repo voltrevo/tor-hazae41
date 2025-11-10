@@ -9,7 +9,7 @@ import {
   Echalote,
   TorClientDuplex,
   createSnowflakeStream,
-} from '@hazae41/echalote';
+} from '../echalote';
 import { Ed25519Wasm } from '@hazae41/ed25519.wasm';
 import { Ed25519 } from '@hazae41/ed25519';
 import { fetch } from '@hazae41/fleche';
