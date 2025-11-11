@@ -23,6 +23,7 @@ import { X25519Wasm } from '@hazae41/x25519.wasm';
 import { X25519 } from '@hazae41/x25519';
 
 import { WebSocketDuplex } from './WebSocketDuplex';
+import { initWasm } from './initWasm';
 
 /**
  * Configuration options for the TorClient.
@@ -310,7 +311,7 @@ export class TorClient {
       // Start creating the new circuit in the background while keeping the old one
       // The old circuit will continue to serve requests until the deadline
       this.circuitPromise = (async () => {
-        await this.init();
+        await initWasm();
         const tor = await this.createTorConnection();
         const circuit = await this.createCircuit(tor);
 
@@ -450,31 +451,6 @@ export class TorClient {
     this.log(`${prefix}: ${errorMessage}`, 'error');
   }
 
-  private async init(): Promise<void> {
-    if (TorClient.initialized) return;
-
-    this.log('Initializing WASM modules');
-
-    await Promise.all([
-      Sha1Wasm.initBundled(),
-      Sha3Wasm.initBundled(),
-      RipemdWasm.initBundled(),
-      ChaCha20Poly1305Wasm.initBundled(),
-      Ed25519Wasm.initBundled(),
-      X25519Wasm.initBundled(),
-    ]);
-    
-    Sha1.set(Sha1.fromWasm(Sha1Wasm));
-    Keccak256.set(Keccak256.fromWasm(Sha3Wasm));
-    Ripemd160.set(Ripemd160.fromWasm(RipemdWasm));
-    ChaCha20Poly1305.set(ChaCha20Poly1305.fromWasm(ChaCha20Poly1305Wasm));
-    Ed25519.set(Ed25519.fromWasm(Ed25519Wasm));
-    X25519.set(X25519.fromWasm(X25519Wasm));
-
-    TorClient.initialized = true;
-    this.log('WASM modules initialized successfully', 'success');
-  }
-
   private async createTorConnection(): Promise<TorClientDuplex> {
     this.log(`Connecting to Snowflake bridge at ${this.snowflakeUrl}`);
 
@@ -603,7 +579,7 @@ export class TorClient {
 
     // Create new circuit
     this.circuitPromise = (async () => {
-      await this.init();
+      await initWasm();
       const tor = await this.createTorConnection();
       const circuit = await this.createCircuit(tor);
 
