@@ -247,30 +247,32 @@ function formatError(error: unknown): string {
 }
 
 function getErrorDetails(error: unknown): string {
-  if (error instanceof Error) {
-    return `Error: ${error.name}: ${error.message}\nStack: ${error.stack}`;
+  if (!(error instanceof Error)) {
+    return JSON.stringify(error);
   }
 
-  if (error && typeof error === 'object') {
-    const obj = error as Record<string, unknown>;
-    const details: string[] = [];
+  let msg: string;
 
-    // Collect relevant properties
-    if ('type' in obj) details.push(`type: ${obj.type}`);
-    if ('message' in obj) details.push(`message: ${obj.message}`);
-    if ('code' in obj) details.push(`code: ${obj.code}`);
-    if ('reason' in obj) details.push(`reason: ${obj.reason}`);
-    if ('target' in obj && obj.target) {
-      const target = obj.target as Record<string, unknown>;
-      details.push(`target: ${target.constructor?.name || 'unknown'}`);
+  if (error.stack) {
+    const includesName = error.stack.includes(error.name);
+    const includesMsg = error.stack.includes(error.message);
+
+    if (includesName && includesMsg) {
+      msg = error.stack;
+    } else if (includesMsg) {
+      msg = `${error.name}: ${error.stack}`
+    } else {
+      msg = `${error.name}: ${error.message}\nStack: ${error.stack}`;
     }
-
-    return details.length > 0
-      ? details.join(', ')
-      : 'No additional details available';
+  } else {
+    msg = `${error.name}: ${error.message}`;
   }
 
-  return String(error);
+  if (error.cause) {
+    msg += `\nCause: ${getErrorDetails(error.cause)}`;
+  }
+
+  return msg;
 }
 
 async function main() {
