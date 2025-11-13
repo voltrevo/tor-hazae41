@@ -2,25 +2,13 @@ import '@hazae41/symbol-dispose-polyfill';
 import './bufferPolyfill';
 
 import { Ciphers, TlsClientDuplex } from '@hazae41/cadenas';
-import { ChaCha20Poly1305Wasm } from '@hazae41/chacha20poly1305.wasm';
-import { ChaCha20Poly1305 } from '@hazae41/chacha20poly1305';
 import {
   Circuit,
   Echalote,
   TorClientDuplex,
   createSnowflakeStream,
 } from '../echalote';
-import { Ed25519Wasm } from '@hazae41/ed25519.wasm';
-import { Ed25519 } from '@hazae41/ed25519';
 import { fetch } from '../fleche';
-import { Sha3Wasm } from '@hazae41/sha3.wasm';
-import { Keccak256 } from '@hazae41/keccak256';
-import { RipemdWasm } from '@hazae41/ripemd.wasm';
-import { Ripemd160 } from '@hazae41/ripemd160';
-import { Sha1Wasm } from '@hazae41/sha1.wasm';
-import { Sha1 } from '@hazae41/sha1';
-import { X25519Wasm } from '@hazae41/x25519.wasm';
-import { X25519 } from '@hazae41/x25519';
 
 import { WebSocketDuplex } from './WebSocketDuplex';
 import { initWasm } from './initWasm';
