@@ -26,7 +26,31 @@ export class HiddenServicesDir {
   }
 
   periodNum(): number {
-    throw new Error('todo');
+    // see torspec/attic/text_formats/rend-spec-v3.txt section [TIME-PERIODS]
+    // Time periods start at the Unix epoch (Jan 1, 1970), and are computed by
+    // taking the number of minutes since the epoch and dividing by the time
+    // period. However, we want our time periods to start at a regular offset
+    // from the SRV voting schedule, so we subtract a "rotation time offset"
+    // of 12 voting periods from the number of minutes since the epoch, before
+    // dividing by the time period (effectively making "our" epoch start at Jan
+    // 1, 1970 12:00UTC when the voting period is 1 hour.)
+
+    const validAfter = this.consensus.validAfter;
+    const secondsSinceEpoch = Math.floor(validAfter.getTime() / 1000);
+    const minutesSinceEpoch = Math.floor(secondsSinceEpoch / 60);
+
+    // Calculate voting period in minutes from consensus timestamps
+    // In production, this is typically 60 minutes (1 hour)
+    const freshUntil = this.consensus.freshUntil;
+    const votingPeriodMinutes = Math.floor(
+      (freshUntil.getTime() - validAfter.getTime()) / (1000 * 60)
+    );
+
+    const rotationTimeOffset = 12 * votingPeriodMinutes; // 12 voting periods
+    const adjustedMinutes = minutesSinceEpoch - rotationTimeOffset;
+    const periodLength = this.periodLength();
+
+    return Math.floor(adjustedMinutes / periodLength);
   }
 
   sharedRandomValue(): Uint8Array {
