@@ -1,5 +1,5 @@
 import { hash } from './hash.js';
-import { ed25519 } from '@noble/curves/ed25519';
+import { ed25519 } from '@noble/curves/ed25519.js';
 
 const basePointStr = [
   '(15112221349535400772501151409588531511454012693041857206046113283949847762202,',
@@ -33,10 +33,15 @@ export function getBlindedPubkey(
   const point = ed25519.Point.fromBytes(pubkey);
 
   // Convert h (Uint8Array) to BigInt in little-endian format
-  let scalar = 0n;
+  let scalarRaw = 0n;
   for (let i = 0; i < h.length; i++) {
-    scalar += BigInt(h[i]) << BigInt(8 * i);
+    scalarRaw += BigInt(h[i]) << BigInt(8 * i);
   }
+
+  // The clamping operation prepares h for Ed25519's private key format,
+  // but the resulting 256-bit value must be reduced modulo the curve order n
+  // (which is ~2^252) to get a valid scalar for point multiplication.
+  const scalar = ed25519.Point.Fn.create(scalarRaw);
 
   const blindedPoint = point.multiply(scalar);
 
