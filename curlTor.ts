@@ -260,7 +260,7 @@ function getErrorDetails(error: unknown): string {
     if (includesName && includesMsg) {
       msg = error.stack;
     } else if (includesMsg) {
-      msg = `${error.name}: ${error.stack}`
+      msg = `${error.name}: ${error.stack}`;
     } else {
       msg = `${error.name}: ${error.message}\nStack: ${error.stack}`;
     }
@@ -365,13 +365,17 @@ async function main() {
 
     // Enable TorClient logging in verbose mode
     if (opts.verbose && !opts.silent) {
+      const startTime = Date.now();
+      const relTimestamp = () =>
+        ((Date.now() - startTime) / 1000).toFixed(1).padStart(5, '0');
+
       fetchOptions.onLog = (
         message: string,
         type?: 'info' | 'success' | 'error'
       ) => {
         const prefix =
           type === 'error' ? '! ' : type === 'success' ? '✓ ' : '> ';
-        stderr.write(`${prefix}${message}\n`);
+        stderr.write(`${relTimestamp()} | ${prefix}${message}\n`);
       };
     }
 
