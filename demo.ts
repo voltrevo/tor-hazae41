@@ -1,6 +1,6 @@
 // Import the TorClient abstraction
 import { TorClient } from './src/TorClient';
-import { waitForWebSocket } from './src/WebSocketDuplex';
+import { waitForWebSocket } from './src/TorClient/WebSocketDuplex.js';
 
 declare global {
   interface Window {
