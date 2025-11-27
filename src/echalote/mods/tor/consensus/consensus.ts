@@ -7,6 +7,7 @@ import { RsaWasm } from '@hazae41/rsa.wasm';
 import { OIDs, X509 } from '@hazae41/x509';
 import { Mutable } from '../../../libs/typescript/typescript';
 import { Circuit } from '../circuit.js';
+import { mkdir, writeFile } from 'fs/promises';
 
 export interface Consensus {
   readonly type: string;
@@ -80,7 +81,13 @@ export namespace Consensus {
       `http://localhost/tor/status-vote/current/consensus-microdesc.z`,
       { stream: stream.outer, signal }
     );
-    const consensus = Consensus.parseOrThrow(await response.text());
+    const consensusTxt = await response.text();
+    await mkdir('ignore/consensus', { recursive: true });
+    await writeFile(
+      `ignore/consensus/${new Date().toISOString().replace(/[:.-]/g, '_')}`,
+      consensusTxt
+    );
+    const consensus = Consensus.parseOrThrow(consensusTxt);
 
     if ((await Consensus.verifyOrThrow(circuit, consensus, signal)) !== true)
       throw new Error(`Could not verify`);
@@ -786,14 +793,14 @@ export namespace Consensus {
       readonly idEd25519: string;
     }
 
-    export async function fetchOrThrow(
+    export async function fetchBodyOrThrow(
       circuit: Circuit,
-      ref: Head,
+      microdescHash: string,
       signal = new AbortController().signal
     ) {
       const stream = await circuit.openDirOrThrow({}, signal);
       const response = await fetch(
-        `http://localhost/tor/micro/d/${ref.microdesc}.z`,
+        `http://localhost/tor/micro/d/${microdescHash}.z`,
         { stream: stream.outer, signal }
       );
 
@@ -803,18 +810,33 @@ export namespace Consensus {
         );
 
       const buffer = await response.arrayBuffer();
+      await mkdir('ignore/microdescs', { recursive: true });
+      await writeFile(
+        `ignore/microdescs/${Buffer.from(microdescHash, 'base64').toString('base64url')}`,
+        new Uint8Array(buffer)
+      );
       const digest = new Uint8Array(
         await crypto.subtle.digest('SHA-256', buffer)
       );
 
       const digest64 = Base64.get().getOrThrow().encodeUnpaddedOrThrow(digest);
 
-      if (digest64 !== ref.microdesc) throw new Error(`Digest mismatch`);
+      if (digest64 !== microdescHash) throw new Error(`Digest mismatch`);
 
       const text = Bytes.toUtf8(new Uint8Array(buffer));
       const [data] = parseOrThrow(text);
 
       if (data == null) throw new Error(`Empty microdescriptor`);
+
+      return data;
+    }
+
+    export async function fetchOrThrow(
+      circuit: Circuit,
+      ref: Head,
+      signal = new AbortController().signal
+    ) {
+      const data = await fetchBodyOrThrow(circuit, ref.microdesc, signal);
 
       return { ...ref, ...data } as Microdesc;
     }
