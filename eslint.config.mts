@@ -6,6 +6,8 @@ import prettierConfig from 'eslint-config-prettier';
 import { defineConfig } from 'eslint/config';
 
 export default defineConfig([
+  js.configs.recommended,
+  ...tseslint.configs.recommended,
   {
     files: ['**/*.{js,mjs,cjs,ts,mts,cts}'],
     plugins: {
@@ -23,8 +25,17 @@ export default defineConfig([
 
       // Prettier integration
       'prettier/prettier': 'error',
+
+      // TypeScript rules
+      '@typescript-eslint/no-namespace': 'off',
+      '@typescript-eslint/no-unused-vars': [
+        'error',
+        {
+          argsIgnorePattern: '^_',
+          varsIgnorePattern: '^_',
+        },
+      ],
     },
   },
-  ...tseslint.configs.recommended,
   prettierConfig, // This must be last to override other formatting rules
 ]);
