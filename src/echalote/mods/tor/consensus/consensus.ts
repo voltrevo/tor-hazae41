@@ -842,13 +842,96 @@ export namespace Consensus {
       return { ...ref, ...data } as Microdesc;
     }
 
-    export function parseOrThrow(text: string) {
+    export async function fetchManyOrThrow(
+      circuit: Circuit,
+      refs: Head[],
+      signal = new AbortController().signal
+    ): Promise<Microdesc[]> {
+      if (refs.length === 0) return [];
+
+      // Tor directory servers typically limit batch requests to ~92 microdescriptors
+      // We'll use a conservative limit of 80 to stay well within bounds
+      const BATCH_SIZE = 80;
+      const batches: Head[][] = [];
+
+      for (let i = 0; i < refs.length; i += BATCH_SIZE) {
+        // TODO: integration test with multiple batches
+        batches.push(refs.slice(i, i + BATCH_SIZE));
+      }
+
+      const hashToBodyMap = new Map<string, { body: Body; rawText: string }>();
+
+      for (const batch of batches) {
+        const hashes = batch.map(ref => ref.microdesc);
+        const stream = await circuit.openDirOrThrow({}, signal);
+        const hashesPath = hashes.join('-');
+        const response = await fetch(
+          `http://localhost/tor/micro/d/${hashesPath}.z`,
+          { stream: stream.outer, signal }
+        );
+
+        if (!response.ok)
+          throw new Error(
+            `Could not fetch batch ${response.status} ${response.statusText}: ${await response.text()}`
+          );
+
+        const buffer = await response.arrayBuffer();
+        const text = Bytes.toUtf8(new Uint8Array(buffer));
+        const bodiesWithText = parseWithRawTextOrThrow(text);
+
+        if (bodiesWithText.length !== batch.length) {
+          throw new Error(
+            `Expected ${batch.length} microdescriptors but got ${bodiesWithText.length}`
+          );
+        }
+
+        for (let idx = 0; idx < bodiesWithText.length; idx++) {
+          const { body, rawText } = bodiesWithText[idx];
+          // Convert text to bytes for hash calculation
+          const encoder = new TextEncoder();
+          const rawBytes = encoder.encode(rawText);
+          const digest = new Uint8Array(
+            await crypto.subtle.digest('SHA-256', rawBytes)
+          );
+          const calculatedHash = Base64.get()
+            .getOrThrow()
+            .encodeUnpaddedOrThrow(digest);
+
+          // Store in map using calculated hash
+          hashToBodyMap.set(calculatedHash, { body, rawText });
+        }
+      }
+
+      // Combine heads with bodies using hash matching instead of position
+      const result: Microdesc[] = [];
+      const missingHashes: string[] = [];
+
+      for (const ref of refs) {
+        const entry = hashToBodyMap.get(ref.microdesc);
+        if (!entry) {
+          missingHashes.push(ref.microdesc);
+          continue;
+        }
+        result.push({ ...ref, ...entry.body } as Microdesc);
+      }
+
+      if (missingHashes.length > 0) {
+        throw new Error(
+          `${missingHashes.length} requested microdesc(s) not found in response: ${missingHashes.slice(0, 3).join(', ')}${missingHashes.length > 3 ? '...' : ''}`
+        );
+      }
+
+      return result;
+    }
+
+    export function parseWithRawTextOrThrow(text: string) {
       const lines = text.split('\n');
 
-      const items: Body[] = [];
+      const items: Array<{ body: Body; rawText: string }> = [];
 
       for (const i = { x: 0 }; i.x < lines.length; i.x++) {
         if (lines[i.x] === 'onion-key') {
+          const startLine = i.x;
           i.x++;
 
           const item: Partial<Mutable<Body>> = {};
@@ -880,7 +963,17 @@ export namespace Consensus {
             throw new Error('Missing ntor-onion-key');
           if (item.idEd25519 == null) throw new Error('Missing id ed25519');
 
-          items.push(item as Body);
+          // Extract the raw text for this microdesc (for hash verification)
+          const endLine = i.x + 1;
+          const itemLines = lines.slice(startLine, endLine);
+
+          while (itemLines.slice(-1)[0]?.trim() === '') {
+            itemLines.pop(); // trim trailing newlines
+          }
+
+          const rawText = itemLines.join('\n') + '\n';
+
+          items.push({ body: item as Body, rawText });
           continue;
         }
 
@@ -888,6 +981,10 @@ export namespace Consensus {
       }
 
       return items;
+    }
+
+    export function parseOrThrow(text: string) {
+      return parseWithRawTextOrThrow(text).map(item => item.body);
     }
   }
 }
