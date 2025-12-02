@@ -248,7 +248,17 @@ function formatError(error: unknown): string {
 
 function getErrorDetails(error: unknown): string {
   if (!(error instanceof Error)) {
-    return JSON.stringify(error);
+    let className = '';
+    try {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      className = (error as any).constructor.name;
+    } catch {
+      //
+    }
+
+    const prefix = className ? `${className} ` : '';
+
+    return `${prefix}${JSON.stringify(error)}`;
   }
 
   let msg: string;
