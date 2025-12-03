@@ -15,6 +15,27 @@ export default defineConfig([
     external: ['*'],
   },
   {
+    entry: [
+      'src/storage/index.ts',
+      'src/storage/index-browser.ts',
+      'src/storage/index-node.ts',
+    ],
+    format: ['esm', 'cjs'],
+    dts: true,
+    sourcemap: true,
+    minify: false,
+    splitting: false,
+    outDir: 'dist/storage',
+    outExtension({ format }) {
+      return {
+        js: format === 'esm' ? '.mjs' : '.js',
+      };
+    },
+    target: 'es2022',
+    treeshake: false,
+    external: ['node:fs/promises', 'node:path'],
+  },
+  {
     entry: ['curlTor.ts'],
     format: ['cjs'],
     dts: false,
