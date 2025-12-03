@@ -1,4 +1,4 @@
-import { Echalote } from '../../../index.js';
+import { parseDiffOrThrow, applyDiffOrThrow } from './diff.js';
 
 /**
  * Simple test for consensus diff parsing and application.
@@ -43,7 +43,7 @@ valid-after 2025-12-01 01:00:00
 .`;
 
   console.log('Test 1: Parsing diff format');
-  const diff = Echalote.Consensus.parseDiffOrThrow(testDiff);
+  const diff = parseDiffOrThrow(testDiff);
 
   console.log(`  Version: ${diff.version}`);
   console.log(`  From hash: ${diff.fromHash}`);
@@ -58,7 +58,7 @@ valid-after 2025-12-01 01:00:00
   console.log('  ✓ Diff parsed correctly\n');
 
   console.log('Test 2: Applying diff');
-  const result = Echalote.Consensus.applyDiffOrThrow(baseConsensus, diff);
+  const result = applyDiffOrThrow(baseConsensus, diff);
 
   console.log('  Result:');
   console.log(
@@ -107,9 +107,9 @@ valid-after 2025-12-01 01:00:00
 hash test1 test2
 3,4d`;
 
-  const deleteResult = Echalote.Consensus.applyDiffOrThrow(
+  const deleteResult = applyDiffOrThrow(
     baseConsensus,
-    Echalote.Consensus.parseDiffOrThrow(deleteDiff)
+    parseDiffOrThrow(deleteDiff)
   );
 
   const deleteLines = deleteResult.split('\n');
@@ -130,9 +130,9 @@ new-field added-value
 another-field another-value
 .`;
 
-  const appendResult = Echalote.Consensus.applyDiffOrThrow(
+  const appendResult = applyDiffOrThrow(
     baseConsensus,
-    Echalote.Consensus.parseDiffOrThrow(appendDiff)
+    parseDiffOrThrow(appendDiff)
   );
 
   const appendLines = appendResult.split('\n');
