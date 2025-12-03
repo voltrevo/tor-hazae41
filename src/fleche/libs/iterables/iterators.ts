@@ -1,16 +1,19 @@
 export namespace Iterators {
-  export type Peeked<T, TReturn = any> = {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  type ExplicitAny = any;
+
+  export type Peeked<T, TReturn = ExplicitAny> = {
     current: T;
     next: IteratorResult<T, TReturn>;
   };
 
-  export type Peeker<T, TReturn = any, TNext = undefined> = Generator<
+  export type Peeker<T, TReturn = ExplicitAny, TNext = undefined> = Generator<
     Peeked<T, TReturn>,
     TReturn,
     TNext
   >;
 
-  export function* peek<T, TReturn = any, TNext = undefined>(
+  export function* peek<T, TReturn = ExplicitAny, TNext = undefined>(
     iterator: Iterator<T, TReturn, TNext>
   ): Peeker<T, TReturn, TNext> {
     let next = iterator.next();

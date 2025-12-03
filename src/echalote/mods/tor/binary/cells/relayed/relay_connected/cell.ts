@@ -5,7 +5,7 @@ import { Unimplemented } from '../../../../errors';
 
 export class UnknownAddressType extends Error {
   readonly #class = UnknownAddressType;
-  readonly name = this.#class.name;
+  readonly name = this.constructor.name;
 
   constructor(readonly type: number) {
     super(`Unknown address type ${type}`);
@@ -40,7 +40,7 @@ export class RelayConnectedCell {
     throw new Unimplemented();
   }
 
-  writeOrThrow(cursor: Cursor): never {
+  writeOrThrow(_cursor: Cursor): never {
     throw new Unimplemented();
   }
 

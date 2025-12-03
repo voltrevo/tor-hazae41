@@ -41,7 +41,6 @@ export interface Consensus {
   readonly signatures: Consensus.Signature[];
 }
 
-// eslint-disable-next-line no-redeclare
 export namespace Consensus {
   export interface SharedRandom {
     readonly reveals: number;

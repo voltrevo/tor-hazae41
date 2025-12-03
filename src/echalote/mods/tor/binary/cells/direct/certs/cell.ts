@@ -32,7 +32,7 @@ export class CertsCell {
     throw new Unimplemented();
   }
 
-  writeOrThrow(cursor: Cursor): never {
+  writeOrThrow(_cursor: Cursor): never {
     throw new Unimplemented();
   }
 

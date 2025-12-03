@@ -240,7 +240,7 @@ export class SecretTorClientDuplex {
   }
 
   async #onInputWrite(chunk: Opaque) {
-    // Console.debug(this.#class.name, "<-", chunk)
+    // Console.debug(this.constructor.name, "<-", chunk)
 
     if (this.#buffer.inner.offset) await this.#onReadBuffered(chunk.bytes);
     else await this.#onReadDirect(chunk.bytes);
@@ -275,7 +275,7 @@ export class SecretTorClientDuplex {
           this.#state.type === 'none'
             ? Readable.readOrRollbackAndThrow(OldCell.Raw, cursor)
             : Readable.readOrRollbackAndThrow(Cell.Raw, cursor);
-      } catch (e: unknown) {
+      } catch {
         this.#buffer.writeOrThrow(cursor.after);
         break;
       }
@@ -382,7 +382,7 @@ export class SecretTorClientDuplex {
     this.#state = { ...state, type: 'handshaking', guard };
   }
 
-  async #onAuthChallengeCell(cell: Cell<Opaque>, state: TorHandshakingState) {
+  async #onAuthChallengeCell(cell: Cell<Opaque>, _state: TorHandshakingState) {
     Console.debug(Cell.Circuitless.intoOrThrow(cell, AuthChallengeCell));
   }
 

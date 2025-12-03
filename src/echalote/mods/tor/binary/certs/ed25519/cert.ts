@@ -10,7 +10,7 @@ export interface Extensions {
 
 export class UnknownCertExtensionError extends Error {
   readonly #class = UnknownCertExtensionError;
-  readonly name = this.#class.name;
+  readonly name = this.constructor.name;
 
   constructor(readonly type: number) {
     super(`Unknown certificate extension ${type}`);
@@ -63,7 +63,7 @@ export class Ed25519Cert {
 
   static readOrThrow(cursor: Cursor) {
     const type = cursor.readUint8OrThrow();
-    const length = cursor.readUint16OrThrow(); // TODO check length
+    const _length = cursor.readUint16OrThrow(); // TODO check length
 
     const start = cursor.offset;
 

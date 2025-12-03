@@ -4,7 +4,7 @@ import { HASH_LEN, KEY_LEN } from '../constants';
 
 export class InvalidKdfKeyHashError extends Error {
   readonly #class = InvalidKdfKeyHashError;
-  readonly name = this.#class.name;
+  readonly name = this.constructor.name;
 
   constructor() {
     super(`Invalid KDF key hash`);

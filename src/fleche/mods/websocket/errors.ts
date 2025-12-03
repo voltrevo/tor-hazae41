@@ -30,7 +30,7 @@ export class UnexpectedContinuationFrameError extends Error {
 
 export class ExpectedContinuationFrameError extends Error {
   readonly #class = ExpectedContinuationFrameError;
-  readonly name = this.#class.name;
+  readonly name = this.constructor.name;
 
   constructor() {
     super(`Expected a continuation frame`);

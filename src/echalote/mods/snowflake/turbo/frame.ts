@@ -8,7 +8,7 @@ export type TurboFrameError =
 
 export class FragmentOverflowError extends Error {
   readonly #class = FragmentOverflowError;
-  readonly name = this.#class.name;
+  readonly name = this.constructor.name;
 
   constructor() {
     super(`Fragment size is greater than or equals to 2**20`);
@@ -17,7 +17,7 @@ export class FragmentOverflowError extends Error {
 
 export class UnexpectedContinuationError extends Error {
   readonly #class = UnexpectedContinuationError;
-  readonly name = this.#class.name;
+  readonly name = this.constructor.name;
 
   constructor() {
     super(`Unexpected continuation bit on third byte`);

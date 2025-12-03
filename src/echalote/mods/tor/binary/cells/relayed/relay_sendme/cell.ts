@@ -84,11 +84,11 @@ export class RelaySendmeStreamCell {
     return 0;
   }
 
-  writeOrThrow(cursor: Cursor) {
+  writeOrThrow(_cursor: Cursor) {
     return;
   }
 
-  static readOrThrow(cursor: Cursor) {
+  static readOrThrow(_cursor: Cursor) {
     return new RelaySendmeStreamCell();
   }
 }

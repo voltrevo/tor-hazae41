@@ -4,7 +4,7 @@ import { HASH_LEN, KEY_LEN } from '../../constants';
 
 export class InvalidNtorAuthError extends Error {
   readonly #class = InvalidNtorAuthError;
-  readonly name = this.#class.name;
+  readonly name = this.constructor.name;
 
   constructor() {
     super(`Invalid Ntor auth`);

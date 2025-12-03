@@ -52,7 +52,7 @@ export class TorStreamDuplex {
 
 export class RelayEndedError extends Error {
   readonly #class = RelayEndedError;
-  readonly name = this.#class.name;
+  readonly name = this.constructor.name;
 
   constructor(readonly reason: RelayEndReason) {
     super(`Relay ended`, { cause: reason });
@@ -192,7 +192,7 @@ export class SecretTorStreamDuplex {
   }
 
   async #onCircuitClose() {
-    Console.debug(`${this.#class.name}.onCircuitClose`);
+    Console.debug(`${this.constructor.name}.onCircuitClose`);
 
     if (this.duplex.closing) return;
 
@@ -200,7 +200,7 @@ export class SecretTorStreamDuplex {
   }
 
   async #onCircuitError(reason?: unknown) {
-    Console.debug(`${this.#class.name}.onCircuitError`, { reason });
+    Console.debug(`${this.constructor.name}.onCircuitError`, { reason });
 
     if (this.duplex.closing) return;
 
@@ -218,7 +218,7 @@ export class SecretTorStreamDuplex {
     if (this.type === 'external') {
       const cell2 = RelayCell.Streamful.intoOrThrow(cell, RelayConnectedCell);
 
-      Console.debug(`${this.#class.name}.onRelayConnectedCell`, cell2);
+      Console.debug(`${this.constructor.name}.onRelayConnectedCell`, cell2);
 
       await this.events.emit('connected');
       return;
@@ -228,7 +228,7 @@ export class SecretTorStreamDuplex {
   async #onRelayDataCell(cell: RelayCell.Streamful<RelayDataCell<Opaque>>) {
     if (cell.stream !== this) return;
 
-    Console.debug(`${this.#class.name}.onRelayDataCell`, cell);
+    Console.debug(`${this.constructor.name}.onRelayDataCell`, cell);
 
     this.delivery--;
 
@@ -246,7 +246,7 @@ export class SecretTorStreamDuplex {
   async #onRelayEndCell(cell: RelayCell.Streamful<RelayEndCell>) {
     if (cell.stream !== this) return;
 
-    Console.debug(`${this.#class.name}.onRelayEndCell`, cell);
+    Console.debug(`${this.constructor.name}.onRelayEndCell`, cell);
 
     if (this.duplex.closing) return;
 

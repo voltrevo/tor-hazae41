@@ -52,10 +52,11 @@ export class WebSocketClientDuplex extends EventTarget implements WebSocket {
 
   binaryType: BinaryType = 'blob';
 
-  onclose: ((this: WebSocket, ev: CloseEvent) => any) | null = null;
-  onerror: ((this: WebSocket, ev: Event) => any) | null = null;
-  onmessage: ((this: WebSocket, ev: MessageEvent<any>) => any) | null = null;
-  onopen: ((this: WebSocket, ev: Event) => any) | null = null;
+  onclose: ((this: WebSocket, ev: CloseEvent) => void) | null = null;
+  onerror: ((this: WebSocket, ev: Event) => void) | null = null;
+  onmessage: ((this: WebSocket, ev: MessageEvent<unknown>) => void) | null =
+    null;
+  onopen: ((this: WebSocket, ev: Event) => void) | null = null;
 
   readonly url: string;
   readonly extensions = '';
@@ -66,7 +67,7 @@ export class WebSocketClientDuplex extends EventTarget implements WebSocket {
 
   #resolveOnPong = new Future<void>();
 
-  constructor(url: string | URL, protocols?: string | string[]) {
+  constructor(url: string | URL, _protocols?: string | string[]) {
     super();
 
     this.addEventListener('close', e => this.onclose?.(e));
@@ -142,7 +143,7 @@ export class WebSocketClientDuplex extends EventTarget implements WebSocket {
 
   addEventListener<K extends keyof WebSocketEventMap>(
     type: K,
-    listener: (this: WebSocket, ev: WebSocketEventMap[K]) => any,
+    listener: (this: WebSocket, ev: WebSocketEventMap[K]) => void,
     options?: boolean | AddEventListenerOptions
   ): void;
 
@@ -162,7 +163,7 @@ export class WebSocketClientDuplex extends EventTarget implements WebSocket {
 
   removeEventListener<K extends keyof WebSocketEventMap>(
     type: K,
-    listener: (this: WebSocket, ev: WebSocketEventMap[K]) => any,
+    listener: (this: WebSocket, ev: WebSocketEventMap[K]) => void,
     options?: boolean | EventListenerOptions
   ): void;
 
@@ -323,7 +324,7 @@ export class WebSocketClientDuplex extends EventTarget implements WebSocket {
 
       try {
         await this.#pingOrThrow();
-      } catch (e) {
+      } catch {
         if (this.readyState === this.OPEN) this.close();
         return;
       }
@@ -364,7 +365,7 @@ export class WebSocketClientDuplex extends EventTarget implements WebSocket {
   }
 
   async #onInputWrite(chunk: Uint8Array) {
-    // Console.debug(this.#class.name, "<-", chunk.length)
+    // Console.debug(this.constructor.name, "<-", chunk.length)
 
     using bytesMemory = new BitwiseWasm.Memory(chunk);
     using bitsMemory = bitwise_unpack(bytesMemory);
@@ -391,7 +392,7 @@ export class WebSocketClientDuplex extends EventTarget implements WebSocket {
 
       try {
         frame = Readable.readOrRollbackAndThrow(WebSocketFrame, cursor);
-      } catch (e: unknown) {
+      } catch {
         this.#buffer.writeOrThrow(cursor.after);
         break;
       }
@@ -435,7 +436,7 @@ export class WebSocketClientDuplex extends EventTarget implements WebSocket {
     await this.#writeOrThrow(pong);
   }
 
-  async #onPongFrame(frame: WebSocketFrame) {
+  async #onPongFrame(_frame: WebSocketFrame) {
     this.#resolveOnPong.resolve();
   }
 
@@ -542,7 +543,7 @@ export class WebSocketClientDuplex extends EventTarget implements WebSocket {
       mask,
     });
 
-    // Console.debug(this.#class.name, "->", current.length)
+    // Console.debug(this.constructor.name, "->", current.length)
 
     await this.#writeOrThrow(frame);
 
@@ -562,7 +563,7 @@ export class WebSocketClientDuplex extends EventTarget implements WebSocket {
         mask,
       });
 
-      // Console.debug(this.#class.name, "-> (continuation)", current.length)
+      // Console.debug(this.constructor.name, "-> (continuation)", current.length)
       await this.#writeOrThrow(frame);
     }
   }

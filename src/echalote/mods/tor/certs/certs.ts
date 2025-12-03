@@ -22,7 +22,7 @@ export type CertError =
 
 export class DuplicatedCertError extends Error {
   readonly #class = DuplicatedCertError;
-  readonly name = this.#class.name;
+  readonly name = this.constructor.name;
 
   constructor() {
     super(`Duplicated certificate`);
@@ -31,7 +31,7 @@ export class DuplicatedCertError extends Error {
 
 export class UnknownCertError extends Error {
   readonly #class = UnknownCertError;
-  readonly name = this.#class.name;
+  readonly name = this.constructor.name;
 
   constructor() {
     super(`Unknown certificate`);
@@ -40,7 +40,7 @@ export class UnknownCertError extends Error {
 
 export class ExpectedCertError extends Error {
   readonly #class = ExpectedCertError;
-  readonly name = this.#class.name;
+  readonly name = this.constructor.name;
 
   constructor() {
     super(`Expected a certificate`);
@@ -49,7 +49,7 @@ export class ExpectedCertError extends Error {
 
 export class ExpiredCertError extends Error {
   readonly #class = ExpiredCertError;
-  readonly name = this.#class.name;
+  readonly name = this.constructor.name;
 
   constructor() {
     super(`Expired certificate`);
@@ -58,7 +58,7 @@ export class ExpiredCertError extends Error {
 
 export class PrematureCertError extends Error {
   readonly #class = PrematureCertError;
-  readonly name = this.#class.name;
+  readonly name = this.constructor.name;
 
   constructor() {
     super(`Premature certificate`);
@@ -67,7 +67,7 @@ export class PrematureCertError extends Error {
 
 export class InvalidSignatureError extends Error {
   readonly #class = InvalidSignatureError;
-  readonly name = this.#class.name;
+  readonly name = this.constructor.name;
 
   constructor() {
     super(`Invalid certificate signature`);
@@ -76,7 +76,7 @@ export class InvalidSignatureError extends Error {
 
 export class InvalidCertError extends Error {
   readonly #class = InvalidCertError;
-  readonly name = this.#class.name;
+  readonly name = this.constructor.name;
 
   constructor() {
     super(`Invalid certificate`);

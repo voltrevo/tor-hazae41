@@ -69,7 +69,9 @@ async function testFsStorage() {
   // Clean up
   try {
     rmSync(testDir, { recursive: true });
-  } catch {}
+  } catch {
+    //
+  }
 
   const storage = createFsStorage(testDir);
 
@@ -123,7 +125,9 @@ async function testAutoStorage() {
   // Clean up
   try {
     rmSync(testDir, { recursive: true });
-  } catch {}
+  } catch {
+    //
+  }
 
   const storage = createAutoStorage('test-auto-storage');
 
@@ -149,7 +153,9 @@ async function testKeyMangling() {
   // Clean up
   try {
     rmSync(testDir, { recursive: true });
-  } catch {}
+  } catch {
+    //
+  }
 
   const storage = createFsStorage(testDir);
 

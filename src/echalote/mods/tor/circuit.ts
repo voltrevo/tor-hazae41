@@ -62,7 +62,7 @@ export interface CircuitOpenParams {
 
 export class UnknownProtocolError extends Error {
   readonly #class = UnknownProtocolError;
-  readonly name = this.#class.name;
+  readonly name = this.constructor.name;
 
   constructor(readonly protocol: string) {
     super(`Unknown protocol "${protocol}"`);
@@ -71,7 +71,7 @@ export class UnknownProtocolError extends Error {
 
 export class DestroyedError extends Error {
   readonly #class = DestroyedError;
-  readonly name = this.#class.name;
+  readonly name = this.constructor.name;
 
   constructor(readonly reason: number) {
     super(`Circuit destroyed`, { cause: reason });
@@ -80,7 +80,7 @@ export class DestroyedError extends Error {
 
 export class ExtendError extends Error {
   readonly #class = ExtendError;
-  readonly name = this.#class.name;
+  readonly name = this.constructor.name;
 
   constructor(options: ErrorOptions) {
     super(`Could not extend`, options);
@@ -93,7 +93,7 @@ export class ExtendError extends Error {
 
 export class OpenError extends Error {
   readonly #class = OpenError;
-  readonly name = this.#class.name;
+  readonly name = this.constructor.name;
 
   constructor(options: ErrorOptions) {
     super(`Could not open`, options);
@@ -106,7 +106,7 @@ export class OpenError extends Error {
 
 export class TruncateError extends Error {
   readonly #class = TruncateError;
-  readonly name = this.#class.name;
+  readonly name = this.constructor.name;
 
   constructor(options: ErrorOptions) {
     super(`Could not truncate`, options);
@@ -304,7 +304,7 @@ export class SecretCircuit {
   }
 
   async #onTorClose() {
-    Console.debug(`${this.#class.name}.onTorClose`);
+    Console.debug(`${this.constructor.name}.onTorClose`);
 
     this.#onCloseOrError();
 
@@ -312,7 +312,7 @@ export class SecretCircuit {
   }
 
   async #onTorError(reason?: unknown) {
-    Console.debug(`${this.#class.name}.onReadError`, { reason });
+    Console.debug(`${this.constructor.name}.onReadError`, { reason });
 
     await this.events.emit('error', [reason]);
 
@@ -322,7 +322,7 @@ export class SecretCircuit {
   async #onDestroyCell(cell: Cell.Circuitful<DestroyCell>) {
     if (cell.circuit !== this) return;
 
-    Console.debug(`${this.#class.name}.onDestroyCell`, cell);
+    Console.debug(`${this.constructor.name}.onDestroyCell`, cell);
 
     const error = new DestroyedError(cell.fragment.reason);
 
@@ -338,7 +338,7 @@ export class SecretCircuit {
   ) {
     if (cell.circuit !== this) return;
 
-    Console.debug(`${this.#class.name}.onRelayExtended2Cell`, cell);
+    Console.debug(`${this.constructor.name}.onRelayExtended2Cell`, cell);
 
     await this.events.emit('RELAY_EXTENDED2', cell);
   }
@@ -346,7 +346,7 @@ export class SecretCircuit {
   async #onRelayTruncatedCell(cell: RelayCell.Streamless<RelayTruncatedCell>) {
     if (cell.circuit !== this) return;
 
-    Console.debug(`${this.#class.name}.onRelayTruncatedCell`, cell);
+    Console.debug(`${this.constructor.name}.onRelayTruncatedCell`, cell);
 
     const error = new DestroyedError(cell.fragment.reason);
 
@@ -362,7 +362,7 @@ export class SecretCircuit {
   async #onRelayConnectedCell(cell: RelayCell.Streamful<Opaque>) {
     if (cell.circuit !== this) return;
 
-    Console.debug(`${this.#class.name}.onRelayConnectedCell`, cell);
+    Console.debug(`${this.constructor.name}.onRelayConnectedCell`, cell);
 
     await this.events.emit('RELAY_CONNECTED', cell);
   }
@@ -370,7 +370,7 @@ export class SecretCircuit {
   async #onRelayDataCell(cell: RelayCell.Streamful<RelayDataCell<Opaque>>) {
     if (cell.circuit !== this) return;
 
-    Console.debug(`${this.#class.name}.onRelayDataCell`, cell);
+    Console.debug(`${this.constructor.name}.onRelayDataCell`, cell);
 
     await this.events.emit('RELAY_DATA', cell);
   }
@@ -378,7 +378,7 @@ export class SecretCircuit {
   async #onRelayEndCell(cell: RelayCell.Streamful<RelayEndCell>) {
     if (cell.circuit !== this) return;
 
-    Console.debug(`${this.#class.name}.onRelayEndCell`, cell);
+    Console.debug(`${this.constructor.name}.onRelayEndCell`, cell);
 
     this.streams.delete(cell.stream.id);
 

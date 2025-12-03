@@ -11,7 +11,7 @@ export class RelayEndReasonOther {
     return 0;
   }
 
-  writeOrThrow(cursor: Cursor) {
+  writeOrThrow(_cursor: Cursor) {
     return;
   }
 }

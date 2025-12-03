@@ -17,7 +17,7 @@ export class PaddingCell {
     throw new Unimplemented();
   }
 
-  writeOrThrow(cursor: Cursor): never {
+  writeOrThrow(_cursor: Cursor): never {
     throw new Unimplemented();
   }
 

@@ -1,9 +1,4 @@
-import {
-  Circuit,
-  Echalote,
-  TorClientDuplex,
-  createSnowflakeStream,
-} from '../echalote';
+import { Circuit, TorClientDuplex, createSnowflakeStream } from '../echalote';
 import { WebSocketDuplex } from './WebSocketDuplex';
 import { initWasm } from './initWasm';
 

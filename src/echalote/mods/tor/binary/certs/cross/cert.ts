@@ -30,13 +30,13 @@ export class CrossCert {
     throw new Unimplemented();
   }
 
-  writeOrThrow(cursor: Cursor): never {
+  writeOrThrow(_cursor: Cursor): never {
     throw new Unimplemented();
   }
 
   static readOrThrow(cursor: Cursor) {
     const type = cursor.readUint8OrThrow();
-    const length = cursor.readUint16OrThrow(); // TODO: check length
+    const length = cursor.readUint16OrThrow();
 
     const start = cursor.offset;
 
@@ -53,6 +53,15 @@ export class CrossCert {
 
     const sigLength = cursor.readUint8OrThrow();
     const signature = cursor.readAndCopyOrThrow(sigLength);
+
+    const end = cursor.offset;
+    const actualLength = end - start;
+
+    if (actualLength !== length) {
+      throw new Error(
+        `CrossCert length mismatch: expected ${length}, got ${actualLength}`
+      );
+    }
 
     return new CrossCert(type, key, expiration, payload, signature);
   }

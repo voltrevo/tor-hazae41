@@ -117,7 +117,7 @@ export class HttpClientDuplex {
 
   async #onInputWrite(chunk: Opaque) {
     Console.debug(
-      this.#class.name,
+      this.constructor.name,
       '<-',
       chunk.bytes.length,
       Bytes.toUtf8(chunk.bytes)
@@ -272,7 +272,7 @@ export class HttpClientDuplex {
     const rawBody = buffer.inner.before.subarray(split + Lines.rnrn.length);
 
     const [rawStatus, ...rawHeaders] = Bytes.toUtf8(rawHead).split('\r\n');
-    const [version, statusString, statusText] = rawStatus.split(' ');
+    const [_version, statusString, statusText] = rawStatus.split(' ');
 
     const status = Number(statusString);
     const headers = new Headers(
@@ -445,7 +445,7 @@ export class HttpClientDuplex {
     headers.forEach((v, k) => (head += `${k}: ${v}\r\n`));
     head += `\r\n`;
 
-    Console.debug(this.#class.name, '->', head.length, head);
+    Console.debug(this.constructor.name, '->', head.length, head);
     this.duplex.output.enqueue(new Opaque(Bytes.fromUtf8(head)));
 
     const buffer = new Resizer();
@@ -466,7 +466,7 @@ export class HttpClientDuplex {
   }
 
   async #onOutputWrite(chunk: Uint8Array) {
-    Console.debug(this.#class.name, '->', Bytes.toUtf8(chunk));
+    Console.debug(this.constructor.name, '->', Bytes.toUtf8(chunk));
 
     if (this.#state.type === 'upgrading' || this.#state.type === 'upgraded') {
       this.duplex.output.enqueue(new Opaque(chunk));
@@ -530,7 +530,7 @@ export class HttpClientDuplex {
     const length = text.length.toString(16);
     const line = `${length}\r\n${text}\r\n`;
 
-    // Console.debug(this.#class.name, "->", line.length, line)
+    // Console.debug(this.constructor.name, "->", line.length, line)
 
     const { client_compression } = state;
 

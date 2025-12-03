@@ -6,7 +6,7 @@ export type HttpError =
 
 export class InvalidHttpStateError extends Error {
   readonly #class = InvalidHttpStateError;
-  readonly name = this.#class.name;
+  readonly name = this.constructor.name;
 
   constructor() {
     super(`Invalid state`);
@@ -15,7 +15,7 @@ export class InvalidHttpStateError extends Error {
 
 export class UnsupportedContentEncoding extends Error {
   readonly #class = UnsupportedContentEncoding;
-  readonly name = this.#class.name;
+  readonly name = this.constructor.name;
 
   constructor(readonly type: string) {
     super(`Unsupported "Content-Encoding" header value "${type}"`);
@@ -24,7 +24,7 @@ export class UnsupportedContentEncoding extends Error {
 
 export class UnsupportedTransferEncoding extends Error {
   readonly #class = UnsupportedTransferEncoding;
-  readonly name = this.#class.name;
+  readonly name = this.constructor.name;
 
   constructor(readonly type: string) {
     super(`Unsupported "Transfer-Encoding" header value "${type}"`);
@@ -33,7 +33,7 @@ export class UnsupportedTransferEncoding extends Error {
 
 export class ContentLengthOverflowError extends Error {
   readonly #class = ContentLengthOverflowError;
-  readonly name = this.#class.name;
+  readonly name = this.constructor.name;
 
   constructor(
     readonly offset: number,

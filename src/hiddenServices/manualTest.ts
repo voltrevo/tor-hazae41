@@ -1,6 +1,4 @@
-import { assert } from '@hazae41/phobos';
 import { decodeOnionPubKey } from './decodeOnionPubkey';
-import { fetchConsensus } from '../TorClient/fetchConsensus';
 import { Echalote } from '../echalote';
 import { readFile } from 'fs/promises';
 import { HiddenServicesDir } from './HiddenServicesDir';
@@ -11,7 +9,7 @@ const onionAddr =
 
 async function main() {
   const startTime = Date.now();
-  const relTimestamp = () =>
+  const _relTimestamp = () =>
     ((Date.now() - startTime) / 1000).toFixed(1).padStart(5, '0');
 
   const pubkey = decodeOnionPubKey(new URL(onionAddr).host);

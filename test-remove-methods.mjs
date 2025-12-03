@@ -58,7 +58,9 @@ async function runTests() {
   const testDir = '/tmp/test-storage-remove';
   try {
     rmSync(testDir, { recursive: true });
-  } catch {}
+  } catch {
+    //
+  }
 
   const fs = createFsStorage(testDir);
 

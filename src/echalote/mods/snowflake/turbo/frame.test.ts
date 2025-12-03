@@ -8,7 +8,7 @@ const directory = resolve('./dist/test/');
 const { pathname } = new URL(import.meta.url);
 console.log(relative(directory, pathname.replace('.mjs', '.ts')));
 
-test('turbo frame', async ({ test }) => {
+test('turbo frame', async () => {
   const frame = TurboFrame.createOrThrow({
     padding: false,
     fragment: new Opaque(Bytes.random(130)),
