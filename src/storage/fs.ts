@@ -8,7 +8,10 @@ import type { IStorage } from './types.js';
  * - a-z -> a-z
  * - A-Z -> A-Z
  * - 0-9 -> 0-9
- * - Other characters are encoded as _XX where XX is the hex code
+ * - Other characters are encoded as _XX_ (with trailing underscore) for 2-digit hex
+ *   or _XXXX_ (with trailing underscore) for 4-digit unicode
+ *
+ * The trailing underscore makes the encoding unambiguous and easier to parse.
  */
 function mangleKey(key: string): string {
   let result = '';
@@ -24,11 +27,11 @@ function mangleKey(key: string): string {
     ) {
       result += char;
     } else {
-      // Encode as _XX or _XXXX for unicode
+      // Encode as _XX_ or _XXXX_ for unicode (with trailing underscore delimiter)
       if (code <= 0xff) {
-        result += '_' + code.toString(16).padStart(2, '0');
+        result += '_' + code.toString(16).padStart(2, '0') + '_';
       } else {
-        result += '_' + code.toString(16).padStart(4, '0');
+        result += '_' + code.toString(16).padStart(4, '0') + '_';
       }
     }
   }
@@ -37,29 +40,41 @@ function mangleKey(key: string): string {
 
 /**
  * Unmangles a filename back to the original key.
+ * The new mangling scheme uses _XX_ for chars <= 0xFF and _XXXX_ for unicode chars > 0xFF.
+ * The trailing underscore delimiter makes parsing unambiguous.
  */
 function unmangleKey(filename: string): string {
   let result = '';
   let i = 0;
   while (i < filename.length) {
     if (filename[i] === '_') {
-      // Peek ahead to determine if it's 2 or 4 hex digits
-      let hexLen = 2;
-      if (i + 4 < filename.length) {
-        // Check if next 4 chars are all hex
-        const next4 = filename.slice(i + 1, i + 5);
-        if (/^[0-9a-f]{4}$/i.test(next4)) {
-          const code = parseInt(next4, 16);
-          if (code > 0xff) {
-            hexLen = 4;
-          }
+      // Look for _XX_ or _XXXX_ pattern
+
+      // Try 4-digit first (_XXXX_)
+      if (i + 5 < filename.length && filename[i + 5] === '_') {
+        const hex4 = filename.slice(i + 1, i + 5);
+        if (/^[0-9a-f]{4}$/i.test(hex4)) {
+          const code = parseInt(hex4, 16);
+          result += String.fromCharCode(code);
+          i += 6; // Skip _XXXX_
+          continue;
         }
       }
 
-      const hex = filename.slice(i + 1, i + 1 + hexLen);
-      const code = parseInt(hex, 16);
-      result += String.fromCharCode(code);
-      i += 1 + hexLen;
+      // Try 2-digit (_XX_)
+      if (i + 3 < filename.length && filename[i + 3] === '_') {
+        const hex2 = filename.slice(i + 1, i + 3);
+        if (/^[0-9a-f]{2}$/i.test(hex2)) {
+          const code = parseInt(hex2, 16);
+          result += String.fromCharCode(code);
+          i += 4; // Skip _XX_
+          continue;
+        }
+      }
+
+      // Not a valid encoding pattern, treat '_' literally
+      result += '_';
+      i++;
     } else {
       result += filename[i];
       i++;

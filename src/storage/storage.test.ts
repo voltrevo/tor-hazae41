@@ -6,6 +6,152 @@ import {
   createMemoryStorage,
 } from './index-node.js';
 
+// Mangle/Unmangle Tests (for FS storage internal functions)
+test('FS Storage: list with colon prefix (consensus:)', async () => {
+  const testDir = '/tmp/test-storage-mangle-colon';
+
+  try {
+    rmSync(testDir, { recursive: true });
+  } catch {
+    //
+  }
+
+  const storage = createFsStorage(testDir);
+
+  // Write keys with colons (like consensus:TIMESTAMP)
+  await storage.write(
+    'consensus:2025-12-03T05_00_00_000Z',
+    new Uint8Array([1])
+  );
+  await storage.write(
+    'consensus:2025-12-03T06_00_00_000Z',
+    new Uint8Array([2])
+  );
+  await storage.write('other:key', new Uint8Array([3]));
+
+  // List should find keys starting with "consensus:"
+  const consensusKeys = await storage.list('consensus:');
+
+  assert(
+    consensusKeys.length === 2,
+    `Should find 2 consensus keys, found ${consensusKeys.length}: ${JSON.stringify(consensusKeys)}`
+  );
+  assert(
+    consensusKeys.includes('consensus:2025-12-03T05_00_00_000Z'),
+    'Should include first consensus key'
+  );
+  assert(
+    consensusKeys.includes('consensus:2025-12-03T06_00_00_000Z'),
+    'Should include second consensus key'
+  );
+
+  // Should not include other keys
+  assert(
+    !consensusKeys.includes('other:key'),
+    'Should not include non-consensus keys'
+  );
+
+  try {
+    rmSync(testDir, { recursive: true });
+  } catch {
+    //
+  }
+});
+
+test('FS Storage: mangle/unmangle round-trip with special chars', async () => {
+  const testDir = '/tmp/test-storage-mangle-roundtrip';
+
+  try {
+    rmSync(testDir, { recursive: true });
+  } catch {
+    //
+  }
+
+  const storage = createFsStorage(testDir);
+
+  const testKeys = [
+    'simple',
+    'with:colon',
+    'with-dash',
+    'with_underscore',
+    'with/slash',
+    'with.dot',
+    'complex:key-with_many.special/chars',
+    'consensus:2025-12-03T05_00_00_000Z',
+  ];
+
+  // Write all test keys
+  for (let i = 0; i < testKeys.length; i++) {
+    await storage.write(testKeys[i], new Uint8Array([i]));
+  }
+
+  // List all keys and verify round-trip
+  const allKeys = await storage.list('');
+
+  assert(
+    allKeys.length === testKeys.length,
+    `Should find ${testKeys.length} keys, found ${allKeys.length}`
+  );
+
+  for (const key of testKeys) {
+    assert(allKeys.includes(key), `Should include key: ${key}`);
+  }
+
+  // Test reading back
+  for (let i = 0; i < testKeys.length; i++) {
+    const data = await storage.read(testKeys[i]);
+    assert(data[0] === i, `Data for key ${testKeys[i]} should be [${i}]`);
+  }
+
+  try {
+    rmSync(testDir, { recursive: true });
+  } catch {
+    //
+  }
+});
+
+test('FS Storage: unmangle handles consecutive hex-like sequences', async () => {
+  const testDir = '/tmp/test-storage-mangle-consecutive';
+
+  try {
+    rmSync(testDir, { recursive: true });
+  } catch {
+    //
+  }
+
+  const storage = createFsStorage(testDir);
+
+  // These keys have special chars that when mangled, create consecutive _XX patterns
+  // E.g., "a:-" becomes "a_3a_2d"
+  const testKeys = [
+    'a:-', // _3a_2d - colon then dash
+    'a:--', // _3a_2d_2d - colon then two dashes
+    'test:2025', // _3a followed by digits
+  ];
+
+  for (let i = 0; i < testKeys.length; i++) {
+    await storage.write(testKeys[i], new Uint8Array([i]));
+  }
+
+  const allKeys = await storage.list('');
+
+  for (const key of testKeys) {
+    assert(allKeys.includes(key), `Should correctly unmangle: ${key}`);
+  }
+
+  // Test reading
+  for (let i = 0; i < testKeys.length; i++) {
+    const data = await storage.read(testKeys[i]);
+    assert(data[0] === i, `Data for key ${testKeys[i]} should match`);
+  }
+
+  try {
+    rmSync(testDir, { recursive: true });
+  } catch {
+    //
+  }
+});
+
 // Memory Storage Tests
 test('Memory Storage: write and read', async () => {
   const storage = createMemoryStorage();

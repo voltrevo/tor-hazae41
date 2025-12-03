@@ -12,6 +12,8 @@ import { fetch } from '../fleche';
 
 import { WebSocketDuplex } from './WebSocketDuplex';
 import { initWasm } from './initWasm';
+import { createAutoStorage, IStorage } from 'tor-hazae41/storage';
+import { ConsensusManager } from './ConsensusManager';
 
 /**
  * Configuration options for the TorClient.
@@ -31,6 +33,8 @@ export interface TorClientOptions {
   circuitUpdateAdvance?: number;
   /** Optional logging callback function */
   onLog?: (message: string, type?: 'info' | 'success' | 'error') => void;
+  /** Storage interface */
+  storage?: IStorage;
 }
 
 /**
@@ -69,6 +73,7 @@ export class TorClient {
     message: string,
     type?: 'info' | 'success' | 'error'
   ) => void;
+  private storage: IStorage;
   private static initialized = false;
 
   // Circuit state management
@@ -81,6 +86,9 @@ export class TorClient {
   private updateLoopActive = false;
   private nextUpdateTime = 0;
   private circuitUsed = false;
+
+  // Consensus management
+  private consensusManager: ConsensusManager;
 
   /**
    * Creates a new TorClient instance with the specified configuration.
@@ -107,6 +115,11 @@ export class TorClient {
     this.circuitUpdateInterval = options.circuitUpdateInterval ?? 10 * 60_000; // 10 minutes
     this.circuitUpdateAdvance = options.circuitUpdateAdvance ?? 60_000; // 1 minute
     this.onLog = options.onLog;
+    this.storage = options.storage ?? createAutoStorage('tor-hazae41-cache');
+    this.consensusManager = new ConsensusManager({
+      storage: this.storage,
+      onLog: this.onLog,
+    });
 
     // Create first circuit immediately if requested
     if (this.createCircuitEarly) {
@@ -487,12 +500,8 @@ export class TorClient {
     const circuit: Circuit = await tor.createOrThrow();
     this.log('Circuit created successfully', 'success');
 
-    this.log('Fetching consensus');
-    const consensus = await Echalote.Consensus.fetchOrThrow(circuit);
-    this.log(
-      `Consensus fetched with ${consensus.microdescs.length} microdescs`,
-      'success'
-    );
+    // Get consensus (from cache if fresh, or fetch if needed)
+    const consensus = await this.consensusManager.getConsensus(circuit);
 
     this.log('Filtering relays');
     const middles = consensus.microdescs.filter(
