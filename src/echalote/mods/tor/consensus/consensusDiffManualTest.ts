@@ -2,6 +2,7 @@ import { Echalote } from '../../../index.js';
 import { readFile, readdir } from 'fs/promises';
 import { makeCircuit } from '../../../../TorClient/makeCircuit.js';
 import { join } from 'path';
+import { computeSignedPartHash } from './diff.js';
 
 /**
  * Manual test for consensus diff mechanism.
@@ -82,8 +83,8 @@ async function main() {
   );
 
   // Compute hashes
-  const hash1 = Echalote.Consensus.computeSignedPartHash(consensus1.preimage);
-  const hash2 = Echalote.Consensus.computeSignedPartHash(consensus2.preimage);
+  const hash1 = computeSignedPartHash(consensus1.preimage);
+  const hash2 = computeSignedPartHash(consensus2.preimage);
 
   console.log(`\nConsensus 1 hash: ${hash1}`);
   console.log(`Consensus 2 hash: ${hash2}`);
@@ -122,7 +123,7 @@ async function main() {
     `${relTimestamp()} | Loaded saved consensus (valid-after: ${savedConsensus.validAfter.toISOString()})`
   );
   console.log(
-    `${relTimestamp()} | Saved consensus hash: ${Echalote.Consensus.computeSignedPartHash(savedConsensus.preimage)}`
+    `${relTimestamp()} | Saved consensus hash: ${computeSignedPartHash(savedConsensus.preimage)}`
   );
 
   // Test 2: Fetch with known consensus (should receive a diff if available)
@@ -130,7 +131,7 @@ async function main() {
     `\n${relTimestamp()} | Test 3: Fetching with saved consensus as known...`
   );
   console.log(
-    `${relTimestamp()} | Using saved consensus hash: ${Echalote.Consensus.computeSignedPartHash(savedConsensus.preimage)}`
+    `${relTimestamp()} | Using saved consensus hash: ${computeSignedPartHash(savedConsensus.preimage)}`
   );
 
   // Check if the saved consensus is expired (freshUntil has passed)

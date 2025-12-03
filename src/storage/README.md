@@ -30,6 +30,8 @@ import {
 } from 'tor-hazae41/storage';
 ```
 
+**Development Note**: When developing within this repository, the `tsconfig.json` has a path mapping that resolves `tor-hazae41/storage` to `./src/storage/index-node.ts` for Node.js environments. This allows you to use the same import path during development that consumers will use. The build process uses the conditional exports in `package.json` instead.
+
 ### Memory Storage
 
 Available in all environments:
