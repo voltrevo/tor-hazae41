@@ -1,0 +1,40 @@
+import { test } from '@hazae41/phobos';
+import { readFile } from 'fs/promises';
+import { Echalote } from '../echalote/index.js';
+import { decodeOnionPubKey } from './decodeOnionPubkey.js';
+import { HiddenServicesDir } from './HiddenServicesDir.js';
+import { getBlindedPubkey } from './getBlindedPubkey.js';
+
+test('Hidden services directory lookup', async () => {
+  const onionAddr =
+    'https://duckduckgogg42xjoc72x3sjasowoarfbgcmvfimaftt6twagswzczad.onion/';
+
+  const startTime = Date.now();
+  const relTimestamp = () =>
+    ((Date.now() - startTime) / 1000).toFixed(1).padStart(5, '0');
+
+  const pubkey = decodeOnionPubKey(new URL(onionAddr).host);
+  console.log(`${relTimestamp()} | Pubkey:`, pubkey);
+
+  const consensus = await Echalote.Consensus.parseOrThrow(
+    await readFile('ignore/consensus.txt', 'utf-8')
+  );
+
+  const hsdir = new HiddenServicesDir(consensus);
+
+  const interval = hsdir.interval();
+  console.log(`${relTimestamp()} | Interval:`, interval);
+
+  const blindedPubkey = getBlindedPubkey(
+    pubkey,
+    hsdir.periodNum(),
+    hsdir.periodLength()
+  );
+
+  console.log(
+    `${relTimestamp()} | Blinded pubkey:`,
+    Buffer.from(blindedPubkey).toString('base64')
+  );
+
+  console.log('✓ Hidden services directory test completed successfully');
+});

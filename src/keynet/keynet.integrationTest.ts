@@ -1,25 +1,14 @@
-import { Consensus, Echalote } from '../echalote';
+import { test } from '@hazae41/phobos';
 import { readFile } from 'fs/promises';
-import { decodeKeynetPubKey } from './decodeKeynetPubkey';
-import { makeCircuit } from '../TorClient/makeCircuit';
-import { fetch } from '../fleche';
+import { Consensus, Echalote } from '../echalote/index.js';
+import { makeCircuit } from '../TorClient/makeCircuit.js';
+import { decodeKeynetPubKey } from './decodeKeynetPubkey.js';
+import { fetch } from '../fleche/index.js';
 
-// const keynetAddr =
-//   'http://hkggnoqjyx3zsdh4y3zau223ulchj4xd3b7xldqihngtacgyag3malyd.keynet/';
-const keynetAddr =
-  'http://jyn6dehf3ttu4lblc7tr3i23xqsz76dn2du6keptg5kyo3r6mur36vad.keynet';
+test('Keynet connection and fetch', async () => {
+  const keynetAddr =
+    'http://jyn6dehf3ttu4lblc7tr3i23xqsz76dn2du6keptg5kyo3r6mur36vad.keynet';
 
-(async () => {
-  try {
-    await main();
-    process.exit(0);
-  } catch (err) {
-    console.error(err);
-    process.exit(1);
-  }
-})();
-
-async function main() {
   const startTime = Date.now();
   const relTimestamp = () =>
     ((Date.now() - startTime) / 1000).toFixed(1).padStart(5, '0');
@@ -31,14 +20,11 @@ async function main() {
     onLog: (msg, type) => console.log(`${relTimestamp()} | [${type}] ${msg}`),
   });
 
-  // const consensus = await Echalote.Consensus.fetchOrThrow(circuit);
-
   const consensus = await Echalote.Consensus.parseOrThrow(
     await readFile('ignore/consensus/2025_12_02T23_04_37_883Z', 'utf-8')
   );
 
   for (let i = 0; i < 1; i++) {
-    // FIXME: Only works with exactly one middle?
     const middles = consensus.microdescs.filter(
       it =>
         it.flags.includes('Fast') &&
@@ -65,10 +51,10 @@ async function main() {
   });
 
   const txt = await response.text();
-  console.log(txt);
+  console.log('Response received:', txt.substring(0, 100));
 
-  console.log('done');
-}
+  console.log('✓ Keynet connection test completed successfully');
+});
 
 async function findKeynetExit(
   circuit: Echalote.Circuit,

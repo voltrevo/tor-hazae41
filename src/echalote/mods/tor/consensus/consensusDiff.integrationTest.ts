@@ -1,45 +1,24 @@
-import { Echalote } from '../../../index.js';
+import { test } from '@hazae41/phobos';
 import { readFile, readdir } from 'fs/promises';
-import { makeCircuit } from '../../../../TorClient/makeCircuit.js';
 import { join } from 'path';
 import { computeSignedPartHash } from './diff.js';
+import { Echalote } from '../../../index.js';
+import { makeCircuit } from '../../../../TorClient/makeCircuit.js';
 
 /**
- * Manual test for consensus diff mechanism.
+ * Integration test for consensus diff mechanism.
  *
  * This test:
  * 1. Loads multiple saved consensuses from ignore/consensus/
  * 2. Uses older consensuses as "known" when fetching a new one
  * 3. Verifies that the diff mechanism works correctly
- *
- * Expected results:
- * - Test 1: Fetches a full consensus successfully
- * - Test 2: Loads a saved consensus and checks if it's expired
- * - Test 3: Attempts to fetch with the saved consensus as known
- *   - If the server has a diff from that consensus, it will send it
- *   - If not, it may send a diff from a different consensus (and we'll get "No matching base consensus")
- *   - If the consensus hasn't changed, server may return 304 Not Modified
- *
- * Success criteria: The X-Or-Diff-From-Consensus header is sent and the server responds
- * appropriately (either with a full consensus, a diff, or 304).
  */
-
-(async () => {
-  try {
-    await main();
-    process.exit(0);
-  } catch (err) {
-    console.error(err);
-    process.exit(1);
-  }
-})();
-
-async function main() {
+test('Consensus diff mechanism with live fetch', async () => {
   const startTime = Date.now();
   const relTimestamp = () =>
     ((Date.now() - startTime) / 1000).toFixed(1).padStart(5, '0');
 
-  console.log('=== Consensus Diff Manual Test ===\n');
+  console.log('=== Consensus Diff Integration Test ===\n');
 
   // Load saved consensuses from ignore/consensus/
   const consensusDir = 'ignore/consensus';
@@ -54,7 +33,9 @@ async function main() {
     console.log(
       `Not enough consensus files found (need at least 2, found ${consensusFiles.length})`
     );
-    console.log('Run the Tor client to fetch consensuses first.');
+    console.log(
+      'Skipping test - run the Tor client to fetch consensuses first.'
+    );
     return;
   }
 
@@ -207,4 +188,4 @@ async function main() {
   }
 
   console.log(`\n${relTimestamp()} | All tests completed successfully!`);
-}
+});
