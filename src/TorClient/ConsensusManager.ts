@@ -1,5 +1,6 @@
 import { Circuit, Echalote } from '../echalote';
 import { IStorage } from 'tor-hazae41/storage';
+import { computeFullConsensusHash } from '../echalote/mods/tor/consensus/diff';
 
 export interface ConsensusManagerOptions {
   storage: IStorage;
@@ -18,6 +19,8 @@ export class ConsensusManager {
     message: string,
     type?: 'info' | 'success' | 'error'
   ) => void;
+  // Cache maintains chronological order (oldest first, newest last)
+  // This order is required for Tor nodes to properly return 304 responses
   private consensusCache: Echalote.Consensus[] = [];
   private cacheLoaded = false;
 
@@ -41,7 +44,8 @@ export class ConsensusManager {
     const now = new Date();
 
     if (this.consensusCache.length > 0) {
-      const mostRecent = this.consensusCache[0];
+      // Most recent consensus is at the end of the array
+      const mostRecent = this.consensusCache[this.consensusCache.length - 1];
       if (mostRecent.freshUntil > now) {
         const secondsUntilStale = Math.floor(
           (mostRecent.freshUntil.getTime() - now.getTime()) / 1000
@@ -95,8 +99,8 @@ export class ConsensusManager {
         return;
       }
 
-      // Sort keys by timestamp (newest first)
-      const sortedKeys = keys.sort().reverse();
+      // Sort keys by timestamp (oldest first, for chronological order)
+      const sortedKeys = keys.sort();
 
       // Load consensuses
       const consensuses: Echalote.Consensus[] = [];
@@ -157,24 +161,26 @@ export class ConsensusManager {
         .replace(/[:.]/g, '_');
       const key = `consensus:${timestamp}`;
 
-      const data = new TextEncoder().encode(consensus.preimage);
+      // Reconstruct the full consensus text from preimage + signatureText
+      const textToSave = this.serializeConsensus(consensus);
+      const data = new TextEncoder().encode(textToSave);
       await this.storage.write(key, data);
 
       this.log(`Saved consensus to cache: ${key}`);
 
-      // Update cache
-      this.consensusCache.unshift(consensus);
+      // Update cache - append to end to maintain chronological order
+      this.consensusCache.push(consensus);
 
-      // Keep only the most recent consensuses
+      // Keep only the most recent consensuses (remove oldest)
       if (this.consensusCache.length > this.maxCached) {
-        this.consensusCache = this.consensusCache.slice(0, this.maxCached);
+        this.consensusCache = this.consensusCache.slice(-this.maxCached);
       }
 
       // Clean up old consensuses from storage
       const keys = await this.storage.list('consensus:');
       if (keys.length > this.maxCached) {
-        const sortedKeys = keys.sort().reverse();
-        const keysToRemove = sortedKeys.slice(this.maxCached);
+        const sortedKeys = keys.sort(); // chronological order
+        const keysToRemove = sortedKeys.slice(0, keys.length - this.maxCached);
         for (const oldKey of keysToRemove) {
           try {
             await this.storage.remove(oldKey);
@@ -193,6 +199,29 @@ export class ConsensusManager {
         'error'
       );
     }
+  }
+
+  /**
+   * Serializes a consensus back to its full text format.
+   * Reconstructs the original consensus document from preimage and signatureText.
+   * Verifies the reconstruction matches the original by checking the hash.
+   */
+  private serializeConsensus(consensus: Echalote.Consensus): string {
+    // Combine preimage and signature text to reconstruct full consensus
+    const text = consensus.preimage + consensus.signatureText;
+
+    // Verify the reconstruction is correct by checking the hash
+    if (consensus.fullTextHash) {
+      const reconstructedHash = computeFullConsensusHash(text);
+      if (reconstructedHash !== consensus.fullTextHash) {
+        throw new Error(
+          `Consensus reconstruction failed: hash mismatch. ` +
+            `Expected ${consensus.fullTextHash}, got ${reconstructedHash}`
+        );
+      }
+    }
+
+    return text;
   }
 
   private log(

@@ -22,6 +22,7 @@ export interface Consensus {
   readonly method: number;
   readonly validAfter: Date;
   readonly freshUntil: Date;
+  readonly validUntil: Date;
   readonly votingDelay: [number, number];
   readonly clientVersions: string[];
   readonly serverVersions: string[];
@@ -39,6 +40,8 @@ export interface Consensus {
 
   readonly preimage: string;
   readonly signatures: Consensus.Signature[];
+  readonly fullTextHash?: string;
+  readonly signatureText: string;
 }
 
 export namespace Consensus {
@@ -114,36 +117,38 @@ export namespace Consensus {
       );
     }
 
-    let response;
-    let consensusTxt: string;
-    let contentType: string;
+    const requestTime = new Date();
 
-    try {
-      response = await fetch(
-        `http://localhost/tor/status-vote/current/consensus-microdesc.z`,
-        { stream: stream.outer, signal, headers }
+    const response = await fetch(
+      `http://localhost/tor/status-vote/current/consensus-microdesc.z`,
+      { stream: stream.outer, signal, headers }
+    );
+
+    // Handle 304 Not Modified - the known consensus is still current
+    if (response.status === 304) {
+      console.warn(
+        'Received 304 Not Modified - the known consensus is still current'
+      );
+      if (known.length === 0) {
+        throw new Error('Received 304 but no known consensus was provided');
+      }
+      // Return the most recent known consensus based on validAfter date (already verified)
+      const mostRecent = known.reduce((latest, current) =>
+        current.validAfter > latest.validAfter ? current : latest
       );
 
-      contentType = response.headers.get('Content-Type') || '';
-      consensusTxt = await response.text();
-    } catch (error) {
-      // Handle 304 Not Modified - the Response constructor doesn't support it
-      if (
-        error instanceof Error &&
-        error.message.includes('Invalid response status code 304')
-      ) {
-        // FIXME: Fleche shouldn't consider 304 to be an error
-        console.warn(
-          'Received 304 Not Modified - the known consensus is still current'
+      // Check if the most recent consensus has expired
+      if (requestTime > mostRecent.validUntil) {
+        throw new Error(
+          `Most recent known consensus has expired (validUntil: ${mostRecent.validUntil.toISOString()}, requestTime: ${requestTime.toISOString()})`
         );
-        if (known.length === 0) {
-          throw new Error('Received 304 but no known consensus was provided');
-        }
-        // Return the most recent known consensus (already verified)
-        return known[known.length - 1]; // FIXME: known might be unordered, need most recent
       }
-      throw error;
+
+      return mostRecent;
     }
+
+    const contentType = response.headers.get('Content-Type') || '';
+    const consensusTxt = await response.text();
 
     let consensus: Consensus;
 
@@ -201,6 +206,13 @@ export namespace Consensus {
     if ((await Consensus.verifyOrThrow(circuit, consensus, signal)) !== true)
       throw new Error(`Could not verify`);
 
+    // Check if the fetched consensus has already expired
+    if (requestTime > consensus.validUntil) {
+      throw new Error(
+        `Fetched consensus has already expired (validUntil: ${consensus.validUntil.toISOString()}, requestTime: ${requestTime.toISOString()})`
+      );
+    }
+
     return consensus;
   }
 
@@ -247,6 +259,12 @@ export namespace Consensus {
       if (lines[i.x].startsWith('fresh-until ')) {
         const freshUntil = lines[i.x].split(' ').slice(1).join(' ');
         consensus.freshUntil = new Date(freshUntil);
+        continue;
+      }
+
+      if (lines[i.x].startsWith('valid-until ')) {
+        const validUntil = lines[i.x].split(' ').slice(1).join(' ');
+        consensus.validUntil = new Date(validUntil);
         continue;
       }
 
@@ -590,6 +608,15 @@ export namespace Consensus {
         );
       }
     }
+
+    // Compute and store the full text hash for verification when reconstructing
+    consensus.fullTextHash = computeFullConsensusHash(text);
+
+    // Store the signature portion (everything after preimage)
+    if (!consensus.preimage) {
+      throw new Error('Missing preimage');
+    }
+    consensus.signatureText = text.slice(consensus.preimage.length);
 
     return consensus as Consensus;
   }

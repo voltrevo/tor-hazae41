@@ -1,0 +1,2 @@
+- Improve logging, avoid all raw console.\* calls
+  - Hierarchical logging

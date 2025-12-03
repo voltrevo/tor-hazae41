@@ -92,8 +92,22 @@ export async function fetch(
     target,
     headers,
 
-    head(init) {
-      resolveOnHead.resolve(new Response(this.outer.readable, init));
+    async head(init) {
+      // Per Fetch spec, these statuses cannot have a body argument at all
+      // (even if it's an empty stream)
+      const isNullBodyStatus =
+        init.status === 101 ||
+        init.status === 204 ||
+        init.status === 205 ||
+        init.status === 304;
+
+      if (isNullBodyStatus) {
+        // Per Fetch API spec, these statuses must be constructed with null body
+        // The HTTP layer ensures no body data via transfer: 'none'
+        resolveOnHead.resolve(new Response(null, init));
+      } else {
+        resolveOnHead.resolve(new Response(this.outer.readable, init));
+      }
     },
     error(cause) {
       rejectOnError.reject(new Error('Errored', { cause }));
