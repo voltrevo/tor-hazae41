@@ -1,53 +1,56 @@
-import { Opaque, Writable } from "@hazae41/binary"
-import { Disposer } from "@hazae41/disposer"
-import { Future } from "@hazae41/future"
-import { Signals } from "@hazae41/signals"
-import { Nullable } from "../../libs/nullable/index"
-import { HttpClientDuplex } from "../http/client"
+import { Opaque, Writable } from '@hazae41/binary';
+import { Disposer } from '@hazae41/disposer';
+import { Future } from '@hazae41/future';
+import { Signals } from '@hazae41/signals';
+import { Nullable } from '../../libs/nullable/index';
+import { HttpClientDuplex } from '../http/client';
 
 export interface FetchParams {
-  readonly stream: ReadableWritablePair<Opaque, Writable>
-  readonly preventAbort?: boolean
-  readonly preventCancel?: boolean
-  readonly preventClose?: boolean
+  readonly stream: ReadableWritablePair<Opaque, Writable>;
+  readonly preventAbort?: boolean;
+  readonly preventCancel?: boolean;
+  readonly preventClose?: boolean;
 }
 
 namespace Requests {
-
   export async function getBody(request: Request, init: RequestInit) {
     /**
      * Firefox fix
      */
     if (request.body == null && init.body != null) {
       if (init.body instanceof ReadableStream) {
-        return init.body as ReadableStream<Uint8Array>
+        return init.body as ReadableStream<Uint8Array>;
       } else {
-        const blob = await request.blob()
-        return blob.stream()
+        const blob = await request.blob();
+        return blob.stream();
       }
     }
 
-    return request.body
+    return request.body;
   }
-
 }
 
 namespace Pipe {
+  export function rejectOnError(
+    http: HttpClientDuplex,
+    body: Nullable<ReadableStream<Uint8Array>>
+  ) {
+    const rejectOnError = new Future<never>();
 
-  export function rejectOnError(http: HttpClientDuplex, body: Nullable<ReadableStream<Uint8Array>>) {
-    const rejectOnError = new Future<never>()
-
-    const controller = new AbortController()
-    const { signal } = controller
+    const controller = new AbortController();
+    const { signal } = controller;
 
     if (body != null)
-      body.pipeTo(http.outer.writable, { signal }).catch(cause => rejectOnError.reject(new Error("Errored", { cause })))
+      body
+        .pipeTo(http.outer.writable, { signal })
+        .catch(cause => rejectOnError.reject(new Error('Errored', { cause })));
     else
-      http.outer.writable.close().catch(cause => rejectOnError.reject(new Error("Errored", { cause })))
+      http.outer.writable
+        .close()
+        .catch(cause => rejectOnError.reject(new Error('Errored', { cause })));
 
-    return new Disposer(rejectOnError.promise, () => controller.abort())
+    return new Disposer(rejectOnError.promise, () => controller.abort());
   }
-
 }
 
 /**
@@ -55,33 +58,34 @@ namespace Pipe {
  * Will wait for response to be available
  * @param input "https://google.com"
  * @param init.stream Transport substream
- * @returns 
+ * @returns
  */
-export async function fetch(input: RequestInfo | URL, init: RequestInit & FetchParams): Promise<Response> {
-  const { stream, preventAbort, preventCancel, preventClose, ...others } = init
+export async function fetch(
+  input: RequestInfo | URL,
+  init: RequestInit & FetchParams
+): Promise<Response> {
+  const { stream, preventAbort, preventCancel, preventClose, ...others } = init;
 
-  const request = new Request(input, others)
-  const body = await Requests.getBody(request, others)
+  const request = new Request(input, others);
+  const body = await Requests.getBody(request, others);
 
-  const { url, method, signal } = request
-  const { host, pathname, search } = new URL(url)
+  const { url, method, signal } = request;
+  const { host, pathname, search } = new URL(url);
 
-  const target = pathname + search
-  const headers = new Headers(init.headers)
+  const target = pathname + search;
+  const headers = new Headers(init.headers);
 
-  if (!headers.has("Host"))
-    headers.set("Host", host)
-  if (!headers.has("Connection"))
-    headers.set("Connection", "keep-alive")
-  if (!headers.has("Transfer-Encoding") && !headers.has("Content-Length"))
-    headers.set("Transfer-Encoding", "chunked")
-  if (!headers.has("Accept-Encoding"))
-    headers.set("Accept-Encoding", "gzip, deflate")
+  if (!headers.has('Host')) headers.set('Host', host);
+  if (!headers.has('Connection')) headers.set('Connection', 'keep-alive');
+  if (!headers.has('Transfer-Encoding') && !headers.has('Content-Length'))
+    headers.set('Transfer-Encoding', 'chunked');
+  if (!headers.has('Accept-Encoding'))
+    headers.set('Accept-Encoding', 'gzip, deflate');
 
-  const resolveOnHead = new Future<Response>()
+  const resolveOnHead = new Future<Response>();
 
-  const rejectOnClose = new Future<never>()
-  const rejectOnError = new Future<never>()
+  const rejectOnClose = new Future<never>();
+  const rejectOnError = new Future<never>();
 
   const http = new HttpClientDuplex({
     method,
@@ -89,21 +93,31 @@ export async function fetch(input: RequestInfo | URL, init: RequestInit & FetchP
     headers,
 
     head(init) {
-      resolveOnHead.resolve(new Response(this.outer.readable, init))
+      resolveOnHead.resolve(new Response(this.outer.readable, init));
     },
     error(cause) {
-      rejectOnError.reject(new Error("Errored", { cause }))
+      rejectOnError.reject(new Error('Errored', { cause }));
     },
     close() {
-      rejectOnClose.reject(new Error("Closed"))
-    }
-  })
+      rejectOnClose.reject(new Error('Closed'));
+    },
+  });
 
-  stream.readable.pipeTo(http.inner.writable, { signal, preventCancel }).catch(() => { })
-  http.inner.readable.pipeTo(stream.writable, { signal, preventClose, preventAbort }).catch(() => { })
+  stream.readable
+    .pipeTo(http.inner.writable, { signal, preventCancel })
+    .catch(() => {});
+  http.inner.readable
+    .pipeTo(stream.writable, { signal, preventClose, preventAbort })
+    .catch(() => {});
 
-  using rejectOnAbort = Signals.rejectOnAbort(signal)
-  using rejectOnPipe = Pipe.rejectOnError(http, body)
+  using rejectOnAbort = Signals.rejectOnAbort(signal);
+  using rejectOnPipe = Pipe.rejectOnError(http, body);
 
-  return await Promise.race([resolveOnHead.promise, rejectOnClose.promise, rejectOnError.promise, rejectOnAbort.get(), rejectOnPipe.get()])
+  return await Promise.race([
+    resolveOnHead.promise,
+    rejectOnClose.promise,
+    rejectOnError.promise,
+    rejectOnAbort.get(),
+    rejectOnPipe.get(),
+  ]);
 }

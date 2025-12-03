@@ -1,9 +1,9 @@
-import { test } from "@hazae41/phobos"
-import { Iterators } from "./iterators.js"
+import { test } from '@hazae41/phobos';
+import { Iterators } from './iterators.js';
 
-const array = [1, 2, 3, 4, 5]
+const array = [1, 2, 3, 4, 5];
 
-test("peek", async ({ test }) => {
+test('peek', async ({ test }) => {
   for (const { current, next } of Iterators.peek(array.values()))
-    console.log(current, next)
-})
+    console.log(current, next);
+});
