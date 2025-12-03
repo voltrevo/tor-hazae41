@@ -59,6 +59,7 @@
     "dev:lib": "tsup --watch",
     "preview": "vite preview",
     "prepublishOnly": "npm run build",
+    "test": "for file in $(find src -name '*.test.ts'); do echo \"Running: $file\"; tsx \"$file\" || exit 1; done",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "format": "prettier --write .",

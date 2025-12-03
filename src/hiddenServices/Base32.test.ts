@@ -1,10 +1,5 @@
 import { assert, test } from '@hazae41/phobos';
-import { relative, resolve } from 'path';
 import { Base32 } from './Base32.js';
-
-const directory = resolve('./dist/test/');
-const { pathname } = new URL(import.meta.url);
-console.log(relative(directory, pathname.replace('.mjs', '.ts')));
 
 test('Base32.toString', async () => {
   // Test basic encoding
