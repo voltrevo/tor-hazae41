@@ -101,7 +101,13 @@ export namespace Consensus {
   export async function fetchOrThrow(
     circuit: Circuit,
     known: Consensus[] = [],
-    signal = new AbortController().signal
+    signal = new AbortController().signal,
+    certificateManager?: {
+      getCertificates: (
+        circuit: Circuit,
+        fingerprints: string[]
+      ) => Promise<Certificate[]>;
+    }
   ) {
     const stream = await circuit.openDirOrThrow({}, signal);
 
@@ -211,7 +217,14 @@ export namespace Consensus {
       consensus = await Consensus.parseOrThrow(consensusTxt);
     }
 
-    if ((await Consensus.verifyOrThrow(circuit, consensus, signal)) !== true)
+    if (
+      (await Consensus.verifyOrThrow(
+        circuit,
+        consensus,
+        signal,
+        certificateManager
+      )) !== true
+    )
       throw new Error(`Could not verify`);
 
     // Check if the fetched consensus has already expired
@@ -632,7 +645,13 @@ export namespace Consensus {
   export async function verifyOrThrow(
     circuit: Circuit,
     consensus: Consensus,
-    signal = new AbortController().signal
+    signal = new AbortController().signal,
+    certificateManager?: {
+      getCertificates: (
+        circuit: Circuit,
+        fingerprints: string[]
+      ) => Promise<Certificate[]>;
+    }
   ) {
     // Limit concurrent certificate fetches to 10
     const limit = pLimit(10);
@@ -643,15 +662,30 @@ export namespace Consensus {
     );
 
     const startTime = Date.now();
-    // Fetch all certificates in parallel (with concurrency limit)
-    const certificatePromises = signaturesNeedingVerification.map(sig =>
-      limit(() => Certificate.fetchOrThrow(circuit, sig.identity, signal))
-    );
+    let certificates: Certificate[];
 
-    const certificates = await Promise.all(certificatePromises);
-    console.log(
-      `Fetched ${certificates.length} certs in ${Date.now() - startTime}ms`
-    );
+    if (certificateManager) {
+      // Use certificate manager for cached certificates
+      const fingerprints = signaturesNeedingVerification.map(
+        sig => sig.identity
+      );
+      certificates = await certificateManager.getCertificates(
+        circuit,
+        fingerprints
+      );
+      console.log(
+        `Retrieved ${certificates.length} certs (cached/fetched) in ${Date.now() - startTime}ms`
+      );
+    } else {
+      // Fetch all certificates in parallel (with concurrency limit)
+      const certificatePromises = signaturesNeedingVerification.map(sig =>
+        limit(() => Certificate.fetchOrThrow(circuit, sig.identity, signal))
+      );
+      certificates = await Promise.all(certificatePromises);
+      console.log(
+        `Fetched ${certificates.length} certs in ${Date.now() - startTime}ms`
+      );
+    }
 
     // Verify all signatures
     let count = 0;

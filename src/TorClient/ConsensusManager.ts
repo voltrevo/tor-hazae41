@@ -1,9 +1,10 @@
 import { Circuit, Consensus, Echalote } from '../echalote';
-import { IStorage } from 'tor-hazae41/storage';
+import { IStorage } from '../storage';
 import { computeFullConsensusHash } from '../echalote/mods/tor/consensus/diff';
 import { getErrorDetails } from '../utils/getErrorDetails';
 import { softDelay } from '../utils/delay';
 import { Future } from '@hazae41/future';
+import { CertificateManager } from './CertificateManager';
 
 export interface ConsensusManagerOptions {
   storage: IStorage;
@@ -30,6 +31,7 @@ export class ConsensusManager {
   private backgroundUpdating = false;
 
   private inFlightFetch: Promise<Consensus> | undefined;
+  private certificateManager: CertificateManager;
 
   isClosed = false;
 
@@ -37,6 +39,11 @@ export class ConsensusManager {
     this.storage = options.storage;
     this.maxCached = options.maxCached ?? 5;
     this.onLog = options.onLog;
+    this.certificateManager = new CertificateManager({
+      storage: options.storage,
+      maxCached: 20,
+      onLog: options.onLog,
+    });
   }
 
   /**
@@ -86,7 +93,12 @@ export class ConsensusManager {
     const cache = await this.loadCache();
 
     this.log('Fetching consensus from network');
-    const consensus = await Echalote.Consensus.fetchOrThrow(circuit, cache);
+    const consensus = await Echalote.Consensus.fetchOrThrow(
+      circuit,
+      cache,
+      undefined,
+      this.certificateManager
+    );
     this.log(
       `Consensus fetched with ${consensus.microdescs.length} microdescs`,
       'success'
@@ -327,5 +339,6 @@ export class ConsensusManager {
 
   close() {
     this.isClosed = true;
+    this.certificateManager.close();
   }
 }
