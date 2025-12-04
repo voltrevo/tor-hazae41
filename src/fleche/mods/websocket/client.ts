@@ -23,6 +23,7 @@ import {
   UnexpectedContinuationFrameError,
 } from './errors.js';
 import { WebSocketFrame } from './frame.js';
+import { softDelay } from '../../../utils/delay';
 
 const ACCEPT_SUFFIX = Bytes.fromUtf8('258EAFA5-E914-47DA-95CA-C5AB0DC85B11');
 
@@ -320,7 +321,7 @@ export class WebSocketClientDuplex extends EventTarget implements WebSocket {
 
   async #startPingLoop() {
     while (this.readyState === this.OPEN) {
-      await new Promise(ok => setTimeout(ok, 10_000));
+      await softDelay(10_000);
 
       try {
         await this.#pingOrThrow();

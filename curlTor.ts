@@ -213,12 +213,6 @@ async function main() {
   const opts = parseArgs(process.argv.slice(2));
   if (!opts.url) die('Usage: curl.ts [options] <url>');
 
-  const controller = new AbortController();
-  let timeout: NodeJS.Timeout | undefined;
-  if (opts.maxTimeMs) {
-    timeout = setTimeout(() => controller.abort(), opts.maxTimeMs);
-  }
-
   const headers = new Headers();
   for (const [k, v] of opts.headers) headers.append(k, v);
 
@@ -267,7 +261,7 @@ async function main() {
     headers,
     body,
     redirect: opts.follow ? 'follow' : 'manual',
-    signal: controller.signal,
+    signal: opts.maxTimeMs ? AbortSignal.timeout(opts.maxTimeMs) : undefined,
     // Note: no per-request TLS "insecure" option available with built-in fetch.
   };
 
@@ -315,7 +309,6 @@ async function main() {
 
     res = await TorClient.fetch(snowflakeUrl, opts.url, fetchOptions);
   } catch (e: unknown) {
-    if (timeout) clearTimeout(timeout);
     const message = getErrorDetails(e);
 
     // In verbose mode, also show the error object details
@@ -324,8 +317,6 @@ async function main() {
     }
 
     die(`Request failed: ${message}`, 7);
-  } finally {
-    if (timeout) clearTimeout(timeout);
   }
 
   const headerBlock = (() => {

@@ -1,5 +1,4 @@
 - Improve logging, avoid all raw console.\* calls
   - Hierarchical logging
-- replace all setTimeout with (soft)delay
 - update circuit management
 - cache certificates (fingerprint->cert, see Consensus.Certificate.fetchOrThrow)
