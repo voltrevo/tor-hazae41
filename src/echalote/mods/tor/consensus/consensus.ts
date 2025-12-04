@@ -162,14 +162,9 @@ export namespace Consensus {
     ) {
       // Parse and apply the diff
       const diff = parseDiffOrThrow(consensusTxt);
-      console.log(`diff received: ${diff.fromHash} -> ${diff.toHash}`);
 
       console.log(
         `[CONSENSUS DIFF] Received diff with ${diff.commands.length} commands`
-      );
-
-      console.log(
-        `searching for ${diff.fromHash.toLowerCase()} in ${known.map(c => c.fullTextHash).join(', ')}`
       );
 
       let baseConsensus: Consensus | undefined = undefined;
