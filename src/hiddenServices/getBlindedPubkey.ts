@@ -6,13 +6,13 @@ const basePointStr = [
   ' 46316835694926478169428394003475163141307993866256225615783033603165251855960)',
 ].join('');
 
-export function getBlindedPubkey(
+export async function getBlindedPubkey(
   pubkey: Uint8Array, // aka 'A'
   periodNumber: number,
   periodLength: number,
   secret: string | Uint8Array = Uint8Array.from([])
 ) {
-  const h = hash(
+  const h = await hash(
     'Derive temporary signing key',
     Uint8Array.from([0]),
     pubkey,

@@ -1,7 +1,9 @@
-import { sha3_256 } from '@noble/hashes/sha3.js';
+import { sha3 } from 'hash-wasm';
 import { Base32 } from './Base32.js';
 
-export function decodeHostnamePubKey(hostname: string): Uint8Array {
+export async function decodeHostnamePubKey(
+  hostname: string
+): Promise<Uint8Array> {
   // v3 addresses are exactly 56 base32 chars
   if (!/^[a-z2-7]{56}$/.test(hostname)) {
     throw new Error(
@@ -29,10 +31,11 @@ export function decodeHostnamePubKey(hostname: string): Uint8Array {
   toHash.set(pubkey, prefix.length);
   toHash[prefix.length + 32] = version;
 
-  const digest = sha3_256(toHash);
-  if (digest.length < 2)
-    throw new Error('Hash function returned too few bytes.');
-  if (digest[0] !== checksum[0] || digest[1] !== checksum[1]) {
+  const digestHex = await sha3(toHash, 256);
+  // Convert first 2 bytes of hex to Uint8Array for comparison
+  const digest0 = parseInt(digestHex.substring(0, 2), 16);
+  const digest1 = parseInt(digestHex.substring(2, 4), 16);
+  if (digest0 !== checksum[0] || digest1 !== checksum[1]) {
     throw new Error('Checksum mismatch.');
   }
 

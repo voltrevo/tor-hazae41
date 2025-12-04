@@ -13,7 +13,7 @@ test('Hidden services directory lookup', async () => {
   const relTimestamp = () =>
     ((Date.now() - startTime) / 1000).toFixed(1).padStart(5, '0');
 
-  const pubkey = decodeOnionPubKey(new URL(onionAddr).host);
+  const pubkey = await decodeOnionPubKey(new URL(onionAddr).host);
   console.log(`${relTimestamp()} | Pubkey:`, pubkey);
 
   const consensus = await Echalote.Consensus.parseOrThrow(
@@ -25,7 +25,7 @@ test('Hidden services directory lookup', async () => {
   const interval = hsdir.interval();
   console.log(`${relTimestamp()} | Interval:`, interval);
 
-  const blindedPubkey = getBlindedPubkey(
+  const blindedPubkey = await getBlindedPubkey(
     pubkey,
     hsdir.periodNum(),
     hsdir.periodLength()

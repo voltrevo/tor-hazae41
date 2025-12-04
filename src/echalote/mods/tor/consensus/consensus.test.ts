@@ -120,7 +120,7 @@ test('microdesc', async () => {
 });
 
 test('microdescs', async () => {
-  const result = Consensus.parseOrThrow(microdescs);
+  const result = await Consensus.parseOrThrow(microdescs);
 
   assert(result.authorities !== undefined, 'Should have authorities array');
   assert(result.microdescs !== undefined, 'Should have microdescs array');

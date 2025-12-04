@@ -67,7 +67,7 @@ test('ConsensusManager: fetch and reconstruct consensus', async () => {
   console.log(`Reconstructed text length: ${reconstructedText.length} bytes`);
 
   // Verify the reconstructed text hash matches
-  const reconstructedHash = computeFullConsensusHash(reconstructedText);
+  const reconstructedHash = await computeFullConsensusHash(reconstructedText);
   console.log(`Reconstructed fullTextHash: ${reconstructedHash}`);
 
   // Verify they match
@@ -81,7 +81,8 @@ test('ConsensusManager: fetch and reconstruct consensus', async () => {
 
   // Also verify we can re-parse the reconstructed text
   console.log('Re-parsing reconstructed consensus...');
-  const reparsedConsensus = Echalote.Consensus.parseOrThrow(reconstructedText);
+  const reparsedConsensus =
+    await Echalote.Consensus.parseOrThrow(reconstructedText);
   console.log('✓ Reconstructed text re-parses correctly');
 
   // Verify key properties match
@@ -128,7 +129,7 @@ test('ConsensusManager: fetch and reconstruct consensus', async () => {
   // Verify hash matches by reconstructing
   const loadedFullText =
     loadedConsensus.preimage + loadedConsensus.signatureText;
-  const loadedHash = computeFullConsensusHash(loadedFullText);
+  const loadedHash = await computeFullConsensusHash(loadedFullText);
   if (loadedHash !== loadedConsensus.fullTextHash) {
     throw new Error(
       `Loaded consensus hash mismatch! Expected: ${loadedConsensus.fullTextHash}, Got: ${loadedHash}`

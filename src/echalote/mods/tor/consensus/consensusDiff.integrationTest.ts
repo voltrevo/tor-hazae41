@@ -53,8 +53,8 @@ test('Consensus diff mechanism with live fetch', async () => {
   );
 
   console.log('Parsing consensuses...');
-  const consensus1 = Echalote.Consensus.parseOrThrow(consensus1Text);
-  const consensus2 = Echalote.Consensus.parseOrThrow(consensus2Text);
+  const consensus1 = await Echalote.Consensus.parseOrThrow(consensus1Text);
+  const consensus2 = await Echalote.Consensus.parseOrThrow(consensus2Text);
 
   console.log(
     `Consensus 1 valid-after: ${consensus1.validAfter.toISOString()}`
@@ -64,8 +64,8 @@ test('Consensus diff mechanism with live fetch', async () => {
   );
 
   // Compute hashes
-  const hash1 = computeSignedPartHash(consensus1.preimage);
-  const hash2 = computeSignedPartHash(consensus2.preimage);
+  const hash1 = await computeSignedPartHash(consensus1.preimage);
+  const hash2 = await computeSignedPartHash(consensus2.preimage);
 
   console.log(`\nConsensus 1 hash: ${hash1}`);
   console.log(`Consensus 2 hash: ${hash2}`);
@@ -99,12 +99,13 @@ test('Consensus diff mechanism with live fetch', async () => {
     'ignore/consensus/2025_12_02T23_04_37_883Z',
     'utf-8'
   );
-  const savedConsensus = Echalote.Consensus.parseOrThrow(savedConsensusText);
+  const savedConsensus =
+    await Echalote.Consensus.parseOrThrow(savedConsensusText);
   console.log(
     `${relTimestamp()} | Loaded saved consensus (valid-after: ${savedConsensus.validAfter.toISOString()})`
   );
   console.log(
-    `${relTimestamp()} | Saved consensus hash: ${computeSignedPartHash(savedConsensus.preimage)}`
+    `${relTimestamp()} | Saved consensus hash: ${await computeSignedPartHash(savedConsensus.preimage)}`
   );
 
   // Test 2: Fetch with known consensus (should receive a diff if available)
@@ -112,7 +113,7 @@ test('Consensus diff mechanism with live fetch', async () => {
     `\n${relTimestamp()} | Test 3: Fetching with saved consensus as known...`
   );
   console.log(
-    `${relTimestamp()} | Using saved consensus hash: ${computeSignedPartHash(savedConsensus.preimage)}`
+    `${relTimestamp()} | Using saved consensus hash: ${await computeSignedPartHash(savedConsensus.preimage)}`
   );
 
   // Check if the saved consensus is expired (freshUntil has passed)

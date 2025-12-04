@@ -1,11 +1,11 @@
 import { decodeHostnamePubKey } from './decodeHostnamePubkey.js';
 
-export function decodeOnionPubKey(host: string): Uint8Array {
+export async function decodeOnionPubKey(host: string): Promise<Uint8Array> {
   if (!host.endsWith('.onion')) {
     throw new Error('not a .onion address');
   }
 
   const hostname = host.slice(0, -'.onion'.length);
 
-  return decodeHostnamePubKey(hostname);
+  return await decodeHostnamePubKey(hostname);
 }

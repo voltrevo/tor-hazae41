@@ -102,6 +102,7 @@
     "@hazae41/x509": "1.2.10",
     "@noble/curves": "^2.0.1",
     "@noble/hashes": "^2.0.1",
+    "hash-wasm": "^4.12.0",
     "p-limit": "^7.2.0"
   },
   "devDependencies": {

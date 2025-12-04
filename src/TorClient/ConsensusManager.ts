@@ -133,7 +133,7 @@ export class ConsensusManager {
         try {
           const data = await this.storage.read(key);
           const text = new TextDecoder().decode(data);
-          const consensus = Echalote.Consensus.parseOrThrow(text);
+          const consensus = await Echalote.Consensus.parseOrThrow(text);
           consensuses.push(consensus);
           this.log(
             `Loaded cached consensus from ${consensus.validAfter.toISOString()}`
@@ -214,7 +214,7 @@ export class ConsensusManager {
       const key = `consensus:${timestamp}`;
 
       // Reconstruct the full consensus text from preimage + signatureText
-      const textToSave = this.serializeConsensus(consensus);
+      const textToSave = await this.serializeConsensus(consensus);
       const data = new TextEncoder().encode(textToSave);
       await this.storage.write(key, data);
 
@@ -296,13 +296,15 @@ export class ConsensusManager {
    * Reconstructs the original consensus document from preimage and signatureText.
    * Verifies the reconstruction matches the original by checking the hash.
    */
-  private serializeConsensus(consensus: Echalote.Consensus): string {
+  private async serializeConsensus(
+    consensus: Echalote.Consensus
+  ): Promise<string> {
     // Combine preimage and signature text to reconstruct full consensus
     const text = consensus.preimage + consensus.signatureText;
 
     // Verify the reconstruction is correct by checking the hash
     if (consensus.fullTextHash) {
-      const reconstructedHash = computeFullConsensusHash(text);
+      const reconstructedHash = await computeFullConsensusHash(text);
       if (reconstructedHash !== consensus.fullTextHash) {
         throw new Error(
           `Consensus reconstruction failed: hash mismatch. ` +

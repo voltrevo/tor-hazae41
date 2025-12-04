@@ -41,7 +41,7 @@ export interface Consensus {
 
   readonly preimage: string;
   readonly signatures: Consensus.Signature[];
-  readonly fullTextHash?: string;
+  readonly fullTextHash: string;
   readonly signatureText: string;
 }
 
@@ -107,7 +107,9 @@ export namespace Consensus {
     const stream = await circuit.openDirOrThrow({}, signal);
 
     // Compute SHA3-256 hashes of known consensuses for diff request
-    const knownHashes = known.map(c => computeSignedPartHash(c.preimage));
+    const knownHashes = await Promise.all(
+      known.map(c => computeSignedPartHash(c.preimage))
+    );
     const headers: Record<string, string> = {};
 
     if (knownHashes.length > 0) {
@@ -160,17 +162,28 @@ export namespace Consensus {
     ) {
       // Parse and apply the diff
       const diff = parseDiffOrThrow(consensusTxt);
+      console.log(`diff received: ${diff.fromHash} -> ${diff.toHash}`);
 
       console.log(
         `[CONSENSUS DIFF] Received diff with ${diff.commands.length} commands`
       );
 
-      // Find the matching known consensus
-      const baseConsensus = known.find(
-        c =>
-          computeSignedPartHash(c.preimage).toLowerCase() ===
-          diff.fromHash.toLowerCase()
+      console.log(
+        `searching for ${diff.fromHash.toLowerCase()} in ${known.map(c => c.fullTextHash).join(', ')}`
       );
+
+      let baseConsensus: Consensus | undefined = undefined;
+
+      // Find the matching known consensus
+      for (const c of known) {
+        if (
+          (await computeSignedPartHash(c.preimage)).toLowerCase() ===
+          diff.fromHash.toLowerCase()
+        ) {
+          baseConsensus = c;
+          break;
+        }
+      }
 
       if (!baseConsensus) {
         throw new Error(
@@ -186,7 +199,7 @@ export namespace Consensus {
       const fullConsensusTxt = applyDiffOrThrow(baseConsensus.preimage, diff);
 
       // Verify the result hash matches
-      const resultHash = computeFullConsensusHash(fullConsensusTxt);
+      const resultHash = await computeFullConsensusHash(fullConsensusTxt);
 
       if (resultHash.toLowerCase() !== diff.toHash.toLowerCase()) {
         throw new Error(
@@ -198,10 +211,10 @@ export namespace Consensus {
         `[CONSENSUS DIFF] ✓ Successfully applied diff (${fullConsensusTxt.length} bytes)`
       );
 
-      consensus = Consensus.parseOrThrow(fullConsensusTxt);
+      consensus = await Consensus.parseOrThrow(fullConsensusTxt);
     } else {
       // Regular full consensus
-      consensus = Consensus.parseOrThrow(consensusTxt);
+      consensus = await Consensus.parseOrThrow(consensusTxt);
     }
 
     if ((await Consensus.verifyOrThrow(circuit, consensus, signal)) !== true)
@@ -217,7 +230,7 @@ export namespace Consensus {
     return consensus;
   }
 
-  export function parseOrThrow(text: string) {
+  export async function parseOrThrow(text: string) {
     const lines = text.split('\n');
 
     const consensus: Partial<Mutable<Consensus>> = {};
@@ -611,7 +624,7 @@ export namespace Consensus {
     }
 
     // Compute and store the full text hash for verification when reconstructing
-    consensus.fullTextHash = computeFullConsensusHash(text);
+    consensus.fullTextHash = await computeFullConsensusHash(text);
 
     // Store the signature portion (everything after preimage)
     if (!consensus.preimage) {

@@ -1,7 +1,9 @@
-import { sha3_256 } from '@noble/hashes/sha3.js';
+import { sha3 } from 'hash-wasm';
 import { never } from './never.js';
 
-export function hash(...args: (string | number | Uint8Array)[]): Uint8Array {
+export async function hash(
+  ...args: (string | number | Uint8Array)[]
+): Promise<Uint8Array> {
   let len = 0;
 
   for (const arg of args) {
@@ -37,5 +39,11 @@ export function hash(...args: (string | number | Uint8Array)[]): Uint8Array {
     }
   }
 
-  return sha3_256(uint8View);
+  const digestHex = await sha3(uint8View, 256);
+  // Convert hex string to Uint8Array
+  const digest = new Uint8Array(32);
+  for (let i = 0; i < 32; i++) {
+    digest[i] = parseInt(digestHex.substring(i * 2, i * 2 + 2), 16);
+  }
+  return digest;
 }

@@ -1,6 +1,5 @@
-import { Base16 } from '@hazae41/base16';
 import { Bytes } from '@hazae41/bytes';
-import { sha3_256 } from '@noble/hashes/sha3.js';
+import { sha3 } from 'hash-wasm';
 
 export interface ConsensusDiff {
   readonly version: number;
@@ -18,20 +17,21 @@ export type DiffCommand =
  * Computes the SHA3-256 hash of the signed part of a consensus document.
  * The signed part is everything up to and including "directory-signature ".
  */
-export function computeSignedPartHash(preimage: string): string {
+export async function computeSignedPartHash(preimage: string): Promise<string> {
   const signedPart = Bytes.fromUtf8(preimage);
-  const hash = sha3_256(signedPart);
-  // FIXME: Prefer Buffer.toString('hex')
-  return Base16.get().getOrThrow().encodeOrThrow(hash).toLowerCase();
+  const hash = await sha3(signedPart, 256);
+  return hash;
 }
 
 /**
  * Computes the SHA3-256 hash of the entire consensus document.
  */
-export function computeFullConsensusHash(consensusText: string): string {
+export async function computeFullConsensusHash(
+  consensusText: string
+): Promise<string> {
   const bytes = Bytes.fromUtf8(consensusText);
-  const hash = sha3_256(bytes);
-  return Base16.get().getOrThrow().encodeOrThrow(hash).toLowerCase();
+  const hash = await sha3(bytes, 256);
+  return hash;
 }
 
 /**

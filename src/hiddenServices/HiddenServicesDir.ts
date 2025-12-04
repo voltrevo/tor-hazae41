@@ -60,8 +60,8 @@ export class HiddenServicesDir {
       .bytes.slice();
   }
 
-  serviceIndex(replicaNum: number, blindedPublicKey: Uint8Array) {
-    return hash(
+  async serviceIndex(replicaNum: number, blindedPublicKey: Uint8Array) {
+    return await hash(
       'store-at-idx',
       blindedPublicKey,
       replicaNum,
@@ -70,8 +70,8 @@ export class HiddenServicesDir {
     );
   }
 
-  relayIndex(nodeIdentity: Uint8Array) {
-    return hash(
+  async relayIndex(nodeIdentity: Uint8Array) {
+    return await hash(
       'node-idx',
       nodeIdentity,
       this.sharedRandomValue(),
