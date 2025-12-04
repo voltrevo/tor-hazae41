@@ -1,6 +1,9 @@
-import { Circuit, Echalote } from '../echalote';
+import { Circuit, Consensus, Echalote } from '../echalote';
 import { IStorage } from 'tor-hazae41/storage';
 import { computeFullConsensusHash } from '../echalote/mods/tor/consensus/diff';
+import { getErrorDetails } from '../utils/getErrorDetails';
+import { softDelay } from '../utils/delay';
+import { Future } from '@hazae41/future';
 
 export interface ConsensusManagerOptions {
   storage: IStorage;
@@ -23,6 +26,12 @@ export class ConsensusManager {
   // This order is required for Tor nodes to properly return 304 responses
   private consensusCache: Echalote.Consensus[] = [];
   private cacheLoaded = false;
+  private cacheLoading: Promise<void> | undefined;
+  private backgroundUpdating = false;
+
+  private inFlightFetch: Promise<Consensus> | undefined;
+
+  isClosed = false;
 
   constructor(options: ConsensusManagerOptions) {
     this.storage = options.storage;
@@ -36,47 +45,55 @@ export class ConsensusManager {
    * @returns A fresh consensus document
    */
   async getConsensus(circuit: Circuit): Promise<Echalote.Consensus> {
-    // Load consensus cache if not already loaded
-    await this.loadCache();
+    this.backgroundUpdate(circuit);
 
-    // Check if we have a fresh consensus in cache
-    let consensus: Echalote.Consensus | undefined;
-    const now = new Date();
+    const { consensus, status } = await this.loadCachedConsensus();
 
-    if (this.consensusCache.length > 0) {
-      // Most recent consensus is at the end of the array
-      const mostRecent = this.consensusCache[this.consensusCache.length - 1];
-      if (mostRecent.freshUntil > now) {
-        const secondsUntilStale = Math.floor(
-          (mostRecent.freshUntil.getTime() - now.getTime()) / 1000
-        );
-        this.log(
-          `Using cached consensus (fresh for ${secondsUntilStale}s more)`,
-          'success'
-        );
-        consensus = mostRecent;
-      } else {
-        this.log('Cached consensus is stale, fetching new one');
-      }
-    } else {
-      this.log('No cached consensus available');
-    }
-
-    // Fetch consensus if we don't have a fresh one
-    if (!consensus) {
-      this.log('Fetching consensus from network');
-      consensus = await Echalote.Consensus.fetchOrThrow(
-        circuit,
-        this.consensusCache
-      );
+    if (status === 'fresh') {
+      this.log('Providing fresh cached consensus');
+    } else if (status === 'stale') {
       this.log(
-        `Consensus fetched with ${consensus.microdescs.length} microdescs`,
-        'success'
+        'Providing stale cached consensus, a fresh one will be sought separately'
       );
-
-      // Save to cache
-      await this.saveToCache(consensus);
+    } else if (status === 'invalid') {
+      this.log('Cached consensus is no longer valid, fetching a new one');
+    } else if (status === 'none') {
+      this.log('No cached consensus, fetching a new one');
     }
+
+    if (consensus) {
+      return consensus;
+    }
+
+    const newConsensus = await this.fetchConsensus(circuit);
+
+    return newConsensus;
+  }
+
+  private async fetchConsensus(circuit: Circuit) {
+    if (!this.inFlightFetch) {
+      this.inFlightFetch = this.rawFetchConsensus(circuit);
+
+      this.inFlightFetch.finally(() => {
+        this.inFlightFetch = undefined;
+      });
+    }
+
+    return await this.inFlightFetch;
+  }
+
+  private async rawFetchConsensus(circuit: Circuit) {
+    const cache = await this.loadCache();
+
+    this.log('Fetching consensus from network');
+    const consensus = await Echalote.Consensus.fetchOrThrow(circuit, cache);
+    this.log(
+      `Consensus fetched with ${consensus.microdescs.length} microdescs`,
+      'success'
+    );
+
+    // Save to cache
+    await this.saveToCache(consensus);
 
     return consensus;
   }
@@ -84,10 +101,18 @@ export class ConsensusManager {
   /**
    * Loads cached consensuses from storage.
    */
-  private async loadCache(): Promise<void> {
+  private async loadCache(): Promise<Consensus[]> {
     if (this.cacheLoaded) {
-      return;
+      return this.consensusCache;
     }
+
+    if (this.cacheLoading) {
+      await this.cacheLoading;
+      return this.consensusCache;
+    }
+
+    const cacheLoadingFuture = new Future<void>();
+    this.cacheLoading = cacheLoadingFuture.promise;
 
     try {
       this.log('Loading cached consensuses from storage');
@@ -96,7 +121,7 @@ export class ConsensusManager {
       if (keys.length === 0) {
         this.log('No cached consensuses found');
         this.cacheLoaded = true;
-        return;
+        return this.consensusCache;
       }
 
       // Sort keys by timestamp (oldest first, for chronological order)
@@ -146,7 +171,34 @@ export class ConsensusManager {
       );
     } finally {
       this.cacheLoaded = true;
+      cacheLoadingFuture.resolve();
     }
+
+    return this.consensusCache;
+  }
+
+  private async loadCachedConsensus(): Promise<
+    | { status: 'none' | 'invalid'; consensus: undefined }
+    | { status: 'fresh' | 'stale'; consensus: Consensus }
+  > {
+    const cache = await this.loadCache();
+    const consensus = cache.slice(-1)[0];
+
+    if (!consensus) {
+      return { status: 'none', consensus: undefined };
+    }
+
+    const now = new Date();
+
+    if (now < consensus.freshUntil) {
+      return { status: 'fresh', consensus };
+    }
+
+    if (now < consensus.validUntil) {
+      return { status: 'stale', consensus };
+    }
+
+    return { status: 'invalid', consensus: undefined };
   }
 
   /**
@@ -201,6 +253,44 @@ export class ConsensusManager {
     }
   }
 
+  private async backgroundUpdate(circuit: Circuit) {
+    if (this.backgroundUpdating) {
+      return;
+    }
+
+    this.backgroundUpdating = true;
+
+    try {
+      await this.rawBackgroundUpdate(circuit);
+    } catch (e) {
+      this.log(`backgroundUpdate failed: ${getErrorDetails(e)}`, 'error');
+    } finally {
+      this.backgroundUpdating = false;
+    }
+  }
+
+  private async rawBackgroundUpdate(circuit: Circuit) {
+    const info = await this.loadCachedConsensus();
+
+    if (info.status === 'fresh') {
+      const timeTilStale = info.consensus.freshUntil.getTime() - Date.now();
+      await softDelay(timeTilStale + 60_000);
+    }
+
+    const endTime = Date.now() + 3_600_000;
+
+    while (Date.now() < endTime && !this.isClosed) {
+      const consensus = await this.fetchConsensus(circuit);
+      const isFresh = new Date() < consensus.freshUntil;
+
+      if (isFresh) {
+        break;
+      }
+
+      await softDelay(3 * 60_000);
+    }
+  }
+
   /**
    * Serializes a consensus back to its full text format.
    * Reconstructs the original consensus document from preimage and signatureText.
@@ -231,5 +321,9 @@ export class ConsensusManager {
     if (this.onLog) {
       this.onLog(message, type);
     }
+  }
+
+  close() {
+    this.isClosed = true;
   }
 }

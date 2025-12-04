@@ -27,6 +27,7 @@ import { readFileSync, writeFileSync, existsSync } from 'node:fs';
 import { stdout, stderr } from 'node:process';
 
 import { TorClient } from './src/TorClient';
+import { getErrorDetails } from './src/utils/getErrorDetails';
 
 type Opts = {
   method?: string;
@@ -208,83 +209,6 @@ function hasHeader(headers: [string, string][], name: string): boolean {
   return headers.some(([k]) => k.toLowerCase() === n);
 }
 
-function formatError(error: unknown): string {
-  // Handle standard Error objects
-  if (error instanceof Error) {
-    return error.message;
-  }
-
-  // Handle ErrorEvent objects (common with WebSocket errors)
-  if (
-    error &&
-    typeof error === 'object' &&
-    'type' in error &&
-    'message' in error
-  ) {
-    const errorEvent = error as ErrorEvent;
-    return errorEvent.message || `${errorEvent.type} event`;
-  }
-
-  // Handle CloseEvent objects (WebSocket close events)
-  if (
-    error &&
-    typeof error === 'object' &&
-    'code' in error &&
-    'reason' in error
-  ) {
-    const closeEvent = error as CloseEvent;
-    return closeEvent.reason || `WebSocket closed with code ${closeEvent.code}`;
-  }
-
-  // Handle generic Event objects
-  if (error && typeof error === 'object' && 'type' in error) {
-    const event = error as Event;
-    return `${event.type} event`;
-  }
-
-  // Fallback for other types
-  return String(error);
-}
-
-function getErrorDetails(error: unknown): string {
-  if (!(error instanceof Error)) {
-    let className = '';
-    try {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      className = (error as any).constructor.name;
-    } catch {
-      //
-    }
-
-    const prefix = className ? `${className} ` : '';
-
-    return `${prefix}${JSON.stringify(error)}`;
-  }
-
-  let msg: string;
-
-  if (error.stack) {
-    const includesName = error.stack.includes(error.name);
-    const includesMsg = error.stack.includes(error.message);
-
-    if (includesName && includesMsg) {
-      msg = error.stack;
-    } else if (includesMsg) {
-      msg = `${error.name}: ${error.stack}`;
-    } else {
-      msg = `${error.name}: ${error.message}\nStack: ${error.stack}`;
-    }
-  } else {
-    msg = `${error.name}: ${error.message}`;
-  }
-
-  if (error.cause) {
-    msg += `\nCause: ${getErrorDetails(error.cause)}`;
-  }
-
-  return msg;
-}
-
 async function main() {
   const opts = parseArgs(process.argv.slice(2));
   if (!opts.url) die('Usage: curl.ts [options] <url>');
@@ -392,7 +316,7 @@ async function main() {
     res = await TorClient.fetch(snowflakeUrl, opts.url, fetchOptions);
   } catch (e: unknown) {
     if (timeout) clearTimeout(timeout);
-    const message = formatError(e);
+    const message = getErrorDetails(e);
 
     // In verbose mode, also show the error object details
     if (opts.verbose && !opts.silent) {
@@ -449,6 +373,6 @@ async function main() {
 }
 
 main().catch(e => {
-  const message = formatError(e);
+  const message = getErrorDetails(e);
   die(`Unhandled error: ${message}`);
 });

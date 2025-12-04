@@ -411,6 +411,9 @@ export class TorClient {
     // Clear timing state
     this.nextUpdateTime = 0;
 
+    // Close the consensus manager
+    this.consensusManager.close();
+
     if (this.currentCircuit) {
       this.currentCircuit[Symbol.dispose]();
       this.log('Circuit disposed');

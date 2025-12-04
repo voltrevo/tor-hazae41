@@ -1,2 +1,7 @@
 - Improve logging, avoid all raw console.\* calls
   - Hierarchical logging
+- Test circuit before use
+  - (retry without risking sending duplicate actual requests)
+- ConsensusManager needs its own circuit (protect from outside mutation)
+- replace all setTimeout with (soft)delay
+- update circuit management
