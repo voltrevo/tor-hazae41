@@ -6,6 +6,7 @@
 - cache microdescs
 - write technical guide to this project
 - write a good AGENTS.md
+- more tests for certificate caching
 
 # DONE
 

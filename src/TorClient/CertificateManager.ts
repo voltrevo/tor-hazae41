@@ -248,7 +248,7 @@ export class CertificateManager {
    * Saves a certificate to the cache and storage.
    * @param certificate The certificate to save
    */
-  private async saveToCache(
+  async saveToCache(
     certificate: Echalote.Consensus.Certificate
   ): Promise<void> {
     try {
