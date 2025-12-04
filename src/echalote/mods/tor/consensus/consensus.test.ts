@@ -99,7 +99,18 @@ m 8LiidxTziH538pVjEtJ+x7G6+Xe8lSLjUwYjtAbsk/s
 s Fast Running Stable V2Dir Valid
 v Tor 0.4.8.9
 pr Conflux=1 Cons=1-2 Desc=1-2 DirCache=2 FlowCtrl=1-2 HSDir=2 HSIntro=4-5 HSRend=1-2 Link=1-5 LinkAuth=1,3 Microdesc=1-2 Padding=2 Relay=1-4
-w Bandwidth=510`;
+w Bandwidth=510
+directory-footer
+bandwidth-weights Wbd=0 Wbe=0 Wbg=4096 Wbm=10000 Wdb=10000 Web=10000 Wed=10000 Wee=10000 Weg=10000 Wem=10000 Wgb=10000 Wgd=0 Wgg=5904 Wgm=5904 Wmb=10000 Wmd=0 Wme=0 Wmg=4096 Wmm=10000
+directory-signature sha256 0232AF901C31A04EE9848595AF9BB7620D4C5B2E DBC44B8640348CF9B2C152A6A09173810DF2C3B2
+-----BEGIN SIGNATURE-----
+dGVzdCBzaWduYXR1cmUgZHVtbXkgZGF0YSBmb3IgdGVzdGluZyBwdXJwb3NlcyBv
+bmx5IHRoaXMgaXMgbm90IGEgcmVhbCBzaWduYXR1cmUganVzdCBwbGFjZWhvbGRl
+ciBkYXRhIHRvIG1ha2UgdGhlIHBhcnNlciBoYXBweSBhbmQgYWxsb3cgdGhlIHRl
+c3RzIHRvIHJ1biBwcm9wZXJseSB3aXRob3V0IG5lZWRpbmcgYWN0dWFsIHZhbGlk
+Y3J5cHRvZ3JhcGhpYyBzaWduYXR1cmVzIGZyb20gcmVhbCBhdXRob3JpdGllcyBp
+biB0aGUgdG9yIG5ldHdvcmsgdGhpcyBpcyBqdXN0IGZvciBwYXJzaW5nIHRlc3Rz
+-----END SIGNATURE-----`;
 
 test('microdesc', async () => {
   const result = Consensus.Microdesc.parseOrThrow(microdesc);
