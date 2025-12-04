@@ -1,3 +1,7 @@
+// Polyfill Buffer for browser environment
+import { Buffer } from 'buffer';
+globalThis.Buffer = Buffer;
+
 // Import the TorClient abstraction
 import { TorClient } from './src/TorClient';
 import { waitForWebSocket } from './src/TorClient/WebSocketDuplex.js';

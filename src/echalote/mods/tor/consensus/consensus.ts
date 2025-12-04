@@ -7,7 +7,6 @@ import { RsaWasm } from '@hazae41/rsa.wasm';
 import { OIDs, X509 } from '@hazae41/x509';
 import { Mutable } from '../../../libs/typescript/typescript';
 import { Circuit } from '../circuit.js';
-import { mkdir, writeFile } from 'fs/promises';
 import pLimit from 'p-limit';
 import {
   computeSignedPartHash,
@@ -261,19 +260,19 @@ export namespace Consensus {
 
       if (lines[i.x].startsWith('valid-after ')) {
         const validAfter = lines[i.x].split(' ').slice(1).join(' ');
-        consensus.validAfter = new Date(validAfter);
+        consensus.validAfter = new Date(validAfter + ' UTC');
         continue;
       }
 
       if (lines[i.x].startsWith('fresh-until ')) {
         const freshUntil = lines[i.x].split(' ').slice(1).join(' ');
-        consensus.freshUntil = new Date(freshUntil);
+        consensus.freshUntil = new Date(freshUntil + ' UTC');
         continue;
       }
 
       if (lines[i.x].startsWith('valid-until ')) {
         const validUntil = lines[i.x].split(' ').slice(1).join(' ');
-        consensus.validUntil = new Date(validUntil);
+        consensus.validUntil = new Date(validUntil + ' UTC');
         continue;
       }
 
@@ -861,13 +860,13 @@ export namespace Consensus {
 
             if (lines[i.x].startsWith('dir-key-published ')) {
               const published = lines[i.x].split(' ').slice(1).join(' ');
-              cert.published = new Date(published);
+              cert.published = new Date(published + ' UTC');
               continue;
             }
 
             if (lines[i.x].startsWith('dir-key-expires ')) {
               const expires = lines[i.x].split(' ').slice(1).join(' ');
-              cert.expires = new Date(expires);
+              cert.expires = new Date(expires + ' UTC');
               continue;
             }
 
@@ -964,11 +963,6 @@ export namespace Consensus {
         );
 
       const buffer = await response.arrayBuffer();
-      await mkdir('ignore/microdescs', { recursive: true });
-      await writeFile(
-        `ignore/microdescs/${Buffer.from(microdescHash, 'base64').toString('base64url')}`,
-        new Uint8Array(buffer)
-      );
       const digest = new Uint8Array(
         await crypto.subtle.digest('SHA-256', buffer)
       );
