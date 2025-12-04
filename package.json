@@ -101,7 +101,8 @@
     "@hazae41/x25519.wasm": "1.0.8",
     "@hazae41/x509": "1.2.10",
     "@noble/curves": "^2.0.1",
-    "@noble/hashes": "^2.0.1"
+    "@noble/hashes": "^2.0.1",
+    "p-limit": "^7.2.0"
   },
   "devDependencies": {
     "@eslint/compat": "^2.0.0",

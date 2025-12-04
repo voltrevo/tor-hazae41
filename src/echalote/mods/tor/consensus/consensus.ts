@@ -8,6 +8,7 @@ import { OIDs, X509 } from '@hazae41/x509';
 import { Mutable } from '../../../libs/typescript/typescript';
 import { Circuit } from '../circuit.js';
 import { mkdir, writeFile } from 'fs/promises';
+import pLimit from 'p-limit';
 import {
   computeSignedPartHash,
   computeFullConsensusHash,
@@ -113,7 +114,7 @@ export namespace Consensus {
       // Send X-Or-Diff-From-Consensus header with hex-encoded hashes
       headers['X-Or-Diff-From-Consensus'] = knownHashes.join(', ');
       console.log(
-        `[CONSENSUS DIFF] Requesting diff from ${knownHashes.length} known consensus(es)`
+        `[CONSENSUS DIFF] Requesting diff from ${knownHashes.length} known consensus(es): ${knownHashes.join(', ')}`
       );
     }
 
@@ -626,72 +627,81 @@ export namespace Consensus {
     consensus: Consensus,
     signal = new AbortController().signal
   ) {
+    // Limit concurrent certificate fetches to 10
+    const limit = pLimit(10);
+
+    // Filter signatures that need verification
+    const signaturesNeedingVerification = consensus.signatures.filter(
+      it => it.algorithm === 'sha256' && Authority.trusteds.has(it.identity)
+    );
+
+    const startTime = Date.now();
+    // Fetch all certificates in parallel (with concurrency limit)
+    const certificatePromises = signaturesNeedingVerification.map(sig =>
+      limit(() => Certificate.fetchOrThrow(circuit, sig.identity, signal))
+    );
+
+    const certificates = await Promise.all(certificatePromises);
+    console.log(
+      `Fetched ${certificates.length} certs in ${Date.now() - startTime}ms`
+    );
+
+    // Verify all signatures
     let count = 0;
 
-    for (const it of consensus.signatures) {
-      if (it.algorithm === 'sha256') {
-        if (!Authority.trusteds.has(it.identity)) continue;
+    for (let i = 0; i < signaturesNeedingVerification.length; i++) {
+      const it = signaturesNeedingVerification[i];
+      const certificate = certificates[i];
 
-        const certificate = await Certificate.fetchOrThrow(
-          circuit,
-          it.identity,
-          signal
-        );
+      if (certificate == null)
+        throw new Error(`Missing certificate for ${it.identity}`);
 
-        if (certificate == null)
-          throw new Error(`Missing certificate for ${it.identity}`);
+      const signed = Bytes.fromUtf8(consensus.preimage);
+      const hashed = new Uint8Array(
+        await crypto.subtle.digest('SHA-256', signed)
+      );
 
-        const signed = Bytes.fromUtf8(consensus.preimage);
-        const hashed = new Uint8Array(
-          await crypto.subtle.digest('SHA-256', signed)
-        );
+      using signingKey = Base64.get()
+        .getOrThrow()
+        .decodePaddedOrThrow(certificate.signingKey);
 
-        using signingKey = Base64.get()
-          .getOrThrow()
-          .decodePaddedOrThrow(certificate.signingKey);
+      const algorithmAsn1 = ASN1.ObjectIdentifier.create(
+        undefined,
+        OIDs.keys.rsaEncryption
+      ).toDER();
+      const algorithmId = new X509.AlgorithmIdentifier(
+        algorithmAsn1,
+        ASN1.Null.create().toDER()
+      );
+      const subjectPublicKey = ASN1.BitString.create(
+        undefined,
+        0,
+        signingKey.bytes
+      ).toDER();
+      const subjectPublicKeyInfo = new X509.SubjectPublicKeyInfo(
+        algorithmId,
+        subjectPublicKey
+      );
 
-        const algorithmAsn1 = ASN1.ObjectIdentifier.create(
-          undefined,
-          OIDs.keys.rsaEncryption
-        ).toDER();
-        const algorithmId = new X509.AlgorithmIdentifier(
-          algorithmAsn1,
-          ASN1.Null.create().toDER()
-        );
-        const subjectPublicKey = ASN1.BitString.create(
-          undefined,
-          0,
-          signingKey.bytes
-        ).toDER();
-        const subjectPublicKeyInfo = new X509.SubjectPublicKeyInfo(
-          algorithmId,
-          subjectPublicKey
-        );
+      const publicKey = X509.writeToBytesOrThrow(subjectPublicKeyInfo);
 
-        const publicKey = X509.writeToBytesOrThrow(subjectPublicKeyInfo);
+      using signature = Base64.get()
+        .getOrThrow()
+        .decodePaddedOrThrow(it.signature);
 
-        using signature = Base64.get()
-          .getOrThrow()
-          .decodePaddedOrThrow(it.signature);
+      using signatureM = new RsaWasm.Memory(signature.bytes);
+      using hashedM = new RsaWasm.Memory(hashed);
+      using publicKeyM = new RsaWasm.Memory(publicKey);
 
-        using signatureM = new RsaWasm.Memory(signature.bytes);
-        using hashedM = new RsaWasm.Memory(hashed);
-        using publicKeyM = new RsaWasm.Memory(publicKey);
+      using publicKeyX = RsaWasm.RsaPublicKey.from_public_key_der(publicKeyM);
+      const verified = publicKeyX.verify_pkcs1v15_unprefixed(
+        hashedM,
+        signatureM
+      );
 
-        using publicKeyX = RsaWasm.RsaPublicKey.from_public_key_der(publicKeyM);
-        const verified = publicKeyX.verify_pkcs1v15_unprefixed(
-          hashedM,
-          signatureM
-        );
+      if (verified !== true) throw new Error(`Could not verify`);
 
-        if (verified !== true) throw new Error(`Could not verify`);
-
-        count++;
-
-        continue;
-      }
-
-      continue;
+      count++;
     }
 
     if (count < 3) throw new Error(`Not enough signatures`);
