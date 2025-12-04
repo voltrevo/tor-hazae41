@@ -74,7 +74,6 @@ export class TorClient {
     type?: 'info' | 'success' | 'error'
   ) => void;
   private storage: IStorage;
-  private static initialized = false;
 
   // Circuit state management
   private currentTor?: TorClientDuplex;
