@@ -498,12 +498,16 @@ export class TorClient {
   }
 
   private async createCircuit(tor: TorClientDuplex): Promise<Circuit> {
-    this.log('Creating circuit');
-    const circuit: Circuit = await tor.createOrThrow();
+    this.log('Creating circuits');
+    const [consensusCircuit, circuit] = await Promise.all([
+      tor.createOrThrow(),
+      tor.createOrThrow(),
+    ]);
     this.log('Circuit created successfully', 'success');
 
     // Get consensus (from cache if fresh, or fetch if needed)
-    const consensus = await this.consensusManager.getConsensus(circuit);
+    const consensus =
+      await this.consensusManager.getConsensus(consensusCircuit);
 
     this.log('Filtering relays');
     const middles = consensus.microdescs.filter(
@@ -536,7 +540,12 @@ export class TorClient {
       circuit,
       middle
     );
-    await circuit.extendOrThrow(middle2, AbortSignal.timeout(10000));
+    try {
+      await circuit.extendOrThrow(middle2, AbortSignal.timeout(10000));
+    } catch (e) {
+      this.log('Failed to extend circuit through middle relay', 'error');
+      throw e;
+    }
     this.log('Extended through middle relay', 'success');
 
     // Select exit relay and extend circuit
@@ -546,7 +555,12 @@ export class TorClient {
       circuit,
       exit
     );
-    await circuit.extendOrThrow(exit2, AbortSignal.timeout(10000));
+    try {
+      await circuit.extendOrThrow(exit2, AbortSignal.timeout(10000));
+    } catch (e) {
+      this.log('Failed to extend circuit through exit relay', 'error');
+      throw e;
+    }
     this.log('Extended through exit relay', 'success');
 
     return circuit;
