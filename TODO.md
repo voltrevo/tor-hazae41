@@ -11,3 +11,5 @@
 # DONE
 
 - cache certificates (fingerprint->cert, see Consensus.Certificate.fetchOrThrow)
+- src/clock: nodejs unref behavior
+- src/clock: delayUnref method and browser testing setup
