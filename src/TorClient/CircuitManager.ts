@@ -1,5 +1,6 @@
 import { Circuit, Echalote, TorClientDuplex } from '../echalote';
 import { getErrorDetails } from '../utils/getErrorDetails';
+import { selectRandomElement } from '../utils/random';
 import { initWasm } from './initWasm';
 import { Log } from '../Log';
 
@@ -409,7 +410,7 @@ export class CircuitManager {
     }
 
     // Pick a random candidate
-    const candidate = candidates[Math.floor(Math.random() * candidates.length)];
+    const candidate = selectRandomElement(candidates);
 
     try {
       this.logMessage(`Extending circuit through ${logPrefix}`);

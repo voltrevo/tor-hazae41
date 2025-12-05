@@ -15,6 +15,7 @@ import { createAutoStorage, IStorage } from 'tor-hazae41/storage';
 import { ConsensusManager } from './ConsensusManager';
 import { CircuitManager } from './CircuitManager';
 import { getErrorDetails } from '../utils/getErrorDetails';
+import { selectRandomElement } from '../utils/random';
 import { Log } from '../Log';
 
 /**
@@ -393,7 +394,7 @@ export class TorClient {
     }
 
     // Pick a random candidate
-    const candidate = candidates[Math.floor(Math.random() * candidates.length)];
+    const candidate = selectRandomElement(candidates);
 
     try {
       this.logMessage(`Extending circuit through ${logPrefix}`);
