@@ -13,7 +13,7 @@ test('Keynet connection and fetch', async () => {
   const _relTimestamp = () =>
     ((Date.now() - startTime) / 1000).toFixed(1).padStart(5, '0');
 
-  const pubkey = decodeKeynetPubKey(new URL(keynetAddr).host);
+  const pubkey = await decodeKeynetPubKey(new URL(keynetAddr).host);
 
   const circuit = await makeCircuit({
     snowflakeUrl: 'wss://snowflake.pse.dev/',
