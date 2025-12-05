@@ -224,8 +224,18 @@ export class TorClient {
         const ttls = new TlsClientDuplex({ host_name: hostname, ciphers });
 
         // Connect TLS streams
-        ttcp.outer.readable.pipeTo(ttls.inner.writable).catch(() => {});
-        ttls.inner.readable.pipeTo(ttcp.outer.writable).catch(() => {});
+        ttcp.outer.readable.pipeTo(ttls.inner.writable).catch(error => {
+          this.logMessage(
+            `TLS stream connection failed: ${getErrorDetails(error)}`,
+            'error'
+          );
+        });
+        ttls.inner.readable.pipeTo(ttcp.outer.writable).catch(error => {
+          this.logMessage(
+            `TLS stream connection failed: ${getErrorDetails(error)}`,
+            'error'
+          );
+        });
 
         this.logMessage('Making HTTPS request through Tor');
         const response = await fetch(url, {
