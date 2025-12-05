@@ -1,4 +1,5 @@
 import { IClock } from './IClock';
+import { Log } from '../Log';
 
 interface Timer {
   id: number;
@@ -11,6 +12,7 @@ interface Timer {
 interface VirtualClockOptions {
   automated?: boolean;
   startTime?: number;
+  log?: Log;
 }
 
 export class VirtualClock implements IClock {
@@ -20,6 +22,7 @@ export class VirtualClock implements IClock {
   private automated: boolean;
   private running: boolean;
   private stopRequested: boolean;
+  private log?: Log;
 
   constructor(options: VirtualClockOptions = {}) {
     this.currentTime = options.startTime ?? 0;
@@ -28,6 +31,7 @@ export class VirtualClock implements IClock {
     this.automated = options.automated ?? false;
     this.running = false;
     this.stopRequested = false;
+    this.log = options.log;
   }
 
   now(): number {
@@ -122,8 +126,10 @@ export class VirtualClock implements IClock {
         timer.callback();
         // Allow macrotasks to execute
         await new Promise(resolve => setTimeout(resolve, 0));
-      } catch {
-        // FIXME: Use Log instance for error reporting
+      } catch (error) {
+        this.log?.error(
+          `Timer callback error: ${error instanceof Error ? error.message : String(error)}`
+        );
       }
 
       if (timer.interval) {
@@ -180,8 +186,10 @@ export class VirtualClock implements IClock {
 
       try {
         timer.callback();
-      } catch {
-        // FIXME: Use Log instance for error reporting
+      } catch (error) {
+        this.log?.error(
+          `Timer callback error: ${error instanceof Error ? error.message : String(error)}`
+        );
       }
 
       if (timer.interval) {
