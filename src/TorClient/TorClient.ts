@@ -16,6 +16,7 @@ import { ConsensusManager } from './ConsensusManager';
 import { CircuitManager } from './CircuitManager';
 import { getErrorDetails } from '../utils/getErrorDetails';
 import { selectRandomElement } from '../utils/random';
+import { isMiddleRelay, isExitRelay } from '../utils/relayFilters';
 import { Log } from '../Log';
 
 /**
@@ -421,20 +422,9 @@ export class TorClient {
       await this.consensusManager.getConsensus(consensusCircuit);
 
     this.logMessage('Filtering relays');
-    const middles = consensus.microdescs.filter(
-      it =>
-        it.flags.includes('Fast') &&
-        it.flags.includes('Stable') &&
-        it.flags.includes('V2Dir')
-    );
+    const middles = consensus.microdescs.filter(isMiddleRelay);
 
-    const exits = consensus.microdescs.filter(
-      it =>
-        it.flags.includes('Fast') &&
-        it.flags.includes('Stable') &&
-        it.flags.includes('Exit') &&
-        !it.flags.includes('BadExit')
-    );
+    const exits = consensus.microdescs.filter(isExitRelay);
 
     this.logMessage(
       `Found ${middles.length} middle relays and ${exits.length} exit relays`

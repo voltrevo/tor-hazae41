@@ -1,6 +1,7 @@
 import { Circuit, Echalote, TorClientDuplex } from '../echalote';
 import { getErrorDetails } from '../utils/getErrorDetails';
 import { selectRandomElement } from '../utils/random';
+import { isMiddleRelay, isExitRelay } from '../utils/relayFilters';
 import { initWasm } from './initWasm';
 import { Log } from '../Log';
 
@@ -323,20 +324,8 @@ export class CircuitManager {
     const consensus = await this.getConsensus(consensusCircuit);
 
     this.logMessage('Filtering relays');
-    const middles = consensus.microdescs.filter(
-      (it: Echalote.Consensus.Microdesc.Head) =>
-        it.flags.includes('Fast') &&
-        it.flags.includes('Stable') &&
-        it.flags.includes('V2Dir')
-    );
-
-    const exits = consensus.microdescs.filter(
-      (it: Echalote.Consensus.Microdesc.Head) =>
-        it.flags.includes('Fast') &&
-        it.flags.includes('Stable') &&
-        it.flags.includes('Exit') &&
-        !it.flags.includes('BadExit')
-    );
+    const middles = consensus.microdescs.filter(isMiddleRelay);
+    const exits = consensus.microdescs.filter(isExitRelay);
 
     this.logMessage(
       `Found ${middles.length} middle relays and ${exits.length} exit relays`
