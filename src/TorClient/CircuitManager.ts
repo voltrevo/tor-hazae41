@@ -40,7 +40,6 @@ export interface CircuitStatus {
  * Manages Tor circuit lifecycle, including creation, updates, and scheduling.
  */
 export class CircuitManager {
-  private circuitTimeout: number;
   private circuitUpdateInterval: number | null;
   private circuitUpdateAdvance: number;
   private log: Log;
@@ -59,7 +58,6 @@ export class CircuitManager {
   private circuitUsed = false;
 
   constructor(options: CircuitManagerOptions) {
-    this.circuitTimeout = options.circuitTimeout ?? 90000;
     this.circuitUpdateInterval = options.circuitUpdateInterval ?? 10 * 60_000; // 10 minutes
     this.circuitUpdateAdvance = options.circuitUpdateAdvance ?? 60_000; // 1 minute
     this.log = options.log;
@@ -285,15 +283,6 @@ export class CircuitManager {
         this.log.info(message);
         break;
     }
-  }
-
-  private logError(
-    prefix: string,
-    error: unknown,
-    defaultMessage: string
-  ): void {
-    const errorMessage = getErrorDetails(error) || defaultMessage;
-    this.logMessage(`${prefix}: ${errorMessage}`, 'error');
   }
 
   private async createCircuitInternal(): Promise<Circuit> {
