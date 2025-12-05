@@ -196,7 +196,7 @@ export class TorClient {
     const parsedUrl = new URL(url);
     const hostname = parsedUrl.hostname;
     const port = parsedUrl.port
-      ? parseInt(parsedUrl.port)
+      ? parseInt(parsedUrl.port, 10)
       : parsedUrl.protocol === 'https:'
         ? 443
         : 80;

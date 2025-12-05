@@ -45,7 +45,7 @@ export function parseDiffOrThrow(diffText: string): ConsensusDiff {
   if (!lines[i] || !lines[i].startsWith('network-status-diff-version ')) {
     throw new Error('Invalid diff: missing version line');
   }
-  const version = parseInt(lines[i].split(' ')[1]);
+  const version = parseInt(lines[i].split(' ')[1], 10);
   i++;
 
   if (!lines[i] || !lines[i].startsWith('hash ')) {
@@ -63,12 +63,12 @@ export function parseDiffOrThrow(diffText: string): ConsensusDiff {
     // Match delete command: <n1>d or <n1>,<n2>d or <n1>,$d
     const deleteMatch = line.match(/^(\d+)(?:,(\d+|\$))?d$/);
     if (deleteMatch) {
-      const start = parseInt(deleteMatch[1]);
+      const start = parseInt(deleteMatch[1], 10);
       const end =
         deleteMatch[2] === '$'
           ? undefined
           : deleteMatch[2]
-            ? parseInt(deleteMatch[2])
+            ? parseInt(deleteMatch[2], 10)
             : undefined;
       commands.push({ type: 'delete', start, end });
       i++;
@@ -78,8 +78,8 @@ export function parseDiffOrThrow(diffText: string): ConsensusDiff {
     // Match replace command: <n1>c or <n1>,<n2>c
     const replaceMatch = line.match(/^(\d+)(?:,(\d+))?c$/);
     if (replaceMatch) {
-      const start = parseInt(replaceMatch[1]);
-      const end = replaceMatch[2] ? parseInt(replaceMatch[2]) : undefined;
+      const start = parseInt(replaceMatch[1], 10);
+      const end = replaceMatch[2] ? parseInt(replaceMatch[2], 10) : undefined;
       i++;
 
       // Read block until we find a line with just "."
@@ -97,7 +97,7 @@ export function parseDiffOrThrow(diffText: string): ConsensusDiff {
     // Match append command: <n1>a
     const appendMatch = line.match(/^(\d+)a$/);
     if (appendMatch) {
-      const lineNum = parseInt(appendMatch[1]);
+      const lineNum = parseInt(appendMatch[1], 10);
       i++;
 
       // Read block until we find a line with just "."
