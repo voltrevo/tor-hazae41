@@ -332,7 +332,9 @@ export class CircuitManager {
     );
 
     if (middles.length === 0 || exits.length === 0) {
-      throw new Error('Not enough suitable relays found');
+      throw new Error(
+        `Not enough suitable relays found: ${middles.length} middles, ${exits.length} exits`
+      );
     }
 
     // Attempt to build a complete circuit with retry logic
