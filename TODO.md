@@ -1,5 +1,6 @@
 # TODO
 
+- test coverage
 - update circuit management
 - cache microdescs
 - write technical guide to this project
