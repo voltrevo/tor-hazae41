@@ -402,3 +402,132 @@ test('VirtualClock - automated mode - delayUnref behavior', async () => {
   assert(!unrefedExecuted, 'should not execute unrefed delay');
   assert(clock.now() === 1000, 'time should advance to refed timer only');
 });
+
+test('VirtualClock - manual mode - timer callback with logging', async () => {
+  let callbackExecuted = false;
+  const clock = new VirtualClock();
+
+  clock.setTimeout(() => {
+    callbackExecuted = true;
+  }, 50);
+
+  await clock.advanceTime(50);
+  assert(callbackExecuted, 'callback should execute and be logged');
+});
+
+test('VirtualClock - automated mode - timer callback execution', async () => {
+  const clock = new VirtualClock({ automated: true });
+  let callbackExecuted = false;
+
+  clock.setTimeout(() => {
+    callbackExecuted = true;
+  }, 50);
+
+  await clock.run();
+  assert(callbackExecuted, 'should execute callback in automated mode');
+});
+
+test('VirtualClock - unref on non-existent timer', async () => {
+  const clock = new VirtualClock();
+  // Should not throw
+  clock.unref(99999);
+  assert(true, 'should not throw on non-existent timer id');
+});
+
+test('VirtualClock - ref on non-existent timer', async () => {
+  const clock = new VirtualClock();
+  // Should not throw
+  clock.ref(99999);
+  assert(true, 'should not throw on non-existent timer id');
+});
+
+test('VirtualClock - advanceTime on automated mode should throw', async () => {
+  const clock = new VirtualClock({ automated: true });
+  let thrown = false;
+
+  try {
+    await clock.advanceTime(100);
+  } catch (error) {
+    thrown =
+      error instanceof Error &&
+      error.message === 'Cannot manually advance time in automated mode';
+  }
+
+  assert(thrown, 'should throw when calling advanceTime on automated clock');
+});
+
+test('VirtualClock - run on manual mode should throw', async () => {
+  const clock = new VirtualClock({ automated: false });
+  let thrown = false;
+
+  try {
+    await clock.run();
+  } catch (error) {
+    thrown =
+      error instanceof Error &&
+      error.message === 'Cannot run manual clock in automated mode';
+  }
+
+  assert(thrown, 'should throw when calling run on manual clock');
+});
+
+test('VirtualClock - run called twice returns immediately', async () => {
+  const clock = new VirtualClock({ automated: true });
+  let count = 0;
+
+  clock.setTimeout(() => {
+    count++;
+  }, 50);
+
+  // First run
+  const promise1 = clock.run();
+  // Second run should return immediately
+  const promise2 = clock.run();
+
+  await Promise.all([promise1, promise2]);
+  assert(count === 1, 'should not execute twice');
+});
+
+test('VirtualClock - stop when not running', async () => {
+  const clock = new VirtualClock({ automated: true });
+  // Should not throw
+  clock.stop();
+  assert(true, 'should not throw when stop called while not running');
+});
+
+test('VirtualClock - multiple timers at same executeTime', async () => {
+  const clock = new VirtualClock();
+  const order: number[] = [];
+
+  clock.setTimeout(() => order.push(1), 50);
+  clock.setTimeout(() => order.push(2), 50);
+  clock.setTimeout(() => order.push(3), 50);
+
+  await clock.advanceTime(50);
+  assert(order.length === 3, 'should execute all timers at same time');
+});
+
+test('VirtualClock - setInterval execution', async () => {
+  const clock = new VirtualClock();
+  let callCount = 0;
+
+  const intervalId = clock.setInterval(() => {
+    callCount++;
+  }, 50);
+
+  await clock.advanceTime(100);
+  assert(callCount === 2, 'should execute interval twice');
+});
+
+test('VirtualClock - timer cleared during execution', async () => {
+  const clock = new VirtualClock();
+  let executed = false;
+
+  clock.setTimeout(() => {
+    clock.clearTimeout(99999); // Clear non-existent timer
+    executed = true;
+  }, 50);
+
+  await clock.advanceTime(50);
+  assert(executed, 'should execute even when clearing non-existent timer');
+});
