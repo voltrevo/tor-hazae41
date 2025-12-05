@@ -27,8 +27,12 @@ test('ConsensusManager: fetch and reconstruct consensus', async () => {
   const tcp = createSnowflakeStream(stream);
   const tor = new TorClientDuplex();
 
-  tcp.outer.readable.pipeTo(tor.inner.writable).catch(() => {});
-  tor.inner.readable.pipeTo(tcp.outer.writable).catch(() => {});
+  tcp.outer.readable.pipeTo(tor.inner.writable).catch(error => {
+    console.error(`TCP -> Tor stream error: ${error}`);
+  });
+  tor.inner.readable.pipeTo(tcp.outer.writable).catch(error => {
+    console.error(`Tor -> TCP stream error: ${error}`);
+  });
 
   console.log('Waiting for Tor to be ready...');
   await tor.waitOrThrow(AbortSignal.timeout(90000));
