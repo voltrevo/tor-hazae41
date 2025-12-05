@@ -3,6 +3,13 @@ import * as path from 'node:path';
 import type { IStorage } from './types.js';
 
 /**
+ * Type guard to check if an error is a Node.js filesystem error with code property
+ */
+function isNodeFsError(error: unknown): error is NodeJS.ErrnoException {
+  return error instanceof Error && 'code' in error;
+}
+
+/**
  * Mangles a key into a filesystem-friendly filename.
  * Maps characters to readable equivalents:
  * - a-z -> a-z
@@ -104,7 +111,7 @@ export function createFsStorage(dirPath: string): IStorage {
         const data = await fs.readFile(getFilePath(key));
         return new Uint8Array(data);
       } catch (error) {
-        if ((error as { code?: string }).code === 'ENOENT') {
+        if (isNodeFsError(error) && error.code === 'ENOENT') {
           throw new Error(`Key not found: ${key}`);
         }
         throw error;
@@ -126,7 +133,7 @@ export function createFsStorage(dirPath: string): IStorage {
           .sort();
         return keys;
       } catch (error) {
-        if ((error as { code?: string }).code === 'ENOENT') {
+        if (isNodeFsError(error) && error.code === 'ENOENT') {
           return [];
         }
         throw error;
@@ -138,7 +145,7 @@ export function createFsStorage(dirPath: string): IStorage {
       try {
         await fs.unlink(getFilePath(key));
       } catch (error) {
-        if ((error as { code?: string }).code === 'ENOENT') {
+        if (isNodeFsError(error) && error.code === 'ENOENT') {
           // Key doesn't exist, silently succeed
           return;
         }
@@ -158,14 +165,15 @@ export function createFsStorage(dirPath: string): IStorage {
           keysToRemove.map(key =>
             fs.unlink(getFilePath(key)).catch(error => {
               // Ignore ENOENT errors (file already deleted)
-              if ((error as { code?: string }).code !== 'ENOENT') {
-                throw error;
+              if (isNodeFsError(error) && error.code === 'ENOENT') {
+                return;
               }
+              throw error;
             })
           )
         );
       } catch (error) {
-        if ((error as { code?: string }).code === 'ENOENT') {
+        if (isNodeFsError(error) && error.code === 'ENOENT') {
           // Directory doesn't exist, nothing to remove
           return;
         }
