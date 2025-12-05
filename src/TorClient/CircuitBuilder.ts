@@ -115,7 +115,7 @@ export class CircuitBuilder extends EventEmitter<CircuitBuilderEvents> {
           } catch (e) {
             // Dispose failed circuit
             try {
-              (circuit as any)[Symbol.dispose]();
+              (circuit as unknown as Disposable)[Symbol.dispose]();
             } catch {
               // Ignore disposal errors
             }
@@ -140,7 +140,7 @@ export class CircuitBuilder extends EventEmitter<CircuitBuilderEvents> {
     } finally {
       // Dispose consensus circuit
       try {
-        (consensusCircuit as any)[Symbol.dispose]();
+        (consensusCircuit as unknown as Disposable)[Symbol.dispose]();
       } catch {
         // Ignore disposal errors
       }

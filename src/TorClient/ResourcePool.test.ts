@@ -3,10 +3,21 @@ import { ResourcePool } from './ResourcePool';
 import { VirtualClock } from '../clock/VirtualClock';
 
 /**
+ * Mock resource type for testing
+ */
+interface MockResource {
+  id: string;
+  disposed: boolean;
+  [Symbol.dispose](): void;
+}
+
+/**
  * Test helper: creates a mock disposable resource
  */
-function createMockResource(id: string = Math.random().toString(36).slice(2)) {
-  const resource = {
+function createMockResource(
+  id: string = Math.random().toString(36).slice(2)
+): MockResource {
+  const resource: MockResource = {
     id,
     disposed: false,
     [Symbol.dispose]() {
@@ -132,7 +143,7 @@ test('ResourcePool: inFlightCount respects concurrency limit', async () => {
 
 test('ResourcePool: dispose cleans up buffered resources', async () => {
   const clock = new VirtualClock();
-  const createdResources: any[] = [];
+  const createdResources: MockResource[] = [];
 
   const factory = async () => {
     const resource = createMockResource();
@@ -240,7 +251,7 @@ test('ResourcePool: dispose throws on subsequent operations', async () => {
 
 test('ResourcePool: racing multiple concurrent acquires', async () => {
   const clock = new VirtualClock();
-  const createdResources: any[] = [];
+  const createdResources: MockResource[] = [];
 
   const factory = async () => {
     const resource = createMockResource();
@@ -415,7 +426,7 @@ test('ResourcePool: minInFlightCount leftover creations fill buffer', async () =
   // Now pool should have buffered the 2 other successful creations
   assert(pool.size() === 2, 'should have 2 resources in buffer from racing');
 
-  const resource2 = await pool.acquire();
+  const _resource2 = await pool.acquire();
   assert(pool.size() === 1, 'should have 1 remaining after acquire');
 
   pool.dispose();

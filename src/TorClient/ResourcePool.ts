@@ -399,7 +399,7 @@ export class ResourcePool<R> extends EventEmitter<ResourcePoolEvents<R>> {
    * Disposes a single resource by calling Symbol.dispose if available.
    */
   private disposeResource(resource: R): void {
-    const disposable = resource as any;
+    const disposable = resource as unknown as Disposable;
     if (disposable && typeof disposable[Symbol.dispose] === 'function') {
       try {
         disposable[Symbol.dispose]();

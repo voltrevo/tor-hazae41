@@ -4,6 +4,7 @@ globalThis.Buffer = Buffer;
 
 // Import the TorClient abstraction
 import { TorClient } from './src/TorClient';
+import { CircuitStatus } from './src/TorClient/CircuitManager';
 import { waitForWebSocket } from './src/TorClient/WebSocketDuplex.js';
 import { Log } from './src/Log/index.js';
 import { SystemClock } from './src/clock';
@@ -86,9 +87,13 @@ function updateStatus(): void {
   // Format status for each host
   let statusHTML = '<div><strong>Circuit Status (per-host):</strong></div>';
 
-  if (typeof statusData === 'object' && statusData !== null) {
+  if (
+    typeof statusData === 'object' &&
+    statusData !== null &&
+    'idleTime' in statusData === false
+  ) {
     for (const [host, status] of Object.entries(
-      statusData as Record<string, any>
+      statusData as Record<string, CircuitStatus>
     )) {
       const statusStr = torClient.getCircuitStatusString();
       if (typeof statusStr === 'object') {
