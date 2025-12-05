@@ -1,7 +1,5 @@
 # TODO
 
-- Improve logging, avoid all raw console.method calls
-  - Hierarchical logging
 - update circuit management
 - cache microdescs
 - write technical guide to this project
@@ -10,6 +8,9 @@
 
 # DONE
 
+- IClock usage
+- Improve logging, avoid all raw console.method calls
+  - Hierarchical logging
 - add src/clock/README.md
 - get all tests running in both nodejs and playwright
   - playwright testing via npm run test:browser

@@ -2,6 +2,8 @@
 // This file imports all test files that are compatible with browser environment
 // Uses Vite's import.meta.glob to dynamically discover test files
 
+import { SystemClock } from '../src/clock';
+
 interface WindowWithTests extends Window {
   __tests_completed?: boolean;
   __tests_failed?: boolean;
@@ -16,6 +18,7 @@ declare global {
   }
 }
 
+const clock = new SystemClock();
 const output = document.getElementById('output') as HTMLDivElement;
 
 function log(message: string) {
@@ -100,7 +103,7 @@ async function runTests() {
     log(`Note: Storage tests require Node.js and run with 'npm test' instead`);
 
     // Wait for any pending microtasks and macrotasks
-    await new Promise(resolve => setTimeout(resolve, 3000));
+    await clock.delay(3000);
 
     log('\n✅ Test runner completed');
 

@@ -4,11 +4,17 @@ import { selectRandomElement } from '../utils/random';
 import { isMiddleRelay, isExitRelay } from '../utils/relayFilters';
 import { initWasm } from './initWasm';
 import { Log } from '../Log';
+import { IClock } from '../clock';
 
 /**
  * Configuration options for the CircuitManager.
+ *
+ * @internal This is an internal class and should not be used directly by external consumers.
+ * Instances are created by TorClient and should not be instantiated manually.
  */
 export interface CircuitManagerOptions {
+  /** Clock instance for managing timeouts and delays */
+  clock: IClock;
   /** Timeout in milliseconds for circuit creation and readiness (default: 90000) */
   circuitTimeout?: number;
   /** Interval in milliseconds between automatic circuit updates, or null to disable (default: 600000 = 10 minutes) */
@@ -38,8 +44,12 @@ export interface CircuitStatus {
 
 /**
  * Manages Tor circuit lifecycle, including creation, updates, and scheduling.
+ *
+ * @internal This is an internal class and should not be used directly by external consumers.
+ * Instances are created by TorClient and should not be instantiated manually.
  */
 export class CircuitManager {
+  private clock: IClock;
   private circuitUpdateInterval: number | null;
   private circuitUpdateAdvance: number;
   private log: Log;
@@ -52,12 +62,13 @@ export class CircuitManager {
   private circuitPromise?: Promise<Circuit>;
   private isUpdatingCircuit = false;
   private updateDeadline = 0;
-  private updateTimer?: NodeJS.Timeout;
+  private updateTimer?: unknown;
   private updateLoopActive = false;
   private nextUpdateTime = 0;
   private circuitUsed = false;
 
   constructor(options: CircuitManagerOptions) {
+    this.clock = options.clock;
     this.circuitUpdateInterval = options.circuitUpdateInterval ?? 10 * 60_000; // 10 minutes
     this.circuitUpdateAdvance = options.circuitUpdateAdvance ?? 60_000; // 1 minute
     this.log = options.log;
@@ -106,7 +117,7 @@ export class CircuitManager {
 
     // Abort any scheduled update since we're manually updating now
     if (this.updateTimer) {
-      clearTimeout(this.updateTimer);
+      this.clock.clearTimeout(this.updateTimer);
       this.updateTimer = undefined;
       this.logMessage('Aborted scheduled circuit update due to manual update');
     }
@@ -242,7 +253,7 @@ export class CircuitManager {
 
     // Clear the scheduled update timer
     if (this.updateTimer) {
-      clearTimeout(this.updateTimer);
+      this.clock.clearTimeout(this.updateTimer);
       this.updateTimer = undefined;
     }
 
@@ -433,7 +444,7 @@ export class CircuitManager {
     const updateDelay = this.circuitUpdateInterval! - this.circuitUpdateAdvance;
     this.nextUpdateTime = Date.now() + updateDelay;
 
-    this.updateTimer = setTimeout(async () => {
+    this.updateTimer = this.clock.setTimeout(async () => {
       // Check if we were disposed during the wait
       if (!this.updateLoopActive) {
         return;

@@ -2,12 +2,14 @@ import { Circuit, Consensus, Echalote } from '../echalote';
 import { IStorage } from '../storage';
 import { computeFullConsensusHash } from '../echalote/mods/tor/consensus/diff';
 import { getErrorDetails } from '../utils/getErrorDetails';
-import { softDelay } from '../utils/delay';
+import { IClock } from '../clock';
 import { Future } from '@hazae41/future';
 import { CertificateManager } from './CertificateManager';
 import { Log } from '../Log';
 
 export interface ConsensusManagerOptions {
+  /** Clock instance for managing delays */
+  clock: IClock;
   storage: IStorage;
   maxCached?: number;
   log: Log;
@@ -16,8 +18,12 @@ export interface ConsensusManagerOptions {
 /**
  * Manages consensus caching and retrieval for Tor circuits.
  * Handles loading, saving, and freshness checking of consensus documents.
+ *
+ * @internal This is an internal class and should not be used directly by external consumers.
+ * Instances are created by TorClient and should not be instantiated manually.
  */
 export class ConsensusManager {
+  private clock: IClock;
   private storage: IStorage;
   private maxCached: number;
   private log: Log;
@@ -34,6 +40,7 @@ export class ConsensusManager {
   isClosed = false;
 
   constructor(options: ConsensusManagerOptions) {
+    this.clock = options.clock;
     this.storage = options.storage;
     this.maxCached = options.maxCached ?? 5;
     this.log = options.log;
@@ -294,7 +301,7 @@ export class ConsensusManager {
 
     if (info.status === 'fresh') {
       const timeTilStale = info.consensus.freshUntil.getTime() - Date.now();
-      await softDelay(timeTilStale + 60_000);
+      await this.clock.delay(timeTilStale + 60_000);
     }
 
     const endTime = Date.now() + 3_600_000;
@@ -307,7 +314,7 @@ export class ConsensusManager {
         break;
       }
 
-      await softDelay(3 * 60_000);
+      await this.clock.delay(3 * 60_000);
     }
   }
 

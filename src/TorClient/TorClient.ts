@@ -18,6 +18,7 @@ import { getErrorDetails } from '../utils/getErrorDetails';
 import { selectRandomElement } from '../utils/random';
 import { isMiddleRelay, isExitRelay } from '../utils/relayFilters';
 import { Log } from '../Log';
+import { SystemClock, IClock } from '../clock';
 
 /**
  * Configuration options for the TorClient.
@@ -25,6 +26,8 @@ import { Log } from '../Log';
 export interface TorClientOptions {
   /** The Snowflake bridge WebSocket URL for Tor connections */
   snowflakeUrl: string;
+  /** Clock instance for managing timeouts and delays (default: new SystemClock()) */
+  clock?: IClock;
   /** Timeout in milliseconds for establishing initial connections (default: 15000) */
   connectionTimeout?: number;
   /** Timeout in milliseconds for circuit creation and readiness (default: 90000) */
@@ -75,6 +78,7 @@ export class TorClient {
   private circuitUpdateAdvance: number;
   private log: Log;
   private storage: IStorage;
+  private clock: SystemClock;
 
   // Consensus management
   private consensusManager: ConsensusManager;
@@ -108,13 +112,17 @@ export class TorClient {
     this.circuitUpdateAdvance = options.circuitUpdateAdvance ?? 60_000; // 1 minute
     this.log = options.log ?? new Log();
     this.storage = options.storage ?? createAutoStorage('tor-hazae41-cache');
+    this.clock = options.clock ?? new SystemClock();
+
     this.consensusManager = new ConsensusManager({
+      clock: this.clock,
       storage: this.storage,
       log: this.log.child('consensus'),
     });
 
     // Initialize circuit manager
     this.circuitManager = new CircuitManager({
+      clock: this.clock,
       circuitTimeout: this.circuitTimeout,
       circuitUpdateInterval: this.circuitUpdateInterval,
       circuitUpdateAdvance: this.circuitUpdateAdvance,

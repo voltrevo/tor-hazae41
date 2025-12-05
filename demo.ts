@@ -6,6 +6,7 @@ globalThis.Buffer = Buffer;
 import { TorClient } from './src/TorClient';
 import { waitForWebSocket } from './src/TorClient/WebSocketDuplex.js';
 import { Log } from './src/Log/index.js';
+import { SystemClock } from './src/clock';
 
 declare global {
   interface Window {
@@ -20,7 +21,8 @@ declare global {
 
 let isRunning = false;
 let torClient: TorClient | null = null;
-let statusUpdateInterval: NodeJS.Timeout | null = null;
+let statusUpdateTimer: unknown | null = null;
+const clock = new SystemClock();
 
 // Root logger that outputs to both DOM and console
 const log = new Log({
@@ -95,9 +97,9 @@ function setButtonState(
 }
 
 function closeTorClient(): void {
-  if (statusUpdateInterval) {
-    clearInterval(statusUpdateInterval);
-    statusUpdateInterval = null;
+  if (statusUpdateTimer) {
+    clock.clearInterval(statusUpdateTimer);
+    statusUpdateTimer = null;
   }
   if (torClient) {
     torClient.close();
@@ -367,7 +369,7 @@ async function openTorClient(): Promise<void> {
     });
 
     // Start status updates
-    statusUpdateInterval = setInterval(updateStatus, 500);
+    statusUpdateTimer = clock.setInterval(updateStatus, 500);
 
     log.info('⏳ Waiting for initial circuit to be ready...');
     await torClient.waitForCircuit();

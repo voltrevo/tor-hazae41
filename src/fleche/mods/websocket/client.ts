@@ -23,7 +23,7 @@ import {
   UnexpectedContinuationFrameError,
 } from './errors.js';
 import { WebSocketFrame } from './frame.js';
-import { softDelay } from '../../../utils/delay';
+import { IClock } from '../../../clock';
 
 const ACCEPT_SUFFIX = Bytes.fromUtf8('258EAFA5-E914-47DA-95CA-C5AB0DC85B11');
 
@@ -68,8 +68,22 @@ export class WebSocketClientDuplex extends EventTarget implements WebSocket {
 
   #resolveOnPong = new Future<void>();
 
-  constructor(url: string | URL, _protocols?: string | string[]) {
+  readonly #clock: IClock;
+
+  /**
+   * Creates a new WebSocket client connection.
+   * @param clock Required clock instance for managing timeouts and delays
+   * @param url The WebSocket URL
+   * @param protocols Optional protocol strings
+   */
+  constructor(
+    clock: IClock,
+    url: string | URL,
+    _protocols?: string | string[]
+  ) {
     super();
+
+    this.#clock = clock;
 
     this.addEventListener('close', e => this.onclose?.(e));
     this.addEventListener('error', e => this.onerror?.(e));
@@ -321,7 +335,7 @@ export class WebSocketClientDuplex extends EventTarget implements WebSocket {
 
   async #startPingLoop() {
     while (this.readyState === this.OPEN) {
-      await softDelay(10_000);
+      await this.#clock.delay(10_000);
 
       try {
         await this.#pingOrThrow();
