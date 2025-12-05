@@ -10,7 +10,7 @@ test('Keynet connection and fetch', async () => {
     'http://jyn6dehf3ttu4lblc7tr3i23xqsz76dn2du6keptg5kyo3r6mur36vad.keynet';
 
   const startTime = Date.now();
-  const relTimestamp = () =>
+  const _relTimestamp = () =>
     ((Date.now() - startTime) / 1000).toFixed(1).padStart(5, '0');
 
   const pubkey = decodeKeynetPubKey(new URL(keynetAddr).host);

@@ -132,7 +132,9 @@ export class CircuitManager {
       this.updateDeadline = moreAggressiveDeadline;
 
       // Wait for the current update to complete
-      this.logMessage('Waiting for current update to complete with updated deadline');
+      this.logMessage(
+        'Waiting for current update to complete with updated deadline'
+      );
       if (this.circuitPromise) {
         await this.circuitPromise;
       }
@@ -152,7 +154,10 @@ export class CircuitManager {
       await this.circuitPromise;
       this.logMessage('Circuit update completed successfully', 'success');
     } catch (error) {
-      this.logMessage(`Circuit update failed: ${(error as Error).message}`, 'error');
+      this.logMessage(
+        `Circuit update failed: ${(error as Error).message}`,
+        'error'
+      );
       this.isUpdatingCircuit = false;
       this.updateDeadline = 0;
       throw error;
@@ -166,7 +171,9 @@ export class CircuitManager {
     if (!this.circuitUsed) {
       this.circuitUsed = true;
       this.scheduleCircuitUpdate();
-      this.logMessage('Circuit used for first time, scheduling automatic updates');
+      this.logMessage(
+        'Circuit used for first time, scheduling automatic updates'
+      );
     }
   }
 

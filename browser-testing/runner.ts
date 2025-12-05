@@ -2,6 +2,20 @@
 // This file imports all test files that are compatible with browser environment
 // Uses Vite's import.meta.glob to dynamically discover test files
 
+interface WindowWithTests extends Window {
+  __tests_completed?: boolean;
+  __tests_failed?: boolean;
+}
+
+declare global {
+  namespace ImportMetaGlob {
+    function glob(
+      pattern: string,
+      options: Record<string, unknown>
+    ): Record<string, () => Promise<unknown>>;
+  }
+}
+
 const output = document.getElementById('output') as HTMLDivElement;
 
 function log(message: string) {
@@ -14,19 +28,19 @@ const originalLog = console.log;
 const originalError = console.error;
 const originalWarn = console.warn;
 
-console.log = (...args: any[]) => {
+console.log = (...args: unknown[]) => {
   const message = args.map(arg => String(arg)).join(' ');
   log(message);
   originalLog(...args);
 };
 
-console.error = (...args: any[]) => {
+console.error = (...args: unknown[]) => {
   const message = args.map(arg => String(arg)).join(' ');
   log(`ERROR: ${message}`);
   originalError(...args);
 };
 
-console.warn = (...args: any[]) => {
+console.warn = (...args: unknown[]) => {
   const message = args.map(arg => String(arg)).join(' ');
   log(`WARN: ${message}`);
   originalWarn(...args);
@@ -39,9 +53,10 @@ async function runTests() {
 
     // Use Vite's glob API to discover all test files
     // Exclude storage tests which require Node.js-specific modules
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const testModules = (import.meta as any).glob('../src/**/*.test.ts', {
       eager: false,
-    }) as Record<string, () => Promise<any>>;
+    }) as Record<string, () => Promise<unknown>>;
 
     // Filter out storage tests which use Node.js fs module
     const filteredModules = Object.entries(testModules).filter(
@@ -78,7 +93,7 @@ async function runTests() {
 
     if (failedModules.length > 0) {
       log(`Failed modules: ${failedModules.join(', ')}`);
-      (window as any).__tests_failed = true;
+      (window as WindowWithTests).__tests_failed = true;
     }
 
     log(`\nBrowser tests loaded and running via phobos...`);
@@ -90,11 +105,11 @@ async function runTests() {
     log('\n✅ Test runner completed');
 
     // Signal to playwright that tests are done
-    (window as any).__tests_completed = true;
+    (window as WindowWithTests).__tests_completed = true;
   } catch (error) {
     log(`\n❌ Test runner error: ${error}`);
-    (window as any).__tests_completed = true;
-    (window as any).__tests_failed = true;
+    (window as WindowWithTests).__tests_completed = true;
+    (window as WindowWithTests).__tests_failed = true;
   }
 }
 

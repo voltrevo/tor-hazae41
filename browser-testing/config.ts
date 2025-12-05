@@ -3,6 +3,11 @@
 import { chromium } from 'playwright';
 import type { Browser } from 'playwright';
 
+interface WindowWithTests extends Window {
+  __tests_completed?: boolean;
+  __tests_failed?: boolean;
+}
+
 const baseURL = 'http://localhost:5173';
 
 async function runTests() {
@@ -26,13 +31,13 @@ async function runTests() {
     // Wait for tests to complete
     console.log('Waiting for tests to complete...');
     await page.waitForFunction(
-      () => !!(window as any).__tests_completed,
+      () => !!(window as WindowWithTests).__tests_completed,
       { timeout: 6 * 60 * 1000 } // 6 minutes timeout
     );
 
     const completed = await page.evaluate(() => ({
-      completed: (window as any).__tests_completed,
-      failed: (window as any).__tests_failed,
+      completed: (window as WindowWithTests).__tests_completed,
+      failed: (window as WindowWithTests).__tests_failed,
     }));
 
     // Get test output

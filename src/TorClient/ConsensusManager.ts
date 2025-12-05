@@ -159,12 +159,17 @@ export class ConsensusManager {
       }
 
       this.consensusCache = consensuses;
-      this.logMessage(`Loaded ${consensuses.length} cached consensus(es)`, 'success');
+      this.logMessage(
+        `Loaded ${consensuses.length} cached consensus(es)`,
+        'success'
+      );
 
       // Clean up old consensuses
       if (sortedKeys.length > this.maxCached) {
         const keysToRemove = sortedKeys.slice(this.maxCached);
-        this.logMessage(`Removing ${keysToRemove.length} old cached consensus(es)`);
+        this.logMessage(
+          `Removing ${keysToRemove.length} old cached consensus(es)`
+        );
         for (const key of keysToRemove) {
           try {
             await this.storage.remove(key);
@@ -275,7 +280,10 @@ export class ConsensusManager {
     try {
       await this.rawBackgroundUpdate(circuit);
     } catch (e) {
-      this.logMessage(`backgroundUpdate failed: ${getErrorDetails(e)}`, 'error');
+      this.logMessage(
+        `backgroundUpdate failed: ${getErrorDetails(e)}`,
+        'error'
+      );
     } finally {
       this.backgroundUpdating = false;
     }

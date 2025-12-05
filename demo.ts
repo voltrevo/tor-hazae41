@@ -375,7 +375,9 @@ async function openTorClient(): Promise<void> {
     log.info('🎉 TorClient is ready!');
     log.info('💡 Use the URL textboxes and request buttons to make requests');
   } catch (error) {
-    log.error(`❌ TorClient initialization failed: ${(error as Error).message}`);
+    log.error(
+      `❌ TorClient initialization failed: ${(error as Error).message}`
+    );
     log.error(`Stack trace: ${(error as Error).stack}`);
     closeTorClient(); // This will properly reset button states
   }
