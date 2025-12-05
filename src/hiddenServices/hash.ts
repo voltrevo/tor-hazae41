@@ -41,9 +41,8 @@ export async function hash(
 
   const digestHex = await sha3(uint8View, 256);
   // Convert hex string to Uint8Array
-  const digest = new Uint8Array(32);
-  for (let i = 0; i < 32; i++) {
-    digest[i] = parseInt(digestHex.substring(i * 2, i * 2 + 2), 16);
-  }
+  const digest = new Uint8Array(
+    digestHex.match(/.{1,2}/g)?.map(byte => parseInt(byte, 16)) ?? []
+  );
   return digest;
 }

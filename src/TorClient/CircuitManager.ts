@@ -362,12 +362,8 @@ export class CircuitManager {
         );
         const circuit = await tor.createOrThrow();
 
-        for (let i = 1; i <= 1; i++) {
-          const suffix = i === 1 ? '' : ` (${i})`;
-
-          // Try to extend through middle relay
-          await this.extendCircuit(circuit, middles, `middle relay${suffix}`);
-        }
+        // Try to extend through middle relay
+        await this.extendCircuit(circuit, middles, 'middle relay');
 
         // Try to extend through exit relay
         await this.extendCircuit(circuit, exits, 'exit relay');

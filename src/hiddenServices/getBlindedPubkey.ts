@@ -34,8 +34,8 @@ export async function getBlindedPubkey(
 
   // Convert h (Uint8Array) to BigInt in little-endian format
   let scalarRaw = 0n;
-  for (let i = 0; i < h.length; i++) {
-    scalarRaw += BigInt(h[i]) << BigInt(8 * i);
+  for (let i = h.length - 1; i >= 0; i--) {
+    scalarRaw = (scalarRaw << 8n) | BigInt(h[i]);
   }
 
   // The clamping operation prepares h for Ed25519's private key format,
