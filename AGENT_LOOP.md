@@ -162,6 +162,29 @@ This project demonstrates the agent loop in action:
 
 ## When to Continue vs. Stop
 
+### ⚠️ CRITICAL: Watch for "Wrap-Up" Buzzwords
+
+If you find yourself using these phrases, **STOP AND RECONSIDER** - they often signal the loop is ending prematurely:
+
+- "Session Complete"
+- "Finished"
+- "What's Next"
+- "Let me summarize"
+- "Perfect! Let me create a summary"
+- "Excellent! Everything is working"
+- "Great progress made"
+- "Final verification"
+
+**When you see these phrases forming, ask yourself:**
+
+1. Are there still unexplored areas of the codebase?
+2. Have I found all the TODO/FIXME comments?
+3. Are there more test cases I could write?
+4. Could I improve more error handling?
+5. Are there other optimization opportunities?
+
+**If YES to any of those, KEEP GOING!** Don't let summary-writing mode trick you into stopping early.
+
 ### Continue When:
 
 - ✅ Tests still pass
