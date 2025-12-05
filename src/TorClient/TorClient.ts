@@ -32,8 +32,8 @@ export interface TorClientOptions {
   connectionTimeout?: number;
   /** Timeout in milliseconds for circuit creation and readiness (default: 90000) */
   circuitTimeout?: number;
-  /** Whether to create the first circuit immediately upon construction (default: true) */
-  createCircuitEarly?: boolean;
+  /** Number of circuits to pre-create and maintain in buffer (default: 0, disabled) */
+  circuitBuffer?: number;
   /** Interval in milliseconds between automatic circuit updates, or null to disable (default: 600000 = 10 minutes) */
   circuitUpdateInterval?: number | null;
   /** Time in milliseconds to allow old circuit usage before forcing new circuit during updates (default: 60000 = 1 minute) */
@@ -73,7 +73,7 @@ export class TorClient {
   private snowflakeUrl: string;
   private connectionTimeout: number;
   private circuitTimeout: number;
-  private createCircuitEarly: boolean;
+  private circuitBuffer: number;
   private circuitUpdateInterval: number | null;
   private circuitUpdateAdvance: number;
   private log: Log;
@@ -107,7 +107,7 @@ export class TorClient {
     this.snowflakeUrl = options.snowflakeUrl;
     this.connectionTimeout = options.connectionTimeout ?? 15000;
     this.circuitTimeout = options.circuitTimeout ?? 90000;
-    this.createCircuitEarly = options.createCircuitEarly ?? true;
+    this.circuitBuffer = options.circuitBuffer ?? 2;
     this.circuitUpdateInterval = options.circuitUpdateInterval ?? 10 * 60_000; // 10 minutes
     this.circuitUpdateAdvance = options.circuitUpdateAdvance ?? 60_000; // 1 minute
     this.log = options.log ?? new Log();
@@ -120,28 +120,20 @@ export class TorClient {
       log: this.log.child('consensus'),
     });
 
-    // Initialize circuit manager
+    // Initialize circuit manager with circuit buffer
     this.circuitManager = new CircuitManager({
       clock: this.clock,
       circuitTimeout: this.circuitTimeout,
       circuitUpdateInterval: this.circuitUpdateInterval,
       circuitUpdateAdvance: this.circuitUpdateAdvance,
+      circuitBuffer: this.circuitBuffer,
       log: this.log.child('circuit'),
       createTorConnection: () => this.createTorConnection(),
       getConsensus: circuit => this.consensusManager.getConsensus(circuit),
     });
 
-    // Create first circuit immediately if requested
-    if (this.createCircuitEarly) {
-      this.circuitManager.getOrCreateCircuit().catch(error => {
-        this.log.error(
-          `Failed to create initial circuit: ${getErrorDetails(error)}`
-        );
-      });
-    }
-
-    // Note: Circuit updates are scheduled only after first use to avoid
-    // unnecessary circuit creation during periods of inactivity
+    // Note: Circuits are created proactively via circuitBuffer parameter.
+    // The buffer maintains N ready-to-use circuits in the background.
   }
 
   /**
@@ -176,9 +168,14 @@ export class TorClient {
       connectionTimeout,
       circuitTimeout,
       log,
-      createCircuitEarly: false, // Don't create circuit until needed
+      // FIXME: yes and no ("no precreation")
+      // add another concept to CircuitManager to allow it to buffer
+      // circuits beyond its ordinary buffer size
+      // when a circuit is needed, CircuitManager should race N circuit creations
+      // (N includes already in-flight creations)
+      // (N is another parameter)
+      circuitBuffer: 0, // No pre-creation for one-time use
       circuitUpdateInterval: null, // No auto-updates for one-time use
-      circuitUpdateAdvance: 0, // Not relevant for one-time use
     });
 
     try {
@@ -215,10 +212,10 @@ export class TorClient {
     this.logMessage(`Target: ${hostname}:${port} (HTTPS: ${isHttps})`);
 
     try {
-      const circuit = await this.circuitManager.getOrCreateCircuit();
+      const circuit = await this.circuitManager.getOrCreateCircuit(hostname);
 
       // Mark circuit as used to schedule updates
-      this.circuitManager.markCircuitUsed();
+      this.circuitManager.markCircuitUsed(hostname);
 
       this.logMessage(`Opening connection to ${hostname}:${port}`);
       const ttcp = await circuit.openOrThrow(hostname, port);
@@ -266,8 +263,8 @@ export class TorClient {
     } catch (error) {
       this.logMessage(`Request failed: ${(error as Error).message}`, 'error');
 
-      // If circuit fails, clear it so next request will create a new one
-      this.circuitManager.clearCircuit();
+      // If circuit fails, clear only this host's circuit so Tor connection can be reused
+      this.circuitManager.clearCircuit(hostname);
 
       throw error;
     }
@@ -278,14 +275,18 @@ export class TorClient {
    * @param deadline Milliseconds to allow existing requests to use the old circuit. Defaults to 0.
    */
   async updateCircuit(deadline: number = 0): Promise<void> {
-    await this.circuitManager.updateCircuit(deadline);
+    await this.circuitManager.updateCircuit(undefined, deadline);
   }
 
   /**
    * Waits for a circuit to be ready if one would be needed for requests.
    */
   async waitForCircuit(): Promise<void> {
-    await this.circuitManager.getOrCreateCircuit();
+    // FIXME:
+    // don't make a localhost circuit, this should wait for at least one circuit
+    // to be ready in CircuitManager instead
+    // throw if CircuitManager is empty and not working on any circuits
+    await this.circuitManager.getOrCreateCircuit('localhost');
   }
 
   /**
@@ -299,7 +300,7 @@ export class TorClient {
   /**
    * Gets a human-readable status string for the current circuit state.
    */
-  getCircuitStatusString(): string {
+  getCircuitStatusString(): string | Record<string, string> {
     return this.circuitManager.getCircuitStatusString();
   }
 

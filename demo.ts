@@ -8,6 +8,38 @@ import { waitForWebSocket } from './src/TorClient/WebSocketDuplex.js';
 import { Log } from './src/Log/index.js';
 import { SystemClock } from './src/clock';
 
+/**
+ * CIRCUIT BUFFER DEMONSTRATION
+ *
+ * This demo showcases the CircuitManager's circuit buffer capability:
+ *
+ * - Shared Tor Connection: The TorClient maintains ONE persistent connection to the Tor network
+ *   (via Snowflake bridge). This is the expensive part and is reused across all requests.
+ *
+ * - Circuit Buffer: When circuitBuffer > 0, the CircuitManager creates circuits proactively:
+ *   - Creates N circuits in parallel in the background
+ *   - Adds them to a buffer as they complete (not in start order)
+ *   - Allocates from oldest buffered circuit when a request needs one
+ *
+ * - Per-Host Circuits: Each unique hostname gets allocated a buffered circuit:
+ *   - Request to httpbin.org uses Buffered Circuit A (exit relay X)
+ *   - Request to example.com uses Buffered Circuit B (exit relay Y)
+ *   - Request to httpbin.org again reuses allocated Circuit A
+ *
+ * - Smart Retry Logic: Buffer creation uses exponential backoff (5s → 60s → reset to 5s on success):
+ *   - Prevents tight retry loops if circuit creation is failing
+ *   - Gradually backs off: 5s → 5.5s → 6s → ... up to 60s
+ *   - Resets to 5s on first successful circuit creation
+ *
+ * - Dead Buffered Circuit Replacement: Buffered circuits idle for 5 minutes are auto-replaced:
+ *   - Keeps buffer fresh with circuits that have recently succeeded
+ *   - Automatically maintains configured buffer size
+ *
+ * Try these configurations:
+ *   - circuitBuffer: 0  (default, no pre-creation, on-demand)
+ *   - circuitBuffer: 3  (maintain 3 ready circuits)
+ *   - circuitBuffer: 5  (maintain 5 ready circuits)
+ */
 declare global {
   interface Window {
     openTorClient: () => Promise<void>;
@@ -49,11 +81,27 @@ function updateStatus(): void {
   const statusElement = document.getElementById('status');
   if (!statusElement || !torClient) return;
 
-  const statusString = torClient.getCircuitStatusString();
+  const statusData = torClient.getCircuitStatus();
 
-  statusElement.innerHTML = `
-    <div><strong>Circuit Status:</strong> ${statusString}</div>
-  `;
+  // Format status for each host
+  let statusHTML = '<div><strong>Circuit Status (per-host):</strong></div>';
+
+  if (typeof statusData === 'object' && statusData !== null) {
+    for (const [host, status] of Object.entries(
+      statusData as Record<string, any>
+    )) {
+      const statusStr = torClient.getCircuitStatusString();
+      if (typeof statusStr === 'object') {
+        const hostStatus = statusStr[host] || 'Unknown';
+        statusHTML += `<div style="margin-left: 20px; margin-top: 8px;">
+          <strong>${host}:</strong> ${hostStatus}
+          <br/><small>Idle: ${Math.round(status.idleTime / 1000)}s</small>
+        </div>`;
+      }
+    }
+  }
+
+  statusElement.innerHTML = statusHTML;
 }
 
 function clearOutput(): void {
@@ -355,14 +403,16 @@ async function openTorClient(): Promise<void> {
       return;
     }
 
-    // Create persistent TorClient with auto-updates
-    log.info('🌨️ Creating persistent TorClient with 2-minute auto-updates...');
+    // Create persistent TorClient with circuit buffer
+    log.info(
+      '🌨️ Creating persistent TorClient with circuit buffer (3 circuits)...'
+    );
 
     torClient = new TorClient({
       snowflakeUrl: snowflakeUrl,
       connectionTimeout: 15000,
       circuitTimeout: 90000,
-      createCircuitEarly: true,
+      circuitBuffer: 2, // Maintain 2 circuits in buffer
       circuitUpdateInterval: 2 * 60_000, // 2 minutes for demo
       circuitUpdateAdvance: 30_000, // 30 seconds advance
       log: log.child('tor'),
@@ -371,11 +421,12 @@ async function openTorClient(): Promise<void> {
     // Start status updates
     statusUpdateTimer = clock.setInterval(updateStatus, 500);
 
-    log.info('⏳ Waiting for initial circuit to be ready...');
+    log.info('⏳ Waiting for buffered circuits to initialize...');
     await torClient.waitForCircuit();
 
     log.info('🎉 TorClient is ready!');
     log.info('💡 Use the URL textboxes and request buttons to make requests');
+    log.info('📊 Circuit buffer will maintain 3 circuits ready to go');
   } catch (error) {
     log.error(
       `❌ TorClient initialization failed: ${(error as Error).message}`
