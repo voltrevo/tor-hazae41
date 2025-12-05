@@ -121,6 +121,7 @@
     "prettier": "^3.6.2",
     "tslib": "^2.8.1",
     "tsup": "^8.3.5",
+    "typed-emitter": "^2.1.0",
     "typescript": "5.7.3",
     "typescript-eslint": "^8.46.2",
     "vite": "^7.1.10"
