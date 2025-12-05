@@ -61,10 +61,28 @@
     "prepublishOnly": "npm run build",
     "test": "for file in $(find src -name '*.test.ts'); do echo \"Running: $file\"; tsx \"$file\" || exit 1; done",
     "test:browser": "bash scripts/test-browser.sh",
+    "coverage": "c8 --reporter=text-summary --reporter=html npm run test",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "format": "prettier --write .",
     "format:check": "prettier --check ."
+  },
+  "c8": {
+    "include": [
+      "src/**/*.ts"
+    ],
+    "exclude": [
+      "src/**/*.test.ts",
+      "src/**/*.integrationTest.ts",
+      "src/**/example.ts",
+      "node_modules"
+    ],
+    "reporter": [
+      "text-summary",
+      "html"
+    ],
+    "all": true,
+    "skipFull": false
   },
   "dependencies": {
     "@hazae41/aes.wasm": "1.0.0",
@@ -113,6 +131,7 @@
     "@hazae41/phobos": "^1.0.0",
     "@types/node": "^22.0.0",
     "buffer": "^6.0.3",
+    "c8": "^10.1.3",
     "eslint": "^9.38.0",
     "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-prettier": "^5.5.4",
