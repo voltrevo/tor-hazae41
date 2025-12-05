@@ -1,6 +1,5 @@
 # TODO
 
-- add src/clock/README.md
 - Improve logging, avoid all raw console.method calls
   - Hierarchical logging
 - update circuit management
@@ -11,6 +10,7 @@
 
 # DONE
 
+- add src/clock/README.md
 - get all tests running in both nodejs and playwright
   - playwright testing via npm run test:browser
 - cache certificates
