@@ -84,18 +84,16 @@ export async function makeCircuit(options: {
 
     return circuit;
   } catch (error) {
-    logInstance.error(`Failed to fetch consensus: ${getErrorDetails(error)}`);
+    logInstance.error(`Failed to create circuit: ${getErrorDetails(error)}`);
+    // Clean up resources on error
+    if (circuit) {
+      circuit[Symbol.dispose]();
+      logInstance.info('Circuit disposed after error');
+    }
+    if (tor) {
+      tor.close();
+      logInstance.info('Tor connection closed after error');
+    }
     throw error;
-  } finally {
-    logInstance.debug('FIXME: clean up resources');
-    // // Clean up resources
-    // if (circuit) {
-    //   circuit[Symbol.dispose]();
-    //   logInstance.info('Circuit disposed');
-    // }
-    // if (tor) {
-    //   tor.close();
-    //   logInstance.info('Tor connection closed');
-    // }
   }
 }
