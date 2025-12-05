@@ -180,6 +180,71 @@ export class CircuitManager {
   }
 
   /**
+   * Waits for at least one circuit to be ready (buffered or in-flight creation).
+   * Useful for determining when CircuitManager is initialized and ready for use.
+   *
+   * @throws Error if circuitBuffer is disabled and no circuits are being created
+   * @returns Promise that resolves when a circuit is ready
+   */
+  async waitForCircuitReady(): Promise<void> {
+    // If buffer has circuits, return immediately
+    if (this.circuitBuffer.length > 0) {
+      return;
+    }
+
+    // If no buffer configured and no circuits being created, throw error
+    if (this.circuitBufferSize === 0 && this.circuitCreationQueue.size === 0) {
+      throw new Error(
+        'CircuitManager not configured to create circuits (circuitBuffer=0 and no pending allocations)'
+      );
+    }
+
+    // If we have in-flight creations, wait for one to complete
+    if (this.circuitCreationQueue.size > 0) {
+      // Wait for the first circuit creation to complete
+      // We need to wait for at least one to complete, but don't care which one
+      const circuitPromises = Array.from(this.circuitCreationQueue);
+
+      // Wait for any one of them to complete successfully
+      // (we only care about at least one circuit being ready)
+      let lastError: Error | null = null;
+
+      for (const promise of circuitPromises) {
+        try {
+          await promise;
+          // If we get here, at least one circuit is ready
+          return;
+        } catch (error) {
+          // Track error but continue trying other promises
+          if (error instanceof Error) {
+            lastError = error;
+          }
+        }
+      }
+
+      // If all promises rejected and buffer is still empty, throw the last error
+      if (this.circuitBuffer.length === 0) {
+        if (lastError) {
+          throw lastError;
+        }
+        throw new Error(
+          'All in-flight circuit creations failed and buffer is empty'
+        );
+      }
+
+      // Buffer might have been filled while we were waiting, so we're done
+      return;
+    }
+
+    // This shouldn't happen given the checks above, but be safe
+    if (this.circuitBuffer.length === 0) {
+      throw new Error(
+        'CircuitManager has no circuits ready and is not creating any'
+      );
+    }
+  }
+
+  /**
    * Allocates a buffered circuit to a host, or creates one if buffer is empty.
    */
   private async allocateCircuitToHost(hostname: string): Promise<Circuit> {

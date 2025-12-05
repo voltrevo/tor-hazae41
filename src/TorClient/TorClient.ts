@@ -280,13 +280,12 @@ export class TorClient {
 
   /**
    * Waits for a circuit to be ready if one would be needed for requests.
+   * This checks if the CircuitManager has at least one circuit available or being created.
+   *
+   * @throws Error if circuitBuffer is disabled (circuitBuffer=0) and no circuits are being created
    */
   async waitForCircuit(): Promise<void> {
-    // FIXME:
-    // don't make a localhost circuit, this should wait for at least one circuit
-    // to be ready in CircuitManager instead
-    // throw if CircuitManager is empty and not working on any circuits
-    await this.circuitManager.getOrCreateCircuit('localhost');
+    await this.circuitManager.waitForCircuitReady();
   }
 
   /**
