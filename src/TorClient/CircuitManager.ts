@@ -1,6 +1,7 @@
 import { Circuit, Echalote, TorClientDuplex } from '../echalote';
 import { getErrorDetails } from '../utils/getErrorDetails';
 import { initWasm } from './initWasm';
+import { Log } from '../Log';
 
 /**
  * Configuration options for the CircuitManager.
@@ -12,8 +13,8 @@ export interface CircuitManagerOptions {
   circuitUpdateInterval?: number | null;
   /** Time in milliseconds to allow old circuit usage before forcing new circuit during updates (default: 60000 = 1 minute) */
   circuitUpdateAdvance?: number;
-  /** Optional logging callback function */
-  onLog?: (message: string, type?: 'info' | 'success' | 'error') => void;
+  /** Logger instance for hierarchical logging */
+  log: Log;
   /** Function to create a Tor connection */
   createTorConnection: () => Promise<TorClientDuplex>;
   /** Function to get the current consensus */
@@ -40,10 +41,7 @@ export class CircuitManager {
   private circuitTimeout: number;
   private circuitUpdateInterval: number | null;
   private circuitUpdateAdvance: number;
-  private onLog?: (
-    message: string,
-    type?: 'info' | 'success' | 'error'
-  ) => void;
+  private log: Log;
   private createTorConnection: () => Promise<TorClientDuplex>;
   private getConsensus: (circuit: Circuit) => Promise<Echalote.Consensus>;
 
@@ -62,7 +60,7 @@ export class CircuitManager {
     this.circuitTimeout = options.circuitTimeout ?? 90000;
     this.circuitUpdateInterval = options.circuitUpdateInterval ?? 10 * 60_000; // 10 minutes
     this.circuitUpdateAdvance = options.circuitUpdateAdvance ?? 60_000; // 1 minute
-    this.onLog = options.onLog;
+    this.log = options.log;
     this.createTorConnection = options.createTorConnection;
     this.getConsensus = options.getConsensus;
   }
@@ -77,7 +75,7 @@ export class CircuitManager {
       Date.now() >= this.updateDeadline &&
       this.circuitPromise
     ) {
-      this.log('Deadline passed, waiting for new circuit');
+      this.logMessage('Deadline passed, waiting for new circuit');
       return await this.circuitPromise;
     }
 
@@ -110,7 +108,7 @@ export class CircuitManager {
     if (this.updateTimer) {
       clearTimeout(this.updateTimer);
       this.updateTimer = undefined;
-      this.log('Aborted scheduled circuit update due to manual update');
+      this.logMessage('Aborted scheduled circuit update due to manual update');
     }
 
     // Reset scheduling state - next use will trigger new scheduling
@@ -123,7 +121,7 @@ export class CircuitManager {
       const currentDeadline = this.updateDeadline;
       const moreAggressiveDeadline = Math.min(currentDeadline, newDeadline);
 
-      this.log(
+      this.logMessage(
         `Update already in progress. Using more aggressive deadline: ` +
           `${moreAggressiveDeadline - Date.now()}ms (current: ${
             currentDeadline - Date.now()
@@ -134,14 +132,14 @@ export class CircuitManager {
       this.updateDeadline = moreAggressiveDeadline;
 
       // Wait for the current update to complete
-      this.log('Waiting for current update to complete with updated deadline');
+      this.logMessage('Waiting for current update to complete with updated deadline');
       if (this.circuitPromise) {
         await this.circuitPromise;
       }
       return;
     }
 
-    this.log(`Updating circuit with ${deadline}ms deadline`);
+    this.logMessage(`Updating circuit with ${deadline}ms deadline`);
 
     // Set the update state and deadline
     this.isUpdatingCircuit = true;
@@ -152,9 +150,9 @@ export class CircuitManager {
       // The old circuit will continue to serve requests until the deadline
       this.circuitPromise = this.createCircuitInternal();
       await this.circuitPromise;
-      this.log('Circuit update completed successfully', 'success');
+      this.logMessage('Circuit update completed successfully', 'success');
     } catch (error) {
-      this.log(`Circuit update failed: ${(error as Error).message}`, 'error');
+      this.logMessage(`Circuit update failed: ${(error as Error).message}`, 'error');
       this.isUpdatingCircuit = false;
       this.updateDeadline = 0;
       throw error;
@@ -168,7 +166,7 @@ export class CircuitManager {
     if (!this.circuitUsed) {
       this.circuitUsed = true;
       this.scheduleCircuitUpdate();
-      this.log('Circuit used for first time, scheduling automatic updates');
+      this.logMessage('Circuit used for first time, scheduling automatic updates');
     }
   }
 
@@ -180,7 +178,7 @@ export class CircuitManager {
       this.currentCircuit[Symbol.dispose]();
       this.currentCircuit = undefined;
       this.currentTor = undefined;
-      this.log('Circuit cleared');
+      this.logMessage('Circuit cleared');
     }
   }
 
@@ -246,7 +244,7 @@ export class CircuitManager {
 
     if (this.currentCircuit) {
       this.currentCircuit[Symbol.dispose]();
-      this.log('Circuit disposed');
+      this.logMessage('Circuit disposed');
     }
 
     this.currentCircuit = undefined;
@@ -265,12 +263,18 @@ export class CircuitManager {
     this.close();
   }
 
-  private log(
+  private logMessage(
     message: string,
     type: 'info' | 'success' | 'error' = 'info'
   ): void {
-    if (this.onLog) {
-      this.onLog(message, type);
+    switch (type) {
+      case 'error':
+        this.log.error(message);
+        break;
+      case 'success':
+      case 'info':
+        this.log.info(message);
+        break;
     }
   }
 
@@ -279,9 +283,8 @@ export class CircuitManager {
     error: unknown,
     defaultMessage: string
   ): void {
-    const errorMessage =
-      error instanceof Error ? error.message : String(error || defaultMessage);
-    this.log(`${prefix}: ${errorMessage}`, 'error');
+    const errorMessage = getErrorDetails(error) || defaultMessage;
+    this.logMessage(`${prefix}: ${errorMessage}`, 'error');
   }
 
   private async createCircuitInternal(): Promise<Circuit> {
@@ -292,7 +295,7 @@ export class CircuitManager {
     // Clean up old circuit
     if (this.currentCircuit) {
       this.currentCircuit[Symbol.dispose]();
-      this.log('Old circuit disposed');
+      this.logMessage('Old circuit disposed');
     }
 
     this.currentTor = tor;
@@ -304,14 +307,14 @@ export class CircuitManager {
   }
 
   private async buildCircuit(tor: TorClientDuplex): Promise<Circuit> {
-    this.log('Creating circuits');
+    this.logMessage('Creating circuits');
     const consensusCircuit = await tor.createOrThrow();
-    this.log('Consensus circuit created successfully', 'success');
+    this.logMessage('Consensus circuit created successfully', 'success');
 
     // Get consensus (from cache if fresh, or fetch if needed)
     const consensus = await this.getConsensus(consensusCircuit);
 
-    this.log('Filtering relays');
+    this.logMessage('Filtering relays');
     const middles = consensus.microdescs.filter(
       (it: Echalote.Consensus.Microdesc.Head) =>
         it.flags.includes('Fast') &&
@@ -327,7 +330,7 @@ export class CircuitManager {
         !it.flags.includes('BadExit')
     );
 
-    this.log(
+    this.logMessage(
       `Found ${middles.length} middle relays and ${exits.length} exit relays`
     );
 
@@ -347,7 +350,7 @@ export class CircuitManager {
       circuitAttempt++
     ) {
       try {
-        this.log(
+        this.logMessage(
           `Building circuit (attempt ${circuitAttempt}/${maxCircuitAttempts})`
         );
         const circuit = await tor.createOrThrow();
@@ -362,13 +365,13 @@ export class CircuitManager {
         // Try to extend through exit relay
         await this.extendCircuit(circuit, exits, 'exit relay');
 
-        this.log('Circuit built successfully!', 'success');
+        this.logMessage('Circuit built successfully!', 'success');
         return circuit;
       } catch (e) {
         lastError = e;
         // Only log details on final attempt
         if (circuitAttempt === maxCircuitAttempts) {
-          this.log(
+          this.logMessage(
             `Circuit build failed after ${maxCircuitAttempts} attempts: ${getErrorDetails(e)}`,
             'error'
           );
@@ -406,13 +409,13 @@ export class CircuitManager {
     const candidate = candidates[Math.floor(Math.random() * candidates.length)];
 
     try {
-      this.log(`Extending circuit through ${logPrefix}`);
+      this.logMessage(`Extending circuit through ${logPrefix}`);
       const microdesc = await Echalote.Consensus.Microdesc.fetchOrThrow(
         circuit,
         candidate
       );
       await circuit.extendOrThrow(microdesc, AbortSignal.timeout(timeout));
-      this.log(`Extended through ${logPrefix}`, 'success');
+      this.logMessage(`Extended through ${logPrefix}`, 'success');
     } catch (e) {
       // Circuit is now destroyed, dispose it
       circuit[Symbol.dispose]();
@@ -425,17 +428,17 @@ export class CircuitManager {
       this.circuitUpdateInterval === null ||
       this.circuitUpdateInterval <= 0
     ) {
-      this.log('Circuit auto-update disabled');
+      this.logMessage('Circuit auto-update disabled');
       return;
     }
 
     // If updates are already scheduled, don't schedule again
     if (this.updateLoopActive) {
-      this.log('Circuit updates already scheduled');
+      this.logMessage('Circuit updates already scheduled');
       return;
     }
 
-    this.log(
+    this.logMessage(
       `Scheduled next circuit update in ${this.circuitUpdateInterval}ms with ${this.circuitUpdateAdvance}ms advance`
     );
 
@@ -456,7 +459,7 @@ export class CircuitManager {
         // Clear next update time since we're starting the update now
         this.nextUpdateTime = 0;
 
-        this.log('Scheduled circuit update triggered');
+        this.logMessage('Scheduled circuit update triggered');
         await this.updateCircuit(this.circuitUpdateAdvance);
 
         // After update completes, reset the scheduling state
@@ -464,7 +467,7 @@ export class CircuitManager {
         this.updateLoopActive = false;
         this.circuitUsed = false;
       } catch (error) {
-        this.log(
+        this.logMessage(
           `Scheduled circuit update failed: ${(error as Error).message}`,
           'error'
         );

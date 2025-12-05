@@ -6,6 +6,7 @@ import { createSnowflakeStream } from '../echalote';
 import { computeFullConsensusHash } from '../echalote/mods/tor/consensus/diff';
 import { ConsensusManager } from './ConsensusManager';
 import { createFsStorage } from '../storage/fs';
+import { Log } from '../Log';
 
 test('ConsensusManager: fetch and reconstruct consensus', async () => {
   // Initialize WASM
@@ -104,7 +105,8 @@ test('ConsensusManager: fetch and reconstruct consensus', async () => {
 
   // Test caching: manually save and load
   console.log('\nTesting consensus caching...');
-  const consensusManager = new ConsensusManager({ storage });
+  const log = new Log();
+  const consensusManager = new ConsensusManager({ storage, log });
 
   // Manually save to cache (bypassing getConsensus to avoid diff issues)
   await consensusManager['saveToCache'](consensus);

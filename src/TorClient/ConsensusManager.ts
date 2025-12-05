@@ -5,11 +5,12 @@ import { getErrorDetails } from '../utils/getErrorDetails';
 import { softDelay } from '../utils/delay';
 import { Future } from '@hazae41/future';
 import { CertificateManager } from './CertificateManager';
+import { Log } from '../Log';
 
 export interface ConsensusManagerOptions {
   storage: IStorage;
   maxCached?: number;
-  onLog?: (message: string, type?: 'info' | 'success' | 'error') => void;
+  log: Log;
 }
 
 /**
@@ -19,10 +20,7 @@ export interface ConsensusManagerOptions {
 export class ConsensusManager {
   private storage: IStorage;
   private maxCached: number;
-  private onLog?: (
-    message: string,
-    type?: 'info' | 'success' | 'error'
-  ) => void;
+  private log: Log;
   // Cache maintains chronological order (oldest first, newest last)
   // This order is required for Tor nodes to properly return 304 responses
   private consensusCache: Echalote.Consensus[] = [];
@@ -38,11 +36,11 @@ export class ConsensusManager {
   constructor(options: ConsensusManagerOptions) {
     this.storage = options.storage;
     this.maxCached = options.maxCached ?? 5;
-    this.onLog = options.onLog;
+    this.log = options.log;
     this.certificateManager = new CertificateManager({
       storage: options.storage,
       maxCached: 20,
-      onLog: options.onLog,
+      log: this.log.child('certificates'),
     });
   }
 
@@ -57,15 +55,17 @@ export class ConsensusManager {
     const { consensus, status } = await this.loadCachedConsensus();
 
     if (status === 'fresh') {
-      this.log('Providing fresh cached consensus');
+      this.logMessage('Providing fresh cached consensus');
     } else if (status === 'stale') {
-      this.log(
+      this.logMessage(
         'Providing stale cached consensus, a fresh one will be sought separately'
       );
     } else if (status === 'invalid') {
-      this.log('Cached consensus is no longer valid, fetching a new one');
+      this.logMessage(
+        'Cached consensus is no longer valid, fetching a new one'
+      );
     } else if (status === 'none') {
-      this.log('No cached consensus, fetching a new one');
+      this.logMessage('No cached consensus, fetching a new one');
     }
 
     if (consensus) {
@@ -92,14 +92,14 @@ export class ConsensusManager {
   private async rawFetchConsensus(circuit: Circuit) {
     const cache = await this.loadCache();
 
-    this.log('Fetching consensus from network');
+    this.logMessage('Fetching consensus from network');
     const consensus = await Echalote.Consensus.fetchOrThrow(
       circuit,
       cache,
       undefined,
       this.certificateManager
     );
-    this.log(
+    this.logMessage(
       `Consensus fetched with ${consensus.microdescs.length} microdescs`,
       'success'
     );
@@ -127,11 +127,11 @@ export class ConsensusManager {
     this.cacheLoading = cacheLoadingFuture.promise;
 
     try {
-      this.log('Loading cached consensuses from storage');
+      this.logMessage('Loading cached consensuses from storage');
       const keys = await this.storage.list('consensus:');
 
       if (keys.length === 0) {
-        this.log('No cached consensuses found');
+        this.logMessage('No cached consensuses found');
         this.cacheLoaded = true;
         return this.consensusCache;
       }
@@ -147,11 +147,11 @@ export class ConsensusManager {
           const text = new TextDecoder().decode(data);
           const consensus = await Echalote.Consensus.parseOrThrow(text);
           consensuses.push(consensus);
-          this.log(
+          this.logMessage(
             `Loaded cached consensus from ${consensus.validAfter.toISOString()}`
           );
         } catch (error) {
-          this.log(
+          this.logMessage(
             `Failed to load consensus ${key}: ${(error as Error).message}`,
             'error'
           );
@@ -159,17 +159,17 @@ export class ConsensusManager {
       }
 
       this.consensusCache = consensuses;
-      this.log(`Loaded ${consensuses.length} cached consensus(es)`, 'success');
+      this.logMessage(`Loaded ${consensuses.length} cached consensus(es)`, 'success');
 
       // Clean up old consensuses
       if (sortedKeys.length > this.maxCached) {
         const keysToRemove = sortedKeys.slice(this.maxCached);
-        this.log(`Removing ${keysToRemove.length} old cached consensus(es)`);
+        this.logMessage(`Removing ${keysToRemove.length} old cached consensus(es)`);
         for (const key of keysToRemove) {
           try {
             await this.storage.remove(key);
           } catch (error) {
-            this.log(
+            this.logMessage(
               `Failed to remove old consensus ${key}: ${(error as Error).message}`,
               'error'
             );
@@ -177,7 +177,7 @@ export class ConsensusManager {
         }
       }
     } catch (error) {
-      this.log(
+      this.logMessage(
         `Failed to load consensus cache: ${(error as Error).message}`,
         'error'
       );
@@ -230,7 +230,7 @@ export class ConsensusManager {
       const data = new TextEncoder().encode(textToSave);
       await this.storage.write(key, data);
 
-      this.log(`Saved consensus to cache: ${key}`);
+      this.logMessage(`Saved consensus to cache: ${key}`);
 
       // Update cache - append to end to maintain chronological order
       this.consensusCache.push(consensus);
@@ -248,9 +248,9 @@ export class ConsensusManager {
         for (const oldKey of keysToRemove) {
           try {
             await this.storage.remove(oldKey);
-            this.log(`Removed old cached consensus: ${oldKey}`);
+            this.logMessage(`Removed old cached consensus: ${oldKey}`);
           } catch (error) {
-            this.log(
+            this.logMessage(
               `Failed to remove old consensus ${oldKey}: ${(error as Error).message}`,
               'error'
             );
@@ -258,7 +258,7 @@ export class ConsensusManager {
         }
       }
     } catch (error) {
-      this.log(
+      this.logMessage(
         `Failed to save consensus to cache: ${(error as Error).message}`,
         'error'
       );
@@ -275,7 +275,7 @@ export class ConsensusManager {
     try {
       await this.rawBackgroundUpdate(circuit);
     } catch (e) {
-      this.log(`backgroundUpdate failed: ${getErrorDetails(e)}`, 'error');
+      this.logMessage(`backgroundUpdate failed: ${getErrorDetails(e)}`, 'error');
     } finally {
       this.backgroundUpdating = false;
     }
@@ -328,12 +328,18 @@ export class ConsensusManager {
     return text;
   }
 
-  private log(
+  private logMessage(
     message: string,
     type: 'info' | 'success' | 'error' = 'info'
   ): void {
-    if (this.onLog) {
-      this.onLog(message, type);
+    switch (type) {
+      case 'error':
+        this.log.error(message);
+        break;
+      case 'success':
+      case 'info':
+        this.log.info(message);
+        break;
     }
   }
 

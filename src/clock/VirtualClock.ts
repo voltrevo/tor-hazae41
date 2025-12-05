@@ -123,7 +123,8 @@ export class VirtualClock implements IClock {
         // Allow macrotasks to execute
         await new Promise(resolve => setTimeout(resolve, 0));
       } catch (error) {
-        console.error('Timer callback error:', error);
+        // FIXME: Use Log instance for error reporting
+        // console.error('Timer callback error:', error);
       }
 
       if (timer.interval) {
@@ -181,7 +182,8 @@ export class VirtualClock implements IClock {
       try {
         timer.callback();
       } catch (error) {
-        console.error('Timer callback error:', error);
+        // FIXME: Use Log instance for error reporting
+        // console.error('Timer callback error:', error);
       }
 
       if (timer.interval) {

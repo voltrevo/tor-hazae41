@@ -28,6 +28,7 @@ import { stdout, stderr } from 'node:process';
 
 import { TorClient } from './src/TorClient';
 import { getErrorDetails } from './src/utils/getErrorDetails';
+import { Log } from './src/Log';
 
 type Opts = {
   method?: string;
@@ -288,23 +289,16 @@ async function main() {
     const fetchOptions: RequestInit & {
       connectionTimeout?: number;
       circuitTimeout?: number;
-      onLog?: (message: string, type?: 'info' | 'success' | 'error') => void;
+      log?: Log;
     } = { ...reqInit };
 
-    // Enable TorClient logging in verbose mode
+    // Create a logger that writes to stderr in verbose mode
     if (opts.verbose && !opts.silent) {
-      const startTime = Date.now();
-      const relTimestamp = () =>
-        ((Date.now() - startTime) / 1000).toFixed(1).padStart(5, '0');
-
-      fetchOptions.onLog = (
-        message: string,
-        type?: 'info' | 'success' | 'error'
-      ) => {
-        const prefix =
-          type === 'error' ? '! ' : type === 'success' ? '✓ ' : '> ';
-        stderr.write(`${relTimestamp()} | ${prefix}${message}\n`);
-      };
+      fetchOptions.log = new Log({
+        rawLog: (level, ...args) => {
+          stderr.write(`[${level.toUpperCase()}] ${args.join(' ')}\n`);
+        },
+      });
     }
 
     res = await TorClient.fetch(snowflakeUrl, opts.url, fetchOptions);

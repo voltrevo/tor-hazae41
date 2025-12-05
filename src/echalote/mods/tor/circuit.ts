@@ -274,7 +274,10 @@ export class SecretCircuit {
   }
 
   [Symbol.dispose]() {
-    this.close().catch(console.error);
+    // FIXME: Use Log instance for error reporting
+    this.close().catch(() => {
+      /* silent catch */
+    });
   }
 
   async [Symbol.asyncDispose]() {

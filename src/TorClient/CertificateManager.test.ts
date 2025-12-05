@@ -1,6 +1,7 @@
 import { assert, test } from '@hazae41/phobos';
 import { CertificateManager } from './CertificateManager';
 import { createMemoryStorage } from '../storage';
+import { Log } from '../Log';
 import { Circuit } from '../echalote';
 import { Echalote } from '../echalote';
 
@@ -34,9 +35,12 @@ function createMockCertificate(
 
 test('CertificateManager: basic functionality', async () => {
   const storage = createMemoryStorage();
+  // Create a silent logger that doesn't output to console
+  const log = new Log({ rawLog: () => {} });
   const certificateManager = new CertificateManager({
     storage,
     maxCached: 3,
+    log,
   });
   const mockCircuit = new MockCircuit() as Circuit;
 

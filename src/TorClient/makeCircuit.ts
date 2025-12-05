@@ -1,6 +1,8 @@
 import { Circuit, TorClientDuplex, createSnowflakeStream } from '../echalote';
 import { WebSocketDuplex } from './WebSocketDuplex';
 import { initWasm } from './initWasm';
+import { Log } from '../Log';
+import { getErrorDetails } from '../utils/getErrorDetails';
 
 export async function makeCircuit(options: {
   /** The Snowflake bridge WebSocket URL for Tor connections */
@@ -9,34 +11,15 @@ export async function makeCircuit(options: {
   connectionTimeout?: number;
   /** Timeout in milliseconds for circuit creation and readiness (default: 90000) */
   circuitTimeout?: number;
-  /** Optional logging callback function */
-  onLog?: (message: string, type?: 'info' | 'success' | 'error') => void;
+  /** Optional logger instance for hierarchical logging */
+  log?: Log;
 }) {
   const {
     snowflakeUrl,
     connectionTimeout = 15000,
     circuitTimeout = 90000,
-    onLog,
+    log: logInstance = new Log(),
   } = options;
-
-  const log = (
-    message: string,
-    type: 'info' | 'success' | 'error' = 'info'
-  ): void => {
-    if (onLog) {
-      onLog(message, type);
-    }
-  };
-
-  const logError = (
-    prefix: string,
-    error: unknown,
-    defaultMessage: string
-  ): void => {
-    const errorMessage =
-      error instanceof Error ? error.message : String(error || defaultMessage);
-    log(`${prefix}: ${errorMessage}`, 'error');
-  };
 
   let tor: TorClientDuplex | undefined;
   let circuit: Circuit | undefined;
@@ -46,28 +29,34 @@ export async function makeCircuit(options: {
     await initWasm();
 
     // Create Tor connection
-    log(`Connecting to Snowflake bridge at ${snowflakeUrl}`);
+    logInstance.info(`Connecting to Snowflake bridge at ${snowflakeUrl}`);
     const stream = await WebSocketDuplex.connect(
       snowflakeUrl,
       AbortSignal.timeout(connectionTimeout)
     );
 
-    log('Creating Snowflake stream');
+    logInstance.info('Creating Snowflake stream');
     const tcp = createSnowflakeStream(stream);
     tor = new TorClientDuplex();
 
-    log('Connecting streams');
+    logInstance.info('Connecting streams');
     tcp.outer.readable.pipeTo(tor.inner.writable).catch((error: unknown) => {
-      logError('TCP -> Tor stream error', error, 'Stream pipe error');
+      logInstance.error(
+        `TCP -> Tor stream error: ${getErrorDetails(error) || 'Stream pipe error'}`
+      );
     });
 
     tor.inner.readable.pipeTo(tcp.outer.writable).catch((error: unknown) => {
-      logError('Tor -> TCP stream error', error, 'Stream pipe error');
+      logInstance.error(
+        `Tor -> TCP stream error: ${getErrorDetails(error) || 'Stream pipe error'}`
+      );
     });
 
     // Add event listeners for debugging
     tor.events.on('error', (error: unknown) => {
-      logError('Tor client error', error, 'Unknown error');
+      logInstance.error(
+        `Tor client error: ${getErrorDetails(error) || 'Unknown error'}`
+      );
     });
 
     tor.events.on('close', (reason: unknown) => {
@@ -75,33 +64,38 @@ export async function makeCircuit(options: {
         reason instanceof Error
           ? reason.message
           : String(reason || 'Connection closed normally');
-      const logLevel = reason && reason !== undefined ? 'error' : 'info';
-      log(`Tor client closed: ${reasonMessage}`, logLevel);
+      if (reason && reason !== undefined) {
+        logInstance.error(`Tor client closed: ${reasonMessage}`);
+      } else {
+        logInstance.info(`Tor client closed: ${reasonMessage}`);
+      }
     });
 
-    log(`Waiting for Tor to be ready (timeout: ${circuitTimeout}ms)`);
+    logInstance.info(
+      `Waiting for Tor to be ready (timeout: ${circuitTimeout}ms)`
+    );
     await tor.waitOrThrow(AbortSignal.timeout(circuitTimeout));
-    log('Tor client ready!', 'success');
+    logInstance.info('Tor client ready!');
 
     // Create circuit
-    log('Creating circuit');
+    logInstance.info('Creating circuit');
     circuit = await tor.createOrThrow();
-    log('Circuit created successfully', 'success');
+    logInstance.info('Circuit created successfully');
 
     return circuit;
   } catch (error) {
-    log(`Failed to fetch consensus: ${(error as Error).message}`, 'error');
+    logInstance.error(`Failed to fetch consensus: ${getErrorDetails(error)}`);
     throw error;
   } finally {
-    console.error('FIXME: clean up resources');
+    logInstance.debug('FIXME: clean up resources');
     // // Clean up resources
     // if (circuit) {
     //   circuit[Symbol.dispose]();
-    //   log('Circuit disposed');
+    //   logInstance.info('Circuit disposed');
     // }
     // if (tor) {
     //   tor.close();
-    //   log('Tor connection closed');
+    //   logInstance.info('Tor connection closed');
     // }
   }
 }

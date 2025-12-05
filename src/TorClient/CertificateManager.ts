@@ -1,10 +1,11 @@
 import { Circuit, Echalote } from '../echalote';
 import { IStorage } from '../storage';
+import { Log } from '../Log';
 
 export interface CertificateManagerOptions {
   storage: IStorage;
   maxCached?: number;
-  onLog?: (message: string, type?: 'info' | 'success' | 'error') => void;
+  log: Log;
 }
 
 /**
@@ -14,10 +15,7 @@ export interface CertificateManagerOptions {
 export class CertificateManager {
   private storage: IStorage;
   private maxCached: number;
-  private onLog?: (
-    message: string,
-    type?: 'info' | 'success' | 'error'
-  ) => void;
+  private log: Log;
   private certificateCache: Map<string, Echalote.Consensus.Certificate> =
     new Map();
   private cacheLoaded = false;
@@ -28,7 +26,7 @@ export class CertificateManager {
   constructor(options: CertificateManagerOptions) {
     this.storage = options.storage;
     this.maxCached = options.maxCached ?? 20; // More certificates than consensuses
-    this.onLog = options.onLog;
+    this.log = options.log;
   }
 
   /**
@@ -44,11 +42,11 @@ export class CertificateManager {
     // Check cache first
     const cached = await this.loadCachedCertificate(fingerprint);
     if (cached && this.isCertificateValid(cached)) {
-      this.log(`Using cached certificate for ${fingerprint}`);
+      this.logMessage(`Using cached certificate for ${fingerprint}`);
       return cached;
     }
 
-    this.log(`Fetching certificate for ${fingerprint} from network`);
+    this.logMessage(`Fetching certificate for ${fingerprint} from network`);
     const certificate = await Echalote.Consensus.Certificate.fetchOrThrow(
       circuit,
       fingerprint
@@ -56,7 +54,7 @@ export class CertificateManager {
 
     // Save to cache
     await this.saveToCache(certificate);
-    this.log(`Cached certificate for ${fingerprint}`, 'success');
+    this.logMessage(`Cached certificate for ${fingerprint}`, 'success');
 
     return certificate;
   }
@@ -88,7 +86,7 @@ export class CertificateManager {
     for (const { fingerprint, certificate } of cachedResults) {
       if (certificate && this.isCertificateValid(certificate)) {
         cachedCertificates.push(certificate);
-        this.log(`Using cached certificate for ${fingerprint}`);
+        this.logMessage(`Using cached certificate for ${fingerprint}`);
       } else {
         uncachedFingerprints.push(fingerprint);
       }
@@ -96,7 +94,7 @@ export class CertificateManager {
 
     // Fetch uncached certificates in parallel
     if (uncachedFingerprints.length > 0) {
-      this.log(
+      this.logMessage(
         `Fetching ${uncachedFingerprints.length} certificates from network`
       );
       const fetchedCertificates = await Promise.all(
@@ -111,7 +109,7 @@ export class CertificateManager {
       );
 
       certificates.push(...fetchedCertificates);
-      this.log(
+      this.logMessage(
         `Cached ${fetchedCertificates.length} new certificates`,
         'success'
       );
@@ -162,11 +160,11 @@ export class CertificateManager {
 
   private async loadCacheInternal(): Promise<void> {
     try {
-      this.log('Loading cached certificates from storage');
+      this.logMessage('Loading cached certificates from storage');
       const keys = await this.storage.list('cert:');
 
       if (keys.length === 0) {
-        this.log('No cached certificates found');
+        this.logMessage('No cached certificates found');
         this.cacheLoaded = true;
         return;
       }
@@ -183,26 +181,26 @@ export class CertificateManager {
           if (this.isCertificateValid(certificate)) {
             this.certificateCache.set(certificate.fingerprint, certificate);
             loadedCount++;
-            this.log(
+            this.logMessage(
               `Loaded cached certificate for ${certificate.fingerprint} (expires: ${certificate.expires.toISOString()})`
             );
           } else {
             expiredCount++;
-            this.log(
+            this.logMessage(
               `Skipping expired certificate for ${certificate.fingerprint} (expired: ${certificate.expires.toISOString()})`
             );
             // Remove expired certificate from storage
             await this.storage.remove(key);
           }
         } catch (error) {
-          this.log(
+          this.logMessage(
             `Failed to load certificate ${key}: ${(error as Error).message}`,
             'error'
           );
         }
       }
 
-      this.log(
+      this.logMessage(
         `Loaded ${loadedCount} cached certificates, removed ${expiredCount} expired ones`,
         'success'
       );
@@ -210,12 +208,14 @@ export class CertificateManager {
       // Clean up old certificates if we have too many
       if (keys.length > this.maxCached) {
         const keysToRemove = keys.slice(this.maxCached);
-        this.log(`Removing ${keysToRemove.length} old cached certificates`);
+        this.logMessage(
+          `Removing ${keysToRemove.length} old cached certificates`
+        );
         for (const key of keysToRemove) {
           try {
             await this.storage.remove(key);
           } catch (error) {
-            this.log(
+            this.logMessage(
               `Failed to remove old certificate ${key}: ${(error as Error).message}`,
               'error'
             );
@@ -223,7 +223,7 @@ export class CertificateManager {
         }
       }
     } catch (error) {
-      this.log(
+      this.logMessage(
         `Failed to load certificate cache: ${(error as Error).message}`,
         'error'
       );
@@ -273,9 +273,9 @@ export class CertificateManager {
         }
       }
 
-      this.log(`Saved certificate to cache: ${key}`);
+      this.logMessage(`Saved certificate to cache: ${key}`);
     } catch (error) {
-      this.log(
+      this.logMessage(
         `Failed to save certificate to cache: ${(error as Error).message}`,
         'error'
       );
@@ -333,12 +333,18 @@ export class CertificateManager {
     }
   }
 
-  private log(
+  private logMessage(
     message: string,
     type: 'info' | 'success' | 'error' = 'info'
   ): void {
-    if (this.onLog) {
-      this.onLog(message, type);
+    switch (type) {
+      case 'error':
+        this.log.error(message);
+        break;
+      case 'success':
+      case 'info':
+        this.log.info(message);
+        break;
     }
   }
 

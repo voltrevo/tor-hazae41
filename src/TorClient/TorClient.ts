@@ -15,6 +15,7 @@ import { createAutoStorage, IStorage } from 'tor-hazae41/storage';
 import { ConsensusManager } from './ConsensusManager';
 import { CircuitManager } from './CircuitManager';
 import { getErrorDetails } from '../utils/getErrorDetails';
+import { Log } from '../Log';
 
 /**
  * Configuration options for the TorClient.
@@ -32,8 +33,8 @@ export interface TorClientOptions {
   circuitUpdateInterval?: number | null;
   /** Time in milliseconds to allow old circuit usage before forcing new circuit during updates (default: 60000 = 1 minute) */
   circuitUpdateAdvance?: number;
-  /** Optional logging callback function */
-  onLog?: (message: string, type?: 'info' | 'success' | 'error') => void;
+  /** Optional logger instance for hierarchical logging */
+  log?: Log;
   /** Storage interface */
   storage?: IStorage;
 }
@@ -70,10 +71,7 @@ export class TorClient {
   private createCircuitEarly: boolean;
   private circuitUpdateInterval: number | null;
   private circuitUpdateAdvance: number;
-  private onLog?: (
-    message: string,
-    type?: 'info' | 'success' | 'error'
-  ) => void;
+  private log: Log;
   private storage: IStorage;
 
   // Consensus management
@@ -89,7 +87,7 @@ export class TorClient {
    * ```typescript
    * const client = new TorClient({
    *   snowflakeUrl: 'wss://snowflake.torproject.net/',
-   *   onLog: (msg, type) => console.log(`[${type}] ${msg}`)
+   *   log: new Log()
    * });
    *
    * const response = await client.fetch('https://httpbin.org/ip');
@@ -106,11 +104,11 @@ export class TorClient {
     this.createCircuitEarly = options.createCircuitEarly ?? true;
     this.circuitUpdateInterval = options.circuitUpdateInterval ?? 10 * 60_000; // 10 minutes
     this.circuitUpdateAdvance = options.circuitUpdateAdvance ?? 60_000; // 1 minute
-    this.onLog = options.onLog;
+    this.log = options.log ?? new Log();
     this.storage = options.storage ?? createAutoStorage('tor-hazae41-cache');
     this.consensusManager = new ConsensusManager({
       storage: this.storage,
-      onLog: this.onLog,
+      log: this.log.child('consensus'),
     });
 
     // Initialize circuit manager
@@ -118,7 +116,7 @@ export class TorClient {
       circuitTimeout: this.circuitTimeout,
       circuitUpdateInterval: this.circuitUpdateInterval,
       circuitUpdateAdvance: this.circuitUpdateAdvance,
-      onLog: this.onLog,
+      log: this.log.child('circuit'),
       createTorConnection: () => this.createTorConnection(),
       getConsensus: circuit => this.consensusManager.getConsensus(circuit),
     });
@@ -126,7 +124,9 @@ export class TorClient {
     // Create first circuit immediately if requested
     if (this.createCircuitEarly) {
       this.circuitManager.getOrCreateCircuit().catch(error => {
-        this.log(`Failed to create initial circuit: ${error.message}`, 'error');
+        this.log.error(
+          `Failed to create initial circuit: ${getErrorDetails(error)}`
+        );
       });
     }
 
@@ -155,17 +155,17 @@ export class TorClient {
     options?: RequestInit & {
       connectionTimeout?: number;
       circuitTimeout?: number;
-      onLog?: (message: string, type?: 'info' | 'success' | 'error') => void;
+      log?: Log;
     }
   ): Promise<Response> {
-    const { connectionTimeout, circuitTimeout, onLog, ...fetchOptions } =
+    const { connectionTimeout, circuitTimeout, log, ...fetchOptions } =
       options || {};
 
     const client = new TorClient({
       snowflakeUrl,
       connectionTimeout,
       circuitTimeout,
-      onLog,
+      log,
       createCircuitEarly: false, // Don't create circuit until needed
       circuitUpdateInterval: null, // No auto-updates for one-time use
       circuitUpdateAdvance: 0, // Not relevant for one-time use
@@ -191,7 +191,7 @@ export class TorClient {
    * @returns Promise resolving to the fetch Response
    */
   async fetch(url: string, options?: RequestInit): Promise<Response> {
-    this.log(`Starting fetch request to ${url}`);
+    this.logMessage(`Starting fetch request to ${url}`);
 
     const parsedUrl = new URL(url);
     const hostname = parsedUrl.hostname;
@@ -202,7 +202,7 @@ export class TorClient {
         : 80;
     const isHttps = parsedUrl.protocol === 'https:';
 
-    this.log(`Target: ${hostname}:${port} (HTTPS: ${isHttps})`);
+    this.logMessage(`Target: ${hostname}:${port} (HTTPS: ${isHttps})`);
 
     try {
       const circuit = await this.circuitManager.getOrCreateCircuit();
@@ -210,11 +210,11 @@ export class TorClient {
       // Mark circuit as used to schedule updates
       this.circuitManager.markCircuitUsed();
 
-      this.log(`Opening connection to ${hostname}:${port}`);
+      this.logMessage(`Opening connection to ${hostname}:${port}`);
       const ttcp = await circuit.openOrThrow(hostname, port);
 
       if (isHttps) {
-        this.log('Setting up TLS connection');
+        this.logMessage('Setting up TLS connection');
         const ciphers = [
           Ciphers.TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384,
           Ciphers.TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384,
@@ -225,26 +225,26 @@ export class TorClient {
         ttcp.outer.readable.pipeTo(ttls.inner.writable).catch(() => {});
         ttls.inner.readable.pipeTo(ttcp.outer.writable).catch(() => {});
 
-        this.log('Making HTTPS request through Tor');
+        this.logMessage('Making HTTPS request through Tor');
         const response = await fetch(url, {
           ...options,
           stream: ttls.outer,
         });
 
-        this.log('Request completed successfully', 'success');
+        this.logMessage('Request completed successfully', 'success');
         return response;
       } else {
-        this.log('Making HTTP request through Tor');
+        this.logMessage('Making HTTP request through Tor');
         const response = await fetch(url, {
           ...options,
           stream: ttcp.outer,
         });
 
-        this.log('Request completed successfully', 'success');
+        this.logMessage('Request completed successfully', 'success');
         return response;
       }
     } catch (error) {
-      this.log(`Request failed: ${(error as Error).message}`, 'error');
+      this.logMessage(`Request failed: ${(error as Error).message}`, 'error');
 
       // If circuit fails, clear it so next request will create a new one
       this.circuitManager.clearCircuit();
@@ -302,12 +302,18 @@ export class TorClient {
     this.close();
   }
 
-  private log(
+  private logMessage(
     message: string,
     type: 'info' | 'success' | 'error' = 'info'
   ): void {
-    if (this.onLog) {
-      this.onLog(message, type);
+    switch (type) {
+      case 'error':
+        this.log.error(message);
+        break;
+      case 'success':
+      case 'info':
+        this.log.info(message);
+        break;
     }
   }
 
@@ -316,24 +322,23 @@ export class TorClient {
     error: unknown,
     defaultMessage: string
   ): void {
-    const errorMessage =
-      error instanceof Error ? error.message : String(error || defaultMessage);
-    this.log(`${prefix}: ${errorMessage}`, 'error');
+    const errorMessage = getErrorDetails(error) || defaultMessage;
+    this.logMessage(`${prefix}: ${errorMessage}`, 'error');
   }
 
   private async createTorConnection(): Promise<TorClientDuplex> {
-    this.log(`Connecting to Snowflake bridge at ${this.snowflakeUrl}`);
+    this.logMessage(`Connecting to Snowflake bridge at ${this.snowflakeUrl}`);
 
     const stream = await WebSocketDuplex.connect(
       this.snowflakeUrl,
       AbortSignal.timeout(this.connectionTimeout)
     );
 
-    this.log('Creating Snowflake stream');
+    this.logMessage('Creating Snowflake stream');
     const tcp = createSnowflakeStream(stream);
     const tor = new TorClientDuplex();
 
-    this.log('Connecting streams');
+    this.logMessage('Connecting streams');
     tcp.outer.readable.pipeTo(tor.inner.writable).catch((error: unknown) => {
       this.logError('TCP -> Tor stream error', error, 'Stream pipe error');
     });
@@ -354,12 +359,14 @@ export class TorClient {
           : String(reason || 'Connection closed normally');
       // Only log as error if there's an actual error reason
       const logLevel = reason && reason !== undefined ? 'error' : 'info';
-      this.log(`Tor client closed: ${reasonMessage}`, logLevel);
+      this.logMessage(`Tor client closed: ${reasonMessage}`, logLevel);
     });
 
-    this.log(`Waiting for Tor to be ready (timeout: ${this.circuitTimeout}ms)`);
+    this.logMessage(
+      `Waiting for Tor to be ready (timeout: ${this.circuitTimeout}ms)`
+    );
     await tor.waitOrThrow(AbortSignal.timeout(this.circuitTimeout));
-    this.log('Tor client ready!', 'success');
+    this.logMessage('Tor client ready!', 'success');
 
     return tor;
   }
@@ -389,13 +396,13 @@ export class TorClient {
     const candidate = candidates[Math.floor(Math.random() * candidates.length)];
 
     try {
-      this.log(`Extending circuit through ${logPrefix}`);
+      this.logMessage(`Extending circuit through ${logPrefix}`);
       const microdesc = await Echalote.Consensus.Microdesc.fetchOrThrow(
         circuit,
         candidate
       );
       await circuit.extendOrThrow(microdesc, AbortSignal.timeout(timeout));
-      this.log(`Extended through ${logPrefix}`, 'success');
+      this.logMessage(`Extended through ${logPrefix}`, 'success');
     } catch (e) {
       // Circuit is now destroyed, dispose it
       circuit[Symbol.dispose]();
@@ -404,15 +411,15 @@ export class TorClient {
   }
 
   private async createCircuit(tor: TorClientDuplex): Promise<Circuit> {
-    this.log('Creating circuits');
+    this.logMessage('Creating circuits');
     const consensusCircuit = await tor.createOrThrow();
-    this.log('Consensus circuit created successfully', 'success');
+    this.logMessage('Consensus circuit created successfully', 'success');
 
     // Get consensus (from cache if fresh, or fetch if needed)
     const consensus =
       await this.consensusManager.getConsensus(consensusCircuit);
 
-    this.log('Filtering relays');
+    this.logMessage('Filtering relays');
     const middles = consensus.microdescs.filter(
       it =>
         it.flags.includes('Fast') &&
@@ -428,7 +435,7 @@ export class TorClient {
         !it.flags.includes('BadExit')
     );
 
-    this.log(
+    this.logMessage(
       `Found ${middles.length} middle relays and ${exits.length} exit relays`
     );
 
@@ -448,7 +455,7 @@ export class TorClient {
       circuitAttempt++
     ) {
       try {
-        this.log(
+        this.logMessage(
           `Building circuit (attempt ${circuitAttempt}/${maxCircuitAttempts})`
         );
         const circuit = await tor.createOrThrow();
@@ -463,13 +470,13 @@ export class TorClient {
         // Try to extend through exit relay
         await this.extendCircuit(circuit, exits, 'exit relay');
 
-        this.log('Circuit built successfully!', 'success');
+        this.logMessage('Circuit built successfully!', 'success');
         return circuit;
       } catch (e) {
         lastError = e;
         // Only log details on final attempt
         if (circuitAttempt === maxCircuitAttempts) {
-          this.log(
+          this.logMessage(
             `Circuit build failed after ${maxCircuitAttempts} attempts: ${getErrorDetails(e)}`,
             'error'
           );

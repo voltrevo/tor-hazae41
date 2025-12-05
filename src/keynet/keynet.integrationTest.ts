@@ -17,7 +17,6 @@ test('Keynet connection and fetch', async () => {
 
   const circuit = await makeCircuit({
     snowflakeUrl: 'wss://snowflake.pse.dev/',
-    onLog: (msg, type) => console.log(`${relTimestamp()} | [${type}] ${msg}`),
   });
 
   const consensus = await Echalote.Consensus.parseOrThrow(
