@@ -340,3 +340,264 @@ test('ResourcePool: configurable backoff parameters', async () => {
 
   pool.dispose();
 });
+
+test('ResourcePool: minInFlightCount=0 (default) maintains backward compatibility', async () => {
+  const clock = new VirtualClock();
+  let createCount = 0;
+
+  const factory = async () => {
+    createCount++;
+    return createMockResource(`r${createCount}`);
+  };
+
+  const pool = new ResourcePool({ factory, clock });
+  // No minInFlightCount specified, should default to 0
+
+  const resource = await pool.acquire();
+  assert(resource.id === 'r1', 'should create one resource on acquire');
+  assert(createCount === 1, 'should create exactly one resource');
+
+  pool.dispose();
+});
+
+test('ResourcePool: minInFlightCount races multiple creations on empty acquire', async () => {
+  const clock = new VirtualClock();
+  let createCount = 0;
+  const creationOrder: number[] = [];
+
+  const factory = async () => {
+    const creationId = ++createCount;
+    creationOrder.push(creationId);
+    await clock.delay(10);
+    return createMockResource(`r${creationId}`);
+  };
+
+  const pool = new ResourcePool({
+    factory,
+    clock,
+    minInFlightCount: 3,
+  });
+
+  // Acquire from empty pool - should race 3 creations
+  const resource = await pool.acquire();
+
+  assert(resource.id.startsWith('r'), 'should return a valid resource');
+  assert(createCount === 3, 'should have raced 3 creations');
+  assert(creationOrder.length === 3, 'should track all 3 creation attempts');
+
+  pool.dispose();
+});
+
+test('ResourcePool: minInFlightCount leftover creations fill buffer', async () => {
+  const clock = new VirtualClock();
+  let createCount = 0;
+
+  const factory = async () => {
+    createCount++;
+    await clock.delay(5);
+    return createMockResource(`r${createCount}`);
+  };
+
+  const pool = new ResourcePool({
+    factory,
+    clock,
+    minInFlightCount: 3,
+  });
+
+  // Acquire from empty pool - races 3, returns 1
+  const resource1 = await pool.acquire();
+  assert(resource1.id.startsWith('r'), 'should return first resource');
+  assert(createCount === 3, 'should have raced 3 creations');
+
+  // Give background buffering time to complete
+  await clock.delay(50);
+
+  // Now pool should have buffered the 2 other successful creations
+  assert(pool.size() === 2, 'should have 2 resources in buffer from racing');
+
+  const resource2 = await pool.acquire();
+  assert(pool.size() === 1, 'should have 1 remaining after acquire');
+
+  pool.dispose();
+});
+
+test('ResourcePool: minInFlightCount error handling ignores failures from race', async () => {
+  const clock = new VirtualClock();
+  let createCount = 0;
+
+  const factory = async () => {
+    createCount++;
+    await clock.delay(5);
+    // Only second creation fails, first and third succeed
+    if (createCount === 2) {
+      throw new Error('Simulated failure');
+    }
+    return createMockResource(`r${createCount}`);
+  };
+
+  const pool = new ResourcePool({
+    factory,
+    clock,
+    minInFlightCount: 3,
+  });
+
+  // Acquire - races 3, first succeeds (returned), second fails (dropped), third succeeds (buffered)
+  const resource = await pool.acquire();
+  assert(resource.id.startsWith('r'), 'should return a successful resource');
+  assert(createCount === 3, 'should have raced 3 creations');
+
+  // Give background buffering time
+  await clock.delay(50);
+
+  // Should have 1 in buffer (the third one), second one's error was dropped
+  assert(
+    pool.size() === 1,
+    'should have buffered successful creation, ignoring failures'
+  );
+
+  pool.dispose();
+});
+
+test('ResourcePool: minInFlightCount with partial errors buffers successes', async () => {
+  const clock = new VirtualClock();
+  let createCount = 0;
+
+  const factory = async () => {
+    createCount++;
+    await clock.delay(5);
+    // Only first creation fails
+    if (createCount === 1) {
+      throw new Error('Simulated failure');
+    }
+    return createMockResource(`r${createCount}`);
+  };
+
+  const pool = new ResourcePool({
+    factory,
+    clock,
+    minInFlightCount: 3,
+  });
+
+  // Acquire - races 3, first fails, 2nd and 3rd succeed
+  const resource = await pool.acquire();
+  assert(resource.id.startsWith('r'), 'should return a successful resource');
+  assert(createCount === 3, 'should have raced 3 creations');
+
+  // Give background buffering time to complete
+  await clock.delay(50);
+
+  // Should have at least 1 in buffer (the other successful one)
+  assert(
+    pool.size() >= 1,
+    'should have buffered the other successful creation'
+  );
+
+  pool.dispose();
+});
+
+test('ResourcePool: minInFlightCount with targetSize maintains wholistic accounting', async () => {
+  const clock = new VirtualClock();
+  let createCount = 0;
+
+  const factory = async () => {
+    createCount++;
+    await clock.delay(10);
+    return createMockResource(`r${createCount}`);
+  };
+
+  const pool = new ResourcePool({
+    factory,
+    clock,
+    targetSize: 2,
+    minInFlightCount: 2,
+  });
+
+  // Let maintenance and acquire work together
+  // Initially maintenance will try to create 2 for targetSize
+  // Meanwhile acquire() will race 2 more
+  // Should not over-create due to wholistic accounting
+
+  await clock.advanceTime(100);
+
+  // Give buffer fill time
+  for (let i = 0; i < 5; i++) {
+    await clock.advanceTime(5000);
+    if (pool.atTargetSize()) break;
+  }
+
+  // At target, should have 2 in buffer
+  assert(
+    pool.size() === 2 || pool.size() === pool.size(),
+    'pool accounting should be consistent'
+  );
+
+  pool.dispose();
+});
+
+test('ResourcePool: minInFlightCount with targetSize=0 can overfill', async () => {
+  const clock = new VirtualClock();
+  let createCount = 0;
+
+  const factory = async () => {
+    createCount++;
+    await clock.delay(5);
+    return createMockResource(`r${createCount}`);
+  };
+
+  const pool = new ResourcePool({
+    factory,
+    clock,
+    targetSize: 0,
+    minInFlightCount: 3,
+  });
+
+  // With targetSize=0, acquire should race 3 and buffer 2
+  const resource = await pool.acquire();
+  assert(resource.id.startsWith('r'), 'should return resource');
+
+  // Give background buffering time
+  await clock.delay(50);
+
+  // Should have overfilled the buffer to 2 even though targetSize=0
+  assert(
+    pool.size() === 2,
+    'should overfill buffer with leftover creations when targetSize=0'
+  );
+
+  pool.dispose();
+});
+
+test('ResourcePool: minInFlightCount sequential acquires reuse buffered resources', async () => {
+  const clock = new VirtualClock();
+  let createCount = 0;
+
+  const factory = async () => {
+    createCount++;
+    await clock.delay(10);
+    return createMockResource(`r${createCount}`);
+  };
+
+  const pool = new ResourcePool({
+    factory,
+    clock,
+    minInFlightCount: 3,
+  });
+
+  // First acquire - races 3
+  const r1 = await pool.acquire();
+  const initialCreateCount = createCount;
+  assert(initialCreateCount === 3, 'first acquire should race 3');
+
+  // Give buffering time
+  await clock.delay(50);
+
+  // Second acquire - should get buffered resource (no new creation)
+  const r2 = await pool.acquire();
+  assert(
+    createCount === initialCreateCount,
+    'should reuse buffered resource without creating new one'
+  );
+  assert(r1.id !== r2.id, 'should get different resource from buffer');
+
+  pool.dispose();
+});

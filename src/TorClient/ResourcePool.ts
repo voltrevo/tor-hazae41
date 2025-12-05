@@ -18,6 +18,8 @@ export interface ResourcePoolOptions<R> {
   clock: IClock;
   /** Desired pool size to maintain (default: 0) */
   targetSize?: number;
+  /** Minimum number of in-flight creations to maintain during acquire() (default: 0) */
+  minInFlightCount?: number;
   /** Optional maximum concurrent creations (default: null = unlimited) */
   concurrencyLimit?: number | null;
   /** Minimum backoff delay in milliseconds (default: 5000) */
@@ -45,9 +47,11 @@ export type ResourcePoolEvents<R> = {
  *
  * Key design:
  * - targetSize: pool proactively maintains this count (overflow allowed)
+ * - minInFlightCount: when acquire() is called and buffer is empty, races N creations
+ *   in parallel where N = minInFlightCount. First to complete is returned,
+ *   others fill the buffer. Errors are dropped. Pool can overfill especially if targetSize=0.
  * - No return() method: resources are one-use (get disposed after use)
- * - Racing emerges naturally from concurrent acquire() calls
- * - Background fill: uses inlined exponential backoff strategy
+ * - Background fill: uses inlined exponential backoff strategy with wholistic in-flight accounting
  * - Implicit deduplication: each acquire/maintenance task creates independently
  * - concurrencyLimit: optional cap on concurrent creation attempts
  *
@@ -56,6 +60,7 @@ export type ResourcePoolEvents<R> = {
 export class ResourcePool<R> extends EventEmitter<ResourcePoolEvents<R>> {
   private readonly factory: ResourceFactory<R>;
   private readonly targetSize: number;
+  private readonly minInFlightCount: number;
   private readonly clock: IClock;
   private readonly concurrencyLimit: ReturnType<typeof limit> | null;
 
@@ -81,6 +86,7 @@ export class ResourcePool<R> extends EventEmitter<ResourcePoolEvents<R>> {
     this.factory = options.factory;
     this.clock = options.clock;
     this.targetSize = options.targetSize ?? 0;
+    this.minInFlightCount = options.minInFlightCount ?? 0;
     this.concurrencyLimit = options.concurrencyLimit
       ? limit(options.concurrencyLimit)
       : null;
@@ -99,6 +105,12 @@ export class ResourcePool<R> extends EventEmitter<ResourcePoolEvents<R>> {
    * Acquires a resource from the pool. If buffer is empty, waits for one to be created.
    * Returns immediately if a buffered resource is available.
    *
+   * When buffer is empty, races minInFlightCount creations in parallel:
+   * - Returns whoever finishes first (fastest acquisition)
+   * - Other successful creations fill the buffer for future acquires
+   * - Errors are silently dropped
+   * - Pool can overfill, especially when targetSize=0
+   *
    * @throws Error if pool is disposed or resource creation fails
    */
   async acquire(): Promise<R> {
@@ -113,7 +125,39 @@ export class ResourcePool<R> extends EventEmitter<ResourcePoolEvents<R>> {
       return buffered;
     }
 
-    // Slow path: wait for new resource to be created
+    // Slow path: buffer is empty, race minInFlightCount creations
+    if (this.minInFlightCount > 0) {
+      const creationPromises: Promise<R>[] = [];
+      for (let i = 0; i < this.minInFlightCount; i++) {
+        creationPromises.push(this.createResource());
+      }
+
+      // Race them: return first successful, buffer the rest
+      const resource = await Promise.race(creationPromises);
+      this.emit('resource-acquired', resource);
+
+      // Background: buffer any other successful creations
+      Promise.allSettled(creationPromises)
+        .then(results => {
+          for (const result of results) {
+            if (result.status === 'fulfilled' && result.value !== resource) {
+              if (!this.disposed) {
+                this.buffered.push(result.value);
+              } else {
+                this.disposeResource(result.value);
+              }
+            }
+            // Errors (result.status === 'rejected') are silently dropped
+          }
+        })
+        .catch(() => {
+          // Ignore errors from background buffering task
+        });
+
+      return resource;
+    }
+
+    // No minimum in-flight, just create one resource
     return await this.createResource();
   }
 
@@ -241,17 +285,22 @@ export class ResourcePool<R> extends EventEmitter<ResourcePoolEvents<R>> {
 
   /**
    * Main loop for background maintenance.
+   * Accounts for both buffered resources and in-flight creations when calculating deficit.
    */
   private async maintenanceLoop(): Promise<void> {
     const signal = this.maintenanceAbortController!.signal;
 
     while (!this.disposed && !signal.aborted) {
       try {
-        // Calculate how many more resources we need
-        const deficit = this.targetSize - this.buffered.length;
+        // Calculate how many more resources we need, accounting for in-flight creations
+        // Total "committed" = buffered + in-flight + minimum in-flight from acquire() calls
+        // But maintenance contributes to the in-flight count, so we calculate:
+        // deficit = targetSize - (buffered + in-flight)
+        const deficit =
+          this.targetSize - (this.buffered.length + this.inFlightCounter);
 
         if (deficit <= 0) {
-          // At target size, just wait a bit before checking again
+          // At or above target size, just wait a bit before checking again
           try {
             await this.clock.delay(1000);
           } catch {
@@ -276,7 +325,10 @@ export class ResourcePool<R> extends EventEmitter<ResourcePoolEvents<R>> {
                 this.buffered.push(resource);
 
                 // Emit target-size-reached when we first hit it
-                if (this.buffered.length === this.targetSize) {
+                if (
+                  this.buffered.length + this.inFlightCounter ===
+                  this.targetSize
+                ) {
                   this.emit('target-size-reached');
                 }
               } else {
@@ -294,7 +346,7 @@ export class ResourcePool<R> extends EventEmitter<ResourcePoolEvents<R>> {
         await Promise.allSettled(promises);
 
         // If still under target after attempts, apply backoff
-        if (this.buffered.length < this.targetSize) {
+        if (this.buffered.length + this.inFlightCounter < this.targetSize) {
           const delayMs = this.getNextBackoffDelay();
           try {
             await this.clock.delay(delayMs);

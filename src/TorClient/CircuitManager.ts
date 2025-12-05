@@ -110,6 +110,7 @@ export class CircuitManager {
       factory: async () => await this.createNewCircuit(),
       clock: this.clock,
       targetSize: this.circuitBufferSize,
+      minInFlightCount: 2,
     });
   }
 
