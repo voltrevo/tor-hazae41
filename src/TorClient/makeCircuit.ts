@@ -82,6 +82,7 @@ export async function makeCircuit(options: {
     circuit = await tor.createOrThrow();
     logInstance.info('Circuit created successfully');
 
+    console.error('FIXME: circuit should eventually get cleaned up');
     return circuit;
   } catch (error) {
     logInstance.error(`Failed to create circuit: ${getErrorDetails(error)}`);

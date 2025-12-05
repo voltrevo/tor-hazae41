@@ -1,6 +1,5 @@
 # TODO
 
-- Restore FIXME in makeCircuit.ts
 - Improve logging, avoid all raw console.method calls
   - Hierarchical logging
 - update circuit management
