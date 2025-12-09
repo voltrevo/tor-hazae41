@@ -122,8 +122,23 @@ export class CircuitManager {
 
   /**
    * Gets or creates a circuit for the specified hostname.
+   * For keynet hostnames (.keynet), optionally provide the service's Ed25519 public key
+   * to build a keynet circuit instead of a regular Tor circuit.
+   *
+   * @param hostname The hostname to route through (or .keynet hostname)
+   * @param keynetPubkey Optional: The 32-byte Ed25519 public key for keynet services
+   * @returns Promise resolving to a circuit
    */
-  async getOrCreateCircuit(hostname: string): Promise<Circuit> {
+  async getOrCreateCircuit(
+    hostname: string,
+    keynetPubkey?: Uint8Array
+  ): Promise<Circuit> {
+    // Check if this is a keynet circuit request
+    if (keynetPubkey !== undefined) {
+      return await this.getOrCreateKeynetCircuit(hostname, keynetPubkey);
+    }
+
+    // Regular circuit path
     // Cancel idle timer if circuit exists for this host
     const existingCircuit = this.hostCircuitMap.get(hostname);
     if (existingCircuit) {
@@ -170,6 +185,67 @@ export class CircuitManager {
     } finally {
       this.circuitAllocationTasks.delete(hostname);
     }
+  }
+
+  /**
+   * Gets or creates a keynet circuit for the specified hostname and service public key.
+   * Unlike regular circuits, keynet circuits are not auto-updated.
+   *
+   * @param hostname The .keynet hostname
+   * @param pubkey The 32-byte Ed25519 public key of the keynet service
+   * @returns Promise resolving to a keynet circuit
+   */
+  private async getOrCreateKeynetCircuit(
+    hostname: string,
+    pubkey: Uint8Array
+  ): Promise<Circuit> {
+    // Check if we already have a circuit for this hostname
+    const existingCircuit = this.hostCircuitMap.get(hostname);
+    if (existingCircuit) {
+      this.logMessage(hostname, 'Reusing existing keynet circuit');
+      return existingCircuit;
+    }
+
+    // If we're already allocating a keynet circuit for this host, wait for it
+    if (this.circuitAllocationTasks.has(hostname)) {
+      return await this.circuitAllocationTasks.get(hostname)!;
+    }
+
+    // Build new keynet circuit
+    const allocationPromise = this.buildAndAllocateKeynetCircuit(
+      hostname,
+      pubkey
+    );
+    this.circuitAllocationTasks.set(hostname, allocationPromise);
+    try {
+      return await allocationPromise;
+    } finally {
+      this.circuitAllocationTasks.delete(hostname);
+    }
+  }
+
+  /**
+   * Builds and allocates a keynet circuit to a hostname.
+   */
+  private async buildAndAllocateKeynetCircuit(
+    hostname: string,
+    pubkey: Uint8Array
+  ): Promise<Circuit> {
+    const circuit = await this.buildKeynetCircuit(pubkey);
+    this.logMessage(hostname, 'Allocated keynet circuit');
+
+    // Initialize circuit state first (required before allocate)
+    this.circuitStateTracker.initialize(circuit);
+
+    // Allocate to hostname using CircuitStateTracker (no auto-updates for keynet)
+    this.circuitStateTracker.allocate(circuit, hostname);
+    this.circuitOwnershipMap.set(circuit, hostname);
+    this.hostCircuitMap.set(hostname, circuit);
+
+    // Mark as used but don't schedule auto-updates for keynet circuits
+    this.circuitStateTracker.markUsed(circuit);
+
+    return circuit;
   }
 
   /**

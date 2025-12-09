@@ -305,9 +305,17 @@ export class TorClient {
         `[Keynet] Decoded public key (first 8 bytes): ${Buffer.from(pubkey.slice(0, 8)).toString('hex')}`
       );
 
-      // Build keynet circuit through CircuitManager
-      this.logMessage('[Keynet] Building 4-hop circuit to keynet exit');
-      const circuit = await this.circuitManager.buildKeynetCircuit(pubkey);
+      // Get or create a keynet circuit for this hostname
+      this.logMessage(
+        '[Keynet] Getting or creating 4-hop circuit to keynet exit'
+      );
+      const circuit = await this.circuitManager.getOrCreateCircuit(
+        hostname,
+        pubkey
+      );
+
+      // Mark circuit as used
+      this.circuitManager.markCircuitUsed(hostname);
 
       try {
         // Now make the HTTP request
@@ -322,13 +330,10 @@ export class TorClient {
 
         this.logMessage(`[Keynet] Request completed successfully`, 'success');
         return response;
-      } finally {
-        // Always dispose the keynet circuit since it's not reused
-        try {
-          (circuit as unknown as Disposable)[Symbol.dispose]();
-        } catch {
-          // Ignore disposal errors
-        }
+      } catch (error) {
+        // If circuit fails, clear it so a new one will be created on next request
+        this.circuitManager.clearCircuit(hostname);
+        throw error;
       }
     } catch (error) {
       this.logMessage(
