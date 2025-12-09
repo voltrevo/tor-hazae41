@@ -42,11 +42,11 @@ export class MicrodescManager {
     // Check cache first
     const cached = await this.loadCachedMicrodesc(ref.microdesc);
     if (cached) {
-      this.logMessage(`Using cached microdesc for ${ref.identity.slice(0, 8)}`);
+      this.log.info(`Using cached microdesc for ${ref.identity.slice(0, 8)}`);
       return cached;
     }
 
-    this.logMessage(
+    this.log.info(
       `Fetching microdesc for ${ref.identity.slice(0, 8)} from network`
     );
     const microdesc = await Echalote.Consensus.Microdesc.fetchOrThrow(
@@ -56,10 +56,7 @@ export class MicrodescManager {
 
     // Save to cache
     await this.saveToCache(microdesc);
-    this.logMessage(
-      `Cached microdesc for ${ref.identity.slice(0, 8)}`,
-      'success'
-    );
+    this.log.info(`Cached microdesc for ${ref.identity.slice(0, 8)}`);
 
     return microdesc;
   }
@@ -93,9 +90,7 @@ export class MicrodescManager {
     for (const { ref, microdesc } of cachedResults) {
       if (microdesc) {
         cachedMicrodescs.push(microdesc);
-        this.logMessage(
-          `Using cached microdesc for ${ref.identity.slice(0, 8)}`
-        );
+        this.log.info(`Using cached microdesc for ${ref.identity.slice(0, 8)}`);
       } else {
         uncachedRefs.push(ref);
       }
@@ -103,9 +98,7 @@ export class MicrodescManager {
 
     // Fetch uncached microdescs in batch
     if (uncachedRefs.length > 0) {
-      this.logMessage(
-        `Fetching ${uncachedRefs.length} microdescs from network`
-      );
+      this.log.info(`Fetching ${uncachedRefs.length} microdescs from network`);
       const fetchedMicrodescs =
         await Echalote.Consensus.Microdesc.fetchManyOrThrow(
           circuit,
@@ -116,10 +109,7 @@ export class MicrodescManager {
       await Promise.all(fetchedMicrodescs.map(md => this.saveToCache(md)));
 
       microdescs.push(...fetchedMicrodescs);
-      this.logMessage(
-        `Cached ${fetchedMicrodescs.length} new microdescs`,
-        'success'
-      );
+      this.log.info(`Cached ${fetchedMicrodescs.length} new microdescs`);
     }
 
     microdescs.push(...cachedMicrodescs);
@@ -151,11 +141,11 @@ export class MicrodescManager {
 
   private async loadCacheInternal(): Promise<void> {
     try {
-      this.logMessage('Loading cached microdescs from storage');
+      this.log.info('Loading cached microdescs from storage');
       const keys = await this.storage.list('microdesc:');
 
       if (keys.length === 0) {
-        this.logMessage('No cached microdescs found');
+        this.log.info('No cached microdescs found');
         this.cacheLoaded = true;
         return;
       }
@@ -172,44 +162,38 @@ export class MicrodescManager {
 
           this.microdescCache.set(microdesc.microdesc, microdesc);
           loadedCount++;
-          this.logMessage(
+          this.log.info(
             `Loaded cached microdesc for ${microdesc.identity.slice(0, 8)}`
           );
         } catch (error) {
           errorCount++;
-          this.logMessage(
-            `Failed to load microdesc ${key}: ${(error as Error).message}`,
-            'error'
+          this.log.error(
+            `Failed to load microdesc ${key}: ${(error as Error).message}`
           );
         }
       }
 
-      this.logMessage(
-        `Loaded ${loadedCount} cached microdescs${errorCount > 0 ? `, ${errorCount} errors` : ''}`,
-        'success'
+      this.log.info(
+        `Loaded ${loadedCount} cached microdescs${errorCount > 0 ? `, ${errorCount} errors` : ''}`
       );
 
       // Clean up old microdescs if we have too many
       if (keys.length > this.maxCached) {
         const keysToRemove = keys.slice(this.maxCached);
-        this.logMessage(
-          `Removing ${keysToRemove.length} old cached microdescs`
-        );
+        this.log.info(`Removing ${keysToRemove.length} old cached microdescs`);
         for (const key of keysToRemove) {
           try {
             await this.storage.remove(key);
           } catch (error) {
-            this.logMessage(
-              `Failed to remove old microdesc ${key}: ${(error as Error).message}`,
-              'error'
+            this.log.error(
+              `Failed to remove old microdesc ${key}: ${(error as Error).message}`
             );
           }
         }
       }
     } catch (error) {
-      this.logMessage(
-        `Failed to load microdesc cache: ${(error as Error).message}`,
-        'error'
+      this.log.error(
+        `Failed to load microdesc cache: ${(error as Error).message}`
       );
     } finally {
       this.cacheLoaded = true;
@@ -255,11 +239,10 @@ export class MicrodescManager {
         }
       }
 
-      this.logMessage(`Saved microdesc to cache: ${key}`);
+      this.log.info(`Saved microdesc to cache: ${key}`);
     } catch (error) {
-      this.logMessage(
-        `Failed to save microdesc to cache: ${(error as Error).message}`,
-        'error'
+      this.log.error(
+        `Failed to save microdesc to cache: ${(error as Error).message}`
       );
     }
   }
@@ -302,21 +285,6 @@ export class MicrodescManager {
   ): Promise<Echalote.Consensus.Microdesc> {
     const data = JSON.parse(text);
     return data as Echalote.Consensus.Microdesc;
-  }
-
-  private logMessage(
-    message: string,
-    type: 'info' | 'success' | 'error' = 'info'
-  ): void {
-    switch (type) {
-      case 'error':
-        this.log.error(message);
-        break;
-      case 'success':
-      case 'info':
-        this.log.info(message);
-        break;
-    }
   }
 
   close() {

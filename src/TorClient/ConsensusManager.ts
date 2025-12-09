@@ -68,17 +68,15 @@ export class ConsensusManager {
     const { consensus, status } = await this.loadCachedConsensus();
 
     if (status === 'fresh') {
-      this.logMessage('Providing fresh cached consensus');
+      this.log.info('Providing fresh cached consensus');
     } else if (status === 'stale') {
-      this.logMessage(
+      this.log.info(
         'Providing stale cached consensus, a fresh one will be sought separately'
       );
     } else if (status === 'invalid') {
-      this.logMessage(
-        'Cached consensus is no longer valid, fetching a new one'
-      );
+      this.log.info('Cached consensus is no longer valid, fetching a new one');
     } else if (status === 'none') {
-      this.logMessage('No cached consensus, fetching a new one');
+      this.log.info('No cached consensus, fetching a new one');
     }
 
     if (consensus) {
@@ -105,16 +103,15 @@ export class ConsensusManager {
   private async rawFetchConsensus(circuit: Circuit) {
     const cache = await this.loadCache();
 
-    this.logMessage('Fetching consensus from network');
+    this.log.info('Fetching consensus from network');
     const consensus = await Echalote.Consensus.fetchOrThrow(
       circuit,
       cache,
       undefined,
       this.certificateManager
     );
-    this.logMessage(
-      `Consensus fetched with ${consensus.microdescs.length} microdescs`,
-      'success'
+    this.log.info(
+      `Consensus fetched with ${consensus.microdescs.length} microdescs`
     );
 
     // Save to cache
@@ -140,11 +137,11 @@ export class ConsensusManager {
     this.cacheLoading = cacheLoadingFuture.promise;
 
     try {
-      this.logMessage('Loading cached consensuses from storage');
+      this.log.info('Loading cached consensuses from storage');
       const keys = await this.storage.list('consensus:');
 
       if (keys.length === 0) {
-        this.logMessage('No cached consensuses found');
+        this.log.info('No cached consensuses found');
         this.cacheLoaded = true;
         return this.consensusCache;
       }
@@ -160,44 +157,38 @@ export class ConsensusManager {
           const text = new TextDecoder().decode(data);
           const consensus = await Echalote.Consensus.parseOrThrow(text);
           consensuses.push(consensus);
-          this.logMessage(
+          this.log.info(
             `Loaded cached consensus from ${consensus.validAfter.toISOString()}`
           );
         } catch (error) {
-          this.logMessage(
-            `Failed to load consensus ${key}: ${(error as Error).message}`,
-            'error'
+          this.log.error(
+            `Failed to load consensus ${key}: ${(error as Error).message}`
           );
         }
       }
 
       this.consensusCache = consensuses;
-      this.logMessage(
-        `Loaded ${consensuses.length} cached consensus(es)`,
-        'success'
-      );
+      this.log.info(`Loaded ${consensuses.length} cached consensus(es)`);
 
       // Clean up old consensuses
       if (sortedKeys.length > this.maxCached) {
         const keysToRemove = sortedKeys.slice(this.maxCached);
-        this.logMessage(
+        this.log.info(
           `Removing ${keysToRemove.length} old cached consensus(es)`
         );
         for (const key of keysToRemove) {
           try {
             await this.storage.remove(key);
           } catch (error) {
-            this.logMessage(
-              `Failed to remove old consensus ${key}: ${(error as Error).message}`,
-              'error'
+            this.log.error(
+              `Failed to remove old consensus ${key}: ${(error as Error).message}`
             );
           }
         }
       }
     } catch (error) {
-      this.logMessage(
-        `Failed to load consensus cache: ${(error as Error).message}`,
-        'error'
+      this.log.error(
+        `Failed to load consensus cache: ${(error as Error).message}`
       );
     } finally {
       this.cacheLoaded = true;
@@ -248,7 +239,7 @@ export class ConsensusManager {
       const data = new TextEncoder().encode(textToSave);
       await this.storage.write(key, data);
 
-      this.logMessage(`Saved consensus to cache: ${key}`);
+      this.log.info(`Saved consensus to cache: ${key}`);
 
       // Update cache - append to end to maintain chronological order
       this.consensusCache.push(consensus);
@@ -266,19 +257,17 @@ export class ConsensusManager {
         for (const oldKey of keysToRemove) {
           try {
             await this.storage.remove(oldKey);
-            this.logMessage(`Removed old cached consensus: ${oldKey}`);
+            this.log.info(`Removed old cached consensus: ${oldKey}`);
           } catch (error) {
-            this.logMessage(
-              `Failed to remove old consensus ${oldKey}: ${(error as Error).message}`,
-              'error'
+            this.log.error(
+              `Failed to remove old consensus ${oldKey}: ${(error as Error).message}`
             );
           }
         }
       }
     } catch (error) {
-      this.logMessage(
-        `Failed to save consensus to cache: ${(error as Error).message}`,
-        'error'
+      this.log.error(
+        `Failed to save consensus to cache: ${(error as Error).message}`
       );
     }
   }
@@ -293,10 +282,7 @@ export class ConsensusManager {
     try {
       await this.rawBackgroundUpdate(circuit);
     } catch (e) {
-      this.logMessage(
-        `backgroundUpdate failed: ${getErrorDetails(e)}`,
-        'error'
-      );
+      this.log.error(`backgroundUpdate failed: ${getErrorDetails(e)}`);
     } finally {
       this.backgroundUpdating = false;
     }
@@ -347,21 +333,6 @@ export class ConsensusManager {
     }
 
     return text;
-  }
-
-  private logMessage(
-    message: string,
-    type: 'info' | 'success' | 'error' = 'info'
-  ): void {
-    switch (type) {
-      case 'error':
-        this.log.error(message);
-        break;
-      case 'success':
-      case 'info':
-        this.log.info(message);
-        break;
-    }
   }
 
   close() {

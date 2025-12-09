@@ -42,11 +42,11 @@ export class CertificateManager {
     // Check cache first
     const cached = await this.loadCachedCertificate(fingerprint);
     if (cached && this.isCertificateValid(cached)) {
-      this.logMessage(`Using cached certificate for ${fingerprint}`);
+      this.log.info(`Using cached certificate for ${fingerprint}`);
       return cached;
     }
 
-    this.logMessage(`Fetching certificate for ${fingerprint} from network`);
+    this.log.info(`Fetching certificate for ${fingerprint} from network`);
     const certificate = await Echalote.Consensus.Certificate.fetchOrThrow(
       circuit,
       fingerprint
@@ -54,7 +54,7 @@ export class CertificateManager {
 
     // Save to cache
     await this.saveToCache(certificate);
-    this.logMessage(`Cached certificate for ${fingerprint}`, 'success');
+    this.log.info(`Cached certificate for ${fingerprint}`);
 
     return certificate;
   }
@@ -86,7 +86,7 @@ export class CertificateManager {
     for (const { fingerprint, certificate } of cachedResults) {
       if (certificate && this.isCertificateValid(certificate)) {
         cachedCertificates.push(certificate);
-        this.logMessage(`Using cached certificate for ${fingerprint}`);
+        this.log.info(`Using cached certificate for ${fingerprint}`);
       } else {
         uncachedFingerprints.push(fingerprint);
       }
@@ -94,7 +94,7 @@ export class CertificateManager {
 
     // Fetch uncached certificates in parallel
     if (uncachedFingerprints.length > 0) {
-      this.logMessage(
+      this.log.info(
         `Fetching ${uncachedFingerprints.length} certificates from network`
       );
       const fetchedCertificates = await Promise.all(
@@ -109,10 +109,7 @@ export class CertificateManager {
       );
 
       certificates.push(...fetchedCertificates);
-      this.logMessage(
-        `Cached ${fetchedCertificates.length} new certificates`,
-        'success'
-      );
+      this.log.info(`Cached ${fetchedCertificates.length} new certificates`);
     }
 
     certificates.push(...cachedCertificates);
@@ -160,11 +157,11 @@ export class CertificateManager {
 
   private async loadCacheInternal(): Promise<void> {
     try {
-      this.logMessage('Loading cached certificates from storage');
+      this.log.info('Loading cached certificates from storage');
       const keys = await this.storage.list('cert:');
 
       if (keys.length === 0) {
-        this.logMessage('No cached certificates found');
+        this.log.info('No cached certificates found');
         this.cacheLoaded = true;
         return;
       }
@@ -181,51 +178,47 @@ export class CertificateManager {
           if (this.isCertificateValid(certificate)) {
             this.certificateCache.set(certificate.fingerprint, certificate);
             loadedCount++;
-            this.logMessage(
+            this.log.info(
               `Loaded cached certificate for ${certificate.fingerprint} (expires: ${certificate.expires.toISOString()})`
             );
           } else {
             expiredCount++;
-            this.logMessage(
+            this.log.info(
               `Skipping expired certificate for ${certificate.fingerprint} (expired: ${certificate.expires.toISOString()})`
             );
             // Remove expired certificate from storage
             await this.storage.remove(key);
           }
         } catch (error) {
-          this.logMessage(
-            `Failed to load certificate ${key}: ${(error as Error).message}`,
-            'error'
+          this.log.error(
+            `Failed to load certificate ${key}: ${(error as Error).message}`
           );
         }
       }
 
-      this.logMessage(
-        `Loaded ${loadedCount} cached certificates, removed ${expiredCount} expired ones`,
-        'success'
+      this.log.info(
+        `Loaded ${loadedCount} cached certificates, removed ${expiredCount} expired ones`
       );
 
       // Clean up old certificates if we have too many
       if (keys.length > this.maxCached) {
         const keysToRemove = keys.slice(this.maxCached);
-        this.logMessage(
+        this.log.info(
           `Removing ${keysToRemove.length} old cached certificates`
         );
         for (const key of keysToRemove) {
           try {
             await this.storage.remove(key);
           } catch (error) {
-            this.logMessage(
-              `Failed to remove old certificate ${key}: ${(error as Error).message}`,
-              'error'
+            this.log.error(
+              `Failed to remove old certificate ${key}: ${(error as Error).message}`
             );
           }
         }
       }
     } catch (error) {
-      this.logMessage(
-        `Failed to load certificate cache: ${(error as Error).message}`,
-        'error'
+      this.log.error(
+        `Failed to load certificate cache: ${(error as Error).message}`
       );
     } finally {
       this.cacheLoaded = true;
@@ -273,11 +266,10 @@ export class CertificateManager {
         }
       }
 
-      this.logMessage(`Saved certificate to cache: ${key}`);
+      this.log.info(`Saved certificate to cache: ${key}`);
     } catch (error) {
-      this.logMessage(
-        `Failed to save certificate to cache: ${(error as Error).message}`,
-        'error'
+      this.log.error(
+        `Failed to save certificate to cache: ${(error as Error).message}`
       );
     }
   }
@@ -330,21 +322,6 @@ export class CertificateManager {
         throw new Error('No certificate found in text');
       }
       return certificates[0];
-    }
-  }
-
-  private logMessage(
-    message: string,
-    type: 'info' | 'success' | 'error' = 'info'
-  ): void {
-    switch (type) {
-      case 'error':
-        this.log.error(message);
-        break;
-      case 'success':
-      case 'info':
-        this.log.info(message);
-        break;
     }
   }
 

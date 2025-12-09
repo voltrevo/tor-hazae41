@@ -7,3 +7,5 @@
 - read README.md
   - keep this up to date
   - focus on public api and underlying concepts
+
+**always confirm with the user before committing changes**
