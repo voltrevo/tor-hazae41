@@ -201,7 +201,7 @@ export class TorClient {
    * @returns Promise resolving to the fetch Response
    */
   async fetch(url: string, options?: RequestInit): Promise<Response> {
-    this.logMessage(`Starting fetch request to ${url}`);
+    this.log.info(`Starting fetch request to ${url}`);
 
     const parsedUrl = new URL(url);
     const hostname = parsedUrl.hostname;
@@ -212,7 +212,7 @@ export class TorClient {
         : 80;
     const isHttps = parsedUrl.protocol === 'https:';
 
-    this.logMessage(`Target: ${hostname}:${port} (HTTPS: ${isHttps})`);
+    this.log.info(`Target: ${hostname}:${port} (HTTPS: ${isHttps})`);
 
     try {
       const circuit = await this.circuitManager.getOrCreateCircuit(hostname);
@@ -220,11 +220,11 @@ export class TorClient {
       // Mark circuit as used to schedule updates
       this.circuitManager.markCircuitUsed(hostname);
 
-      this.logMessage(`Opening connection to ${hostname}:${port}`);
+      this.log.info(`Opening connection to ${hostname}:${port}`);
       const ttcp = await circuit.openOrThrow(hostname, port);
 
       if (isHttps) {
-        this.logMessage('Setting up TLS connection');
+        this.log.info('Setting up TLS connection');
         const ciphers = [
           Ciphers.TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384,
           Ciphers.TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384,
@@ -233,38 +233,36 @@ export class TorClient {
 
         // Connect TLS streams
         ttcp.outer.readable.pipeTo(ttls.inner.writable).catch(error => {
-          this.logMessage(
-            `TLS stream connection failed: ${getErrorDetails(error)}`,
-            'error'
+          this.log.error(
+            `TLS stream connection failed: ${getErrorDetails(error)}`
           );
         });
         ttls.inner.readable.pipeTo(ttcp.outer.writable).catch(error => {
-          this.logMessage(
-            `TLS stream connection failed: ${getErrorDetails(error)}`,
-            'error'
+          this.log.error(
+            `TLS stream connection failed: ${getErrorDetails(error)}`
           );
         });
 
-        this.logMessage('Making HTTPS request through Tor');
+        this.log.info('Making HTTPS request through Tor');
         const response = await fetch(url, {
           ...options,
           stream: ttls.outer,
         });
 
-        this.logMessage('Request completed successfully', 'success');
+        this.log.info('Request completed successfully');
         return response;
       } else {
-        this.logMessage('Making HTTP request through Tor');
+        this.log.info('Making HTTP request through Tor');
         const response = await fetch(url, {
           ...options,
           stream: ttcp.outer,
         });
 
-        this.logMessage('Request completed successfully', 'success');
+        this.log.info('Request completed successfully');
         return response;
       }
     } catch (error) {
-      this.logMessage(`Request failed: ${(error as Error).message}`, 'error');
+      this.log.error(`Request failed: ${(error as Error).message}`);
 
       // If circuit fails, clear only this host's circuit so Tor connection can be reused
       this.circuitManager.clearCircuit(hostname);
@@ -325,54 +323,30 @@ export class TorClient {
     this.close();
   }
 
-  private logMessage(
-    message: string,
-    type: 'info' | 'success' | 'error' = 'info'
-  ): void {
-    switch (type) {
-      case 'error':
-        this.log.error(message);
-        break;
-      case 'success':
-      case 'info':
-        this.log.info(message);
-        break;
-    }
-  }
-
-  private logError(
-    prefix: string,
-    error: unknown,
-    defaultMessage: string
-  ): void {
-    const errorMessage = getErrorDetails(error) || defaultMessage;
-    this.logMessage(`${prefix}: ${errorMessage}`, 'error');
-  }
-
   private async createTorConnection(): Promise<TorClientDuplex> {
-    this.logMessage(`Connecting to Snowflake bridge at ${this.snowflakeUrl}`);
+    this.log.info(`Connecting to Snowflake bridge at ${this.snowflakeUrl}`);
 
     const stream = await WebSocketDuplex.connect(
       this.snowflakeUrl,
       AbortSignal.timeout(this.connectionTimeout)
     );
 
-    this.logMessage('Creating Snowflake stream');
+    this.log.info('Creating Snowflake stream');
     const tcp = createSnowflakeStream(stream);
     const tor = new TorClientDuplex();
 
-    this.logMessage('Connecting streams');
+    this.log.info('Connecting streams');
     tcp.outer.readable.pipeTo(tor.inner.writable).catch((error: unknown) => {
-      this.logError('TCP -> Tor stream error', error, 'Stream pipe error');
+      this.log.error(`TCP -> Tor stream error: ${getErrorDetails(error)}`);
     });
 
     tor.inner.readable.pipeTo(tcp.outer.writable).catch((error: unknown) => {
-      this.logError('Tor -> TCP stream error', error, 'Stream pipe error');
+      this.log.error(`Tor -> TCP stream error: ${getErrorDetails(error)}`);
     });
 
     // Add event listeners for debugging
     tor.events.on('error', (error: unknown) => {
-      this.logError('Tor client error', error, 'Unknown error');
+      this.log.error(`Tor client error: ${getErrorDetails(error)}`);
     });
 
     tor.events.on('close', (reason: unknown) => {
@@ -382,14 +356,18 @@ export class TorClient {
           : String(reason || 'Connection closed normally');
       // Only log as error if there's an actual error reason
       const logLevel = reason && reason !== undefined ? 'error' : 'info';
-      this.logMessage(`Tor client closed: ${reasonMessage}`, logLevel);
+      if (logLevel === 'error') {
+        this.log.error(`Tor client closed: ${reasonMessage}`);
+      } else {
+        this.log.info(`Tor client closed: ${reasonMessage}`);
+      }
     });
 
-    this.logMessage(
+    this.log.info(
       `Waiting for Tor to be ready (timeout: ${this.circuitTimeout}ms)`
     );
     await tor.waitOrThrow(AbortSignal.timeout(this.circuitTimeout));
-    this.logMessage('Tor client ready!', 'success');
+    this.log.info('Tor client ready!');
 
     return tor;
   }

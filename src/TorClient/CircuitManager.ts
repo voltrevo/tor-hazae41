@@ -145,7 +145,7 @@ export class CircuitManager {
         Date.now() >= trackerState.updateDeadline &&
         this.circuitAllocationTasks.has(hostname)
       ) {
-        this.logMessage(hostname, 'Deadline passed, waiting for new circuit');
+        this.log.info(`[${hostname}] Deadline passed, waiting for new circuit`);
         return await this.circuitAllocationTasks.get(hostname)!;
       }
 
@@ -206,7 +206,7 @@ export class CircuitManager {
     if (!hostname.endsWith('.keynet')) {
       // Use ResourcePool to acquire a circuit
       circuit = await this.circuitPool.acquire();
-      this.logMessage(hostname, 'Allocated circuit from pool');
+      this.log.info(`[${hostname}] Allocated circuit from pool`);
     } else {
       // keynet circuits are special and can't come from the pool
       circuit = await this.createNewCircuit(hostname);
@@ -244,7 +244,7 @@ export class CircuitManager {
 
     const circuit = this.hostCircuitMap.get(hostname);
     if (!circuit) {
-      this.logMessage(hostname, 'No circuit to update');
+      this.log.info(`[${hostname}] No circuit to update`);
       return;
     }
 
@@ -259,7 +259,7 @@ export class CircuitManager {
     if (state.updateTimer) {
       this.clock.clearTimeout(state.updateTimer);
       state.updateTimer = undefined;
-      this.logMessage(hostname, 'Aborted scheduled circuit update');
+      this.log.info(`[${hostname}] Aborted scheduled circuit update`);
     }
 
     // Reset scheduling state
@@ -273,9 +273,8 @@ export class CircuitManager {
       const currentDeadline = trackerState.updateDeadline;
       const moreAggressiveDeadline = Math.min(currentDeadline, newDeadline);
 
-      this.logMessage(
-        hostname,
-        `Update already in progress. Using more aggressive deadline: ` +
+      this.log.info(
+        `[${hostname}] Update already in progress. Using more aggressive deadline: ` +
           `${moreAggressiveDeadline - Date.now()}ms`
       );
 
@@ -288,7 +287,7 @@ export class CircuitManager {
       return;
     }
 
-    this.logMessage(hostname, `Updating circuit with ${deadline}ms deadline`);
+    this.log.info(`[${hostname}] Updating circuit with ${deadline}ms deadline`);
 
     this.circuitStateTracker.markUpdating(circuit, newDeadline);
 
@@ -298,16 +297,10 @@ export class CircuitManager {
       this.circuitAllocationTasks.set(hostname, allocationPromise);
       await allocationPromise;
 
-      this.logMessage(
-        hostname,
-        'Circuit update completed successfully',
-        'success'
-      );
+      this.log.info(`[${hostname}] Circuit update completed successfully`);
     } catch (error) {
-      this.logMessage(
-        hostname,
-        `Circuit update failed: ${(error as Error).message}`,
-        'error'
+      this.log.error(
+        `[${hostname}] Circuit update failed: ${(error as Error).message}`
       );
       this.circuitStateTracker.markNotUpdating(circuit);
       throw error;
@@ -324,9 +317,8 @@ export class CircuitManager {
     if (circuit) {
       if (!this.circuitStateTracker.hasBeenUsed(circuit)) {
         this.circuitStateTracker.markUsed(circuit);
-        this.logMessage(
-          hostname,
-          'Circuit used for first time, scheduling automatic updates'
+        this.log.info(
+          `[${hostname}] Circuit used for first time, scheduling automatic updates`
         );
       } else {
         // Just update lastUsed timestamp
@@ -367,7 +359,7 @@ export class CircuitManager {
         this.circuitUpdateTimers.delete(circuit);
       }
 
-      this.logMessage(hostname, 'Circuit cleared');
+      this.log.info(`[${hostname}] Circuit cleared`);
     }
   }
 
@@ -514,7 +506,7 @@ export class CircuitManager {
     for (const [hostname, circuit] of this.hostCircuitMap.entries()) {
       circuit[Symbol.dispose]();
       this.circuitStateTracker.dispose(circuit);
-      this.logMessage(hostname, 'Circuit disposed');
+      this.log.info(`[${hostname}] Circuit disposed`);
     }
 
     this.hostCircuitMap.clear();
@@ -525,7 +517,7 @@ export class CircuitManager {
     // Close the shared Tor connection
     if (this.torConnection) {
       this.torConnection.close();
-      this.logMessage('Tor', 'Connection closed');
+      this.log.info(`[Tor] Connection closed`);
     }
     this.torConnection = undefined;
     this.torConnectionPromise = undefined;
@@ -543,7 +535,7 @@ export class CircuitManager {
    */
   private async createNewCircuit(hostname?: string): Promise<Circuit> {
     const hostLabel = hostname || 'buffered';
-    this.logMessage(hostLabel, '🚀 Creating new circuit');
+    this.log.info(`[${hostLabel}] 🚀 Creating new circuit`);
 
     try {
       await initWasm();
@@ -551,43 +543,40 @@ export class CircuitManager {
       // Get or create the shared Tor connection
       if (!this.torConnection) {
         if (!this.torConnectionPromise) {
-          this.logMessage(hostLabel, '🔌 Creating shared Tor connection');
+          this.log.info(`[${hostLabel}] 🔌 Creating shared Tor connection`);
           this.torConnectionPromise = this.createTorConnection();
         }
         this.torConnection = await this.torConnectionPromise;
 
         // Add error listener to detect connection failures
         this.torConnection.events.on('error', () => {
-          this.logMessage(
-            'Tor',
-            'Connection error detected, will create new connection on next use'
+          this.log.info(
+            `[Tor] Connection error detected, will create new connection on next use`
           );
           this.torConnection = undefined;
           this.torConnectionPromise = undefined;
         });
 
         this.torConnection.events.on('close', () => {
-          this.logMessage(
-            'Tor',
-            'Connection closed, will create new connection on next use'
+          this.log.info(
+            `[Tor] Connection closed, will create new connection on next use`
           );
           this.torConnection = undefined;
           this.torConnectionPromise = undefined;
         });
       }
 
-      this.logMessage(hostLabel, '🔨 Building circuit');
+      this.log.info(`[${hostLabel}] 🔨 Building circuit`);
       const circuit = await this.buildCircuit(hostname);
 
       // Initialize circuit state
       this.circuitStateTracker.initialize(circuit);
 
-      this.logMessage(hostLabel, '✅ Circuit created successfully');
+      this.log.info(`[${hostLabel}] ✅ Circuit created successfully`);
       return circuit;
     } catch (error) {
-      this.logMessage(
-        hostLabel,
-        `❌ Circuit creation failed: ${(error as Error).message}`
+      this.log.error(
+        `[${hostLabel}] ❌ Circuit creation failed: ${(error as Error).message}`
       );
       throw error;
     }
@@ -620,18 +609,17 @@ export class CircuitManager {
       this.circuitUpdateInterval === null ||
       this.circuitUpdateInterval <= 0
     ) {
-      this.logMessage(hostname, 'Circuit auto-update disabled');
+      this.log.info(`[${hostname}] Circuit auto-update disabled`);
       return;
     }
 
     if (state.updateLoopActive) {
-      this.logMessage(hostname, 'Circuit updates already scheduled');
+      this.log.info(`[${hostname}] Circuit updates already scheduled`);
       return;
     }
 
-    this.logMessage(
-      hostname,
-      `Scheduled next circuit update in ${this.circuitUpdateInterval}ms with ${this.circuitUpdateAdvance}ms advance`
+    this.log.info(
+      `[${hostname}] Scheduled next circuit update in ${this.circuitUpdateInterval}ms with ${this.circuitUpdateAdvance}ms advance`
     );
 
     state.updateLoopActive = true;
@@ -647,16 +635,14 @@ export class CircuitManager {
       try {
         state.nextUpdateTime = 0;
 
-        this.logMessage(hostname, 'Scheduled circuit update triggered');
+        this.log.info(`[${hostname}] Scheduled circuit update triggered`);
         await this.updateCircuit(hostname, this.circuitUpdateAdvance);
 
         state.updateLoopActive = false;
         state.circuitUsed = false;
       } catch (error) {
-        this.logMessage(
-          hostname,
-          `Scheduled circuit update failed: ${(error as Error).message}`,
-          'error'
+        this.log.error(
+          `[${hostname}] Scheduled circuit update failed: ${(error as Error).message}`
         );
         state.updateLoopActive = false;
         state.circuitUsed = false;
@@ -664,24 +650,5 @@ export class CircuitManager {
     }, updateDelay);
 
     this.circuitUpdateTimers.set(circuit, state.updateTimer);
-  }
-
-  private logMessage(
-    context: string,
-    message: string,
-    type: 'info' | 'success' | 'error' = 'info'
-  ): void {
-    const prefix = `[${context}]`;
-    const fullMessage = `${prefix} ${message}`;
-
-    switch (type) {
-      case 'error':
-        this.log.error(fullMessage);
-        break;
-      case 'success':
-      case 'info':
-        this.log.info(fullMessage);
-        break;
-    }
   }
 }
