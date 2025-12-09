@@ -4,7 +4,6 @@ globalThis.Buffer = Buffer;
 
 // Import the TorClient abstraction
 import { TorClient } from './src/TorClient';
-import { CircuitStatus } from './src/TorClient/CircuitManager';
 import { waitForWebSocket } from './src/TorClient/WebSocketDuplex.js';
 import { Log } from './src/Log/index.js';
 import { SystemClock } from './src/clock';
@@ -96,7 +95,6 @@ function updateStatus(): void {
     } else {
       // Multiple circuits - use the status strings
       if (typeof statusStrings === 'object' && statusStrings !== null) {
-        const firstStatusStr = Object.values(statusStrings)[0];
         statusText = `✅ Connected`;
 
         // Build circuit status details using the proper status strings

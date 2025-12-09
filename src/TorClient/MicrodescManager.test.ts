@@ -2,9 +2,12 @@ import { assert, test } from '@hazae41/phobos';
 import { MicrodescManager } from './MicrodescManager';
 import { createMemoryStorage } from '../storage';
 import { Log } from '../Log';
+import { Echalote } from '../echalote';
 
 // Mock microdesc factory
-function createMockMicrodesc(overrides: Partial<any> = {}): any {
+function createMockMicrodesc(
+  overrides: Partial<Echalote.Consensus.Microdesc> = {}
+): Echalote.Consensus.Microdesc {
   return {
     nickname: overrides.nickname || 'test-relay',
     identity:
@@ -26,7 +29,7 @@ function createMockMicrodesc(overrides: Partial<any> = {}): any {
     ntorOnionKey: overrides.ntorOnionKey || 'test-ntor-key',
     idEd25519: overrides.idEd25519 || 'test-ed25519-key',
     ...overrides,
-  };
+  } as Echalote.Consensus.Microdesc;
 }
 
 test('MicrodescManager: saveToCache and retrieval', async () => {
