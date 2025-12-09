@@ -1,6 +1,7 @@
 import limit from 'p-limit';
 import { EventEmitter } from './EventEmitter';
 import { IClock } from '../clock/IClock';
+import { Log } from '../Log';
 
 /**
  * Factory function type for creating resources.
@@ -28,6 +29,8 @@ export interface ResourcePoolOptions<R> {
   backoffMaxMs?: number;
   /** Backoff exponential multiplier (default: 1.1) */
   backoffMultiplier?: number;
+  /** Optional logger instance for diagnostics */
+  log?: Log; // FIXME: make this non-optional
 }
 
 /**
@@ -63,6 +66,7 @@ export class ResourcePool<R> extends EventEmitter<ResourcePoolEvents<R>> {
   private readonly minInFlightCount: number;
   private readonly clock: IClock;
   private readonly concurrencyLimit: ReturnType<typeof limit> | null;
+  private readonly log?: Log;
 
   // Inlined backoff strategy
   private currentDelayMs: number;
@@ -87,6 +91,7 @@ export class ResourcePool<R> extends EventEmitter<ResourcePoolEvents<R>> {
     this.clock = options.clock;
     this.targetSize = options.targetSize ?? 0;
     this.minInFlightCount = options.minInFlightCount ?? 0;
+    this.log = options.log;
     this.concurrencyLimit = options.concurrencyLimit
       ? limit(options.concurrencyLimit)
       : null;
@@ -143,6 +148,8 @@ export class ResourcePool<R> extends EventEmitter<ResourcePoolEvents<R>> {
             if (result.status === 'fulfilled' && result.value !== resource) {
               if (!this.disposed) {
                 this.buffered.push(result.value);
+                // Emit resource-created after buffering
+                this.emit('resource-created', result.value);
               } else {
                 this.disposeResource(result.value);
               }
@@ -173,23 +180,42 @@ export class ResourcePool<R> extends EventEmitter<ResourcePoolEvents<R>> {
 
     // Already at target size
     if (this.buffered.length >= this.targetSize) {
+      this.log?.info?.(
+        `⏭️  waitForFull: Already at target size (buffered=${this.buffered.length}, target=${this.targetSize})`
+      );
       this.emit('target-size-reached');
       return;
     }
+
+    this.log?.info?.(
+      `⏳ waitForFull: Starting wait for target size (buffered=${this.buffered.length}, target=${this.targetSize})`
+    );
 
     // Wait for maintenance to reach target
     // This will emit 'target-size-reached' when achieved
     return new Promise((resolve, reject) => {
       const checkFull = () => {
+        this.log?.info?.(
+          `🔍 waitForFull: checkFull called (buffered=${this.buffered.length}, target=${this.targetSize}, inFlight=${this.inFlightCounter})`
+        );
+
         if (this.disposed) {
+          this.log?.error?.('❌ waitForFull: Pool disposed while waiting');
           reject(new Error('ResourcePool disposed while waiting for full'));
           this.off('resource-created', checkFull);
           return;
         }
 
         if (this.buffered.length >= this.targetSize) {
+          this.log?.info?.(
+            `✅ waitForFull: Target size reached (buffered=${this.buffered.length})`
+          );
           resolve();
           this.off('resource-created', checkFull);
+        } else {
+          this.log?.info?.(
+            `⏳ waitForFull: Not yet at target (buffered=${this.buffered.length}, target=${this.targetSize})`
+          );
         }
       };
 
@@ -249,14 +275,23 @@ export class ResourcePool<R> extends EventEmitter<ResourcePoolEvents<R>> {
   private async createResource(): Promise<R> {
     const createFn = async () => {
       this.inFlightCounter++;
+      this.log?.info?.(
+        `🔨 createResource: Starting creation (inFlight=${this.inFlightCounter})`
+      );
       try {
         const resource = await this.factory();
         this.inFlightCounter--;
-        this.emit('resource-created', resource);
+        this.log?.info?.(
+          `✅ createResource: Success (inFlight=${this.inFlightCounter})`
+        );
+        // Don't emit resource-created here - let maintenanceLoop emit it after buffering
         return resource;
       } catch (error) {
         this.inFlightCounter--;
         const err = error instanceof Error ? error : new Error(String(error));
+        this.log?.error?.(
+          `❌ createResource: Factory failed with error: ${err.message} (inFlight=${this.inFlightCounter})`
+        );
         this.emit('creation-failed', err, this.inFlightCounter);
         throw err;
       }
@@ -299,8 +334,15 @@ export class ResourcePool<R> extends EventEmitter<ResourcePoolEvents<R>> {
         const deficit =
           this.targetSize - (this.buffered.length + this.inFlightCounter);
 
+        this.log?.info?.(
+          `📊 maintenanceLoop: buffered=${this.buffered.length}, inFlight=${this.inFlightCounter}, target=${this.targetSize}, deficit=${deficit}`
+        );
+
         if (deficit <= 0) {
           // At or above target size, just wait a bit before checking again
+          this.log?.info?.(
+            `✅ maintenanceLoop: At or above target, waiting 1s before next check`
+          );
           try {
             await this.clock.delay(1000);
           } catch {
@@ -314,6 +356,10 @@ export class ResourcePool<R> extends EventEmitter<ResourcePoolEvents<R>> {
         // Each creation attempt is independent (no deduplication)
         const promises: Promise<void>[] = [];
 
+        this.log?.info?.(
+          `🚀 maintenanceLoop: Creating ${deficit} resources to reach target`
+        );
+
         for (let i = 0; i < deficit; i++) {
           if (this.disposed || signal.aborted) {
             break;
@@ -323,20 +369,32 @@ export class ResourcePool<R> extends EventEmitter<ResourcePoolEvents<R>> {
             .then(resource => {
               if (!this.disposed) {
                 this.buffered.push(resource);
+                this.log?.info?.(
+                  `✅ maintenanceLoop: Resource created and buffered (buffered=${this.buffered.length})`
+                );
+
+                // Emit resource-created AFTER buffering so waitForFull sees the updated count
+                this.emit('resource-created', resource);
 
                 // Emit target-size-reached when we first hit it
                 if (
                   this.buffered.length + this.inFlightCounter ===
                   this.targetSize
                 ) {
+                  this.log?.info?.(
+                    `🎉 maintenanceLoop: Target size reached! (buffered=${this.buffered.length} + inFlight=${this.inFlightCounter} = ${this.targetSize})`
+                  );
                   this.emit('target-size-reached');
                 }
               } else {
                 this.disposeResource(resource);
               }
             })
-            .catch(() => {
+            .catch(error => {
               // Creation failed, backoff will handle retry on next loop iteration
+              this.log?.error?.(
+                `❌ maintenanceLoop: Resource creation failed: ${error instanceof Error ? error.message : String(error)}`
+              );
             });
 
           promises.push(p);
@@ -348,6 +406,9 @@ export class ResourcePool<R> extends EventEmitter<ResourcePoolEvents<R>> {
         // If still under target after attempts, apply backoff
         if (this.buffered.length + this.inFlightCounter < this.targetSize) {
           const delayMs = this.getNextBackoffDelay();
+          this.log?.warn?.(
+            `⏳ maintenanceLoop: Still under target after creation attempts, backoff ${delayMs}ms (buffered=${this.buffered.length}, inFlight=${this.inFlightCounter}, target=${this.targetSize})`
+          );
           try {
             await this.clock.delay(delayMs);
           } catch {
@@ -356,10 +417,16 @@ export class ResourcePool<R> extends EventEmitter<ResourcePoolEvents<R>> {
           }
         } else {
           // Success: reset backoff
+          this.log?.info?.(
+            `🔄 maintenanceLoop: Reached target, resetting backoff`
+          );
           this.resetBackoff();
         }
-      } catch {
+      } catch (error) {
         // Unexpected error, continue
+        this.log?.error?.(
+          `❌ maintenanceLoop: Unexpected error: ${error instanceof Error ? error.message : String(error)}`
+        );
         if (!this.disposed && !signal.aborted) {
           try {
             await this.clock.delay(1000);

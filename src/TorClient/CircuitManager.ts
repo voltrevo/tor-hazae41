@@ -116,6 +116,7 @@ export class CircuitManager {
       clock: this.clock,
       targetSize: this.circuitBufferSize,
       minInFlightCount: 2,
+      log: this.log.child('pool'), // FIXME: noisy maintenance logs
     });
   }
 
@@ -181,12 +182,19 @@ export class CircuitManager {
   async waitForCircuitReady(): Promise<void> {
     // Wait for ResourcePool to have at least one circuit ready (targetSize >= 1)
     if (this.circuitBufferSize <= 0) {
+      this.log.error(
+        `❌ waitForCircuitReady: CircuitBuffer is disabled (circuitBuffer=${this.circuitBufferSize})`
+      );
       throw new Error(
         'CircuitManager not configured to create circuits (circuitBuffer=0)'
       );
     }
+    this.log.info(
+      `⏳ waitForCircuitReady: Waiting for circuits (target=${this.circuitBufferSize})`
+    );
     // Wait for pool to reach target size
     await this.circuitPool.waitForFull();
+    this.log.info(`✅ waitForCircuitReady: Circuits ready!`);
   }
 
   /**
@@ -534,41 +542,55 @@ export class CircuitManager {
    * Creates a new unallocated circuit.
    */
   private async createNewCircuit(hostname?: string): Promise<Circuit> {
-    await initWasm();
+    const hostLabel = hostname || 'buffered';
+    this.logMessage(hostLabel, '🚀 Creating new circuit');
 
-    // Get or create the shared Tor connection
-    if (!this.torConnection) {
-      if (!this.torConnectionPromise) {
-        this.torConnectionPromise = this.createTorConnection();
+    try {
+      await initWasm();
+
+      // Get or create the shared Tor connection
+      if (!this.torConnection) {
+        if (!this.torConnectionPromise) {
+          this.logMessage(hostLabel, '🔌 Creating shared Tor connection');
+          this.torConnectionPromise = this.createTorConnection();
+        }
+        this.torConnection = await this.torConnectionPromise;
+
+        // Add error listener to detect connection failures
+        this.torConnection.events.on('error', () => {
+          this.logMessage(
+            'Tor',
+            'Connection error detected, will create new connection on next use'
+          );
+          this.torConnection = undefined;
+          this.torConnectionPromise = undefined;
+        });
+
+        this.torConnection.events.on('close', () => {
+          this.logMessage(
+            'Tor',
+            'Connection closed, will create new connection on next use'
+          );
+          this.torConnection = undefined;
+          this.torConnectionPromise = undefined;
+        });
       }
-      this.torConnection = await this.torConnectionPromise;
 
-      // Add error listener to detect connection failures
-      this.torConnection.events.on('error', () => {
-        this.logMessage(
-          'Tor',
-          'Connection error detected, will create new connection on next use'
-        );
-        this.torConnection = undefined;
-        this.torConnectionPromise = undefined;
-      });
+      this.logMessage(hostLabel, '🔨 Building circuit');
+      const circuit = await this.buildCircuit(hostname);
 
-      this.torConnection.events.on('close', () => {
-        this.logMessage(
-          'Tor',
-          'Connection closed, will create new connection on next use'
-        );
-        this.torConnection = undefined;
-        this.torConnectionPromise = undefined;
-      });
+      // Initialize circuit state
+      this.circuitStateTracker.initialize(circuit);
+
+      this.logMessage(hostLabel, '✅ Circuit created successfully');
+      return circuit;
+    } catch (error) {
+      this.logMessage(
+        hostLabel,
+        `❌ Circuit creation failed: ${(error as Error).message}`
+      );
+      throw error;
     }
-
-    const circuit = await this.buildCircuit(hostname);
-
-    // Initialize circuit state
-    this.circuitStateTracker.initialize(circuit);
-
-    return circuit;
   }
 
   /**
