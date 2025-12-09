@@ -1,10 +1,11 @@
-import { Circuit, Echalote, TorClientDuplex } from '../echalote';
+import { Circuit, Consensus, Echalote, TorClientDuplex } from '../echalote';
 import { Log } from '../Log';
 import { selectRandomElement } from '../utils/random';
 import { isMiddleRelay, isExitRelay } from '../utils/relayFilters';
 import { getErrorDetails } from '../utils/getErrorDetails';
 import { initWasm } from './initWasm';
 import { EventEmitter } from './EventEmitter';
+import { decodeKeynetPubKey } from '../keynet/decodeKeynetPubkey';
 
 /**
  * Events emitted by CircuitBuilder.
@@ -65,7 +66,11 @@ export class CircuitBuilder extends EventEmitter<CircuitBuilderEvents> {
    *
    * @throws Error if circuit building fails after all retry attempts
    */
-  async buildCircuit(): Promise<Circuit> {
+  async buildCircuit(hostname?: string): Promise<Circuit> {
+    if (hostname?.endsWith('.keynet')) {
+      return await this.buildKeynetCircuit(hostname);
+    }
+
     await initWasm();
 
     this.log.info('[CircuitBuilder] Creating circuit');
@@ -145,6 +150,118 @@ export class CircuitBuilder extends EventEmitter<CircuitBuilderEvents> {
         // Ignore disposal errors
       }
     }
+  }
+
+  async buildKeynetCircuit(hostname: string): Promise<Circuit> {
+    await initWasm();
+
+    this.log.info('[CircuitBuilder] Creating keynet circuit');
+
+    // Create consensus circuit and fetch consensus
+    const consensusCircuit = await this.torConnection.createOrThrow();
+    this.log.info('[CircuitBuilder] Consensus circuit created');
+
+    let consensus;
+
+    try {
+      consensus = await this.getConsensus(consensusCircuit);
+    } catch (e) {
+      consensusCircuit[Symbol.dispose]();
+      throw e;
+    }
+
+    // Select relay candidates
+    const middles = consensus.microdescs.filter(isMiddleRelay);
+
+    this.log.info(`[CircuitBuilder] Found ${middles.length} middle relays`);
+
+    if (middles.length === 0) {
+      throw new Error(`Insufficient relays: ${middles.length} middles`);
+    }
+
+    // Try building circuit with retries
+    let lastError: unknown;
+
+    for (let attempt = 1; attempt <= this.maxAttempts; attempt++) {
+      try {
+        this.log.info(
+          `[CircuitBuilder] Building keynet circuit (attempt ${attempt}/${this.maxAttempts})`
+        );
+
+        const circuit = await this.torConnection.createOrThrow();
+
+        try {
+          // Extend through middle relay
+          await this.extendCircuit(circuit, middles, 'middle');
+
+          // Extend through another middle relay
+          await this.extendCircuit(circuit, middles, 'middle (2)');
+
+          await this.extendCircuitToKeynet(consensus, circuit, hostname);
+
+          this.log.info('[CircuitBuilder] Keynet circuit built successfully');
+          this.emit('circuit-created', circuit);
+          return circuit;
+        } catch (e) {
+          // Dispose failed circuit
+          circuit[Symbol.dispose]();
+          throw e;
+        }
+      } catch (e) {
+        lastError = e;
+        const error = e instanceof Error ? e : new Error(String(e));
+        this.emit('circuit-failed', error, attempt, this.maxAttempts);
+
+        if (attempt === this.maxAttempts) {
+          this.log.error(
+            `[CircuitBuilder] Failed after ${this.maxAttempts} attempts: ${getErrorDetails(e)}`
+          );
+        }
+      }
+    }
+
+    throw new Error(
+      `Circuit build failed after ${this.maxAttempts} attempts: ${getErrorDetails(lastError)}`
+    );
+  }
+
+  async extendCircuitToKeynet(
+    consensus: Consensus,
+    circuit: Circuit,
+    hostname: string
+  ) {
+    const host = hostname; // FIXME: host vs hostname
+    const pubkey = await decodeKeynetPubKey(host);
+
+    const candidates = consensus.microdescs.filter(
+      // keynet servers choose an rsa key such that the first byte of their rsa
+      // fingerprint (m.identity) matches the first byte of their ed25519 key
+      // (pubkey).
+      m => Buffer.from(m.identity, 'base64')[0] === pubkey[0]
+    );
+
+    const fullCandidates = await Consensus.Microdesc.fetchManyOrThrow(
+      circuit,
+      candidates
+    );
+
+    let keynetNode: Consensus.Microdesc | undefined;
+
+    for (const candidate of fullCandidates) {
+      if (Buffer.from(candidate.idEd25519, 'base64').equals(pubkey)) {
+        keynetNode = candidate;
+        break;
+      }
+    }
+
+    if (!keynetNode) {
+      throw new Error('Failed to find keynet exit node');
+    }
+
+    await circuit.extendOrThrow(
+      keynetNode,
+      AbortSignal.timeout(this.extendTimeout)
+    );
   }
 
   /**

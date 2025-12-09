@@ -220,14 +220,14 @@ test('Resizer - exceeding by 1 byte beyond maximum throws', async () => {
   }
 });
 
-test('Resizer - constructor with custom min/max', () => {
+test('Resizer - constructor with custom min/max', async () => {
   const resizer = new Resizer(512, 4096);
   assert(resizer.minimum === 512);
   assert(resizer.maximum === 4096);
   assert(resizer.inner.length === 512);
 });
 
-test('Resizer - writeOrThrow with small chunk', () => {
+test('Resizer - writeOrThrow with small chunk', async () => {
   const resizer = new Resizer();
   const chunk = new Uint8Array([1, 2, 3, 4, 5]);
 
@@ -235,7 +235,7 @@ test('Resizer - writeOrThrow with small chunk', () => {
   assert(resizer.inner.offset === 5, 'offset should advance by chunk length');
 });
 
-test('Resizer - writeOrThrow multiple times within buffer', () => {
+test('Resizer - writeOrThrow multiple times within buffer', async () => {
   const resizer = new Resizer(256, 1024);
   const chunk1 = new Uint8Array(100);
   const chunk2 = new Uint8Array(100);
@@ -250,9 +250,8 @@ test('Resizer - writeOrThrow multiple times within buffer', () => {
   assert(resizer.inner.offset === 200);
 });
 
-test('Resizer - writeOrThrow triggers resize when needed', () => {
+test('Resizer - writeOrThrow triggers resize when needed', async () => {
   const resizer = new Resizer(100, 1000);
-  const initialLength = resizer.inner.length;
 
   // Write data that exceeds initial buffer
   const largeChunk = new Uint8Array(150);
@@ -265,7 +264,7 @@ test('Resizer - writeOrThrow triggers resize when needed', () => {
   );
 });
 
-test('Resizer - writeOrThrow preserves previous data on resize', () => {
+test('Resizer - writeOrThrow preserves previous data on resize', async () => {
   const resizer = new Resizer(100, 1000);
   const chunk1 = new Uint8Array([1, 2, 3]);
   const chunk2 = new Uint8Array(150);
@@ -283,7 +282,7 @@ test('Resizer - writeOrThrow preserves previous data on resize', () => {
   assert(resizer.inner.offset === offsetAfterFirst + 150);
 });
 
-test('Resizer - writeOrThrow throws when exceeding maximum', () => {
+test('Resizer - writeOrThrow throws when exceeding maximum', async () => {
   const resizer = new Resizer(100, 200);
 
   try {
@@ -299,7 +298,7 @@ test('Resizer - writeOrThrow throws when exceeding maximum', () => {
   }
 });
 
-test('Resizer - writeOrThrow throws when single chunk exceeds maximum', () => {
+test('Resizer - writeOrThrow throws when single chunk exceeds maximum', async () => {
   const resizer = new Resizer(100, 200);
 
   try {
@@ -312,7 +311,7 @@ test('Resizer - writeOrThrow throws when single chunk exceeds maximum', () => {
   }
 });
 
-test('Resizer - writeFromOrThrow with Writable', () => {
+test('Resizer - writeFromOrThrow with Writable', async () => {
   const resizer = new Resizer(256, 2048);
 
   // Create a simple writable that writes 20 bytes
@@ -329,7 +328,7 @@ test('Resizer - writeFromOrThrow with Writable', () => {
   assert(resizer.inner.offset === 20, 'offset should be 20 after write');
 });
 
-test('Resizer - writeFromOrThrow triggers resize', () => {
+test('Resizer - writeFromOrThrow triggers resize', async () => {
   const resizer = new Resizer(100, 1000);
 
   const writable: Writable = {
@@ -345,7 +344,7 @@ test('Resizer - writeFromOrThrow triggers resize', () => {
   assert(resizer.inner.offset === 150);
 });
 
-test('Resizer - writeFromOrThrow throws on maximum exceeded', () => {
+test('Resizer - writeFromOrThrow throws on maximum exceeded', async () => {
   const resizer = new Resizer(100, 200);
 
   const writable: Writable = {
@@ -362,7 +361,7 @@ test('Resizer - writeFromOrThrow throws on maximum exceeded', () => {
   }
 });
 
-test('Resizer - writeFromOrThrow preserves data from previous writes', () => {
+test('Resizer - writeFromOrThrow preserves data from previous writes', async () => {
   const resizer = new Resizer(256, 2048);
 
   const writable1: Writable = {
@@ -391,7 +390,7 @@ test('Resizer - writeFromOrThrow preserves data from previous writes', () => {
   assert(buffer[14] === 19);
 });
 
-test('Resizer - sequential writes and multiple resizes', () => {
+test('Resizer - sequential writes and multiple resizes', async () => {
   const resizer = new Resizer(50, 500);
 
   // Multiple writes that trigger multiple resizes
@@ -405,7 +404,7 @@ test('Resizer - sequential writes and multiple resizes', () => {
   assert(resizer.inner.length <= 500);
 });
 
-test('Resizer - exact maximum size fits', () => {
+test('Resizer - exact maximum size fits', async () => {
   const resizer = new Resizer(100, 100);
   const chunk = new Uint8Array(100);
 
@@ -414,7 +413,7 @@ test('Resizer - exact maximum size fits', () => {
   assert(resizer.inner.length === 100);
 });
 
-test('Resizer - exceeding by 1 byte beyond maximum throws', () => {
+test('Resizer - exceeding by 1 byte beyond maximum throws', async () => {
   const resizer = new Resizer(100, 100);
 
   try {

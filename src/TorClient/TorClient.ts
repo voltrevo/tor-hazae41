@@ -2,12 +2,7 @@ import '@hazae41/symbol-dispose-polyfill';
 import './bufferPolyfill';
 
 import { Ciphers, TlsClientDuplex } from '@hazae41/cadenas';
-import {
-  Circuit,
-  Echalote,
-  TorClientDuplex,
-  createSnowflakeStream,
-} from '../echalote';
+import { TorClientDuplex, createSnowflakeStream } from '../echalote';
 import { fetch } from '../fleche';
 
 import { WebSocketDuplex } from './WebSocketDuplex';
@@ -15,8 +10,6 @@ import { createAutoStorage, IStorage } from 'tor-hazae41/storage';
 import { ConsensusManager } from './ConsensusManager';
 import { CircuitManager } from './CircuitManager';
 import { getErrorDetails } from '../utils/getErrorDetails';
-import { selectRandomElement } from '../utils/random';
-import { isMiddleRelay, isExitRelay } from '../utils/relayFilters';
 import { Log } from '../Log';
 import { SystemClock, IClock } from '../clock';
 
@@ -389,114 +382,5 @@ export class TorClient {
     this.logMessage('Tor client ready!', 'success');
 
     return tor;
-  }
-
-  /**
-   * Extends a circuit through a randomly selected relay.
-   * NOTE: Since circuit.extendOrThrow destroys the circuit on failure,
-   * this function will dispose the circuit and throw if extension fails.
-   *
-   * @param circuit The circuit to extend (will be disposed on failure)
-   * @param candidates Array of microdesc candidates to choose from
-   * @param logPrefix Prefix for log messages (e.g., "middle relay" or "exit relay")
-   * @param timeout Timeout in milliseconds for the extension attempt (default: 10000)
-   * @throws Error if extension fails (circuit will be disposed)
-   */
-  private async extendCircuit(
-    circuit: Circuit,
-    candidates: Echalote.Consensus.Microdesc.Head[],
-    logPrefix: string,
-    timeout: number = 10000
-  ): Promise<void> {
-    if (candidates.length === 0) {
-      throw new Error(`No ${logPrefix} candidates available`);
-    }
-
-    // Pick a random candidate
-    const candidate = selectRandomElement(candidates);
-
-    try {
-      this.logMessage(`Extending circuit through ${logPrefix}`);
-      const microdesc = await Echalote.Consensus.Microdesc.fetchOrThrow(
-        circuit,
-        candidate
-      );
-      await circuit.extendOrThrow(microdesc, AbortSignal.timeout(timeout));
-      this.logMessage(`Extended through ${logPrefix}`, 'success');
-    } catch (e) {
-      // Circuit is now destroyed, dispose it
-      circuit[Symbol.dispose]();
-      throw e;
-    }
-  }
-
-  private async createCircuit(tor: TorClientDuplex): Promise<Circuit> {
-    this.logMessage('Creating circuits');
-    const consensusCircuit = await tor.createOrThrow();
-    this.logMessage('Consensus circuit created successfully', 'success');
-
-    // Get consensus (from cache if fresh, or fetch if needed)
-    const consensus =
-      await this.consensusManager.getConsensus(consensusCircuit);
-
-    this.logMessage('Filtering relays');
-    const middles = consensus.microdescs.filter(isMiddleRelay);
-
-    const exits = consensus.microdescs.filter(isExitRelay);
-
-    this.logMessage(
-      `Found ${middles.length} middle relays and ${exits.length} exit relays`
-    );
-
-    if (middles.length === 0 || exits.length === 0) {
-      throw new Error(
-        `Not enough suitable relays found: ${middles.length} middles, ${exits.length} exits`
-      );
-    }
-
-    // Attempt to build a complete circuit with retry logic
-    // Since extendOrThrow destroys the circuit on failure, we need to
-    // create a fresh circuit for each complete attempt
-    const maxCircuitAttempts = 10;
-    let lastError: unknown;
-
-    for (
-      let circuitAttempt = 1;
-      circuitAttempt <= maxCircuitAttempts;
-      circuitAttempt++
-    ) {
-      try {
-        this.logMessage(
-          `Building circuit (attempt ${circuitAttempt}/${maxCircuitAttempts})`
-        );
-        const circuit = await tor.createOrThrow();
-
-        for (let i = 1; i <= 1; i++) {
-          const suffix = i === 1 ? '' : ` (${i})`;
-
-          // Try to extend through middle relay
-          await this.extendCircuit(circuit, middles, `middle relay${suffix}`);
-        }
-
-        // Try to extend through exit relay
-        await this.extendCircuit(circuit, exits, 'exit relay');
-
-        this.logMessage('Circuit built successfully!', 'success');
-        return circuit;
-      } catch (e) {
-        lastError = e;
-        // Only log details on final attempt
-        if (circuitAttempt === maxCircuitAttempts) {
-          this.logMessage(
-            `Circuit build failed after ${maxCircuitAttempts} attempts: ${getErrorDetails(e)}`,
-            'error'
-          );
-        }
-      }
-    }
-
-    throw new Error(
-      `Failed to build circuit after ${maxCircuitAttempts} attempts. Last error: ${getErrorDetails(lastError)}`
-    );
   }
 }

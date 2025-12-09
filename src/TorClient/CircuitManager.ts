@@ -188,9 +188,16 @@ export class CircuitManager {
    * Allocates a buffered circuit to a host, or creates one if buffer is empty.
    */
   private async allocateCircuitToHost(hostname: string): Promise<Circuit> {
-    // Use ResourcePool to acquire a circuit
-    const circuit = await this.circuitPool.acquire();
-    this.logMessage(hostname, 'Allocated circuit from pool');
+    let circuit: Circuit;
+
+    if (!hostname.endsWith('.keynet')) {
+      // Use ResourcePool to acquire a circuit
+      circuit = await this.circuitPool.acquire();
+      this.logMessage(hostname, 'Allocated circuit from pool');
+    } else {
+      // keynet circuits are special and can't come from the pool
+      circuit = await this.createNewCircuit(hostname);
+    }
 
     // Allocate to hostname using CircuitStateTracker
     this.circuitStateTracker.allocate(circuit, hostname);
@@ -521,7 +528,7 @@ export class CircuitManager {
   /**
    * Creates a new unallocated circuit.
    */
-  private async createNewCircuit(): Promise<Circuit> {
+  private async createNewCircuit(hostname?: string): Promise<Circuit> {
     await initWasm();
 
     // Get or create the shared Tor connection
@@ -551,7 +558,7 @@ export class CircuitManager {
       });
     }
 
-    const circuit = await this.buildCircuit();
+    const circuit = await this.buildCircuit(hostname);
 
     // Initialize circuit state
     this.circuitStateTracker.initialize(circuit);
@@ -562,14 +569,14 @@ export class CircuitManager {
   /**
    * Builds a new circuit through the Tor network.
    */
-  private async buildCircuit(): Promise<Circuit> {
+  private async buildCircuit(hostname?: string): Promise<Circuit> {
     // Use CircuitBuilder to build the circuit
     const circuitBuilder = new CircuitBuilder(
       this.torConnection!,
       this.getConsensus,
       this.log.child('CircuitBuilder')
     );
-    return await circuitBuilder.buildCircuit();
+    return await circuitBuilder.buildCircuit(hostname);
   }
 
   /**

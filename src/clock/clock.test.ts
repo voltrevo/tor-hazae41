@@ -511,7 +511,7 @@ test('VirtualClock - setInterval execution', async () => {
   const clock = new VirtualClock();
   let callCount = 0;
 
-  const intervalId = clock.setInterval(() => {
+  clock.setInterval(() => {
     callCount++;
   }, 50);
 

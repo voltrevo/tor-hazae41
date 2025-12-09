@@ -1,6 +1,8 @@
 import { assert, test } from '@hazae41/phobos';
 import { getErrorDetails } from './getErrorDetails.js';
 
+type ErrorWithCause = Error & { cause?: Error };
+
 test('getErrorDetails - with Error object', async () => {
   const error = new Error('Test error message');
   const result = getErrorDetails(error);
@@ -64,7 +66,7 @@ test('getErrorDetails - with Error without stack', async () => {
 test('getErrorDetails - with Error that has cause', async () => {
   const causeError = new Error('Cause error');
   const error = new Error('Main error');
-  (error as any).cause = causeError;
+  (error as ErrorWithCause).cause = causeError;
 
   const result = getErrorDetails(error);
   assert(result.includes('Main error'));
@@ -75,9 +77,9 @@ test('getErrorDetails - with Error that has cause', async () => {
 test('getErrorDetails - with nested causes', async () => {
   const rootError = new Error('Root cause');
   const middleError = new Error('Middle error');
-  (middleError as any).cause = rootError;
+  (middleError as ErrorWithCause).cause = rootError;
   const topError = new Error('Top error');
-  (topError as any).cause = middleError;
+  (topError as ErrorWithCause).cause = middleError;
 
   const result = getErrorDetails(topError);
   assert(result.includes('Top error'));
@@ -155,7 +157,6 @@ test('getErrorDetails - with Error that has both name and message in stack', asy
 test('getErrorDetails - with SyntaxError', async () => {
   let error: SyntaxError;
   try {
-    // @ts-ignore
     eval('invalid syntax {');
   } catch (e) {
     error = e as SyntaxError;

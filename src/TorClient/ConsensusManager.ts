@@ -7,6 +7,12 @@ import { Future } from '@hazae41/future';
 import { CertificateManager } from './CertificateManager';
 import { Log } from '../Log';
 
+// FIXME
+// - ConsensusManager should be given a way to get its circuit on construction
+// - this should be implemented by CircuitManager and it should keep the same
+//   circuit for ConsensusManager unless it needs to be rebuilt (new tor
+//   connection)
+
 export interface ConsensusManagerOptions {
   /** Clock instance for managing delays */
   clock: IClock;
