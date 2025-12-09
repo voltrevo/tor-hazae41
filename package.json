@@ -66,7 +66,8 @@
     "lint:fix": "eslint . --fix",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "commit-checks": "npx tsc --noEmit && npm test && npm run lint && npm run format:check"
+    "commit-checks": "concurrently \"npm test\" \"npm run tsc\" \"npm run lint\" \"npm run format:check\"",
+    "tsc": "tsc --noEmit"
   },
   "c8": {
     "include": [
@@ -134,6 +135,7 @@
     "@types/node": "^22.0.0",
     "buffer": "^6.0.3",
     "c8": "^10.1.3",
+    "concurrently": "^9.2.1",
     "eslint": "^9.38.0",
     "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-prettier": "^5.5.4",
