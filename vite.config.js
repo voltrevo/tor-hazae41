@@ -21,7 +21,7 @@ export default defineConfig(({ command }) => ({
 
   optimizeDeps: {
     exclude: ['@hazae41/echalote', '@hazae41/cadenas', '@hazae41/fleche'],
-    include: ['buffer'],
+    include: ['buffer', 'events'],
     esbuildOptions: {
       define: {
         global: 'globalThis',
@@ -32,6 +32,7 @@ export default defineConfig(({ command }) => ({
   resolve: {
     alias: {
       buffer: 'buffer',
+      events: 'events',
     },
   },
 }));
