@@ -2,7 +2,6 @@
 
 - test coverage
 - update circuit management
-- cache microdescs
 - write technical guide to this project
 - write a good AGENTS.md
 - more tests for certificate caching
@@ -19,3 +18,5 @@
   - fingerprint->cert, see Consensus.Certificate.fetchOrThrow
 - src/clock: nodejs unref behavior
 - src/clock: delayUnref method and browser testing setup
+- cache microdescs
+  - hash->microdesc with 1000 entry limit, see MicrodescManager

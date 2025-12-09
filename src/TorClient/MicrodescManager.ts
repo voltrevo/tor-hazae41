@@ -1,0 +1,326 @@
+import { Circuit, Echalote } from '../echalote';
+import { IStorage } from '../storage';
+import { Log } from '../Log';
+
+export interface MicrodescManagerOptions {
+  storage: IStorage;
+  maxCached?: number;
+  log: Log;
+}
+
+/**
+ * Manages microdescriptor caching and retrieval for Tor circuits.
+ * Handles loading, saving, and fetching of relay microdescriptors.
+ * Microdescs are cached using their SHA-256 hash as the key.
+ */
+export class MicrodescManager {
+  private storage: IStorage;
+  private maxCached: number;
+  private log: Log;
+  private microdescCache: Map<string, Echalote.Consensus.Microdesc> = new Map();
+  private cacheLoaded = false;
+  private cacheLoading: Promise<void> | undefined;
+
+  isClosed = false;
+
+  constructor(options: MicrodescManagerOptions) {
+    this.storage = options.storage;
+    this.maxCached = options.maxCached ?? 1000; // Large cache for frequently-used relays
+    this.log = options.log;
+  }
+
+  /**
+   * Gets a microdescriptor for the given hash, using cache when available or fetching when needed.
+   * @param circuit The circuit to use for fetching if needed
+   * @param ref The relay head information containing the microdesc hash
+   * @returns A verified microdescriptor
+   */
+  async getMicrodesc(
+    circuit: Circuit,
+    ref: Echalote.Consensus.Microdesc.Head
+  ): Promise<Echalote.Consensus.Microdesc> {
+    // Check cache first
+    const cached = await this.loadCachedMicrodesc(ref.microdesc);
+    if (cached) {
+      this.logMessage(`Using cached microdesc for ${ref.identity.slice(0, 8)}`);
+      return cached;
+    }
+
+    this.logMessage(
+      `Fetching microdesc for ${ref.identity.slice(0, 8)} from network`
+    );
+    const microdesc = await Echalote.Consensus.Microdesc.fetchOrThrow(
+      circuit,
+      ref
+    );
+
+    // Save to cache
+    await this.saveToCache(microdesc);
+    this.logMessage(
+      `Cached microdesc for ${ref.identity.slice(0, 8)}`,
+      'success'
+    );
+
+    return microdesc;
+  }
+
+  /**
+   * Gets multiple microdescriptors in parallel, using cache when available.
+   * @param circuit The circuit to use for fetching
+   * @param refs Array of relay head information to retrieve
+   * @returns Array of verified microdescriptors
+   */
+  async getMicrodescs(
+    circuit: Circuit,
+    refs: Echalote.Consensus.Microdesc.Head[]
+  ): Promise<Echalote.Consensus.Microdesc[]> {
+    if (refs.length === 0) return [];
+
+    const microdescs: Echalote.Consensus.Microdesc[] = [];
+
+    // Check cache for all microdescs first
+    const cachedResults = await Promise.all(
+      refs.map(async ref => {
+        const cached = await this.loadCachedMicrodesc(ref.microdesc);
+        return { ref, microdesc: cached };
+      })
+    );
+
+    // Separate cached from uncached
+    const cachedMicrodescs: Echalote.Consensus.Microdesc[] = [];
+    const uncachedRefs: Echalote.Consensus.Microdesc.Head[] = [];
+
+    for (const { ref, microdesc } of cachedResults) {
+      if (microdesc) {
+        cachedMicrodescs.push(microdesc);
+        this.logMessage(
+          `Using cached microdesc for ${ref.identity.slice(0, 8)}`
+        );
+      } else {
+        uncachedRefs.push(ref);
+      }
+    }
+
+    // Fetch uncached microdescs in batch
+    if (uncachedRefs.length > 0) {
+      this.logMessage(
+        `Fetching ${uncachedRefs.length} microdescs from network`
+      );
+      const fetchedMicrodescs =
+        await Echalote.Consensus.Microdesc.fetchManyOrThrow(
+          circuit,
+          uncachedRefs
+        );
+
+      // Cache the newly fetched microdescs
+      await Promise.all(fetchedMicrodescs.map(md => this.saveToCache(md)));
+
+      microdescs.push(...fetchedMicrodescs);
+      this.logMessage(
+        `Cached ${fetchedMicrodescs.length} new microdescs`,
+        'success'
+      );
+    }
+
+    microdescs.push(...cachedMicrodescs);
+
+    // Return in the same order as the input refs
+    const hashToMicrodesc = new Map(microdescs.map(md => [md.microdesc, md]));
+
+    return refs
+      .map(ref => hashToMicrodesc.get(ref.microdesc))
+      .filter((md): md is Echalote.Consensus.Microdesc => md !== undefined);
+  }
+
+  /**
+   * Loads cached microdescs from storage.
+   */
+  private async loadCache(): Promise<void> {
+    if (this.cacheLoaded) {
+      return;
+    }
+
+    if (this.cacheLoading) {
+      await this.cacheLoading;
+      return;
+    }
+
+    this.cacheLoading = this.loadCacheInternal();
+    await this.cacheLoading;
+  }
+
+  private async loadCacheInternal(): Promise<void> {
+    try {
+      this.logMessage('Loading cached microdescs from storage');
+      const keys = await this.storage.list('microdesc:');
+
+      if (keys.length === 0) {
+        this.logMessage('No cached microdescs found');
+        this.cacheLoaded = true;
+        return;
+      }
+
+      let loadedCount = 0;
+      let errorCount = 0;
+
+      // Load only up to maxCached items from storage
+      for (const key of keys.slice(0, this.maxCached)) {
+        try {
+          const data = await this.storage.read(key);
+          const text = new TextDecoder().decode(data);
+          const microdesc = await this.parseMicrodesc(text);
+
+          this.microdescCache.set(microdesc.microdesc, microdesc);
+          loadedCount++;
+          this.logMessage(
+            `Loaded cached microdesc for ${microdesc.identity.slice(0, 8)}`
+          );
+        } catch (error) {
+          errorCount++;
+          this.logMessage(
+            `Failed to load microdesc ${key}: ${(error as Error).message}`,
+            'error'
+          );
+        }
+      }
+
+      this.logMessage(
+        `Loaded ${loadedCount} cached microdescs${errorCount > 0 ? `, ${errorCount} errors` : ''}`,
+        'success'
+      );
+
+      // Clean up old microdescs if we have too many
+      if (keys.length > this.maxCached) {
+        const keysToRemove = keys.slice(this.maxCached);
+        this.logMessage(
+          `Removing ${keysToRemove.length} old cached microdescs`
+        );
+        for (const key of keysToRemove) {
+          try {
+            await this.storage.remove(key);
+          } catch (error) {
+            this.logMessage(
+              `Failed to remove old microdesc ${key}: ${(error as Error).message}`,
+              'error'
+            );
+          }
+        }
+      }
+    } catch (error) {
+      this.logMessage(
+        `Failed to load microdesc cache: ${(error as Error).message}`,
+        'error'
+      );
+    } finally {
+      this.cacheLoaded = true;
+    }
+  }
+
+  /**
+   * Loads a specific microdesc from cache by hash.
+   * @param hash The microdesc hash to load
+   * @returns The cached microdesc or undefined if not found
+   */
+  private async loadCachedMicrodesc(
+    hash: string
+  ): Promise<Echalote.Consensus.Microdesc | undefined> {
+    await this.loadCache();
+    return this.microdescCache.get(hash);
+  }
+
+  /**
+   * Saves a microdesc to the cache and storage.
+   * @param microdesc The microdesc to save
+   */
+  async saveToCache(microdesc: Echalote.Consensus.Microdesc): Promise<void> {
+    try {
+      const key = `microdesc:${microdesc.microdesc}`;
+
+      // Serialize microdesc to JSON format
+      const textToSave = await this.serializeMicrodesc(microdesc);
+      const data = new TextEncoder().encode(textToSave);
+      await this.storage.write(key, data);
+
+      // Update in-memory cache
+      this.microdescCache.set(microdesc.microdesc, microdesc);
+
+      // Maintain cache size limit
+      if (this.microdescCache.size > this.maxCached) {
+        // Remove oldest entries (FIFO)
+        const entries = Array.from(this.microdescCache.entries());
+        const toRemove = entries.slice(0, entries.length - this.maxCached);
+        for (const [hash] of toRemove) {
+          this.microdescCache.delete(hash);
+          await this.storage.remove(`microdesc:${hash}`);
+        }
+      }
+
+      this.logMessage(`Saved microdesc to cache: ${key}`);
+    } catch (error) {
+      this.logMessage(
+        `Failed to save microdesc to cache: ${(error as Error).message}`,
+        'error'
+      );
+    }
+  }
+
+  /**
+   * Serializes a microdesc to JSON format for storage.
+   * @param microdesc The microdesc to serialize
+   * @returns The microdesc JSON
+   */
+  private async serializeMicrodesc(
+    microdesc: Echalote.Consensus.Microdesc
+  ): Promise<string> {
+    return JSON.stringify({
+      nickname: microdesc.nickname,
+      identity: microdesc.identity,
+      date: microdesc.date,
+      hour: microdesc.hour,
+      hostname: microdesc.hostname,
+      orport: microdesc.orport,
+      dirport: microdesc.dirport,
+      ipv6: microdesc.ipv6,
+      microdesc: microdesc.microdesc,
+      flags: microdesc.flags,
+      version: microdesc.version,
+      entries: microdesc.entries,
+      bandwidth: microdesc.bandwidth,
+      onionKey: microdesc.onionKey,
+      ntorOnionKey: microdesc.ntorOnionKey,
+      idEd25519: microdesc.idEd25519,
+    });
+  }
+
+  /**
+   * Parses a microdesc from JSON format.
+   * @param text The microdesc JSON to parse
+   * @returns The parsed microdesc
+   */
+  private async parseMicrodesc(
+    text: string
+  ): Promise<Echalote.Consensus.Microdesc> {
+    const data = JSON.parse(text);
+    return data as Echalote.Consensus.Microdesc;
+  }
+
+  private logMessage(
+    message: string,
+    type: 'info' | 'success' | 'error' = 'info'
+  ): void {
+    switch (type) {
+      case 'error':
+        this.log.error(message);
+        break;
+      case 'success':
+      case 'info':
+        this.log.info(message);
+        break;
+    }
+  }
+
+  close() {
+    this.isClosed = true;
+    this.microdescCache.clear();
+  }
+}

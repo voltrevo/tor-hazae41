@@ -9,6 +9,7 @@ import { WebSocketDuplex } from './WebSocketDuplex';
 import { createAutoStorage, IStorage } from 'tor-hazae41/storage';
 import { ConsensusManager } from './ConsensusManager';
 import { CircuitManager } from './CircuitManager';
+import { MicrodescManager } from './MicrodescManager';
 import { getErrorDetails } from '../utils/getErrorDetails';
 import { Log } from '../Log';
 import { SystemClock, IClock } from '../clock';
@@ -76,6 +77,9 @@ export class TorClient {
   // Consensus management
   private consensusManager: ConsensusManager;
 
+  // Microdescriptor caching
+  private microdescManager: MicrodescManager;
+
   // Circuit management
   private circuitManager: CircuitManager;
 
@@ -113,6 +117,11 @@ export class TorClient {
       log: this.log.child('consensus'),
     });
 
+    this.microdescManager = new MicrodescManager({
+      storage: this.storage,
+      log: this.log.child('microdesc'),
+    });
+
     // Initialize circuit manager with circuit buffer
     this.circuitManager = new CircuitManager({
       clock: this.clock,
@@ -123,6 +132,7 @@ export class TorClient {
       log: this.log.child('circuit'),
       createTorConnection: () => this.createTorConnection(),
       getConsensus: circuit => this.consensusManager.getConsensus(circuit),
+      microdescManager: this.microdescManager,
     });
 
     // Note: Circuits are created proactively via circuitBuffer parameter.

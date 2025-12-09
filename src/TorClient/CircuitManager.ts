@@ -5,6 +5,7 @@ import { IClock } from '../clock';
 import { CircuitBuilder } from './CircuitBuilder';
 import { CircuitStateTracker } from './CircuitStateTracker';
 import { ResourcePool } from './ResourcePool';
+import { MicrodescManager } from './MicrodescManager';
 
 /**
  * Configuration options for the CircuitManager.
@@ -31,6 +32,8 @@ export interface CircuitManagerOptions {
   createTorConnection: () => Promise<TorClientDuplex>;
   /** Function to get the current consensus */
   getConsensus: (circuit: Circuit) => Promise<Echalote.Consensus>;
+  /** Manager for microdescriptor caching */
+  microdescManager: MicrodescManager;
 }
 
 /**
@@ -77,6 +80,7 @@ export class CircuitManager {
   private log: Log;
   private createTorConnection: () => Promise<TorClientDuplex>;
   private getConsensus: (circuit: Circuit) => Promise<Echalote.Consensus>;
+  private microdescManager: MicrodescManager;
   private circuitStateTracker: CircuitStateTracker;
   private circuitPool: ResourcePool<Circuit>;
 
@@ -102,6 +106,7 @@ export class CircuitManager {
     this.log = options.log;
     this.createTorConnection = options.createTorConnection;
     this.getConsensus = options.getConsensus;
+    this.microdescManager = options.microdescManager;
     this.circuitStateTracker = new CircuitStateTracker();
 
     // Always initialize ResourcePool for circuit buffering
@@ -574,7 +579,8 @@ export class CircuitManager {
     const circuitBuilder = new CircuitBuilder(
       this.torConnection!,
       this.getConsensus,
-      this.log.child('CircuitBuilder')
+      this.log.child('CircuitBuilder'),
+      this.microdescManager
     );
     return await circuitBuilder.buildCircuit(hostname);
   }

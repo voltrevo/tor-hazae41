@@ -6,6 +6,7 @@ import { getErrorDetails } from '../utils/getErrorDetails';
 import { initWasm } from './initWasm';
 import { EventEmitter } from './EventEmitter';
 import { decodeKeynetPubKey } from '../keynet/decodeKeynetPubkey';
+import { MicrodescManager } from './MicrodescManager';
 
 /**
  * Events emitted by CircuitBuilder.
@@ -34,6 +35,7 @@ export class CircuitBuilder extends EventEmitter<CircuitBuilderEvents> {
    * @param torConnection Tor connection to build circuits through
    * @param getConsensus Function to fetch consensus information
    * @param log Logger instance
+   * @param microdescManager Manager for caching microdescs
    * @param maxAttempts Maximum build attempts per circuit (default: 10)
    * @param extendTimeout Timeout for circuit extension in milliseconds (default: 10000)
    */
@@ -43,6 +45,7 @@ export class CircuitBuilder extends EventEmitter<CircuitBuilderEvents> {
       circuit: Circuit
     ) => Promise<Echalote.Consensus>,
     private readonly log: Log,
+    private readonly microdescManager: MicrodescManager,
     private readonly maxAttempts: number = 10,
     private readonly extendTimeout: number = 10000
   ) {
@@ -228,7 +231,7 @@ export class CircuitBuilder extends EventEmitter<CircuitBuilderEvents> {
       m => Buffer.from(m.identity, 'base64')[0] === pubkey[0]
     );
 
-    const fullCandidates = await Consensus.Microdesc.fetchManyOrThrow(
+    const fullCandidates = await this.microdescManager.getMicrodescs(
       circuit,
       candidates
     );
@@ -272,7 +275,7 @@ export class CircuitBuilder extends EventEmitter<CircuitBuilderEvents> {
     this.log.info(`[CircuitBuilder] Extending through ${relayType} relay`);
 
     try {
-      const microdesc = await Echalote.Consensus.Microdesc.fetchOrThrow(
+      const microdesc = await this.microdescManager.getMicrodesc(
         circuit,
         candidate
       );
