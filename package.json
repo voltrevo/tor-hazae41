@@ -65,7 +65,8 @@
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "format": "prettier --write .",
-    "format:check": "prettier --check ."
+    "format:check": "prettier --check .",
+    "commit-checks": "npx tsc --noEmit && npm test && npm run lint && npm run format:check"
   },
   "c8": {
     "include": [

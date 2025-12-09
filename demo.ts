@@ -47,7 +47,6 @@ declare global {
     closeTorClient: () => void;
     clearOutput: () => void;
     makeRequest: (index: number) => Promise<void>;
-    makeIsolatedRequest: () => Promise<void>;
     triggerCircuitUpdate: () => Promise<void>;
   }
 }
@@ -80,33 +79,44 @@ const log = new Log({
 
 function updateStatus(): void {
   const statusElement = document.getElementById('status');
+  const circuitStatusElement = document.getElementById('circuitStatus');
   if (!statusElement || !torClient) return;
 
   const statusData = torClient.getCircuitStatus();
+  const statusStrings = torClient.getCircuitStatusString();
 
-  // Format status for each host
-  let statusHTML = '<div><strong>Circuit Status (per-host):</strong></div>';
+  let statusText = '✅ Connected';
+  let circuitHTML = '';
 
-  if (
-    typeof statusData === 'object' &&
-    statusData !== null &&
-    'idleTime' in statusData === false
-  ) {
-    for (const [host, status] of Object.entries(
-      statusData as Record<string, CircuitStatus>
-    )) {
-      const statusStr = torClient.getCircuitStatusString();
-      if (typeof statusStr === 'object') {
-        const hostStatus = statusStr[host] || 'Unknown';
-        statusHTML += `<div style="margin-left: 20px; margin-top: 8px;">
-          <strong>${host}:</strong> ${hostStatus}
-          <br/><small>Idle: ${Math.round(status.idleTime / 1000)}s</small>
-        </div>`;
+  if (typeof statusData === 'object' && statusData !== null) {
+    if ('idleTime' in statusData) {
+      // Single circuit in initialization state
+      statusText = '⏳ Initializing...';
+      circuitHTML = '<div>Initializing circuits...</div>';
+    } else {
+      // Multiple circuits - use the status strings
+      if (typeof statusStrings === 'object' && statusStrings !== null) {
+        const firstStatusStr = Object.values(statusStrings)[0];
+        statusText = `✅ Connected`;
+
+        // Build circuit status details using the proper status strings
+        circuitHTML = '<div>';
+        for (const [host, statusStr] of Object.entries(statusStrings)) {
+          circuitHTML += `<div><strong>${host}</strong>: ${statusStr}</div>`;
+        }
+        circuitHTML += '</div>';
+      } else {
+        circuitHTML = '<div>No circuits active</div>';
       }
     }
+  } else {
+    circuitHTML = '<div>No circuits active</div>';
   }
 
-  statusElement.innerHTML = statusHTML;
+  statusElement.textContent = statusText;
+  if (circuitStatusElement) {
+    circuitStatusElement.innerHTML = circuitHTML;
+  }
 }
 
 function clearOutput(): void {
@@ -124,14 +134,14 @@ function setRequestOutput(
   const outputElement = document.getElementById(id);
   if (!outputElement) return;
 
-  const colors = {
-    loading: '#0066cc',
-    success: '#28a745',
-    error: '#dc3545',
-    info: '#666666',
-  };
+  // Remove existing classes
+  outputElement.classList.remove('loading', 'error', 'success');
 
-  outputElement.style.color = colors[type];
+  // Add appropriate class
+  if (type !== 'info') {
+    outputElement.classList.add(type);
+  }
+
   outputElement.textContent = message;
 }
 
@@ -168,7 +178,7 @@ function closeTorClient(): void {
 
   const statusElement = document.getElementById('status');
   if (statusElement) {
-    statusElement.innerHTML = '<div><strong>TorClient closed</strong></div>';
+    statusElement.textContent = '🛑 Closed';
   }
 
   log.info('🛑 TorClient closed');
@@ -267,95 +277,6 @@ async function makeRequest(index: number): Promise<void> {
   }
 }
 
-async function makeIsolatedRequest(): Promise<void> {
-  const outputId = 'outputIsolated';
-  const buttonId = 'btnIsolated';
-
-  // Clear output and show loading
-  setRequestOutput(outputId, '🔄 Loading...', 'loading');
-  setButtonState(buttonId, true, '⏳ Loading...');
-
-  try {
-    const urlInput = document.getElementById('isolatedUrl') as HTMLInputElement;
-    if (!urlInput) {
-      setRequestOutput(outputId, '❌ Isolated URL input not found', 'error');
-      log.error('❌ Isolated URL input not found');
-      return;
-    }
-
-    const url = urlInput.value.trim();
-    if (!url) {
-      setRequestOutput(
-        outputId,
-        '❌ Please enter a URL for isolated request',
-        'error'
-      );
-      log.error('❌ Please enter a URL for isolated request');
-      return;
-    }
-
-    // Get Snowflake URL from input field
-    const snowflakeUrlInput = document.getElementById(
-      'snowflakeUrl'
-    ) as HTMLInputElement;
-    const snowflakeUrl =
-      snowflakeUrlInput?.value?.trim() || 'wss://snowflake.torproject.net/';
-
-    setRequestOutput(
-      outputId,
-      '🔒 Creating temporary circuit and making request...',
-      'loading'
-    );
-    log.info('🔒 Making isolated request with temporary circuit...');
-    log.info(`🔒 Using Snowflake URL: ${snowflakeUrl}`);
-
-    const start = Date.now();
-
-    const response = await TorClient.fetch(snowflakeUrl, url, {
-      connectionTimeout: 15000,
-      circuitTimeout: 90000,
-      log: log.child('isolated'),
-    });
-
-    const text = await response.text();
-    const duration = Date.now() - start;
-
-    // Try to parse as JSON, fallback to text
-    let data;
-    let isJson = false;
-    try {
-      data = JSON.parse(text);
-      isJson = true;
-    } catch {
-      data = text;
-      isJson = false;
-    }
-
-    log.info(`🔒 Isolated request completed in ${duration}ms`);
-
-    // Format output based on the endpoint and data type
-    let outputText = '';
-    if (isJson && url.includes('/uuid') && data.uuid) {
-      outputText = `✅ Success (${duration}ms)\n🔒 UUID from isolated circuit: ${data.uuid}`;
-    } else if (isJson && url.includes('/ip') && data.origin) {
-      outputText = `✅ Success (${duration}ms)\n🔒 IP from isolated circuit: ${data.origin}`;
-    } else if (isJson) {
-      outputText = `✅ Success (${duration}ms)\n🔒 JSON Response: ${JSON.stringify(data).substring(0, 200)}${JSON.stringify(data).length > 200 ? '...' : ''}`;
-    } else {
-      outputText = `✅ Success (${duration}ms)\n🔒 Text Response: ${text.substring(0, 500)}${text.length > 500 ? '...' : ''}`;
-    }
-
-    setRequestOutput(outputId, outputText, 'success');
-  } catch (error) {
-    const errorText = `❌ Isolated request failed: ${(error as Error).message}`;
-    setRequestOutput(outputId, errorText, 'error');
-    log.error(`❌ Isolated request failed: ${(error as Error).message}`);
-  } finally {
-    // Re-enable button
-    setButtonState(buttonId, false, '🔒 Make Isolated Request');
-  }
-}
-
 async function triggerCircuitUpdate(): Promise<void> {
   if (!torClient) {
     log.error('❌ No persistent client available for circuit update');
@@ -446,14 +367,11 @@ window.openTorClient = openTorClient;
 window.closeTorClient = closeTorClient;
 window.clearOutput = clearOutput;
 window.makeRequest = makeRequest;
-window.makeIsolatedRequest = makeIsolatedRequest;
 window.triggerCircuitUpdate = triggerCircuitUpdate;
 
 // Initial log
 log.info('🌐 Vite browser environment ready');
 log.info('📦 TorClient loaded successfully');
 log.info('🔍 Verbose logging enabled for detailed progress tracking');
-log.info("👆 Click 'Open TorClient' to begin!");
-log.info(
-  '🎯 This demo shows circuit reuse, auto-updates, and isolated requests'
-);
+log.info("👆 Click 'Open Connection' to begin!");
+log.info('🎯 This demo shows circuit reuse and auto-updates');

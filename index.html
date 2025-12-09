@@ -3,140 +3,320 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Echalote Tor Client Example</title>
+    <title>Tor Client Demo</title>
     <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
       body {
         font-family:
           -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-        max-width: 1200px;
-        margin: 0 auto;
+        background: linear-gradient(135deg, #0f1419 0%, #1a1f2e 100%);
+        color: #e0e0e0;
+        min-height: 100vh;
         padding: 20px;
-        background-color: #f5f5f5;
       }
+
       .container {
-        background: white;
-        border-radius: 8px;
-        padding: 30px;
-        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        max-width: 900px;
+        margin: 0 auto;
       }
-      h1 {
-        color: #333;
-        margin-bottom: 20px;
-      }
-      .description {
-        background: #e3f2fd;
-        padding: 15px;
-        border-radius: 5px;
-        margin-bottom: 20px;
-        border-left: 4px solid #1976d2;
-      }
-      .controls {
-        margin-bottom: 20px;
+
+      header {
         display: flex;
-        flex-wrap: wrap;
-        gap: 10px;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 50px;
+        padding-bottom: 30px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.08);
       }
-      button {
-        background: #1976d2;
-        color: white;
-        border: none;
-        padding: 12px 24px;
-        border-radius: 5px;
-        cursor: pointer;
-        font-size: 16px;
-        margin: 0;
+
+      h1 {
+        font-size: 28px;
+        font-weight: 600;
+        letter-spacing: -0.5px;
       }
-      button:hover:not(:disabled) {
-        background: #1565c0;
-      }
-      button:disabled {
-        background: #ccc;
-        cursor: not-allowed;
-      }
-      #output {
-        background: #000;
-        color: #00ff00;
-        padding: 20px;
-        border-radius: 5px;
-        font-family: 'Courier New', monospace;
-        white-space: pre-wrap;
-        height: 500px;
-        overflow-y: auto;
-        font-size: 14px;
-        line-height: 1.4;
-      }
-      .warning {
-        background: #fff3cd;
-        border: 1px solid #ffeaa7;
-        color: #856404;
-        padding: 15px;
-        border-radius: 5px;
-        margin-bottom: 20px;
-      }
+
       .github-link {
         display: inline-flex;
         align-items: center;
-        background: #24292e;
-        color: white;
+        background: rgba(255, 255, 255, 0.08);
+        color: #e0e0e0;
         text-decoration: none;
-        padding: 10px 16px;
+        padding: 8px 16px;
         border-radius: 6px;
-        font-size: 14px;
+        font-size: 13px;
         font-weight: 500;
         transition: all 0.2s ease;
-        margin-bottom: 20px;
-        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
+        border: 1px solid rgba(255, 255, 255, 0.12);
       }
+
       .github-link:hover {
-        background: #1b1f23;
-        transform: translateY(-1px);
-        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
-        color: white;
-        text-decoration: none;
+        background: rgba(255, 255, 255, 0.12);
+        border-color: rgba(255, 255, 255, 0.2);
       }
+
       .github-icon {
         width: 16px;
         height: 16px;
         margin-right: 8px;
         fill: currentColor;
       }
-      .header-section {
+
+      .section {
+        margin-bottom: 30px;
+      }
+
+      .section-title {
+        font-size: 13px;
+        font-weight: 700;
+        margin-bottom: 16px;
+        text-transform: uppercase;
+        letter-spacing: 0.6px;
+        color: #999;
+      }
+
+      .hero {
+        background: linear-gradient(
+          135deg,
+          rgba(79, 172, 254, 0.12) 0%,
+          rgba(79, 172, 254, 0.05) 100%
+        );
+        border: 1px solid rgba(79, 172, 254, 0.25);
+        border-radius: 12px;
+        padding: 45px 35px;
+        text-align: center;
+        margin-bottom: 45px;
+      }
+
+      .hero-title {
+        font-size: 24px;
+        font-weight: 600;
+        margin-bottom: 12px;
+      }
+
+      .hero-subtitle {
+        font-size: 14px;
+        color: #b0b0b0;
+        margin-bottom: 24px;
+      }
+
+      .hero-buttons {
         display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 20px;
+        gap: 12px;
+        justify-content: center;
         flex-wrap: wrap;
-        gap: 15px;
       }
-      .header-section h1 {
-        margin: 0;
-        flex: 1;
+
+      button {
+        background: #4facfe;
+        color: white;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 13px;
+        font-weight: 600;
+        transition: all 0.2s ease;
+        white-space: nowrap;
       }
-      .risk-warning {
-        background: #fff3cd;
-        border: 2px solid #ffc107;
-        color: #856404;
-        padding: 15px 20px;
+
+      button:hover:not(:disabled) {
+        background: #3d9cfd;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(79, 172, 254, 0.3);
+      }
+
+      button:active:not(:disabled) {
+        transform: translateY(0);
+      }
+
+      button:disabled {
+        background: #555;
+        cursor: not-allowed;
+        opacity: 0.6;
+      }
+
+      .request-card {
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.1);
         border-radius: 8px;
-        margin: 20px 0;
-        font-weight: 500;
+        padding: 18px;
+        margin-bottom: 12px;
+      }
+
+      .request-label {
+        font-size: 12px;
+        font-weight: 700;
+        margin-bottom: 10px;
+        color: #999;
+        text-transform: uppercase;
+        letter-spacing: 0.4px;
+      }
+
+      .request-input-group {
+        display: flex;
+        gap: 10px;
+        margin-bottom: 12px;
+      }
+
+      input[type='text'] {
+        flex: 1;
+        background: rgba(255, 255, 255, 0.07);
+        border: 1px solid rgba(255, 255, 255, 0.11);
+        color: #e0e0e0;
+        padding: 9px 11px;
+        border-radius: 6px;
+        font-size: 13px;
+        font-family: 'Courier New', monospace;
+        transition: all 0.2s ease;
+      }
+
+      input[type='text']:focus {
+        outline: none;
+        background: rgba(255, 255, 255, 0.1);
+        border-color: rgba(79, 172, 254, 0.5);
+        box-shadow: 0 0 0 2px rgba(79, 172, 254, 0.1);
+      }
+
+      input[type='text']::placeholder {
+        color: #666;
+      }
+
+      .request-output {
+        background: rgba(0, 0, 0, 0.3);
+        padding: 12px;
+        border-radius: 6px;
+        font-family: 'Courier New', monospace;
+        font-size: 12px;
+        color: #90ee90;
+        min-height: 32px;
+        border: 1px solid rgba(144, 238, 144, 0.2);
+      }
+
+      .request-output.error {
+        color: #ff6b6b;
+        border-color: rgba(255, 107, 107, 0.2);
+      }
+
+      .request-output.loading {
+        color: #4facfe;
+        border-color: rgba(79, 172, 254, 0.2);
+      }
+
+      .status-badge {
+        display: inline-block;
+        background: rgba(79, 172, 254, 0.15);
+        border: 1px solid rgba(79, 172, 254, 0.3);
+        color: #4facfe;
+        padding: 6px 12px;
+        border-radius: 4px;
+        font-size: 11px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.4px;
+      }
+
+      .status-details {
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 8px;
+        padding: 16px;
+        font-size: 12px;
+        font-family: 'Courier New', monospace;
+      }
+
+      .status-details div {
+        margin-bottom: 8px;
+        color: #90ee90;
+      }
+
+      .status-details div:last-child {
+        margin-bottom: 0;
+      }
+
+      .log-container {
+        background: #000;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 8px;
+        padding: 0;
+        overflow: hidden;
+      }
+
+      #output {
+        background: #000;
+        color: #00ff00;
+        padding: 16px;
+        font-family: 'Courier New', monospace;
+        white-space: pre-wrap;
+        word-break: break-word;
+        height: 300px;
+        overflow-y: auto;
+        font-size: 12px;
+        line-height: 1.5;
+      }
+
+      .advanced-section {
+        background: rgba(255, 255, 255, 0.03);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 8px;
+        padding: 16px;
+        margin-top: 20px;
+      }
+
+      .advanced-toggle {
         display: flex;
         align-items: center;
-        gap: 10px;
+        justify-content: space-between;
+        cursor: pointer;
+        user-select: none;
       }
-      .risk-warning .warning-icon {
-        font-size: 20px;
-        flex-shrink: 0;
+
+      .advanced-toggle-label {
+        font-size: 13px;
+        font-weight: 600;
+        color: #b0b0b0;
       }
-      .risk-warning strong {
-        color: #664d03;
+
+      .advanced-toggle-icon {
+        font-size: 14px;
+        transition: transform 0.2s ease;
+      }
+
+      .advanced-toggle.open .advanced-toggle-icon {
+        transform: rotate(90deg);
+      }
+
+      .advanced-content {
+        display: none;
+        margin-top: 12px;
+        padding-top: 12px;
+        border-top: 1px solid rgba(255, 255, 255, 0.1);
+      }
+
+      .advanced-content.open {
+        display: block;
+      }
+
+      .advanced-content input[type='text'] {
+        width: 100%;
+        margin-top: 8px;
+      }
+
+      .info-text {
+        font-size: 12px;
+        color: #888;
+        margin-top: 8px;
       }
     </style>
   </head>
   <body>
     <div class="container">
-      <div class="header-section">
-        <h1>🧅 TorClient Demo</h1>
+      <header>
+        <h1>🧅 Tor Client Demo</h1>
         <a
           href="https://github.com/voltrevo/tor-hazae41"
           target="_blank"
@@ -148,348 +328,156 @@
               d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"
             />
           </svg>
-          View on GitHub
+          GitHub
         </a>
-      </div>
+      </header>
 
-      <div class="risk-warning">
-        <span class="warning-icon">⚠️</span>
-        <div>
-          <strong>Use at Your Own Risk:</strong> The underlying Tor
-          implementation is experimental software.
+      <!-- Hero Section -->
+      <div class="hero">
+        <div class="hero-title">Connect via Tor</div>
+        <div class="hero-subtitle">
+          Test direct circuit reuse across requests
+        </div>
+        <div class="hero-buttons">
+          <button id="openBtn" onclick="openTorClient()">
+            🚀 Open Connection
+          </button>
+          <button id="closeBtn" onclick="closeTorClient()" disabled>
+            🛑 Close Connection
+          </button>
         </div>
       </div>
 
-      <div class="description">
-        <h3>What this demonstrates:</h3>
-        <p>This demo shows advanced TorClient features including:</p>
-        <ul>
-          <li>
-            🔄 <strong>Circuit Reuse:</strong> Persistent circuits that are
-            reused across multiple requests
-          </li>
-          <li>
-            ⏰ <strong>Auto-Updates:</strong> Circuits automatically refresh
-            every 2 minutes with graceful transition
-          </li>
-          <li>
-            🌐 <strong>Individual Requests:</strong> Make requests to custom
-            URLs using the persistent circuit
-          </li>
-          <li>
-            🔒 <strong>Isolated Requests:</strong> Temporary circuits for
-            maximum privacy on single requests
-          </li>
-          <li>
-            📊 <strong>Live Status:</strong> Real-time circuit status and update
-            information
-          </li>
-          <li>
-            ⚡ <strong>Manual Updates:</strong> Force circuit refresh with
-            custom deadlines
-          </li>
-        </ul>
+      <!-- Status -->
+      <div class="section">
+        <div id="status" class="status-badge">Not Connected</div>
       </div>
 
-      <div class="warning">
-        <strong>⚠️ Note:</strong> Initial circuit creation can take 30-90
-        seconds. The demo uses 2-minute auto-updates for demonstration -
-        normally this would be 10 minutes.
-      </div>
+      <!-- Regular Requests -->
+      <div class="section">
+        <div class="section-title">Make Requests</div>
 
-      <div class="controls">
-        <button id="openBtn" onclick="openTorClient()">
-          🚀 Open TorClient
-        </button>
-        <button id="closeBtn" onclick="closeTorClient()" disabled>
-          🛑 Close TorClient
-        </button>
-        <button onclick="clearOutput()">🧹 Clear Output</button>
-      </div>
-
-      <div
-        class="request-section"
-        style="
-          margin: 20px 0;
-          padding: 15px;
-          background: #f8f9fa;
-          border-radius: 5px;
-        "
-      >
-        <h3>Regular Requests (persistent circuit):</h3>
-        <div
-          style="
-            margin-bottom: 20px;
-            padding: 10px;
-            border: 1px solid #e0e0e0;
-            border-radius: 5px;
-          "
-        >
-          <label
-            for="url1"
-            style="display: block; margin-bottom: 5px; font-weight: bold"
-            >Request 1:</label
-          >
-          <div style="display: flex; align-items: center; margin-bottom: 10px">
+        <div class="request-card">
+          <div class="request-label">Request 1</div>
+          <div class="request-input-group">
             <input
               type="text"
               id="url1"
               value="https://check.torproject.org/api/ip"
-              style="
-                flex: 1;
-                padding: 8px;
-                margin-right: 10px;
-                border: 1px solid #ddd;
-                border-radius: 3px;
-              "
+              placeholder="Enter URL..."
             />
-            <button
-              id="btn1"
-              onclick="makeRequest(1)"
-              style="padding: 8px 16px"
-            >
-              🌐 Make Request 1
+            <button id="btn1" onclick="makeRequest(1)" style="flex-shrink: 0">
+              Make Request
             </button>
           </div>
-          <div
-            id="output1"
-            style="
-              background: #f8f9fa;
-              padding: 10px;
-              border-radius: 3px;
-              font-family: 'Courier New', monospace;
-              font-size: 12px;
-              border: 1px solid #e0e0e0;
-              min-height: 20px;
-              color: #666;
-            "
-          >
-            Ready to make request...
-          </div>
+          <div id="output1" class="request-output">Ready</div>
         </div>
-        <div
-          style="
-            margin-bottom: 20px;
-            padding: 10px;
-            border: 1px solid #e0e0e0;
-            border-radius: 5px;
-          "
-        >
-          <label
-            for="url2"
-            style="display: block; margin-bottom: 5px; font-weight: bold"
-            >Request 2:</label
-          >
-          <div style="display: flex; align-items: center; margin-bottom: 10px">
+
+        <div class="request-card">
+          <div class="request-label">Request 2</div>
+          <div class="request-input-group">
             <input
               type="text"
               id="url2"
               value="https://google.com/"
-              style="
-                flex: 1;
-                padding: 8px;
-                margin-right: 10px;
-                border: 1px solid #ddd;
-                border-radius: 3px;
-              "
+              placeholder="Enter URL..."
             />
-            <button
-              id="btn2"
-              onclick="makeRequest(2)"
-              style="padding: 8px 16px"
-            >
-              🌐 Make Request 2
+            <button id="btn2" onclick="makeRequest(2)" style="flex-shrink: 0">
+              Make Request
             </button>
           </div>
-          <div
-            id="output2"
-            style="
-              background: #f8f9fa;
-              padding: 10px;
-              border-radius: 3px;
-              font-family: 'Courier New', monospace;
-              font-size: 12px;
-              border: 1px solid #e0e0e0;
-              min-height: 20px;
-              color: #666;
-            "
-          >
-            Ready to make request...
-          </div>
+          <div id="output2" class="request-output">Ready</div>
         </div>
-        <div
-          style="
-            margin-bottom: 20px;
-            padding: 10px;
-            border: 1px solid #e0e0e0;
-            border-radius: 5px;
-          "
-        >
-          <label
-            for="url3"
-            style="display: block; margin-bottom: 5px; font-weight: bold"
-            >Request 3:</label
-          >
-          <div style="display: flex; align-items: center; margin-bottom: 10px">
+
+        <div class="request-card">
+          <div class="request-label">Request 3</div>
+          <div class="request-input-group">
             <input
               type="text"
               id="url3"
               value="https://cloudflare.com/cdn-cgi/trace"
-              style="
-                flex: 1;
-                padding: 8px;
-                margin-right: 10px;
-                border: 1px solid #ddd;
-                border-radius: 3px;
-              "
+              placeholder="Enter URL..."
             />
-            <button
-              id="btn3"
-              onclick="makeRequest(3)"
-              style="padding: 8px 16px"
-            >
-              🌐 Make Request 3
+            <button id="btn3" onclick="makeRequest(3)" style="flex-shrink: 0">
+              Make Request
             </button>
           </div>
-          <div
-            id="output3"
-            style="
-              background: #f8f9fa;
-              padding: 10px;
-              border-radius: 3px;
-              font-family: 'Courier New', monospace;
-              font-size: 12px;
-              border: 1px solid #e0e0e0;
-              min-height: 20px;
-              color: #666;
-            "
-          >
-            Ready to make request...
-          </div>
+          <div id="output3" class="request-output">Ready</div>
         </div>
       </div>
 
-      <div
-        class="request-section"
-        style="
-          margin: 20px 0;
-          padding: 15px;
-          background: #fff0f5;
-          border-radius: 5px;
-        "
-      >
-        <h3>Isolated Request (temporary circuit):</h3>
-        <div
-          style="
-            margin-bottom: 20px;
-            padding: 10px;
-            border: 1px solid #e0e0e0;
-            border-radius: 5px;
-          "
-        >
-          <label
-            for="isolatedUrl"
-            style="display: block; margin-bottom: 5px; font-weight: bold"
-            >Isolated Request:</label
-          >
-          <div style="display: flex; align-items: center; margin-bottom: 10px">
+      <!-- Control Buttons -->
+      <div class="section">
+        <button onclick="triggerCircuitUpdate()">⚡ Update Circuit Now</button>
+        <button onclick="clearOutput()" style="margin-left: 10px">
+          🧹 Clear Log
+        </button>
+      </div>
+
+      <!-- Circuit Status Display -->
+      <div class="section">
+        <div class="section-title">Circuit Status</div>
+        <div id="circuitStatus" class="status-details">
+          <div>No circuits active</div>
+        </div>
+      </div>
+
+      <!-- Activity Log -->
+      <div class="section">
+        <div class="section-title">Activity Log</div>
+        <div class="log-container">
+          <div id="output"></div>
+        </div>
+      </div>
+
+      <!-- Advanced Settings -->
+      <div class="section">
+        <div class="advanced-section">
+          <div class="advanced-toggle" onclick="toggleAdvanced()">
+            <span class="advanced-toggle-label">Advanced Settings</span>
+            <span class="advanced-toggle-icon">▸</span>
+          </div>
+          <div id="advancedContent" class="advanced-content">
+            <label style="font-size: 12px; color: #b0b0b0"
+              >Snowflake URL:</label
+            >
             <input
               type="text"
-              id="isolatedUrl"
-              value="https://check.torproject.org/api/ip"
-              style="
-                flex: 1;
-                padding: 8px;
-                margin-right: 10px;
-                border: 1px solid #ddd;
-                border-radius: 3px;
-              "
+              id="snowflakeUrl"
+              value="wss://snowflake.torproject.net/"
+              placeholder="Enter Snowflake WebSocket URL"
             />
-            <button
-              id="btnIsolated"
-              onclick="makeIsolatedRequest()"
-              style="padding: 8px 16px"
-            >
-              🔒 Make Isolated Request
-            </button>
-          </div>
-          <div
-            id="outputIsolated"
-            style="
-              background: #f8f9fa;
-              padding: 10px;
-              border-radius: 3px;
-              font-family: 'Courier New', monospace;
-              font-size: 12px;
-              border: 1px solid #e0e0e0;
-              min-height: 20px;
-              color: #666;
-            "
-          >
-            Ready to make request...
+            <div class="info-text">
+              Change before opening connection to use a different Snowflake
+              proxy
+            </div>
           </div>
         </div>
       </div>
 
-      <div class="controls">
-        <button onclick="triggerCircuitUpdate()">⚡ Update Circuit Now</button>
-      </div>
-
+      <!-- Info -->
       <div
-        id="status"
         style="
-          background: #f0f8ff;
-          padding: 15px;
-          border-radius: 5px;
-          margin: 20px 0;
-          font-family: monospace;
-          border: 1px solid #ddd;
+          margin-top: 40px;
+          padding-top: 20px;
+          border-top: 1px solid rgba(255, 255, 255, 0.1);
+          font-size: 12px;
+          color: #666;
         "
       >
-        <strong>Circuit Status:</strong> Not started
+        <strong>⚠️ Disclaimer:</strong> This is experimental software. Initial
+        connection may take 30-90 seconds.
       </div>
-
-      <div
-        class="snowflake-config"
-        style="
-          margin: 20px 0;
-          padding: 15px;
-          background: #f8f9fa;
-          border-radius: 5px;
-          border: 1px solid #dee2e6;
-        "
-      >
-        <h3 style="margin-top: 0; margin-bottom: 10px">
-          Snowflake Configuration:
-        </h3>
-        <div style="display: flex; align-items: center; gap: 10px">
-          <label for="snowflakeUrl" style="font-weight: bold; min-width: 120px"
-            >Snowflake URL:</label
-          >
-          <input
-            type="text"
-            id="snowflakeUrl"
-            value="wss://snowflake.torproject.net/"
-            style="
-              flex: 1;
-              padding: 8px 12px;
-              border: 1px solid #ddd;
-              border-radius: 4px;
-              font-family: 'Courier New', monospace;
-              font-size: 14px;
-            "
-            placeholder="Enter Snowflake WebSocket URL"
-          />
-        </div>
-        <div style="margin-top: 8px; font-size: 12px; color: #666">
-          💡 Change this URL before opening TorClient to use a different
-          Snowflake proxy
-        </div>
-      </div>
-
-      <div id="output"></div>
     </div>
 
     <script type="module" src="/demo.ts"></script>
+    <script>
+      function toggleAdvanced() {
+        const toggle = document.querySelector('.advanced-toggle');
+        const content = document.getElementById('advancedContent');
+        toggle.classList.toggle('open');
+        content.classList.toggle('open');
+      }
+    </script>
   </body>
 </html>
