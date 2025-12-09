@@ -63,16 +63,15 @@ export class CircuitBuilder extends EventEmitter<CircuitBuilderEvents> {
    * Builds a new circuit through the Tor network.
    * Selects random middle and exit relays, extends circuit through them.
    *
-   * For normal requests: Guard → Middle → Exit
-   * For keynet: Can pass finalHop to extend to Guard → Middle → Keynet Node
-   *
-   * @param finalHop Optional specific relay to extend to as the final hop (e.g., keynet exit node)
+   * @param finalHop Optional pre-determined final hop (for keynet or other special cases).
+   *                 When provided, this relay is used instead of selecting a random exit.
+   *                 Currently designed for future keynet integration where the keynet exit
+   *                 node is discovered separately and provided here.
    * @throws Error if circuit building fails after all retry attempts
    */
   async buildCircuit(
-    finalHop?: Echalote.Consensus.Microdesc // fixme: we forgot to use this?
+    finalHop?: Echalote.Consensus.Microdesc
   ): Promise<Circuit> {
-    // FIXME: nested trys, complexity
     await initWasm();
 
     this.log.info('[CircuitBuilder] Creating circuit');
@@ -82,87 +81,129 @@ export class CircuitBuilder extends EventEmitter<CircuitBuilderEvents> {
     this.log.info('[CircuitBuilder] Consensus circuit created');
 
     try {
-      const consensus = await this.getConsensus(consensusCircuit);
-
-      // Select relay candidates
-      const middles = consensus.microdescs.filter(isMiddleRelay);
-      const exits = finalHop
-        ? undefined
-        : consensus.microdescs.filter(isExitRelay);
-
-      this.log.info(
-        `[CircuitBuilder] Found ${middles.length} middle relays${exits ? ` and ${exits.length} exit relays` : ''}`
-      );
-
-      if (middles.length === 0) {
-        throw new Error(`Insufficient relays: ${middles.length} middles`);
-      }
-
-      if (!finalHop && exits && exits.length === 0) {
-        throw new Error('Insufficient relays: 0 exits');
-      }
-
-      // Try building circuit with retries
-      let lastError: unknown;
-
-      for (let attempt = 1; attempt <= this.maxAttempts; attempt++) {
-        try {
-          this.log.info(
-            `[CircuitBuilder] Building circuit (attempt ${attempt}/${this.maxAttempts})`
-          );
-
-          const circuit = await this.torConnection.createOrThrow();
-
-          try {
-            // Extend through middle relay
-            await this.extendCircuit(circuit, middles, 'middle');
-
-            // Extend through final hop (exit relay or keynet node)
-            if (finalHop) {
-              await this.extendCircuitThroughRelay(
-                circuit,
-                finalHop,
-                'final hop'
-              );
-            } else {
-              await this.extendCircuit(circuit, exits!, 'exit');
-            }
-
-            this.log.info('[CircuitBuilder] Circuit built successfully');
-            this.emit('circuit-created', circuit);
-            return circuit;
-          } catch (e) {
-            // Dispose failed circuit
-            try {
-              (circuit as unknown as Disposable)[Symbol.dispose]();
-            } catch {
-              // Ignore disposal errors // fixme: log, deduplicate ignoring dispose errors
-            }
-            throw e;
-          }
-        } catch (e) {
-          lastError = e;
-          const error = e instanceof Error ? e : new Error(String(e));
-          this.emit('circuit-failed', error, attempt, this.maxAttempts);
-
-          if (attempt === this.maxAttempts) {
-            this.log.error(
-              `[CircuitBuilder] Failed after ${this.maxAttempts} attempts: ${getErrorDetails(e)}`
-            );
-          }
-        }
-      }
-
-      throw new Error(
-        `Circuit build failed after ${this.maxAttempts} attempts: ${getErrorDetails(lastError)}`
-      );
+      return await this.buildCircuitWithRetries(consensusCircuit, finalHop);
     } finally {
       // Dispose consensus circuit
+      this.disposeCircuit(consensusCircuit);
+    }
+  }
+
+  /**
+   * Attempts to build a circuit with retry logic.
+   * Extracted from buildCircuit() to reduce nesting complexity.
+   *
+   * @param consensusCircuit Circuit to use for fetching consensus
+   * @param finalHop Optional pre-determined final hop
+   * @throws Error if circuit building fails after all retry attempts
+   */
+  private async buildCircuitWithRetries(
+    consensusCircuit: Circuit,
+    finalHop?: Echalote.Consensus.Microdesc
+  ): Promise<Circuit> {
+    const consensus = await this.getConsensus(consensusCircuit);
+
+    // Select relay candidates
+    const middles = consensus.microdescs.filter(isMiddleRelay);
+    const exits = finalHop
+      ? undefined
+      : consensus.microdescs.filter(isExitRelay);
+
+    this.log.info(
+      `[CircuitBuilder] Found ${middles.length} middle relays${exits ? ` and ${exits.length} exit relays` : ''}`
+    );
+
+    if (middles.length === 0) {
+      throw new Error(`Insufficient relays: ${middles.length} middles`);
+    }
+
+    if (!finalHop && exits && exits.length === 0) {
+      throw new Error('Insufficient relays: 0 exits');
+    }
+
+    // Try building circuit with retries
+    let lastError: unknown;
+
+    for (let attempt = 1; attempt <= this.maxAttempts; attempt++) {
       try {
-        (consensusCircuit as unknown as Disposable)[Symbol.dispose]();
-      } catch {
-        // Ignore disposal errors // fixme: log
+        return await this.attemptBuildCircuit(
+          middles,
+          exits,
+          finalHop,
+          attempt
+        );
+      } catch (e) {
+        lastError = e;
+        const error = e instanceof Error ? e : new Error(String(e));
+        this.emit('circuit-failed', error, attempt, this.maxAttempts);
+
+        if (attempt === this.maxAttempts) {
+          this.log.error(
+            `[CircuitBuilder] Failed after ${this.maxAttempts} attempts: ${getErrorDetails(e)}`
+          );
+        }
       }
+    }
+
+    throw new Error(
+      `Circuit build failed after ${this.maxAttempts} attempts: ${getErrorDetails(lastError)}`
+    );
+  }
+
+  /**
+   * Single attempt to build a circuit.
+   * Extracted from buildCircuit() to reduce nesting complexity.
+   *
+   * @param middles Middle relay candidates
+   * @param exits Exit relay candidates (undefined if using finalHop)
+   * @param finalHop Optional pre-determined final hop
+   * @param attempt Current attempt number
+   * @throws Error if this attempt fails
+   */
+  private async attemptBuildCircuit(
+    middles: Echalote.Consensus.Microdesc.Head[],
+    exits: Echalote.Consensus.Microdesc.Head[] | undefined,
+    finalHop: Echalote.Consensus.Microdesc | undefined,
+    attempt: number
+  ): Promise<Circuit> {
+    this.log.info(
+      `[CircuitBuilder] Building circuit (attempt ${attempt}/${this.maxAttempts})`
+    );
+
+    const newCircuit = await this.torConnection.createOrThrow();
+
+    try {
+      // Extend through middle relay
+      await this.extendCircuit(newCircuit, middles, 'middle');
+
+      // Extend through final hop (exit relay or keynet node)
+      if (finalHop) {
+        await this.extendCircuitThroughRelay(newCircuit, finalHop, 'final hop');
+      } else {
+        await this.extendCircuit(newCircuit, exits!, 'exit');
+      }
+
+      this.log.info('[CircuitBuilder] Circuit built successfully');
+      this.emit('circuit-created', newCircuit);
+      return newCircuit;
+    } catch (e) {
+      // Dispose failed circuit
+      this.disposeCircuit(newCircuit);
+      throw e;
+    }
+  }
+
+  /**
+   * Safely disposes a circuit with proper error handling and logging.
+   *
+   * @param circuit The circuit to dispose
+   */
+  private disposeCircuit(circuit: Circuit): void {
+    try {
+      (circuit as unknown as Disposable)[Symbol.dispose]();
+    } catch (e) {
+      this.log.error(
+        `[CircuitBuilder] Error disposing circuit: ${getErrorDetails(e)}`
+      );
     }
   }
 

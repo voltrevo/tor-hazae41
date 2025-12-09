@@ -357,6 +357,16 @@ export class TorClient {
    * Builds a circuit for keynet discovery: Guard (Snowflake) → Middle → Middle2
    * This circuit is used to fetch consensus candidates and identify the keynet exit node.
    *
+   * Design Note: Keynet circuits are built separately from CircuitBuilder because they require
+   * a special 2-stage discovery process:
+   * 1. Build a temporary 3-hop discovery circuit to fetch relay consensus
+   * 2. Find the keynet exit node matching the service's Ed25519 key
+   * 3. Build the final 4-hop circuit extending through that specific exit
+   *
+   * Future Enhancement: Once CircuitBuilder is exposed from CircuitManager, keynet could
+   * leverage CircuitBuilder.buildCircuit(finalHop) for the final circuit, providing the
+   * discovered keynet exit as the finalHop parameter.
+   *
    * @throws Error if circuit building fails
    */
   private async buildKeynetDiscoveryCircuit(): Promise<Circuit> {
