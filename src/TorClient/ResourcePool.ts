@@ -165,7 +165,9 @@ export class ResourcePool<R> extends EventEmitter<ResourcePoolEvents<R>> {
     }
 
     // No minimum in-flight, just create one resource
-    return await this.createResource();
+    const resource = await this.createResource();
+    this.emit('resource-created', resource);
+    return resource;
   }
 
   /**
