@@ -2,6 +2,7 @@
 
 - before committing code
   - `npm run commit-checks`
+    - this should sufficient checking: avoid running a build unless it's particularly relevant to the changes
   - tell the user your commit message
   - get confirmation from the user
 - read README.md

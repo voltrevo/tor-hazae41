@@ -3,7 +3,6 @@ import { initWasm } from './initWasm';
 import { Log } from '../Log';
 import { IClock } from '../clock';
 import { CircuitBuilder } from './CircuitBuilder';
-import { CircuitStateTracker } from './CircuitStateTracker';
 import { ResourcePool } from './ResourcePool';
 import { MicrodescManager } from './MicrodescManager';
 
@@ -66,7 +65,6 @@ export class CircuitManager {
   private createTorConnection: () => Promise<TorClientDuplex>;
   private getConsensus: (circuit: Circuit) => Promise<Echalote.Consensus>;
   private microdescManager: MicrodescManager;
-  private circuitStateTracker: CircuitStateTracker;
   private circuitPool: ResourcePool<Circuit>;
 
   // Shared Tor connection
@@ -89,7 +87,6 @@ export class CircuitManager {
     this.createTorConnection = options.createTorConnection;
     this.getConsensus = options.getConsensus;
     this.microdescManager = options.microdescManager;
-    this.circuitStateTracker = new CircuitStateTracker();
 
     // Always initialize ResourcePool for circuit buffering
     // If bufferSize is 0, ResourcePool won't maintain a buffer but still provides acquire()
@@ -111,7 +108,7 @@ export class CircuitManager {
     if (existingCircuit) {
       const state = this.circuitStates.get(existingCircuit);
       if (state) {
-        this.circuitStateTracker.markUsed(existingCircuit);
+        state.lastUsed = Date.now();
       }
       return existingCircuit;
     }
@@ -171,8 +168,12 @@ export class CircuitManager {
       circuit = await this.createNewCircuit(hostname);
     }
 
-    // Allocate to hostname using CircuitStateTracker
-    this.circuitStateTracker.allocate(circuit, hostname);
+    // Initialize circuit state
+    this.circuitStates.set(circuit, {
+      allocatedAt: Date.now(),
+      allocatedHost: hostname,
+      lastUsed: Date.now(),
+    });
 
     this.circuitOwnershipMap.set(circuit, hostname);
     this.hostCircuitMap.set(hostname, circuit);
@@ -201,7 +202,6 @@ export class CircuitManager {
       this.hostCircuitMap.delete(hostname);
       this.circuitOwnershipMap.delete(circuit);
       this.circuitStates.delete(circuit);
-      this.circuitStateTracker.dispose(circuit);
 
       // Cancel lifetime timer
       const state = this.circuitStates.get(circuit);
@@ -308,7 +308,6 @@ export class CircuitManager {
         this.clock.clearTimeout(state.lifetimeTimer);
       }
       circuit[Symbol.dispose]();
-      this.circuitStateTracker.dispose(circuit);
       this.log.info(`[${hostname}] Circuit disposed`);
     }
 
@@ -371,9 +370,6 @@ export class CircuitManager {
 
       this.log.info(`[${hostLabel}] 🔨 Building circuit`);
       const circuit = await this.buildCircuit(hostname);
-
-      // Initialize circuit state
-      this.circuitStateTracker.initialize(circuit);
 
       this.log.info(`[${hostLabel}] ✅ Circuit created successfully`);
       return circuit;
