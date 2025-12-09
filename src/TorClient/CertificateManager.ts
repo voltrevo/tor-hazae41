@@ -1,0 +1,355 @@
+import { Circuit, Echalote } from '../echalote';
+import { IStorage } from '../storage';
+import { Log } from '../Log';
+
+export interface CertificateManagerOptions {
+  storage: IStorage;
+  maxCached?: number;
+  log: Log;
+}
+
+/**
+ * Manages certificate caching and retrieval for Tor consensus verification.
+ * Handles loading, saving, and freshness checking of authority certificates.
+ */
+export class CertificateManager {
+  private storage: IStorage;
+  private maxCached: number;
+  private log: Log;
+  private certificateCache: Map<string, Echalote.Consensus.Certificate> =
+    new Map();
+  private cacheLoaded = false;
+  private cacheLoading: Promise<void> | undefined;
+
+  isClosed = false;
+
+  constructor(options: CertificateManagerOptions) {
+    this.storage = options.storage;
+    this.maxCached = options.maxCached ?? 20; // More certificates than consensuses
+    this.log = options.log;
+  }
+
+  /**
+   * Gets a certificate for the given fingerprint, using cache when available or fetching when needed.
+   * @param circuit The circuit to use for fetching if needed
+   * @param fingerprint The certificate fingerprint to retrieve
+   * @returns A verified certificate
+   */
+  async getCertificate(
+    circuit: Circuit,
+    fingerprint: string
+  ): Promise<Echalote.Consensus.Certificate> {
+    // Check cache first
+    const cached = await this.loadCachedCertificate(fingerprint);
+    if (cached && this.isCertificateValid(cached)) {
+      this.logMessage(`Using cached certificate for ${fingerprint}`);
+      return cached;
+    }
+
+    this.logMessage(`Fetching certificate for ${fingerprint} from network`);
+    const certificate = await Echalote.Consensus.Certificate.fetchOrThrow(
+      circuit,
+      fingerprint
+    );
+
+    // Save to cache
+    await this.saveToCache(certificate);
+    this.logMessage(`Cached certificate for ${fingerprint}`, 'success');
+
+    return certificate;
+  }
+
+  /**
+   * Gets multiple certificates in parallel, using cache when available.
+   * @param circuit The circuit to use for fetching
+   * @param fingerprints Array of certificate fingerprints to retrieve
+   * @returns Array of verified certificates
+   */
+  async getCertificates(
+    circuit: Circuit,
+    fingerprints: string[]
+  ): Promise<Echalote.Consensus.Certificate[]> {
+    const certificates: Echalote.Consensus.Certificate[] = [];
+
+    // Check cache for all fingerprints first
+    const cachedResults = await Promise.all(
+      fingerprints.map(async fingerprint => {
+        const cached = await this.loadCachedCertificate(fingerprint);
+        return { fingerprint, certificate: cached };
+      })
+    );
+
+    // Separate cached from uncached
+    const cachedCertificates: Echalote.Consensus.Certificate[] = [];
+    const uncachedFingerprints: string[] = [];
+
+    for (const { fingerprint, certificate } of cachedResults) {
+      if (certificate && this.isCertificateValid(certificate)) {
+        cachedCertificates.push(certificate);
+        this.logMessage(`Using cached certificate for ${fingerprint}`);
+      } else {
+        uncachedFingerprints.push(fingerprint);
+      }
+    }
+
+    // Fetch uncached certificates in parallel
+    if (uncachedFingerprints.length > 0) {
+      this.logMessage(
+        `Fetching ${uncachedFingerprints.length} certificates from network`
+      );
+      const fetchedCertificates = await Promise.all(
+        uncachedFingerprints.map(fingerprint =>
+          Echalote.Consensus.Certificate.fetchOrThrow(circuit, fingerprint)
+        )
+      );
+
+      // Cache the newly fetched certificates
+      await Promise.all(
+        fetchedCertificates.map(cert => this.saveToCache(cert))
+      );
+
+      certificates.push(...fetchedCertificates);
+      this.logMessage(
+        `Cached ${fetchedCertificates.length} new certificates`,
+        'success'
+      );
+    }
+
+    certificates.push(...cachedCertificates);
+
+    // Return in the same order as the input fingerprints
+    const fingerprintToCert = new Map(
+      certificates.map(cert => [cert.fingerprint, cert])
+    );
+
+    return fingerprints
+      .map(fp => fingerprintToCert.get(fp))
+      .filter(
+        (cert): cert is Echalote.Consensus.Certificate => cert !== undefined
+      );
+  }
+
+  /**
+   * Checks if a certificate is still valid (not expired).
+   * @param certificate The certificate to check
+   * @returns True if the certificate is still valid
+   */
+  private isCertificateValid(
+    certificate: Echalote.Consensus.Certificate
+  ): boolean {
+    const now = new Date();
+    return now < certificate.expires;
+  }
+
+  /**
+   * Loads cached certificates from storage.
+   */
+  private async loadCache(): Promise<void> {
+    if (this.cacheLoaded) {
+      return;
+    }
+
+    if (this.cacheLoading) {
+      await this.cacheLoading;
+      return;
+    }
+
+    this.cacheLoading = this.loadCacheInternal();
+    await this.cacheLoading;
+  }
+
+  private async loadCacheInternal(): Promise<void> {
+    try {
+      this.logMessage('Loading cached certificates from storage');
+      const keys = await this.storage.list('cert:');
+
+      if (keys.length === 0) {
+        this.logMessage('No cached certificates found');
+        this.cacheLoaded = true;
+        return;
+      }
+
+      let loadedCount = 0;
+      let expiredCount = 0;
+
+      for (const key of keys.slice(0, this.maxCached)) {
+        try {
+          const data = await this.storage.read(key);
+          const text = new TextDecoder().decode(data);
+          const certificate = await this.parseCertificate(text);
+
+          if (this.isCertificateValid(certificate)) {
+            this.certificateCache.set(certificate.fingerprint, certificate);
+            loadedCount++;
+            this.logMessage(
+              `Loaded cached certificate for ${certificate.fingerprint} (expires: ${certificate.expires.toISOString()})`
+            );
+          } else {
+            expiredCount++;
+            this.logMessage(
+              `Skipping expired certificate for ${certificate.fingerprint} (expired: ${certificate.expires.toISOString()})`
+            );
+            // Remove expired certificate from storage
+            await this.storage.remove(key);
+          }
+        } catch (error) {
+          this.logMessage(
+            `Failed to load certificate ${key}: ${(error as Error).message}`,
+            'error'
+          );
+        }
+      }
+
+      this.logMessage(
+        `Loaded ${loadedCount} cached certificates, removed ${expiredCount} expired ones`,
+        'success'
+      );
+
+      // Clean up old certificates if we have too many
+      if (keys.length > this.maxCached) {
+        const keysToRemove = keys.slice(this.maxCached);
+        this.logMessage(
+          `Removing ${keysToRemove.length} old cached certificates`
+        );
+        for (const key of keysToRemove) {
+          try {
+            await this.storage.remove(key);
+          } catch (error) {
+            this.logMessage(
+              `Failed to remove old certificate ${key}: ${(error as Error).message}`,
+              'error'
+            );
+          }
+        }
+      }
+    } catch (error) {
+      this.logMessage(
+        `Failed to load certificate cache: ${(error as Error).message}`,
+        'error'
+      );
+    } finally {
+      this.cacheLoaded = true;
+    }
+  }
+
+  /**
+   * Loads a specific certificate from cache by fingerprint.
+   * @param fingerprint The certificate fingerprint to load
+   * @returns The cached certificate or undefined if not found
+   */
+  private async loadCachedCertificate(
+    fingerprint: string
+  ): Promise<Echalote.Consensus.Certificate | undefined> {
+    await this.loadCache();
+    return this.certificateCache.get(fingerprint);
+  }
+
+  /**
+   * Saves a certificate to the cache and storage.
+   * @param certificate The certificate to save
+   */
+  async saveToCache(
+    certificate: Echalote.Consensus.Certificate
+  ): Promise<void> {
+    try {
+      const key = `cert:${certificate.fingerprint}`;
+
+      // Serialize certificate to text format
+      const textToSave = await this.serializeCertificate(certificate);
+      const data = new TextEncoder().encode(textToSave);
+      await this.storage.write(key, data);
+
+      // Update in-memory cache
+      this.certificateCache.set(certificate.fingerprint, certificate);
+
+      // Maintain cache size limit
+      if (this.certificateCache.size > this.maxCached) {
+        // Remove oldest entries (simple FIFO for now)
+        const entries = Array.from(this.certificateCache.entries());
+        const toRemove = entries.slice(0, entries.length - this.maxCached);
+        for (const [fingerprint] of toRemove) {
+          this.certificateCache.delete(fingerprint);
+          await this.storage.remove(`cert:${fingerprint}`);
+        }
+      }
+
+      this.logMessage(`Saved certificate to cache: ${key}`);
+    } catch (error) {
+      this.logMessage(
+        `Failed to save certificate to cache: ${(error as Error).message}`,
+        'error'
+      );
+    }
+  }
+
+  /**
+   * Serializes a certificate back to its text format.
+   * @param certificate The certificate to serialize
+   * @returns The certificate text
+   */
+  private async serializeCertificate(
+    certificate: Echalote.Consensus.Certificate
+  ): Promise<string> {
+    // For now, we'll store the certificate in a simple format
+    // In a real implementation, we'd need to reconstruct the original text format
+    // that the Certificate.parseOrThrow function expects
+    return JSON.stringify({
+      version: certificate.version,
+      fingerprint: certificate.fingerprint,
+      published: certificate.published.toISOString(),
+      expires: certificate.expires.toISOString(),
+      identityKey: certificate.identityKey,
+      signingKey: certificate.signingKey,
+      crossCert: certificate.crossCert,
+      preimage: certificate.preimage,
+      signature: certificate.signature,
+    });
+  }
+
+  /**
+   * Parses a certificate from text format.
+   * @param text The certificate text to parse
+   * @returns The parsed certificate
+   */
+  private async parseCertificate(
+    text: string
+  ): Promise<Echalote.Consensus.Certificate> {
+    // Try to parse as JSON first (our cached format)
+    try {
+      const data = JSON.parse(text);
+      return {
+        ...data,
+        published: new Date(data.published),
+        expires: new Date(data.expires),
+      };
+    } catch {
+      // If JSON parsing fails, try the original certificate format
+      // This would be used if we stored the original certificate text
+      const certificates = Echalote.Consensus.Certificate.parseOrThrow(text);
+      if (certificates.length === 0) {
+        throw new Error('No certificate found in text');
+      }
+      return certificates[0];
+    }
+  }
+
+  private logMessage(
+    message: string,
+    type: 'info' | 'success' | 'error' = 'info'
+  ): void {
+    switch (type) {
+      case 'error':
+        this.log.error(message);
+        break;
+      case 'success':
+      case 'info':
+        this.log.info(message);
+        break;
+    }
+  }
+
+  close() {
+    this.isClosed = true;
+    this.certificateCache.clear();
+  }
+}

@@ -6,7 +6,7 @@ export default defineConfig(({ command }) => ({
 
   server: {
     port: 3000,
-    open: true,
+    open: !process.env.TEST_BROWSER,
   },
 
   build: {
@@ -17,12 +17,16 @@ export default defineConfig(({ command }) => ({
 
   define: {
     global: 'globalThis',
-    Buffer: 'Buffer',
   },
 
   optimizeDeps: {
     exclude: ['@hazae41/echalote', '@hazae41/cadenas', '@hazae41/fleche'],
     include: ['buffer'],
+    esbuildOptions: {
+      define: {
+        global: 'globalThis',
+      },
+    },
   },
 
   resolve: {

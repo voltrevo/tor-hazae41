@@ -26,7 +26,9 @@
 import { readFileSync, writeFileSync, existsSync } from 'node:fs';
 import { stdout, stderr } from 'node:process';
 
-import { TorClient } from './src/index.js';
+import { TorClient } from './src/TorClient';
+import { getErrorDetails } from './src/utils/getErrorDetails';
+import { Log } from './src/Log';
 
 type Opts = {
   method?: string;
@@ -208,80 +210,9 @@ function hasHeader(headers: [string, string][], name: string): boolean {
   return headers.some(([k]) => k.toLowerCase() === n);
 }
 
-function formatError(error: unknown): string {
-  // Handle standard Error objects
-  if (error instanceof Error) {
-    return error.message;
-  }
-
-  // Handle ErrorEvent objects (common with WebSocket errors)
-  if (
-    error &&
-    typeof error === 'object' &&
-    'type' in error &&
-    'message' in error
-  ) {
-    const errorEvent = error as ErrorEvent;
-    return errorEvent.message || `${errorEvent.type} event`;
-  }
-
-  // Handle CloseEvent objects (WebSocket close events)
-  if (
-    error &&
-    typeof error === 'object' &&
-    'code' in error &&
-    'reason' in error
-  ) {
-    const closeEvent = error as CloseEvent;
-    return closeEvent.reason || `WebSocket closed with code ${closeEvent.code}`;
-  }
-
-  // Handle generic Event objects
-  if (error && typeof error === 'object' && 'type' in error) {
-    const event = error as Event;
-    return `${event.type} event`;
-  }
-
-  // Fallback for other types
-  return String(error);
-}
-
-function getErrorDetails(error: unknown): string {
-  if (error instanceof Error) {
-    return `Error: ${error.name}: ${error.message}\nStack: ${error.stack}`;
-  }
-
-  if (error && typeof error === 'object') {
-    const obj = error as Record<string, unknown>;
-    const details: string[] = [];
-
-    // Collect relevant properties
-    if ('type' in obj) details.push(`type: ${obj.type}`);
-    if ('message' in obj) details.push(`message: ${obj.message}`);
-    if ('code' in obj) details.push(`code: ${obj.code}`);
-    if ('reason' in obj) details.push(`reason: ${obj.reason}`);
-    if ('target' in obj && obj.target) {
-      const target = obj.target as Record<string, unknown>;
-      details.push(`target: ${target.constructor?.name || 'unknown'}`);
-    }
-
-    return details.length > 0
-      ? details.join(', ')
-      : 'No additional details available';
-  }
-
-  return String(error);
-}
-
 async function main() {
   const opts = parseArgs(process.argv.slice(2));
   if (!opts.url) die('Usage: curl.ts [options] <url>');
-
-  const controller = new AbortController();
-  let timeout: NodeJS.Timeout | undefined;
-  if (opts.maxTimeMs) {
-    timeout = setTimeout(() => controller.abort(), opts.maxTimeMs);
-  }
 
   const headers = new Headers();
   for (const [k, v] of opts.headers) headers.append(k, v);
@@ -331,7 +262,7 @@ async function main() {
     headers,
     body,
     redirect: opts.follow ? 'follow' : 'manual',
-    signal: controller.signal,
+    signal: opts.maxTimeMs ? AbortSignal.timeout(opts.maxTimeMs) : undefined,
     // Note: no per-request TLS "insecure" option available with built-in fetch.
   };
 
@@ -358,25 +289,21 @@ async function main() {
     const fetchOptions: RequestInit & {
       connectionTimeout?: number;
       circuitTimeout?: number;
-      onLog?: (message: string, type?: 'info' | 'success' | 'error') => void;
+      log?: Log;
     } = { ...reqInit };
 
-    // Enable TorClient logging in verbose mode
+    // Create a logger that writes to stderr in verbose mode
     if (opts.verbose && !opts.silent) {
-      fetchOptions.onLog = (
-        message: string,
-        type?: 'info' | 'success' | 'error'
-      ) => {
-        const prefix =
-          type === 'error' ? '! ' : type === 'success' ? '✓ ' : '> ';
-        stderr.write(`${prefix}${message}\n`);
-      };
+      fetchOptions.log = new Log({
+        rawLog: (level, ...args) => {
+          stderr.write(`[${level.toUpperCase()}] ${args.join(' ')}\n`);
+        },
+      });
     }
 
     res = await TorClient.fetch(snowflakeUrl, opts.url, fetchOptions);
   } catch (e: unknown) {
-    if (timeout) clearTimeout(timeout);
-    const message = formatError(e);
+    const message = getErrorDetails(e);
 
     // In verbose mode, also show the error object details
     if (opts.verbose && !opts.silent) {
@@ -384,8 +311,6 @@ async function main() {
     }
 
     die(`Request failed: ${message}`, 7);
-  } finally {
-    if (timeout) clearTimeout(timeout);
   }
 
   const headerBlock = (() => {
@@ -433,6 +358,6 @@ async function main() {
 }
 
 main().catch(e => {
-  const message = formatError(e);
+  const message = getErrorDetails(e);
   die(`Unhandled error: ${message}`);
 });
