@@ -19,10 +19,7 @@ import { selectRandomElement } from '../utils/random';
 import { isMiddleRelay, isExitRelay } from '../utils/relayFilters';
 import { Log } from '../Log';
 import { SystemClock, IClock } from '../clock';
-import {
-  decodeKeynetPubKey,
-  findKeynetExitNode,
-} from '../keynet/decodeKeynetPubkey.js';
+import { decodeKeynetPubKey } from '../keynet/decodeKeynetPubkey.js';
 import { initWasm } from './initWasm';
 
 /**
@@ -308,21 +305,11 @@ export class TorClient {
         `[Keynet] Decoded public key (first 8 bytes): ${Buffer.from(pubkey.slice(0, 8)).toString('hex')}`
       );
 
-      // Create a temporary circuit for keynet discovery (Guard → Middle → Middle2)
-      this.logMessage('[Keynet] Building circuit to discover keynet exit node');
-      const circuit = await this.buildKeynetDiscoveryCircuit();
+      // Build keynet circuit through CircuitManager
+      this.logMessage('[Keynet] Building 4-hop circuit to keynet exit');
+      const circuit = await this.circuitManager.buildKeynetCircuit(pubkey);
 
       try {
-        // Find the keynet exit node using the circuit
-        this.logMessage('[Keynet] Searching for keynet exit node in consensus');
-        const consensus = await this.consensusManager.getConsensus(circuit);
-        const keynetExit = await findKeynetExitNode(circuit, consensus, pubkey);
-
-        this.logMessage(`[Keynet] Found keynet exit node, extending circuit`);
-
-        // Extend the circuit to the keynet node (4th hop)
-        await circuit.extendOrThrow(keynetExit, AbortSignal.timeout(10000));
-
         // Now make the HTTP request
         this.logMessage(`[Keynet] Opening stream to ${hostname}:80`);
         const ttcp = await circuit.openOrThrow(hostname, 80);
@@ -361,62 +348,6 @@ export class TorClient {
    * 1. Build a temporary 3-hop discovery circuit to fetch relay consensus
    * 2. Find the keynet exit node matching the service's Ed25519 key
    * 3. Build the final 4-hop circuit extending through that specific exit
-   *
-   * Future Enhancement: Once CircuitBuilder is exposed from CircuitManager, keynet could
-   * leverage CircuitBuilder.buildCircuit(finalHop) for the final circuit, providing the
-   * discovered keynet exit as the finalHop parameter.
-   *
-   * @throws Error if circuit building fails
-   */
-  private async buildKeynetDiscoveryCircuit(): Promise<Circuit> {
-    // Create Tor connection
-    const tor = await this.createTorConnection();
-
-    // Create initial circuit
-    const circuit = await tor.createOrThrow();
-
-    try {
-      // Get consensus to select middle relays
-      const consensus = await this.consensusManager.getConsensus(circuit);
-      const middles = consensus.microdescs.filter(isMiddleRelay);
-
-      if (middles.length === 0) {
-        throw new Error('No middle relay candidates available');
-      }
-
-      // Extend through first middle relay
-      const middle1 = selectRandomElement(middles);
-      this.logMessage('[Keynet] Extending circuit through middle relay 1');
-
-      const middle1Full = await Echalote.Consensus.Microdesc.fetchOrThrow(
-        circuit,
-        middle1
-      );
-      await circuit.extendOrThrow(middle1Full, AbortSignal.timeout(10000));
-      this.logMessage('[Keynet] Extended through middle relay 1');
-
-      // Extend through second middle relay (pseudo-exit for keynet discovery)
-      const middle2 = selectRandomElement(middles);
-      this.logMessage('[Keynet] Extending circuit through middle relay 2');
-
-      const middle2Full = await Echalote.Consensus.Microdesc.fetchOrThrow(
-        circuit,
-        middle2
-      );
-      await circuit.extendOrThrow(middle2Full, AbortSignal.timeout(10000));
-      this.logMessage('[Keynet] Extended through middle relay 2');
-
-      return circuit;
-    } catch (e) {
-      // Dispose failed circuit
-      try {
-        (circuit as unknown as Disposable)[Symbol.dispose]();
-      } catch {
-        // Ignore disposal errors
-      }
-      throw e;
-    }
-  }
 
   /**
    * Updates the circuit with a deadline for graceful transition.

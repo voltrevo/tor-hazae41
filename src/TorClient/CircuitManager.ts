@@ -5,6 +5,12 @@ import { IClock } from '../clock';
 import { CircuitBuilder } from './CircuitBuilder';
 import { CircuitStateTracker } from './CircuitStateTracker';
 import { ResourcePool } from './ResourcePool';
+import { selectRandomElement } from '../utils/random';
+import { isMiddleRelay } from '../utils/relayFilters';
+import {
+  decodeKeynetPubKey,
+  findKeynetExitNode,
+} from '../keynet/decodeKeynetPubkey.js';
 
 /**
  * Configuration options for the CircuitManager.
@@ -570,6 +576,105 @@ export class CircuitManager {
       this.log.child('CircuitBuilder')
     );
     return await circuitBuilder.buildCircuit();
+  }
+
+  /**
+   * Builds a keynet circuit with the following structure:
+   * Guard (Snowflake) → Middle1 → Middle2 → Keynet Exit Node
+   *
+   * This implements a 2-stage discovery process:
+   * 1. Build temporary 3-hop discovery circuit (Guard → Middle1 → Middle2)
+   * 2. Fetch consensus and find keynet exit node matching the service's Ed25519 key
+   * 3. Build final 4-hop circuit extending through the discovered keynet exit
+   *
+   * @param pubkey The 32-byte Ed25519 public key of the keynet service
+   * @returns Promise resolving to the built 4-hop keynet circuit
+   * @throws Error if keynet exit node cannot be found or circuit building fails
+   */
+  async buildKeynetCircuit(pubkey: Uint8Array): Promise<Circuit> {
+    await initWasm();
+
+    // Stage 1: Build temporary 3-hop discovery circuit
+    const discoveryCircuit = await this.torConnection!.createOrThrow();
+
+    try {
+      // Get consensus to select middle relays
+      const consensus = await this.getConsensus(discoveryCircuit);
+      const middles = consensus.microdescs.filter(isMiddleRelay);
+
+      if (middles.length === 0) {
+        throw new Error('No middle relay candidates available');
+      }
+
+      // Extend through first middle relay
+      const middle1 = selectRandomElement(middles);
+      this.logMessage(
+        'keynet-discovery',
+        'Extending circuit through middle relay 1'
+      );
+
+      const middle1Full = await Echalote.Consensus.Microdesc.fetchOrThrow(
+        discoveryCircuit,
+        middle1
+      );
+      await discoveryCircuit.extendOrThrow(
+        middle1Full,
+        AbortSignal.timeout(10000)
+      );
+      this.logMessage('keynet-discovery', 'Extended through middle relay 1');
+
+      // Extend through second middle relay
+      const middle2 = selectRandomElement(middles);
+      this.logMessage(
+        'keynet-discovery',
+        'Extending circuit through middle relay 2'
+      );
+
+      const middle2Full = await Echalote.Consensus.Microdesc.fetchOrThrow(
+        discoveryCircuit,
+        middle2
+      );
+      await discoveryCircuit.extendOrThrow(
+        middle2Full,
+        AbortSignal.timeout(10000)
+      );
+      this.logMessage('keynet-discovery', 'Extended through middle relay 2');
+
+      // Stage 2: Find the keynet exit node
+      this.logMessage(
+        'keynet-discovery',
+        'Searching for keynet exit node in consensus'
+      );
+      const keynetExit = await findKeynetExitNode(
+        discoveryCircuit,
+        consensus,
+        pubkey
+      );
+      this.logMessage('keynet-discovery', 'Found keynet exit node');
+
+      // Stage 3: Build final 4-hop circuit with keynet exit
+      this.logMessage('keynet', 'Building 4-hop circuit to keynet exit');
+      const circuitBuilder = new CircuitBuilder(
+        this.torConnection!,
+        this.getConsensus,
+        this.log.child('CircuitBuilder-Keynet')
+      );
+      const finalCircuit = await circuitBuilder.buildCircuit(keynetExit);
+
+      this.logMessage('keynet', 'Keynet circuit ready');
+      return finalCircuit;
+    } finally {
+      // Always dispose the discovery circuit
+      try {
+        (discoveryCircuit as unknown as Disposable)[Symbol.dispose]();
+      } catch (e) {
+        this.logMessage(
+          'keynet-discovery',
+          `Error disposing discovery circuit: ${(e as Error).message}`,
+          'error'
+        );
+      }
+    }
   }
 
   /**

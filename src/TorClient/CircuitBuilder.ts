@@ -61,12 +61,10 @@ export class CircuitBuilder extends EventEmitter<CircuitBuilderEvents> {
 
   /**
    * Builds a new circuit through the Tor network.
-   * Selects random middle and exit relays, extends circuit through them.
+   * Selects random middle relays and extends through either a random exit relay or a pre-determined final hop.
    *
-   * @param finalHop Optional pre-determined final hop (for keynet or other special cases).
-   *                 When provided, this relay is used instead of selecting a random exit.
-   *                 Currently designed for future keynet integration where the keynet exit
-   *                 node is discovered separately and provided here.
+   * @param finalHop Optional pre-determined final hop relay. When provided, this relay is used as the final hop
+   *                 instead of selecting a random exit relay. Used internally by CircuitManager for keynet circuits.
    * @throws Error if circuit building fails after all retry attempts
    */
   async buildCircuit(
