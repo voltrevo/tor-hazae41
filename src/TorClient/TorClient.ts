@@ -28,10 +28,8 @@ export interface TorClientOptions {
   circuitTimeout?: number;
   /** Number of circuits to pre-create and maintain in buffer (default: 0, disabled) */
   circuitBuffer?: number;
-  /** Interval in milliseconds between automatic circuit updates, or null to disable (default: 600000 = 10 minutes) */
-  circuitUpdateInterval?: number | null;
-  /** Time in milliseconds to allow old circuit usage before forcing new circuit during updates (default: 60000 = 1 minute) */
-  circuitUpdateAdvance?: number;
+  /** Maximum lifetime in milliseconds for circuits before disposal, or null to disable (default: 600000 = 10 minutes) */
+  maxCircuitLifetime?: number | null;
   /** Optional logger instance for hierarchical logging */
   log?: Log;
   /** Storage interface */
@@ -68,8 +66,7 @@ export class TorClient {
   private connectionTimeout: number;
   private circuitTimeout: number;
   private circuitBuffer: number;
-  private circuitUpdateInterval: number | null;
-  private circuitUpdateAdvance: number;
+  private maxCircuitLifetime: number | null;
   private log: Log;
   private storage: IStorage;
   private clock: SystemClock;
@@ -105,8 +102,7 @@ export class TorClient {
     this.connectionTimeout = options.connectionTimeout ?? 15000;
     this.circuitTimeout = options.circuitTimeout ?? 90000;
     this.circuitBuffer = options.circuitBuffer ?? 2;
-    this.circuitUpdateInterval = options.circuitUpdateInterval ?? 10 * 60_000; // 10 minutes
-    this.circuitUpdateAdvance = options.circuitUpdateAdvance ?? 60_000; // 1 minute
+    this.maxCircuitLifetime = options.maxCircuitLifetime ?? 10 * 60_000; // 10 minutes
     this.log = options.log ?? new Log();
     this.storage = options.storage ?? createAutoStorage('tor-hazae41-cache');
     this.clock = options.clock ?? new SystemClock();
@@ -126,8 +122,7 @@ export class TorClient {
     this.circuitManager = new CircuitManager({
       clock: this.clock,
       circuitTimeout: this.circuitTimeout,
-      circuitUpdateInterval: this.circuitUpdateInterval,
-      circuitUpdateAdvance: this.circuitUpdateAdvance,
+      maxCircuitLifetime: this.maxCircuitLifetime,
       circuitBuffer: this.circuitBuffer,
       log: this.log.child('circuit'),
       createTorConnection: () => this.createTorConnection(),
@@ -171,14 +166,8 @@ export class TorClient {
       connectionTimeout,
       circuitTimeout,
       log,
-      // FIXME: yes and no ("no precreation")
-      // add another concept to CircuitManager to allow it to buffer
-      // circuits beyond its ordinary buffer size
-      // when a circuit is needed, CircuitManager should race N circuit creations
-      // (N includes already in-flight creations)
-      // (N is another parameter)
       circuitBuffer: 0, // No pre-creation for one-time use
-      circuitUpdateInterval: null, // No auto-updates for one-time use
+      maxCircuitLifetime: null, // No lifetime limit for one-time use
     });
 
     try {
@@ -190,11 +179,12 @@ export class TorClient {
 
   /**
    * Makes a fetch request through Tor using this client's persistent circuit.
-   * The circuit is reused across multiple requests and automatically updated
-   * based on the configured update interval and advance settings.
+   * The circuit is reused across multiple requests until it reaches the end of its
+   * lifetime, at which point it is disposed and a new circuit is created on the
+   * next request.
    *
    * Use this method when you have multiple requests or want to maintain
-   * a long-lived Tor connection with automatic circuit management.
+   * a long-lived Tor connection with automatic circuit lifecycle management.
    *
    * @param url The URL to fetch
    * @param options Optional fetch options
@@ -216,9 +206,6 @@ export class TorClient {
 
     try {
       const circuit = await this.circuitManager.getOrCreateCircuit(hostname);
-
-      // Mark circuit as used to schedule updates
-      this.circuitManager.markCircuitUsed(hostname);
 
       this.log.info(`Opening connection to ${hostname}:${port}`);
       const ttcp = await circuit.openOrThrow(hostname, port);
@@ -269,14 +256,6 @@ export class TorClient {
 
       throw error;
     }
-  }
-
-  /**
-   * Updates the circuit with a deadline for graceful transition.
-   * @param deadline Milliseconds to allow existing requests to use the old circuit. Defaults to 0.
-   */
-  async updateCircuit(deadline: number = 0): Promise<void> {
-    await this.circuitManager.updateCircuit(undefined, deadline);
   }
 
   /**

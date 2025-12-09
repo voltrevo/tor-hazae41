@@ -18,12 +18,8 @@ export interface CircuitManagerOptions {
   clock: IClock;
   /** Timeout in milliseconds for circuit creation and readiness (default: 90000) */
   circuitTimeout?: number;
-  /** Interval in milliseconds between automatic circuit updates, or null to disable (default: 600000 = 10 minutes) */
-  circuitUpdateInterval?: number | null;
-  /** Time in milliseconds to allow old circuit usage before forcing new circuit during updates (default: 60000 = 1 minute) */
-  circuitUpdateAdvance?: number;
-  /** Timeout in milliseconds for disposing unused circuits (default: 300000 = 5 minutes) */
-  circuitIdleTimeout?: number;
+  /** Maximum lifetime in milliseconds for circuits before disposal, or null to disable (default: 600000 = 10 minutes) */
+  maxCircuitLifetime?: number | null;
   /** Number of circuits to maintain in buffer (default: 0, disabled) */
   circuitBuffer?: number;
   /** Logger instance for hierarchical logging */
@@ -42,11 +38,6 @@ export interface CircuitManagerOptions {
 export interface CircuitStatus {
   hasCircuit: boolean;
   isCreating: boolean;
-  isUpdating: boolean;
-  updateDeadline: number;
-  timeToDeadline: number;
-  updateActive: boolean;
-  nextUpdateIn: number | null;
   idleTime: number;
 }
 
@@ -56,12 +47,7 @@ export interface CircuitStatus {
 interface CircuitState {
   allocatedAt: number; // When allocated to a host (0 if buffered)
   allocatedHost?: string; // Which host owns this circuit
-  isUpdatingCircuit: boolean;
-  updateDeadline: number;
-  updateTimer?: unknown;
-  updateLoopActive: boolean;
-  nextUpdateTime: number;
-  circuitUsed: boolean;
+  lifetimeTimer?: unknown; // Timer to dispose circuit at end of lifetime
   lastUsed: number;
 }
 
@@ -74,8 +60,7 @@ interface CircuitState {
  */
 export class CircuitManager {
   private clock: IClock;
-  private circuitUpdateInterval: number | null;
-  private circuitUpdateAdvance: number;
+  private maxCircuitLifetime: number | null;
   private circuitBufferSize: number;
   private log: Log;
   private createTorConnection: () => Promise<TorClientDuplex>;
@@ -95,13 +80,10 @@ export class CircuitManager {
 
   // Per-circuit state
   private circuitStates: Map<Circuit, CircuitState> = new Map();
-  private circuitIdleTimers: Map<Circuit, unknown> = new Map();
-  private circuitUpdateTimers: Map<Circuit, unknown> = new Map();
 
   constructor(options: CircuitManagerOptions) {
     this.clock = options.clock;
-    this.circuitUpdateInterval = options.circuitUpdateInterval ?? 10 * 60_000;
-    this.circuitUpdateAdvance = options.circuitUpdateAdvance ?? 60_000;
+    this.maxCircuitLifetime = options.maxCircuitLifetime ?? 10 * 60_000;
     this.circuitBufferSize = options.circuitBuffer ?? 0;
     this.log = options.log;
     this.createTorConnection = options.createTorConnection;
@@ -124,37 +106,14 @@ export class CircuitManager {
    * Gets or creates a circuit for the specified hostname.
    */
   async getOrCreateCircuit(hostname: string): Promise<Circuit> {
-    // Cancel idle timer if circuit exists for this host
+    // Check if we already have a circuit for this host
     const existingCircuit = this.hostCircuitMap.get(hostname);
     if (existingCircuit) {
       const state = this.circuitStates.get(existingCircuit);
-      const trackerState = this.circuitStateTracker.get(existingCircuit);
-      if (state && trackerState) {
-        const idleTimer = this.circuitIdleTimers.get(existingCircuit);
-        if (idleTimer) {
-          this.clock.clearTimeout(idleTimer);
-          this.circuitIdleTimers.delete(existingCircuit);
-        }
-        // Update lastUsed via CircuitStateTracker
+      if (state) {
         this.circuitStateTracker.markUsed(existingCircuit);
       }
-
-      // Handle update deadline logic
-      if (
-        trackerState?.isUpdating &&
-        Date.now() >= trackerState.updateDeadline &&
-        this.circuitAllocationTasks.has(hostname)
-      ) {
-        this.log.info(`[${hostname}] Deadline passed, waiting for new circuit`);
-        return await this.circuitAllocationTasks.get(hostname)!;
-      }
-
-      if (
-        trackerState &&
-        (!trackerState.isUpdating || Date.now() < trackerState.updateDeadline)
-      ) {
-        return existingCircuit;
-      }
+      return existingCircuit;
     }
 
     // If we're already allocating a circuit for this host, wait for it
@@ -218,113 +177,10 @@ export class CircuitManager {
     this.circuitOwnershipMap.set(circuit, hostname);
     this.hostCircuitMap.set(hostname, circuit);
 
-    // Cancel idle timer (allocated circuits don't idle out)
-    const idleTimer = this.circuitIdleTimers.get(circuit);
-    if (idleTimer) {
-      this.clock.clearTimeout(idleTimer);
-      this.circuitIdleTimers.delete(circuit);
-    }
-
-    // Schedule update timer and mark as used
-    this.scheduleCircuitUpdate(circuit, hostname);
+    // Schedule circuit disposal at end of lifetime
+    this.scheduleCircuitDisposal(circuit, hostname);
 
     return circuit;
-  }
-
-  /**
-   * Updates the circuit for a specific host (or all hosts if hostname is undefined).
-   */
-  async updateCircuit(hostname?: string, deadline: number = 0): Promise<void> {
-    if (hostname === undefined) {
-      // Update all allocated hosts
-      const hosts = Array.from(this.hostCircuitMap.keys());
-      await Promise.all(hosts.map(h => this.updateCircuit(h, deadline)));
-      return;
-    }
-
-    const circuit = this.hostCircuitMap.get(hostname);
-    if (!circuit) {
-      this.log.info(`[${hostname}] No circuit to update`);
-      return;
-    }
-
-    const state = this.circuitStates.get(circuit);
-    if (!state) {
-      return;
-    }
-
-    const newDeadline = Date.now() + deadline;
-
-    // Abort any scheduled update
-    if (state.updateTimer) {
-      this.clock.clearTimeout(state.updateTimer);
-      state.updateTimer = undefined;
-      this.log.info(`[${hostname}] Aborted scheduled circuit update`);
-    }
-
-    // Reset scheduling state
-    state.updateLoopActive = false;
-    state.circuitUsed = false;
-    state.nextUpdateTime = 0;
-
-    // If already updating, handle gracefully
-    const trackerState = this.circuitStateTracker.get(circuit);
-    if (trackerState.isUpdating) {
-      const currentDeadline = trackerState.updateDeadline;
-      const moreAggressiveDeadline = Math.min(currentDeadline, newDeadline);
-
-      this.log.info(
-        `[${hostname}] Update already in progress. Using more aggressive deadline: ` +
-          `${moreAggressiveDeadline - Date.now()}ms`
-      );
-
-      // Re-mark with more aggressive deadline
-      this.circuitStateTracker.markUpdating(circuit, moreAggressiveDeadline);
-
-      if (this.circuitAllocationTasks.has(hostname)) {
-        await this.circuitAllocationTasks.get(hostname);
-      }
-      return;
-    }
-
-    this.log.info(`[${hostname}] Updating circuit with ${deadline}ms deadline`);
-
-    this.circuitStateTracker.markUpdating(circuit, newDeadline);
-
-    try {
-      // Create new circuit for this host
-      const allocationPromise = this.allocateCircuitToHost(hostname);
-      this.circuitAllocationTasks.set(hostname, allocationPromise);
-      await allocationPromise;
-
-      this.log.info(`[${hostname}] Circuit update completed successfully`);
-    } catch (error) {
-      this.log.error(
-        `[${hostname}] Circuit update failed: ${(error as Error).message}`
-      );
-      this.circuitStateTracker.markNotUpdating(circuit);
-      throw error;
-    } finally {
-      this.circuitAllocationTasks.delete(hostname);
-    }
-  }
-
-  /**
-   * Marks the circuit for a host as used and schedules updates if not already scheduled.
-   */
-  markCircuitUsed(hostname: string): void {
-    const circuit = this.hostCircuitMap.get(hostname);
-    if (circuit) {
-      if (!this.circuitStateTracker.hasBeenUsed(circuit)) {
-        this.circuitStateTracker.markUsed(circuit);
-        this.log.info(
-          `[${hostname}] Circuit used for first time, scheduling automatic updates`
-        );
-      } else {
-        // Just update lastUsed timestamp
-        this.circuitStateTracker.markUsed(circuit);
-      }
-    }
   }
 
   /**
@@ -347,16 +203,10 @@ export class CircuitManager {
       this.circuitStates.delete(circuit);
       this.circuitStateTracker.dispose(circuit);
 
-      // Cancel timers
-      const idleTimer = this.circuitIdleTimers.get(circuit);
-      if (idleTimer) {
-        this.clock.clearTimeout(idleTimer);
-        this.circuitIdleTimers.delete(circuit);
-      }
-      const updateTimer = this.circuitUpdateTimers.get(circuit);
-      if (updateTimer) {
-        this.clock.clearTimeout(updateTimer);
-        this.circuitUpdateTimers.delete(circuit);
+      // Cancel lifetime timer
+      const state = this.circuitStates.get(circuit);
+      if (state?.lifetimeTimer) {
+        this.clock.clearTimeout(state.lifetimeTimer);
       }
 
       this.log.info(`[${hostname}] Circuit cleared`);
@@ -379,11 +229,6 @@ export class CircuitManager {
       result['[pool]'] = {
         hasCircuit: this.circuitPool.size() > 0,
         isCreating: this.circuitPool.inFlightCount() > 0,
-        isUpdating: false,
-        updateDeadline: 0,
-        timeToDeadline: 0,
-        updateActive: false,
-        nextUpdateIn: null,
         idleTime: 0,
       };
       return result;
@@ -398,20 +243,12 @@ export class CircuitManager {
   private getCircuitStatusForHost(hostname: string): CircuitStatus {
     const now = Date.now();
     const circuit = this.hostCircuitMap.get(hostname);
-    const trackerState = circuit
-      ? this.circuitStateTracker.get(circuit)
-      : undefined;
     const state = circuit ? this.circuitStates.get(circuit) : undefined;
 
-    if (!state || !trackerState) {
+    if (!state) {
       return {
         hasCircuit: false,
-        isCreating: false,
-        isUpdating: false,
-        updateDeadline: 0,
-        timeToDeadline: 0,
-        updateActive: false,
-        nextUpdateIn: null,
+        isCreating: this.circuitAllocationTasks.has(hostname),
         idleTime: 0,
       };
     }
@@ -419,16 +256,7 @@ export class CircuitManager {
     return {
       hasCircuit: !!circuit,
       isCreating: this.circuitAllocationTasks.has(hostname) && !circuit,
-      isUpdating: trackerState.isUpdating,
-      updateDeadline: trackerState.updateDeadline,
-      timeToDeadline:
-        trackerState.updateDeadline > now
-          ? trackerState.updateDeadline - now
-          : 0,
-      updateActive: state.updateLoopActive,
-      nextUpdateIn:
-        state.nextUpdateTime > now ? state.nextUpdateTime - now : null,
-      idleTime: trackerState.lastUsed > 0 ? now - trackerState.lastUsed : 0,
+      idleTime: state.lastUsed > 0 ? now - state.lastUsed : 0,
     };
   }
 
@@ -463,16 +291,6 @@ export class CircuitManager {
       return 'None';
     }
 
-    if (status.isUpdating) {
-      const timeLeft = Math.ceil(status.timeToDeadline / 1000);
-      return `Ready, updating (${timeLeft}s until new circuit required)`;
-    }
-
-    if (status.nextUpdateIn !== null && status.nextUpdateIn > 0) {
-      const timeLeft = Math.ceil(status.nextUpdateIn / 1000);
-      return `Ready (creating next circuit in ${timeLeft}s)`;
-    }
-
     return 'Ready';
   }
 
@@ -483,27 +301,12 @@ export class CircuitManager {
     // Dispose ResourcePool (stops maintenance and disposes buffered circuits)
     this.circuitPool.dispose();
 
-    // Clear all circuit update timers
-    for (const [_circuit, timer] of this.circuitUpdateTimers.entries()) {
-      this.clock.clearTimeout(timer);
-    }
-    this.circuitUpdateTimers.clear();
-
-    // Clear all idle timers
-    for (const [_circuit, timer] of this.circuitIdleTimers.entries()) {
-      this.clock.clearTimeout(timer);
-    }
-    this.circuitIdleTimers.clear();
-
-    // Reset scheduling state
-    for (const state of this.circuitStates.values()) {
-      state.updateLoopActive = false;
-      state.circuitUsed = false;
-      state.nextUpdateTime = 0;
-    }
-
-    // Dispose all allocated circuits
+    // Dispose all allocated circuits and cancel their timers
     for (const [hostname, circuit] of this.hostCircuitMap.entries()) {
+      const state = this.circuitStates.get(circuit);
+      if (state?.lifetimeTimer) {
+        this.clock.clearTimeout(state.lifetimeTimer);
+      }
       circuit[Symbol.dispose]();
       this.circuitStateTracker.dispose(circuit);
       this.log.info(`[${hostname}] Circuit disposed`);
@@ -597,58 +400,26 @@ export class CircuitManager {
   }
 
   /**
-   * Schedules automatic circuit updates for a host.
+   * Schedules disposal of a circuit at the end of its lifetime.
    */
-  private scheduleCircuitUpdate(circuit: Circuit, hostname: string) {
+  private scheduleCircuitDisposal(circuit: Circuit, hostname: string) {
     const state = this.circuitStates.get(circuit);
     if (!state) {
       return;
     }
 
-    if (
-      this.circuitUpdateInterval === null ||
-      this.circuitUpdateInterval <= 0
-    ) {
-      this.log.info(`[${hostname}] Circuit auto-update disabled`);
-      return;
-    }
-
-    if (state.updateLoopActive) {
-      this.log.info(`[${hostname}] Circuit updates already scheduled`);
+    if (this.maxCircuitLifetime === null || this.maxCircuitLifetime <= 0) {
+      this.log.info(`[${hostname}] Circuit lifetime tracking disabled`);
       return;
     }
 
     this.log.info(
-      `[${hostname}] Scheduled next circuit update in ${this.circuitUpdateInterval}ms with ${this.circuitUpdateAdvance}ms advance`
+      `[${hostname}] Scheduled circuit disposal in ${this.maxCircuitLifetime}ms`
     );
 
-    state.updateLoopActive = true;
-
-    const updateDelay = this.circuitUpdateInterval! - this.circuitUpdateAdvance;
-    state.nextUpdateTime = Date.now() + updateDelay;
-
-    state.updateTimer = this.clock.setTimeout(async () => {
-      if (!state.updateLoopActive) {
-        return;
-      }
-
-      try {
-        state.nextUpdateTime = 0;
-
-        this.log.info(`[${hostname}] Scheduled circuit update triggered`);
-        await this.updateCircuit(hostname, this.circuitUpdateAdvance);
-
-        state.updateLoopActive = false;
-        state.circuitUsed = false;
-      } catch (error) {
-        this.log.error(
-          `[${hostname}] Scheduled circuit update failed: ${(error as Error).message}`
-        );
-        state.updateLoopActive = false;
-        state.circuitUsed = false;
-      }
-    }, updateDelay);
-
-    this.circuitUpdateTimers.set(circuit, state.updateTimer);
+    state.lifetimeTimer = this.clock.setTimeout(() => {
+      this.log.info(`[${hostname}] Circuit reached max lifetime, disposing`);
+      this.clearCircuit(hostname);
+    }, this.maxCircuitLifetime);
   }
 }

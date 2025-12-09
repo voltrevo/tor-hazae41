@@ -8,7 +8,6 @@ export type CircuitStatus =
   | 'buffered' // Waiting in buffer
   | 'allocating' // Being assigned to a host
   | 'allocated' // Assigned to a host and ready
-  | 'updating' // Being updated/refreshed
   | 'disposed'; // Disposed and unavailable
 
 /**
@@ -18,8 +17,6 @@ export interface CircuitStateSnapshot {
   status: CircuitStatus;
   allocatedHost?: string;
   allocatedAt?: number;
-  isUpdating: boolean;
-  updateDeadline: number;
   lastUsed: number;
 }
 
@@ -30,11 +27,6 @@ interface CircuitStateInternal {
   status: CircuitStatus;
   allocatedHost?: string;
   allocatedAt: number;
-  isUpdatingCircuit: boolean;
-  updateDeadline: number;
-  updateLoopActive: boolean;
-  nextUpdateTime: number;
-  circuitUsed: boolean;
   lastUsed: number;
 }
 
@@ -45,8 +37,6 @@ export type CircuitStateTrackerEvents = {
   initialize: (circuit: Circuit) => void;
   allocate: (circuit: Circuit, host: string) => void;
   deallocate: (circuit: Circuit) => void;
-  'mark-updating': (circuit: Circuit, deadline: number) => void;
-  'mark-not-updating': (circuit: Circuit) => void;
   'mark-used': (circuit: Circuit) => void;
   dispose: (circuit: Circuit) => void;
 };
@@ -75,11 +65,6 @@ export class CircuitStateTracker extends EventEmitter<CircuitStateTrackerEvents>
     this.states.set(circuit, {
       status: 'buffered',
       allocatedAt: 0,
-      isUpdatingCircuit: false,
-      updateDeadline: 0,
-      updateLoopActive: false,
-      nextUpdateTime: 0,
-      circuitUsed: false,
       lastUsed: 0,
     });
 
@@ -126,33 +111,10 @@ export class CircuitStateTracker extends EventEmitter<CircuitStateTrackerEvents>
   }
 
   /**
-   * Marks a circuit as being updated with a deadline.
-   */
-  markUpdating(circuit: Circuit, deadline: number): void {
-    const state = this.getInternal(circuit);
-    state.isUpdatingCircuit = true;
-    state.updateDeadline = deadline;
-
-    this.emit('mark-updating', circuit, deadline);
-  }
-
-  /**
-   * Marks a circuit as no longer updating.
-   */
-  markNotUpdating(circuit: Circuit): void {
-    const state = this.getInternal(circuit);
-    state.isUpdatingCircuit = false;
-    state.updateDeadline = 0;
-
-    this.emit('mark-not-updating', circuit);
-  }
-
-  /**
    * Marks a circuit as just being used (updates lastUsed timestamp).
    */
   markUsed(circuit: Circuit): void {
     const state = this.getInternal(circuit);
-    state.circuitUsed = true;
     state.lastUsed = Date.now();
 
     this.emit('mark-used', circuit);
@@ -167,18 +129,16 @@ export class CircuitStateTracker extends EventEmitter<CircuitStateTrackerEvents>
       status: state.status,
       allocatedHost: state.allocatedHost,
       allocatedAt: state.allocatedAt,
-      isUpdating: state.isUpdatingCircuit,
-      updateDeadline: state.updateDeadline,
       lastUsed: state.lastUsed,
     };
   }
 
   /**
-   * Checks if a circuit has been used.
+   * Checks if a circuit has been allocated.
    */
   hasBeenUsed(circuit: Circuit): boolean {
     const state = this.getInternal(circuit);
-    return state.circuitUsed;
+    return state.status === 'allocated' || state.allocatedAt > 0;
   }
 
   /**
@@ -221,19 +181,4 @@ export class CircuitStateTracker extends EventEmitter<CircuitStateTrackerEvents>
   clear(): void {
     this.states.clear();
   }
-}
-
-/**
- * Internal state for tracking a circuit.
- */
-interface CircuitStateInternal {
-  status: CircuitStatus;
-  allocatedHost?: string;
-  allocatedAt: number;
-  isUpdatingCircuit: boolean;
-  updateDeadline: number;
-  updateLoopActive: boolean;
-  nextUpdateTime: number;
-  circuitUsed: boolean;
-  lastUsed: number;
 }
