@@ -2,13 +2,6 @@ import { decodeHostnamePubKey } from '../hiddenServices/decodeHostnamePubkey.js'
 import { Echalote } from '../echalote/index.js';
 
 /**
- * Checks if a hostname is a .keynet address
- */ // fixme: find a better home for this or maybe rename this file
-export function isKeynetAddress(hostname: string): boolean {
-  return hostname.endsWith('.keynet');
-}
-
-/**
  * Decodes a .keynet hostname to extract the Ed25519 public key
  *
  * @param host The hostname or URL host part (e.g., "jyn6dehf3ttu4lblc7tr3i23xqsz76dn2du6keptg5kyo3r6mur36vad.keynet")

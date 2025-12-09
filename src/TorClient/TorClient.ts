@@ -20,7 +20,6 @@ import { isMiddleRelay, isExitRelay } from '../utils/relayFilters';
 import { Log } from '../Log';
 import { SystemClock, IClock } from '../clock';
 import {
-  isKeynetAddress,
   decodeKeynetPubKey,
   findKeynetExitNode,
 } from '../keynet/decodeKeynetPubkey.js';
@@ -210,7 +209,7 @@ export class TorClient {
     const hostname = parsedUrl.hostname;
 
     // Check if this is a keynet request
-    if (isKeynetAddress(hostname)) {
+    if (hostname.endsWith('.keynet')) {
       return await this.fetchKeynet(url, hostname, options);
     }
 
