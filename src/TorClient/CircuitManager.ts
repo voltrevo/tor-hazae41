@@ -525,11 +525,10 @@ export class CircuitManager {
   }
 
   /**
-   * Creates a new unallocated circuit.
+   * Ensures the shared Tor connection is initialized.
+   * Handles lazy initialization and error recovery.
    */
-  private async createNewCircuit(): Promise<Circuit> {
-    await initWasm();
-
+  private async ensureTorConnection(): Promise<TorClientDuplex> {
     // Get or create the shared Tor connection
     if (!this.torConnection) {
       if (!this.torConnectionPromise) {
@@ -556,6 +555,18 @@ export class CircuitManager {
         this.torConnectionPromise = undefined;
       });
     }
+
+    return this.torConnection;
+  }
+
+  /**
+   * Creates a new unallocated circuit.
+   */
+  private async createNewCircuit(): Promise<Circuit> {
+    await initWasm();
+
+    // Ensure the shared Tor connection is ready
+    await this.ensureTorConnection();
 
     const circuit = await this.buildCircuit();
 
@@ -593,6 +604,9 @@ export class CircuitManager {
    */
   async buildKeynetCircuit(pubkey: Uint8Array): Promise<Circuit> {
     await initWasm();
+
+    // Ensure the shared Tor connection is initialized
+    await this.ensureTorConnection();
 
     // Stage 1: Build temporary 3-hop discovery circuit
     const discoveryCircuit = await this.torConnection!.createOrThrow();
