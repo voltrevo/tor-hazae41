@@ -7,6 +7,7 @@ import { CircuitStateTracker } from './CircuitStateTracker';
 import { ResourcePool } from './ResourcePool';
 import { selectRandomElement } from '../utils/random';
 import { isMiddleRelay } from '../utils/relayFilters';
+import { getErrorDetails } from '../utils/getErrorDetails';
 import {
   decodeKeynetPubKey,
   findKeynetExitNode,
@@ -122,20 +123,16 @@ export class CircuitManager {
 
   /**
    * Gets or creates a circuit for the specified hostname.
-   * For keynet hostnames (.keynet), optionally provide the service's Ed25519 public key
-   * to build a keynet circuit instead of a regular Tor circuit.
+   * For .keynet hostnames, automatically builds a keynet circuit.
+   * For regular hostnames, builds a standard Tor circuit.
    *
-   * @param hostname The hostname to route through (or .keynet hostname)
-   * @param keynetPubkey Optional: The 32-byte Ed25519 public key for keynet services
+   * @param hostname The hostname to route through
    * @returns Promise resolving to a circuit
    */
-  async getOrCreateCircuit(
-    hostname: string,
-    keynetPubkey?: Uint8Array
-  ): Promise<Circuit> {
-    // Check if this is a keynet circuit request
-    if (keynetPubkey !== undefined) {
-      return await this.getOrCreateKeynetCircuit(hostname, keynetPubkey);
+  async getOrCreateCircuit(hostname: string): Promise<Circuit> {
+    // Check if this is a keynet hostname
+    if (hostname.endsWith('.keynet')) {
+      return await this.getOrCreateKeynetCircuit(hostname);
     }
 
     // Regular circuit path
@@ -188,17 +185,14 @@ export class CircuitManager {
   }
 
   /**
-   * Gets or creates a keynet circuit for the specified hostname and service public key.
+   * Gets or creates a keynet circuit for the specified .keynet hostname.
+   * Automatically decodes the service's Ed25519 public key from the hostname.
    * Unlike regular circuits, keynet circuits are not auto-updated.
    *
    * @param hostname The .keynet hostname
-   * @param pubkey The 32-byte Ed25519 public key of the keynet service
    * @returns Promise resolving to a keynet circuit
    */
-  private async getOrCreateKeynetCircuit(
-    hostname: string,
-    pubkey: Uint8Array
-  ): Promise<Circuit> {
+  private async getOrCreateKeynetCircuit(hostname: string): Promise<Circuit> {
     // Check if we already have a circuit for this hostname
     const existingCircuit = this.hostCircuitMap.get(hostname);
     if (existingCircuit) {
@@ -212,10 +206,7 @@ export class CircuitManager {
     }
 
     // Build new keynet circuit
-    const allocationPromise = this.buildAndAllocateKeynetCircuit(
-      hostname,
-      pubkey
-    );
+    const allocationPromise = this.buildAndAllocateKeynetCircuit(hostname);
     this.circuitAllocationTasks.set(hostname, allocationPromise);
     try {
       return await allocationPromise;
@@ -226,26 +217,60 @@ export class CircuitManager {
 
   /**
    * Builds and allocates a keynet circuit to a hostname.
+   * Decodes the service's Ed25519 public key from the hostname.
+   * Includes retry logic for circuit building failures.
    */
   private async buildAndAllocateKeynetCircuit(
-    hostname: string,
-    pubkey: Uint8Array
+    hostname: string
   ): Promise<Circuit> {
-    const circuit = await this.buildKeynetCircuit(pubkey);
-    this.logMessage(hostname, 'Allocated keynet circuit');
+    // Decode the keynet address to get the Ed25519 public key
+    const pubkey = await decodeKeynetPubKey(hostname);
+    this.logMessage(
+      hostname,
+      `Decoded public key (first 8 bytes): ${Buffer.from(pubkey.slice(0, 8)).toString('hex')}`
+    );
 
-    // Initialize circuit state first (required before allocate)
-    this.circuitStateTracker.initialize(circuit);
+    // Retry logic for building keynet circuit
+    const maxAttempts = 5;
+    let lastError: unknown;
 
-    // Allocate to hostname using CircuitStateTracker (no auto-updates for keynet)
-    this.circuitStateTracker.allocate(circuit, hostname);
-    this.circuitOwnershipMap.set(circuit, hostname);
-    this.hostCircuitMap.set(hostname, circuit);
+    for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+      try {
+        this.logMessage(
+          hostname,
+          `Building keynet circuit (attempt ${attempt}/${maxAttempts})`
+        );
+        const circuit = await this.buildKeynetCircuit(pubkey);
+        this.logMessage(hostname, 'Allocated keynet circuit');
 
-    // Mark as used but don't schedule auto-updates for keynet circuits
-    this.circuitStateTracker.markUsed(circuit);
+        // Initialize circuit state first (required before allocate)
+        this.circuitStateTracker.initialize(circuit);
 
-    return circuit;
+        // Allocate to hostname using CircuitStateTracker (no auto-updates for keynet)
+        this.circuitStateTracker.allocate(circuit, hostname);
+        this.circuitOwnershipMap.set(circuit, hostname);
+        this.hostCircuitMap.set(hostname, circuit);
+
+        // Mark as used but don't schedule auto-updates for keynet circuits
+        this.circuitStateTracker.markUsed(circuit);
+
+        return circuit;
+      } catch (error) {
+        lastError = error;
+        // Only log details on final attempt
+        if (attempt === maxAttempts) {
+          this.logMessage(
+            hostname,
+            `Keynet circuit build failed after ${maxAttempts} attempts: ${getErrorDetails(error)}`,
+            'error'
+          );
+        }
+      }
+    }
+
+    throw new Error(
+      `Failed to build keynet circuit after ${maxAttempts} attempts. Last error: ${getErrorDetails(lastError)}`
+    );
   }
 
   /**

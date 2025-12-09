@@ -19,8 +19,6 @@ import { selectRandomElement } from '../utils/random';
 import { isMiddleRelay, isExitRelay } from '../utils/relayFilters';
 import { Log } from '../Log';
 import { SystemClock, IClock } from '../clock';
-import { decodeKeynetPubKey } from '../keynet/decodeKeynetPubkey.js';
-import { initWasm } from './initWasm';
 
 /**
  * Configuration options for the TorClient.
@@ -192,6 +190,9 @@ export class TorClient {
    * The circuit is reused across multiple requests and automatically updated
    * based on the configured update interval and advance settings.
    *
+   * For .keynet addresses, automatically builds a keynet circuit.
+   * For regular addresses, builds a standard Tor circuit.
+   *
    * Use this method when you have multiple requests or want to maintain
    * a long-lived Tor connection with automatic circuit management.
    *
@@ -205,22 +206,22 @@ export class TorClient {
     const parsedUrl = new URL(url);
     const hostname = parsedUrl.hostname;
 
-    // Check if this is a keynet request
-    if (hostname.endsWith('.keynet')) {
-      return await this.fetchKeynet(url, hostname, options);
-    }
-
-    // Normal Tor request path
+    // Determine port and protocol
+    // Keynet addresses don't support HTTPS
+    const isKeynet = hostname.endsWith('.keynet');
     const port = parsedUrl.port
       ? parseInt(parsedUrl.port, 10)
-      : parsedUrl.protocol === 'https:'
-        ? 443
-        : 80;
-    const isHttps = parsedUrl.protocol === 'https:';
+      : isKeynet
+        ? 80
+        : parsedUrl.protocol === 'https:'
+          ? 443
+          : 80;
+    const isHttps = parsedUrl.protocol === 'https:' && !isKeynet;
 
     this.logMessage(`Target: ${hostname}:${port} (HTTPS: ${isHttps})`);
 
     try {
+      // CircuitManager automatically detects .keynet and builds appropriate circuit
       const circuit = await this.circuitManager.getOrCreateCircuit(hostname);
 
       // Mark circuit as used to schedule updates
@@ -278,81 +279,6 @@ export class TorClient {
       throw error;
     }
   }
-
-  /**
-   * Makes a fetch request to a .keynet address.
-   * Uses a 4-hop circuit (Guard → Middle → Middle2 → Keynet Node)
-   * to preserve anonymity while discovering the keynet service.
-   *
-   * @param url The full keynet URL
-   * @param hostname The .keynet hostname
-   * @param options Optional fetch options
-   * @returns Promise resolving to the fetch Response
-   * @throws Error if keynet exit node cannot be found
-   */
-  private async fetchKeynet(
-    url: string,
-    hostname: string,
-    options?: RequestInit
-  ): Promise<Response> {
-    await initWasm();
-    this.logMessage(`[Keynet] Decoding keynet address: ${hostname}`);
-
-    try {
-      // Decode the keynet address to get the Ed25519 public key
-      const pubkey = await decodeKeynetPubKey(hostname);
-      this.logMessage(
-        `[Keynet] Decoded public key (first 8 bytes): ${Buffer.from(pubkey.slice(0, 8)).toString('hex')}`
-      );
-
-      // Get or create a keynet circuit for this hostname
-      this.logMessage(
-        '[Keynet] Getting or creating 4-hop circuit to keynet exit'
-      );
-      const circuit = await this.circuitManager.getOrCreateCircuit(
-        hostname,
-        pubkey
-      );
-
-      // Mark circuit as used
-      this.circuitManager.markCircuitUsed(hostname);
-
-      try {
-        // Now make the HTTP request
-        this.logMessage(`[Keynet] Opening stream to ${hostname}:80`);
-        const ttcp = await circuit.openOrThrow(hostname, 80);
-
-        this.logMessage(`[Keynet] Making HTTP request`);
-        const response = await fetch(url, {
-          ...options,
-          stream: ttcp.outer,
-        });
-
-        this.logMessage(`[Keynet] Request completed successfully`, 'success');
-        return response;
-      } catch (error) {
-        // If circuit fails, clear it so a new one will be created on next request
-        this.circuitManager.clearCircuit(hostname);
-        throw error;
-      }
-    } catch (error) {
-      this.logMessage(
-        `[Keynet] Request failed: ${(error as Error).message}`,
-        'error'
-      );
-      throw error;
-    }
-  }
-
-  /**
-   * Builds a circuit for keynet discovery: Guard (Snowflake) → Middle → Middle2
-   * This circuit is used to fetch consensus candidates and identify the keynet exit node.
-   *
-   * Design Note: Keynet circuits are built separately from CircuitBuilder because they require
-   * a special 2-stage discovery process:
-   * 1. Build a temporary 3-hop discovery circuit to fetch relay consensus
-   * 2. Find the keynet exit node matching the service's Ed25519 key
-   * 3. Build the final 4-hop circuit extending through that specific exit
 
   /**
    * Updates the circuit with a deadline for graceful transition.
