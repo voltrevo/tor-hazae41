@@ -63,9 +63,16 @@ export class CircuitBuilder extends EventEmitter<CircuitBuilderEvents> {
    * Builds a new circuit through the Tor network.
    * Selects random middle and exit relays, extends circuit through them.
    *
+   * For normal requests: Guard → Middle → Exit
+   * For keynet: Can pass finalHop to extend to Guard → Middle → Keynet Node
+   *
+   * @param finalHop Optional specific relay to extend to as the final hop (e.g., keynet exit node)
    * @throws Error if circuit building fails after all retry attempts
    */
-  async buildCircuit(): Promise<Circuit> {
+  async buildCircuit(
+    finalHop?: Echalote.Consensus.Microdesc // fixme: we forgot to use this?
+  ): Promise<Circuit> {
+    // FIXME: nested trys, complexity
     await initWasm();
 
     this.log.info('[CircuitBuilder] Creating circuit');
@@ -79,16 +86,20 @@ export class CircuitBuilder extends EventEmitter<CircuitBuilderEvents> {
 
       // Select relay candidates
       const middles = consensus.microdescs.filter(isMiddleRelay);
-      const exits = consensus.microdescs.filter(isExitRelay);
+      const exits = finalHop
+        ? undefined
+        : consensus.microdescs.filter(isExitRelay);
 
       this.log.info(
-        `[CircuitBuilder] Found ${middles.length} middle and ${exits.length} exit relays`
+        `[CircuitBuilder] Found ${middles.length} middle relays${exits ? ` and ${exits.length} exit relays` : ''}`
       );
 
-      if (middles.length === 0 || exits.length === 0) {
-        throw new Error(
-          `Insufficient relays: ${middles.length} middles, ${exits.length} exits`
-        );
+      if (middles.length === 0) {
+        throw new Error(`Insufficient relays: ${middles.length} middles`);
+      }
+
+      if (!finalHop && exits && exits.length === 0) {
+        throw new Error('Insufficient relays: 0 exits');
       }
 
       // Try building circuit with retries
@@ -106,8 +117,16 @@ export class CircuitBuilder extends EventEmitter<CircuitBuilderEvents> {
             // Extend through middle relay
             await this.extendCircuit(circuit, middles, 'middle');
 
-            // Extend through exit relay
-            await this.extendCircuit(circuit, exits, 'exit');
+            // Extend through final hop (exit relay or keynet node)
+            if (finalHop) {
+              await this.extendCircuitThroughRelay(
+                circuit,
+                finalHop,
+                'final hop'
+              );
+            } else {
+              await this.extendCircuit(circuit, exits!, 'exit');
+            }
 
             this.log.info('[CircuitBuilder] Circuit built successfully');
             this.emit('circuit-created', circuit);
@@ -117,7 +136,7 @@ export class CircuitBuilder extends EventEmitter<CircuitBuilderEvents> {
             try {
               (circuit as unknown as Disposable)[Symbol.dispose]();
             } catch {
-              // Ignore disposal errors
+              // Ignore disposal errors // fixme: log, deduplicate ignoring dispose errors
             }
             throw e;
           }
@@ -142,7 +161,7 @@ export class CircuitBuilder extends EventEmitter<CircuitBuilderEvents> {
       try {
         (consensusCircuit as unknown as Disposable)[Symbol.dispose]();
       } catch {
-        // Ignore disposal errors
+        // Ignore disposal errors // fixme: log
       }
     }
   }
@@ -171,6 +190,34 @@ export class CircuitBuilder extends EventEmitter<CircuitBuilderEvents> {
         circuit,
         candidate
       );
+      await circuit.extendOrThrow(
+        microdesc,
+        AbortSignal.timeout(this.extendTimeout)
+      );
+      this.log.info(`[CircuitBuilder] Extended through ${relayType}`);
+      this.emit('relay-extended', relayType);
+    } catch (e) {
+      this.log.error(
+        `[CircuitBuilder] Extension through ${relayType} failed: ${getErrorDetails(e)}`
+      );
+      throw e;
+    }
+  }
+
+  /**
+   * Extends a circuit through a specific relay (already fetched).
+   * Used for extending through keynet exit nodes or other pre-determined relays.
+   *
+   * @throws Error if extension fails
+   */
+  private async extendCircuitThroughRelay(
+    circuit: Circuit,
+    microdesc: Echalote.Consensus.Microdesc,
+    relayType: string
+  ): Promise<void> {
+    this.log.info(`[CircuitBuilder] Extending through ${relayType}`);
+
+    try {
       await circuit.extendOrThrow(
         microdesc,
         AbortSignal.timeout(this.extendTimeout)
