@@ -341,12 +341,13 @@ export class ResourcePool<R> extends EventEmitter<ResourcePoolEvents<R>> {
         );
 
         if (deficit <= 0) {
-          // At or above target size, just wait a bit before checking again
+          // At or above target size, wait for events instead of polling
+          // (resource-acquired) which might increase deficit
           this.log?.info?.(
-            `✅ maintenanceLoop: At or above target, waiting 1s before next check`
+            `✅ maintenanceLoop: At or above target, waiting for resource acquisition...`
           );
           try {
-            await this.clock.delay(1000);
+            await this.waitForMaintenanceEvent(signal);
           } catch {
             // Abort signal fired or clock stopped
             return;
@@ -477,5 +478,44 @@ export class ResourcePool<R> extends EventEmitter<ResourcePoolEvents<R>> {
         // Disposal error, but we already tried
       }
     }
+  }
+
+  /**
+   * Waits for an event that would trigger maintenance to recheck status.
+   * Events that can trigger:
+   * - 'resource-acquired': when a buffered resource is acquired, deficit increases
+   * - abort signal: when pool is disposed
+   *
+   * No polling fallback - purely event-driven.
+   */
+  private waitForMaintenanceEvent(signal: AbortSignal): Promise<void> {
+    return new Promise((resolve, reject) => {
+      if (signal.aborted) {
+        reject(new Error('Aborted'));
+        return;
+      }
+
+      let settled = false;
+
+      const cleanup = () => {
+        if (settled) return;
+        settled = true;
+        this.off('resource-acquired', onAcquire);
+        signal.removeEventListener('abort', onAbort);
+      };
+
+      const onAbort = () => {
+        cleanup();
+        reject(new Error('Aborted'));
+      };
+
+      const onAcquire = () => {
+        cleanup();
+        resolve();
+      };
+
+      this.on('resource-acquired', onAcquire);
+      signal.addEventListener('abort', onAbort);
+    });
   }
 }
