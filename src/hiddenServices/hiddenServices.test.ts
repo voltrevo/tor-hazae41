@@ -2,7 +2,7 @@ import { assert, test } from '@hazae41/phobos';
 import { never } from './never.js';
 import { hash } from './hash.js';
 import { decodeOnionPubKey } from './decodeOnionPubkey.js';
-import { decodeHostnamePubKey } from './decodeHostnamePubkey.js';
+import { decodeOnionStylePubKey } from './decodeOnionStylePubkey.js';
 import { Base32 } from './Base32.js';
 
 test('never() throws with message', async () => {
@@ -117,9 +117,9 @@ test('decodeOnionPubkey() with invalid hostname format', async () => {
   }
 });
 
-test('decodeHostnamePubkey() with invalid format - wrong length', async () => {
+test('decodeOnionStylePubkey() with invalid format - wrong length', async () => {
   try {
-    await decodeHostnamePubKey('short');
+    await decodeOnionStylePubKey('short');
     assert(false, 'should have thrown');
   } catch (error) {
     assert(error instanceof Error);
@@ -127,18 +127,18 @@ test('decodeHostnamePubkey() with invalid format - wrong length', async () => {
   }
 });
 
-test('decodeHostnamePubkey() with invalid format - invalid characters', async () => {
+test('decodeOnionStylePubkey() with invalid format - invalid characters', async () => {
   try {
     // 56 chars but with invalid base32 chars
     const invalid = 'a'.repeat(55) + '!'; // '!' is not valid base32
-    await decodeHostnamePubKey(invalid);
+    await decodeOnionStylePubKey(invalid);
     assert(false, 'should have thrown');
   } catch (error) {
     assert(error instanceof Error);
   }
 });
 
-test('decodeHostnamePubkey() with invalid version', async () => {
+test('decodeOnionStylePubkey() with invalid version', async () => {
   // Create valid 56 char base32 string with version != 0x03
   const pubkey = new Uint8Array(32);
   pubkey[0] = 1;
@@ -155,19 +155,19 @@ test('decodeHostnamePubkey() with invalid version', async () => {
   const hostname = Base32.toString(fullData);
 
   try {
-    await decodeHostnamePubKey(hostname);
+    await decodeOnionStylePubKey(hostname);
     assert(false, 'should have thrown');
   } catch (error) {
     assert(error instanceof Error);
     assert(
       (error as Error).message.includes(
-        'Unsupported tor pubkey hostname version'
+        'Unsupported tor pubkey onion-style version'
       )
     );
   }
 });
 
-test('decodeHostnamePubkey() with correct checksum', async () => {
+test('decodeOnionStylePubkey() with correct checksum', async () => {
   // Create a completely valid v3 address
   const pubkey = new Uint8Array(32);
   pubkey[0] = 42;
@@ -191,7 +191,7 @@ test('decodeHostnamePubkey() with correct checksum', async () => {
   fullData.set(checksumAndVersion, pubkey.length);
 
   const hostname = Base32.toString(fullData);
-  const result = await decodeHostnamePubKey(hostname);
+  const result = await decodeOnionStylePubKey(hostname);
 
   assert(result instanceof Uint8Array);
   assert(result.length === 32);

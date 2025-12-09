@@ -1,18 +1,18 @@
 import { sha3 } from 'hash-wasm';
 import { Base32 } from './Base32.js';
 
-export async function decodeHostnamePubKey(
-  hostname: string
+export async function decodeOnionStylePubKey(
+  encodedKey: string
 ): Promise<Uint8Array> {
   // v3 addresses are exactly 56 base32 chars
-  if (!/^[a-z2-7]{56}$/.test(hostname)) {
+  if (!/^[a-z2-7]{56}$/.test(encodedKey)) {
     throw new Error(
-      'Invalid v3 tor pubkey hostname format (expect 56 base32 chars).'
+      'Invalid v3 tor pubkey onion-style format (expect 56 base32 chars).'
     );
   }
 
   // 2) Base32-decode → 35 bytes (32 pubkey | 2 checksum | 1 version)
-  const decoded = Base32.fromString(hostname);
+  const decoded = Base32.fromString(encodedKey);
   if (decoded.length !== 35)
     throw new Error('Decoded length must be 35 bytes.');
 
@@ -22,7 +22,9 @@ export async function decodeHostnamePubKey(
 
   // 3) Version must be 0x03
   if (version !== 0x03)
-    throw new Error('Unsupported tor pubkey hostname version (expected 0x03).');
+    throw new Error(
+      'Unsupported tor pubkey onion-style version (expected 0x03).'
+    );
 
   // 4) Verify checksum = first 2 bytes of SHA3-256(".onion checksum" || pubkey || version)
   const prefix = new TextEncoder().encode('.onion checksum');

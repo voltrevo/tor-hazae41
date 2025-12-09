@@ -28,14 +28,6 @@ export type CircuitBuilderEvents = {
  * @internal This is an internal class and should not be used directly by external consumers.
  */
 export class CircuitBuilder extends EventEmitter<CircuitBuilderEvents> {
-  private readonly torConnection: TorClientDuplex;
-  private readonly getConsensus: (
-    circuit: Circuit
-  ) => Promise<Echalote.Consensus>;
-  private readonly log: Log;
-  private readonly maxAttempts: number;
-  private readonly extendTimeout: number;
-
   /**
    * Creates a new circuit builder instance.
    *
@@ -46,18 +38,15 @@ export class CircuitBuilder extends EventEmitter<CircuitBuilderEvents> {
    * @param extendTimeout Timeout for circuit extension in milliseconds (default: 10000)
    */
   constructor(
-    torConnection: TorClientDuplex,
-    getConsensus: (circuit: Circuit) => Promise<Echalote.Consensus>,
-    log: Log,
-    maxAttempts: number = 10,
-    extendTimeout: number = 10000
+    private readonly torConnection: TorClientDuplex,
+    private readonly getConsensus: (
+      circuit: Circuit
+    ) => Promise<Echalote.Consensus>,
+    private readonly log: Log,
+    private readonly maxAttempts: number = 10,
+    private readonly extendTimeout: number = 10000
   ) {
     super();
-    this.torConnection = torConnection;
-    this.getConsensus = getConsensus;
-    this.log = log;
-    this.maxAttempts = maxAttempts;
-    this.extendTimeout = extendTimeout;
   }
 
   /**
@@ -230,8 +219,7 @@ export class CircuitBuilder extends EventEmitter<CircuitBuilderEvents> {
     circuit: Circuit,
     hostname: string
   ) {
-    const host = hostname; // FIXME: host vs hostname
-    const pubkey = await decodeKeynetPubKey(host);
+    const pubkey = await decodeKeynetPubKey(hostname);
 
     const candidates = consensus.microdescs.filter(
       // keynet servers choose an rsa key such that the first byte of their rsa
