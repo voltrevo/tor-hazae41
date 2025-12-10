@@ -17,12 +17,12 @@
     "declarationMap": true,
     "sourceMap": true,
     "outDir": "./dist",
-    "rootDir": "./src",
+    "rootDir": ".",
     "types": ["node", "vite/client"],
     "paths": {
       "tor-hazae41/storage": ["./src/storage/index-node.ts"]
     }
   },
-  "include": ["src/**/*"],
-  "exclude": ["node_modules", "dist", "demo.ts", "index.html", "public"]
+  "include": ["src/**/*", "demo.ts"],
+  "exclude": ["node_modules", "dist", "index.html", "public"]
 }
