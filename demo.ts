@@ -62,9 +62,8 @@ const log = new Log({
   rawLog: (level, ...args) => {
     const output = document.getElementById('output');
     if (output) {
-      const timestamp = new Date().toLocaleTimeString();
       const message = args.join(' ');
-      output.textContent += `[${timestamp}] ${message}\n`;
+      output.textContent += `${message}\n`;
       output.scrollTop = output.scrollHeight;
     }
     // Also log to console
