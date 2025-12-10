@@ -1,4 +1,5 @@
 import type { IStorage } from './types.js';
+import { assert } from '../utils/assert.js';
 
 export function createMemoryStorage(): IStorage {
   const data = new Map<string, Uint8Array>();
@@ -6,9 +7,7 @@ export function createMemoryStorage(): IStorage {
   return {
     async read(key: string): Promise<Uint8Array> {
       const value = data.get(key);
-      if (value === undefined) {
-        throw new Error(`Key not found: ${key}`);
-      }
+      assert(value !== undefined, `Key not found: ${key}`);
       return value;
     },
 

@@ -1,5 +1,6 @@
 import { IClock } from './IClock';
 import { Log } from '../Log';
+import { assert } from '../utils/assert.js';
 
 interface Timer {
   id: number;
@@ -95,9 +96,7 @@ export class VirtualClock implements IClock {
   }
 
   async advanceTime(amount: number): Promise<void> {
-    if (this.automated) {
-      throw new Error('Cannot manually advance time in automated mode');
-    }
+    assert(!this.automated, 'Cannot manually advance time in automated mode');
 
     const targetTime = this.currentTime + amount;
     await this.executeTimersUntil(targetTime);
@@ -151,9 +150,7 @@ export class VirtualClock implements IClock {
   }
 
   async run(): Promise<void> {
-    if (!this.automated) {
-      throw new Error('Cannot run manual clock in automated mode');
-    }
+    assert(this.automated, 'Cannot run manual clock in automated mode');
 
     if (this.running) {
       return;

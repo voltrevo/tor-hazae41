@@ -1,6 +1,7 @@
 import { Base64 } from '@hazae41/base64';
 import { Consensus } from '../echalote/index.js';
 import { hash } from './hash.js';
+import { assert } from '../utils/assert.js';
 
 export class HiddenServicesDir {
   constructor(public consensus: Consensus) {}
@@ -86,9 +87,7 @@ function asInt(s: string | undefined, default_: number) {
     return default_;
   }
 
-  if (!/^[0-9]+$/.test(s)) {
-    throw new Error(`Expected int: ${s}`);
-  }
+  assert(/^[0-9]+$/.test(s), `Expected int: ${s}`);
 
   return Number(s);
 }

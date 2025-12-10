@@ -11,10 +11,10 @@
  * const selected = selectRandomElement(items);
  * ```
  */
+import { assert } from './assert.js';
+
 export function selectRandomElement<T>(array: T[]): T {
-  if (array.length === 0) {
-    throw new Error('Cannot select from empty array');
-  }
+  assert(array.length !== 0, 'Cannot select from empty array');
   const index = Math.floor(Math.random() * array.length);
   return array[index];
 }
