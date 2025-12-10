@@ -67,7 +67,7 @@
     "lint:fix": "eslint . --fix",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "commit-checks": "concurrently \"npm test\" \"npm run tsc\" \"npm run lint\" \"npm run format:check\"",
+    "commit-checks": "concurrently \"npm test\" \"npm run tsc\" \"npm run lint\" \"npm run format:check\" && echo && echo \"✅ All checks passed! Remember to confirm with the user before committing.\"",
     "tsc": "tsc --noEmit"
   },
   "c8": {
