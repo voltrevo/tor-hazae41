@@ -37,7 +37,7 @@ export interface CircuitManagerOptions {
 export interface CircuitStatus {
   hasCircuit: boolean;
   isCreating: boolean;
-  idleTime: number;
+  lastUsed: number;
 }
 
 /**
@@ -229,7 +229,7 @@ export class CircuitManager {
       result['[pool]'] = {
         hasCircuit: this.circuitPool.size() > 0,
         isCreating: this.circuitPool.inFlightCount() > 0,
-        idleTime: 0,
+        lastUsed: 0,
       };
       return result;
     }
@@ -241,7 +241,6 @@ export class CircuitManager {
    * Gets status for a specific host's circuit.
    */
   private getCircuitStatusForHost(hostname: string): CircuitStatus {
-    const now = Date.now();
     const circuit = this.hostCircuitMap.get(hostname);
     const state = circuit ? this.circuitStates.get(circuit) : undefined;
 
@@ -249,14 +248,14 @@ export class CircuitManager {
       return {
         hasCircuit: false,
         isCreating: this.circuitAllocationTasks.has(hostname),
-        idleTime: 0,
+        lastUsed: 0,
       };
     }
 
     return {
       hasCircuit: !!circuit,
       isCreating: this.circuitAllocationTasks.has(hostname) && !circuit,
-      idleTime: state.lastUsed > 0 ? now - state.lastUsed : 0,
+      lastUsed: state.lastUsed,
     };
   }
 
