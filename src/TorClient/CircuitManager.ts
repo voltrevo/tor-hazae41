@@ -51,6 +51,12 @@ export interface CircuitState {
   isCreating: boolean;
   /** Absolute timestamp when circuit will expire (milliseconds) */
   expiry: number;
+  /** Reference count for circuit usage (incremented for CircuitManager ownership + active requests) */
+  refCount: number;
+  /** When the circuit was created (timestamp in milliseconds) */
+  createdAt: number;
+  /** Timer for 2x lifetime safety check to detect undisposed circuits */
+  safetyCheckTimer?: unknown;
 }
 
 /**
@@ -103,9 +109,71 @@ export class CircuitManager {
   }
 
   /**
+   * Increments the reference count for a circuit.
+   * Called when CircuitManager acquires the circuit or when a request starts using it.
+   */
+  private incrementRefCount(circuit: Circuit): void {
+    const state = this.circuitStates.get(circuit);
+    if (!state) {
+      this.log.error(
+        `Cannot increment refCount for unknown circuit ${circuit.id}`
+      );
+      return;
+    }
+    state.refCount++;
+  }
+
+  /**
+   * Decrements the reference count for a circuit.
+   * When refCount reaches 0, the circuit is disposed.
+   * Called when CircuitManager clears the circuit or when a request completes.
+   */
+  private decrementRefCount(circuit: Circuit): void {
+    const state = this.circuitStates.get(circuit);
+    if (!state) {
+      this.log.error(
+        `Cannot decrement refCount for unknown circuit ${circuit.id}`
+      );
+      return;
+    }
+
+    state.refCount--;
+
+    if (state.refCount < 0) {
+      this.log.error(
+        `Circuit ${circuit.id} refCount went negative (${state.refCount})`
+      );
+      state.refCount = 0; // Clamp to 0
+    }
+
+    if (state.refCount === 0) {
+      // Dispose the circuit when refCount hits 0
+      const hostname = this.circuitOwnershipMap.get(circuit) || 'unknown';
+      this.log.info(
+        `[${hostname}] Circuit refCount reached 0, disposing circuit ${circuit.id}`
+      );
+
+      // Cancel timers before disposing
+      if (state.lifetimeTimer) {
+        this.clock.clearTimeout(state.lifetimeTimer);
+      }
+      if (state.safetyCheckTimer) {
+        this.clock.clearTimeout(state.safetyCheckTimer);
+      }
+
+      // Actually dispose the circuit
+      circuit[Symbol.dispose]();
+
+      // Remove from tracking maps
+      this.circuitStates.delete(circuit);
+      this.circuitOwnershipMap.delete(circuit);
+    }
+  }
+
+  /**
    * Gets or creates a circuit for the specified hostname.
    */
-  async getOrCreateCircuit(hostname: string): Promise<Circuit> {
+  private async getOrCreateCircuit(hostname: string): Promise<Circuit> {
     // Check if we already have a circuit for this host
     const existingCircuit = this.hostCircuitMap.get(hostname);
     if (existingCircuit) {
@@ -128,6 +196,29 @@ export class CircuitManager {
       return await allocationPromise;
     } finally {
       this.circuitAllocationTasks.delete(hostname);
+    }
+  }
+
+  /**
+   * Gets or creates a circuit and safely manages its reference count during async operation.
+   * The circuit is automatically incremented before calling the callback and decremented after,
+   * ensuring safe usage even if the callback throws an error.
+   *
+   * @param hostname The hostname to allocate a circuit for
+   * @param callback Async function that uses the circuit
+   * @returns Promise resolving to the callback's return value
+   */
+  async useCircuit<T>(
+    hostname: string,
+    callback: (circuit: Circuit) => Promise<T>
+  ): Promise<T> {
+    const circuit = await this.getOrCreateCircuit(hostname);
+    this.incrementRefCount(circuit);
+
+    try {
+      return await callback(circuit);
+    } finally {
+      this.decrementRefCount(circuit);
     }
   }
 
@@ -180,6 +271,8 @@ export class CircuitManager {
       hasCircuit: true,
       isCreating: false,
       expiry: now + this.maxCircuitLifetime,
+      refCount: 1, // CircuitManager owns the initial reference
+      createdAt: now,
     });
 
     this.circuitOwnershipMap.set(circuit, hostname);
@@ -193,6 +286,9 @@ export class CircuitManager {
 
   /**
    * Clears the circuit for a specific host (or all if hostname is undefined).
+   * This removes CircuitManager's reference to the circuit. If no active requests
+   * are using it, the circuit will be disposed immediately. Otherwise, it will be
+   * disposed when the last active request completes.
    */
   clearCircuit(hostname?: string): void {
     if (hostname === undefined) {
@@ -203,18 +299,19 @@ export class CircuitManager {
 
     const circuit = this.hostCircuitMap.get(hostname);
     if (circuit) {
-      circuit[Symbol.dispose]();
-
-      // Clear ownership tracking
+      // Remove from ownership tracking
       this.hostCircuitMap.delete(hostname);
-      this.circuitOwnershipMap.delete(circuit);
-      this.circuitStates.delete(circuit);
 
-      // Cancel lifetime timer
+      // Cancel lifetime timer before decrementing
       const state = this.circuitStates.get(circuit);
       if (state?.lifetimeTimer) {
         this.clock.clearTimeout(state.lifetimeTimer);
+        state.lifetimeTimer = undefined;
       }
+
+      // Decrement CircuitManager's reference
+      // This may trigger disposal if refCount reaches 0
+      this.decrementRefCount(circuit);
 
       this.log.info(`[${hostname}] Circuit cleared`);
     }
@@ -240,6 +337,8 @@ export class CircuitManager {
         hasCircuit: this.circuitPool.size() > 0,
         isCreating: this.circuitPool.inFlightCount() > 0,
         expiry: 0,
+        refCount: 0,
+        createdAt: 0,
       };
       return result;
     }
@@ -262,6 +361,8 @@ export class CircuitManager {
         hasCircuit: false,
         isCreating: this.circuitAllocationTasks.has(hostname),
         expiry: 0,
+        refCount: 0,
+        createdAt: 0,
       };
     }
 
@@ -407,6 +508,7 @@ export class CircuitManager {
 
   /**
    * Schedules disposal of a circuit at the end of its lifetime.
+   * Also sets a 2x lifetime safety check to detect if circuit wasn't disposed.
    */
   private scheduleCircuitDisposal(circuit: Circuit, hostname: string) {
     const state = this.circuitStates.get(circuit);
@@ -422,5 +524,17 @@ export class CircuitManager {
       this.log.info(`[${hostname}] Circuit reached max lifetime, disposing`);
       this.clearCircuit(hostname);
     }, this.maxCircuitLifetime);
+
+    // Schedule a safety check at 2x lifetime to detect undisposed circuits
+    const safetyCheckDelay = this.maxCircuitLifetime * 2;
+    state.safetyCheckTimer = this.clock.setTimeout(() => {
+      // At this point, the circuit should have been disposed
+      // Check if it still exists and hasn't been closed
+      if (!circuit.closed) {
+        this.log.error(
+          `[${hostname}] Circuit ${circuit.id} was not disposed after 2x lifetime (${safetyCheckDelay}ms)`
+        );
+      }
+    }, safetyCheckDelay);
   }
 }

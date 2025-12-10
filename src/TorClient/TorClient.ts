@@ -204,49 +204,53 @@ export class TorClient {
     this.log.info(`Target: ${hostname}:${port} (HTTPS: ${isHttps})`);
 
     try {
-      const circuit = await this.circuitManager.getOrCreateCircuit(hostname);
+      return await this.circuitManager.useCircuit(hostname, async circuit => {
+        this.log.info(`Opening connection to ${hostname}:${port}`);
+        const ttcp = await circuit.openOrThrow(hostname, port);
 
-      this.log.info(`Opening connection to ${hostname}:${port}`);
-      const ttcp = await circuit.openOrThrow(hostname, port);
+        if (isHttps) {
+          this.log.info('Setting up TLS connection');
+          const ciphers = [
+            Ciphers.TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384,
+            Ciphers.TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384,
+          ];
+          const ttls = new TlsClientDuplex({ host_name: hostname, ciphers });
 
-      if (isHttps) {
-        this.log.info('Setting up TLS connection');
-        const ciphers = [
-          Ciphers.TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384,
-          Ciphers.TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384,
-        ];
-        const ttls = new TlsClientDuplex({ host_name: hostname, ciphers });
+          // Connect TLS streams
+          ttcp.outer.readable
+            .pipeTo(ttls.inner.writable)
+            .catch((error: unknown) => {
+              this.log.error(
+                `TLS stream connection failed: ${getErrorDetails(error)}`
+              );
+            });
+          ttls.inner.readable
+            .pipeTo(ttcp.outer.writable)
+            .catch((error: unknown) => {
+              this.log.error(
+                `TLS stream connection failed: ${getErrorDetails(error)}`
+              );
+            });
 
-        // Connect TLS streams
-        ttcp.outer.readable.pipeTo(ttls.inner.writable).catch(error => {
-          this.log.error(
-            `TLS stream connection failed: ${getErrorDetails(error)}`
-          );
-        });
-        ttls.inner.readable.pipeTo(ttcp.outer.writable).catch(error => {
-          this.log.error(
-            `TLS stream connection failed: ${getErrorDetails(error)}`
-          );
-        });
+          this.log.info('Making HTTPS request through Tor');
+          const response = await fetch(url, {
+            ...options,
+            stream: ttls.outer,
+          });
 
-        this.log.info('Making HTTPS request through Tor');
-        const response = await fetch(url, {
-          ...options,
-          stream: ttls.outer,
-        });
+          this.log.info('Request completed successfully');
+          return response;
+        } else {
+          this.log.info('Making HTTP request through Tor');
+          const response = await fetch(url, {
+            ...options,
+            stream: ttcp.outer,
+          });
 
-        this.log.info('Request completed successfully');
-        return response;
-      } else {
-        this.log.info('Making HTTP request through Tor');
-        const response = await fetch(url, {
-          ...options,
-          stream: ttcp.outer,
-        });
-
-        this.log.info('Request completed successfully');
-        return response;
-      }
+          this.log.info('Request completed successfully');
+          return response;
+        }
+      });
     } catch (error) {
       this.log.error(`Request failed: ${(error as Error).message}`);
 
