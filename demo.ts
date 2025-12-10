@@ -78,7 +78,7 @@ const log = new Log({
 });
 
 function updateStatus(): void {
-  const statusElement = document.getElementById('status');
+  const statusElement = document.getElementById('circuitStatus');
   const circuitStatusElement = document.getElementById('circuitStatus');
   if (!statusElement || !torClient) return;
 
