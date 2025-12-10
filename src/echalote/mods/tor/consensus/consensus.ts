@@ -987,7 +987,7 @@ export namespace Consensus {
 
       assert(
         response.ok,
-        `Could not fetch ${response.status} ${response.statusText}: ${await response.text()}`
+        `Could not fetch ${response.status} ${response.statusText}`
       );
 
       const buffer = await response.arrayBuffer();
