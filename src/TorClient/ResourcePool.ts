@@ -1,7 +1,7 @@
 import limit from 'p-limit';
-import { EventEmitter } from './EventEmitter';
 import { IClock } from '../clock/IClock';
 import { Log } from '../Log';
+import { EventEmitter } from './EventEmitter';
 
 /**
  * Factory function type for creating resources.
@@ -17,6 +17,8 @@ export interface ResourcePoolOptions<R> {
   factory: ResourceFactory<R>;
   /** Clock instance for timing (required, use VirtualClock for tests) */
   clock: IClock;
+  /** Logger instance for diagnostics */
+  log: Log;
   /** Desired pool size to maintain (default: 0) */
   targetSize?: number;
   /** Minimum number of in-flight creations to maintain during acquire() (default: 0) */
@@ -29,8 +31,6 @@ export interface ResourcePoolOptions<R> {
   backoffMaxMs?: number;
   /** Backoff exponential multiplier (default: 1.1) */
   backoffMultiplier?: number;
-  /** Optional logger instance for diagnostics */
-  log?: Log; // FIXME: make this non-optional
 }
 
 /**
@@ -42,6 +42,7 @@ export type ResourcePoolEvents<R> = {
   'resource-acquired': (resource: R) => void;
   'target-size-reached': () => void;
   'creation-failed': (error: Error, inFlightCount: number) => void;
+  update(): void;
 };
 
 /**
@@ -54,57 +55,52 @@ export type ResourcePoolEvents<R> = {
  *   in parallel where N = minInFlightCount. First to complete is returned,
  *   others fill the buffer. Errors are dropped. Pool can overfill especially if targetSize=0.
  * - No return() method: resources are one-use (get disposed after use)
- * - Background fill: uses inlined exponential backoff strategy with wholistic in-flight accounting
- * - Implicit deduplication: each acquire/maintenance task creates independently
+ * - Background fill: uses exponential backoff with net delay calculation
+ * - Implicit deduplication: concurrent acquires intelligently share in-flight creations
  * - concurrencyLimit: optional cap on concurrent creation attempts
  *
  * @internal This is an internal class and should not be used directly by external consumers.
  */
 export class ResourcePool<R> extends EventEmitter<ResourcePoolEvents<R>> {
+  private pool: R[] = [];
+  private inFlight: Promise<R>[] = [];
+  private disposed: boolean = false;
+  private maintenanceAbortController: AbortController | null = null;
+  private targetSizeReachedEmitted: boolean = false;
+
+  // Backoff state
+  private failCount: number = 0;
+  private lastFailTime: number = 0;
+
+  // Options
   private readonly factory: ResourceFactory<R>;
+  private readonly clock: IClock;
+  private readonly log: Log;
   private readonly targetSize: number;
   private readonly minInFlightCount: number;
-  private readonly clock: IClock;
   private readonly concurrencyLimit: ReturnType<typeof limit> | null;
-  private readonly log?: Log;
-
-  // Inlined backoff strategy
-  private currentDelayMs: number;
   private readonly backoffMinMs: number;
   private readonly backoffMaxMs: number;
   private readonly backoffMultiplier: number;
 
-  private buffered: R[] = [];
-  private inFlightCounter: number = 0;
-  private disposed: boolean = false;
-  private maintenancePromise: Promise<void> | null = null;
-  private maintenanceAbortController: AbortController | null = null;
-  private inFlightPromises: Promise<R>[] = [];
-
-  /**
-   * Creates a new resource pool instance.
-   *
-   * @param options Named parameters object
-   */
   constructor(options: ResourcePoolOptions<R>) {
     super();
     this.factory = options.factory;
     this.clock = options.clock;
+    this.log = options.log;
     this.targetSize = options.targetSize ?? 0;
     this.minInFlightCount = options.minInFlightCount ?? 0;
-    this.log = options.log;
     this.concurrencyLimit = options.concurrencyLimit
       ? limit(options.concurrencyLimit)
       : null;
-
-    // Inlined backoff strategy initialization
     this.backoffMinMs = options.backoffMinMs ?? 5000;
     this.backoffMaxMs = options.backoffMaxMs ?? 60000;
     this.backoffMultiplier = options.backoffMultiplier ?? 1.1;
-    this.currentDelayMs = this.backoffMinMs;
+    this.lastFailTime = this.clock.now();
 
     // Start background maintenance
-    this.startMaintenance();
+    this.maintenanceAbortController = new AbortController();
+    this.maintenanceLoop();
   }
 
   /**
@@ -116,128 +112,59 @@ export class ResourcePool<R> extends EventEmitter<ResourcePoolEvents<R>> {
    * - Other successful creations fill the buffer for future acquires
    * - Errors are silently dropped
    * - Pool can overfill, especially when targetSize=0
-   *
-   * @throws Error if pool is disposed or resource creation fails
    */
-  async acquire(): Promise<R> {
+  async pop(): Promise<R> {
     if (this.disposed) {
       throw new Error('ResourcePool is disposed');
     }
 
-    // Fast path: return buffered resource immediately
-    const buffered = this.buffered.shift();
-    if (buffered) {
-      this.emit('resource-acquired', buffered);
-      return buffered;
+    this.ensureInFlight();
+
+    while (this.pool.length === 0) {
+      await this.nextUpdate();
     }
 
-    // Slow path: buffer is empty
-    if (this.minInFlightCount > 0) {
-      // Calculate how many more in-flight creations we need to reach minInFlightCount
-      const needed = Math.max(0, this.minInFlightCount - this.inFlightCounter);
+    const r = this.pool.shift();
+    if (!r) throw new Error('Unexpected: pool should have a resource');
 
-      // Collect all candidates to race: existing in-flight + new creations
-      const raceCandidates = [...this.inFlightPromises];
-      const newCreatedPromises: Promise<R>[] = [];
+    this.emit('resource-acquired', r);
+    this.emitUpdate();
 
-      // If we need more, create them
-      if (needed > 0) {
-        for (let i = 0; i < needed; i++) {
-          const promise = this.createResource();
-          newCreatedPromises.push(promise);
-          this.inFlightPromises.push(promise);
-          raceCandidates.push(promise);
-        }
-      }
+    return r;
+  }
 
-      // If we have nothing to race (no in-flight and needed=0), create at least 1
-      if (raceCandidates.length === 0) {
-        const promise = this.createResource();
-        newCreatedPromises.push(promise);
-        this.inFlightPromises.push(promise);
-        raceCandidates.push(promise);
-      }
-
-      // Race all candidates (existing + new) to get soonest completion
-      const resource = await Promise.race(raceCandidates);
-      this.emit('resource-acquired', resource);
-
-      // Remove completed resource from in-flight tracking
-      const idx = this.inFlightPromises.findIndex(p =>
-        p.then(
-          r => r === resource,
-          () => false
-        )
-      );
-      if (idx >= 0) {
-        this.inFlightPromises.splice(idx, 1);
-      }
-
-      // Background: collect any other successful creations and buffer them
-      if (newCreatedPromises.length > 0) {
-        Promise.allSettled(newCreatedPromises)
-          .then(results => {
-            for (const result of results) {
-              if (result.status === 'fulfilled' && result.value !== resource) {
-                if (!this.disposed) {
-                  this.buffered.push(result.value);
-                  this.emit('resource-created', result.value);
-                } else {
-                  this.disposeResource(result.value);
-                }
-              }
-            }
-          })
-          .catch(() => {
-            // Ignore errors from background buffering task
-          });
-      }
-
-      return resource;
-    }
-
-    // No minimum in-flight, just create one resource
-    const promise = this.createResource();
-    this.inFlightPromises.push(promise);
-    const resource = await promise;
-    // Remove from in-flight tracking
-    const idx = this.inFlightPromises.indexOf(promise);
-    if (idx >= 0) {
-      this.inFlightPromises.splice(idx, 1);
-    }
-    this.emit('resource-created', resource);
-    return resource;
+  /**
+   * Alias for pop() to maintain backward compatibility with original API
+   */
+  async acquire(): Promise<R> {
+    return this.pop();
   }
 
   /**
    * Waits for the pool to reach target size.
    * Resolves immediately if already at target size.
-   * Rejects if pool is disposed or creation permanently fails.
    */
   async waitForFull(): Promise<void> {
     if (this.disposed) {
       throw new Error('ResourcePool is disposed');
     }
 
-    // Already at target size
-    if (this.buffered.length >= this.targetSize) {
+    if (this.pool.length >= this.targetSize) {
       this.log?.info?.(
-        `⏭️  waitForFull: Already at target size (buffered=${this.buffered.length}, target=${this.targetSize})`
+        `⏭️  waitForFull: Already at target size (pool=${this.pool.length}, target=${this.targetSize})`
       );
       this.emit('target-size-reached');
       return;
     }
 
     this.log?.info?.(
-      `⏳ waitForFull: Starting wait for target size (buffered=${this.buffered.length}, target=${this.targetSize})`
+      `⏳ waitForFull: Starting wait for target size (pool=${this.pool.length}, target=${this.targetSize})`
     );
 
-    // Wait for maintenance to reach target
-    // This will emit 'target-size-reached' when achieved
     return new Promise((resolve, reject) => {
       const checkFull = () => {
         this.log?.info?.(
-          `🔍 waitForFull: checkFull called (buffered=${this.buffered.length}, target=${this.targetSize}, inFlight=${this.inFlightCounter})`
+          `🔍 waitForFull: checkFull called (pool=${this.pool.length}, target=${this.targetSize})`
         );
 
         if (this.disposed) {
@@ -247,28 +174,22 @@ export class ResourcePool<R> extends EventEmitter<ResourcePoolEvents<R>> {
           return;
         }
 
-        if (this.buffered.length >= this.targetSize) {
+        if (this.pool.length >= this.targetSize) {
           this.log?.info?.(
-            `✅ waitForFull: Target size reached (buffered=${this.buffered.length})`
+            `✅ waitForFull: Target size reached (pool=${this.pool.length})`
           );
           resolve();
           this.off('resource-created', checkFull);
-        } else {
-          this.log?.info?.(
-            `⏳ waitForFull: Not yet at target (buffered=${this.buffered.length}, target=${this.targetSize})`
-          );
         }
       };
 
       this.on('resource-created', checkFull);
-      // Check immediately in case maintenance already filled during listener setup
       checkFull();
     });
   }
 
   /**
    * Disposes the pool and all buffered resources.
-   * No further operations are allowed after disposal.
    */
   dispose(): void {
     if (this.disposed) {
@@ -277,231 +198,153 @@ export class ResourcePool<R> extends EventEmitter<ResourcePoolEvents<R>> {
 
     this.disposed = true;
 
-    // Stop maintenance
     if (this.maintenanceAbortController) {
       this.maintenanceAbortController.abort();
     }
 
-    // Dispose all buffered resources
-    for (const resource of this.buffered) {
+    for (const resource of this.pool) {
       this.disposeResource(resource);
     }
-    this.buffered = [];
+    this.pool = [];
   }
 
   /**
    * Returns the number of buffered resources.
    */
   size(): number {
-    return this.buffered.length;
+    return this.pool.length;
   }
 
   /**
    * Returns true if the pool has reached target size.
    */
   atTargetSize(): boolean {
-    return this.buffered.length >= this.targetSize;
+    return this.pool.length >= this.targetSize;
   }
 
   /**
    * Returns the number of in-flight creation attempts.
    */
   inFlightCount(): number {
-    return this.inFlightCounter;
+    return this.inFlight.length;
   }
 
-  /**
-   * Creates a single resource, handling errors and concurrency limits.
-   */
-  private async createResource(): Promise<R> {
-    const createFn = async () => {
-      this.inFlightCounter++;
-      this.log?.info?.(
-        `🔨 createResource: Starting creation (inFlight=${this.inFlightCounter})`
-      );
-      try {
-        const resource = await this.factory();
-        this.inFlightCounter--;
-        this.log?.info?.(
-          `✅ createResource: Success (inFlight=${this.inFlightCounter})`
-        );
-        // Don't emit resource-created here - let maintenanceLoop emit it after buffering
-        return resource;
-      } catch (error) {
-        this.inFlightCounter--;
-        const err = error instanceof Error ? error : new Error(String(error));
-        this.log?.error?.(
-          `❌ createResource: Factory failed with error: ${err.message} (inFlight=${this.inFlightCounter})`
-        );
-        this.emit('creation-failed', err, this.inFlightCounter);
-        throw err;
-      }
-    };
+  // ==================== Private Implementation ====================
 
-    if (this.concurrencyLimit) {
-      return await this.concurrencyLimit(createFn);
-    } else {
-      return await createFn();
-    }
-  }
-
-  /**
-   * Starts background maintenance to keep pool at target size.
-   * Runs indefinitely until disposed.
-   */
-  private startMaintenance(): void {
-    if (this.maintenancePromise) {
+  private ensureInFlight() {
+    if (this.pool.length > 0) {
       return;
     }
 
-    this.maintenanceAbortController = new AbortController();
-
-    this.maintenancePromise = this.maintenanceLoop();
+    while (this.inFlight.length < this.minInFlightCount) {
+      this.pushInFlight();
+    }
   }
 
-  /**
-   * Main loop for background maintenance.
-   * Accounts for both buffered resources and in-flight creations when calculating deficit.
-   */
-  private async maintenanceLoop(): Promise<void> {
+  private pushInFlight() {
+    const createFn = async () => {
+      // Apply backoff if we've had failures
+      if (this.failCount > 0) {
+        const timeElapsed = this.clock.now() - this.lastFailTime;
+        let totalDelay =
+          this.backoffMinMs * this.backoffMultiplier ** this.failCount;
+
+        if (totalDelay > this.backoffMaxMs) {
+          totalDelay = this.backoffMaxMs;
+        }
+
+        const netDelay = totalDelay - timeElapsed;
+
+        if (netDelay > 0) {
+          await this.clock.delay(netDelay);
+        }
+      }
+
+      return this.factory();
+    };
+
+    const p = this.concurrencyLimit
+      ? this.concurrencyLimit(createFn)
+      : createFn();
+
+    this.inFlight.push(p);
+
+    p.then(
+      r => {
+        this.inFlight = this.inFlight.filter(inFlightP => inFlightP !== p);
+        this.pool.push(r);
+        this.failCount = 0;
+        this.emit('resource-created', r);
+        this.checkTargetSizeReached();
+        this.emitUpdate();
+      },
+      e => {
+        this.failCount++;
+        this.lastFailTime = this.clock.now();
+        this.inFlight = this.inFlight.filter(inFlightP => inFlightP !== p);
+        const err = e instanceof Error ? e : new Error(String(e));
+        this.emit('creation-failed', err, this.inFlight.length);
+        this.log?.error?.(`Creation failed: ${err.message}`);
+        this.emitUpdate();
+      }
+    );
+  }
+
+  private checkTargetSizeReached() {
+    if (
+      this.targetSize > 0 &&
+      this.pool.length >= this.targetSize &&
+      !this.targetSizeReachedEmitted
+    ) {
+      this.targetSizeReachedEmitted = true;
+      this.emit('target-size-reached');
+    }
+  }
+
+  private async nextUpdate() {
+    return new Promise<void>(resolve => {
+      this.once('update', resolve);
+    });
+  }
+
+  private emitUpdate() {
+    this.emit('update');
+  }
+
+  private maintenanceLoop() {
     const signal = this.maintenanceAbortController!.signal;
-
-    while (!this.disposed && !signal.aborted) {
-      try {
-        // Calculate how many more resources we need, accounting for in-flight creations
-        // Total "committed" = buffered + in-flight + minimum in-flight from acquire() calls
-        // But maintenance contributes to the in-flight count, so we calculate:
-        // deficit = targetSize - (buffered + in-flight)
-        const deficit =
-          this.targetSize - (this.buffered.length + this.inFlightCounter);
-
-        this.log?.info?.(
-          `📊 maintenanceLoop: buffered=${this.buffered.length}, inFlight=${this.inFlightCounter}, target=${this.targetSize}, deficit=${deficit}`
-        );
-
-        if (deficit <= 0) {
-          // At or above target size, wait for events instead of polling
-          // (resource-acquired) which might increase deficit
-          this.log?.info?.(
-            `✅ maintenanceLoop: At or above target, waiting for resource acquisition...`
-          );
-          try {
-            await this.waitForMaintenanceEvent(signal);
-          } catch {
-            // Abort signal fired or clock stopped
-            return;
-          }
-          continue;
-        }
-
-        // Try to create missing resources
-        // Each creation attempt is independent (no deduplication)
-        const promises: Promise<void>[] = [];
-
-        this.log?.info?.(
-          `🚀 maintenanceLoop: Creating ${deficit} resources to reach target`
-        );
-
-        for (let i = 0; i < deficit; i++) {
-          if (this.disposed || signal.aborted) {
-            break;
+    (async () => {
+      while (!this.disposed && !signal.aborted) {
+        try {
+          while (
+            !this.disposed &&
+            !signal.aborted &&
+            this.pool.length + this.inFlight.length < this.targetSize
+          ) {
+            this.pushInFlight();
           }
 
-          const p = this.createResource()
-            .then(resource => {
-              if (!this.disposed) {
-                this.buffered.push(resource);
-                this.log?.info?.(
-                  `✅ maintenanceLoop: Resource created and buffered (buffered=${this.buffered.length})`
-                );
-
-                // Emit resource-created AFTER buffering so waitForFull sees the updated count
-                this.emit('resource-created', resource);
-
-                // Emit target-size-reached when we first hit it
-                if (
-                  this.buffered.length + this.inFlightCounter ===
-                  this.targetSize
-                ) {
-                  this.log?.info?.(
-                    `🎉 maintenanceLoop: Target size reached! (buffered=${this.buffered.length} + inFlight=${this.inFlightCounter} = ${this.targetSize})`
-                  );
-                  this.emit('target-size-reached');
-                }
-              } else {
-                this.disposeResource(resource);
-              }
-            })
-            .catch(error => {
-              // Creation failed, backoff will handle retry on next loop iteration
-              this.log?.error?.(
-                `❌ maintenanceLoop: Resource creation failed: ${error instanceof Error ? error.message : String(error)}`
-              );
-            });
-
-          promises.push(p);
-        }
-
-        // Wait for all creation attempts to settle
-        await Promise.allSettled(promises);
-
-        // If still under target after attempts, apply backoff
-        if (this.buffered.length + this.inFlightCounter < this.targetSize) {
-          const delayMs = this.getNextBackoffDelay();
-          this.log?.warn?.(
-            `⏳ maintenanceLoop: Still under target after creation attempts, backoff ${delayMs}ms (buffered=${this.buffered.length}, inFlight=${this.inFlightCounter}, target=${this.targetSize})`
-          );
           try {
-            await this.clock.delay(delayMs);
-          } catch {
-            // Abort signal fired or clock stopped
-            return;
-          }
-        } else {
-          // Success: reset backoff
-          this.log?.info?.(
-            `🔄 maintenanceLoop: Reached target, resetting backoff`
-          );
-          this.resetBackoff();
-        }
-      } catch (error) {
-        // Unexpected error, continue
-        this.log?.error?.(
-          `❌ maintenanceLoop: Unexpected error: ${error instanceof Error ? error.message : String(error)}`
-        );
-        if (!this.disposed && !signal.aborted) {
-          try {
-            await this.clock.delay(1000);
+            await this.nextUpdate();
           } catch {
             // Abort signal fired
             return;
           }
+        } catch (error) {
+          this.log?.error?.(
+            `❌ maintenanceLoop: Unexpected error: ${error instanceof Error ? error.message : String(error)}`
+          );
+          if (!this.disposed && !signal.aborted) {
+            try {
+              await this.clock.delay(1000);
+            } catch {
+              // Abort signal fired
+              return;
+            }
+          }
         }
       }
-    }
-  }
-
-  /**
-   * Gets the next backoff delay, growing exponentially up to max.
-   * Call this after a failure to get the delay before retrying.
-   */
-  private getNextBackoffDelay(): number {
-    const delay = Math.min(this.currentDelayMs, this.backoffMaxMs);
-
-    // Grow for next time
-    this.currentDelayMs = Math.min(
-      this.currentDelayMs * this.backoffMultiplier,
-      this.backoffMaxMs
-    );
-
-    return delay;
-  }
-
-  /**
-   * Resets backoff to minimum delay. Call this on success.
-   */
-  private resetBackoff(): void {
-    this.currentDelayMs = this.backoffMinMs;
+    })();
   }
 
   /**
@@ -517,44 +360,5 @@ export class ResourcePool<R> extends EventEmitter<ResourcePoolEvents<R>> {
         // Disposal error, but we already tried
       }
     }
-  }
-
-  /**
-   * Waits for an event that would trigger maintenance to recheck status.
-   * Events that can trigger:
-   * - 'resource-acquired': when a buffered resource is acquired, deficit increases
-   * - abort signal: when pool is disposed
-   *
-   * No polling fallback - purely event-driven.
-   */
-  private waitForMaintenanceEvent(signal: AbortSignal): Promise<void> {
-    return new Promise((resolve, reject) => {
-      if (signal.aborted) {
-        reject(new Error('Aborted'));
-        return;
-      }
-
-      let settled = false;
-
-      const cleanup = () => {
-        if (settled) return;
-        settled = true;
-        this.off('resource-acquired', onAcquire);
-        signal.removeEventListener('abort', onAbort);
-      };
-
-      const onAbort = () => {
-        cleanup();
-        reject(new Error('Aborted'));
-      };
-
-      const onAcquire = () => {
-        cleanup();
-        resolve();
-      };
-
-      this.on('resource-acquired', onAcquire);
-      signal.addEventListener('abort', onAbort);
-    });
   }
 }

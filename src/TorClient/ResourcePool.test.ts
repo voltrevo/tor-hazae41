@@ -1,6 +1,7 @@
 import { test, assert } from '@hazae41/phobos';
 import { ResourcePool } from './ResourcePool';
 import { VirtualClock } from '../clock/VirtualClock';
+import { Log } from '../Log';
 
 /**
  * Mock resource type for testing
@@ -36,7 +37,11 @@ test('ResourcePool: acquire from empty pool creates resource', async () => {
     return createMockResource(`r${createCount}`);
   };
 
-  const pool = new ResourcePool({ factory, clock: new VirtualClock() });
+  const pool = new ResourcePool({
+    factory,
+    log: new Log({ rawLog: () => {} }),
+    clock: new VirtualClock(),
+  });
   pool.on('resource-created', () => events.push('created'));
   pool.on('resource-acquired', () => events.push('acquired'));
 
@@ -58,7 +63,12 @@ test('ResourcePool: acquire from buffered pool returns existing resource', async
     return createMockResource(`r${createCount}`);
   };
 
-  const pool = new ResourcePool({ factory, clock, targetSize: 2 });
+  const pool = new ResourcePool({
+    factory,
+    log: new Log({ rawLog: () => {} }),
+    clock,
+    targetSize: 2,
+  });
 
   // Wait for pool to fill
   for (let i = 0; i < 5; i++) {
@@ -79,7 +89,12 @@ test('ResourcePool: size returns buffered count', async () => {
   const clock = new VirtualClock();
 
   const factory = async () => createMockResource();
-  const pool = new ResourcePool({ factory, clock, targetSize: 3 });
+  const pool = new ResourcePool({
+    factory,
+    log: new Log({ rawLog: () => {} }),
+    clock,
+    targetSize: 3,
+  });
 
   assert(pool.size() === 0, 'should start empty');
 
@@ -97,7 +112,12 @@ test('ResourcePool: atTargetSize indicates when pool is full', async () => {
   const clock = new VirtualClock();
 
   const factory = async () => createMockResource();
-  const pool = new ResourcePool({ factory, clock, targetSize: 2 });
+  const pool = new ResourcePool({
+    factory,
+    log: new Log({ rawLog: () => {} }),
+    clock,
+    targetSize: 2,
+  });
 
   assert(!pool.atTargetSize(), 'should not be at target initially');
 
@@ -126,6 +146,7 @@ test('ResourcePool: inFlightCount respects concurrency limit', async () => {
 
   const pool = new ResourcePool({
     factory,
+    log: new Log({ rawLog: () => {} }),
     clock,
     targetSize: 3,
     concurrencyLimit: 2,
@@ -151,7 +172,12 @@ test('ResourcePool: dispose cleans up buffered resources', async () => {
     return resource;
   };
 
-  const pool = new ResourcePool({ factory, clock, targetSize: 3 });
+  const pool = new ResourcePool({
+    factory,
+    log: new Log({ rawLog: () => {} }),
+    clock,
+    targetSize: 3,
+  });
 
   for (let i = 0; i < 5; i++) {
     await clock.advanceTime(5000);
@@ -169,7 +195,11 @@ test('ResourcePool: dispose cleans up buffered resources', async () => {
 
 test('ResourcePool: waitForFull resolves when at target', async () => {
   const factory = async () => createMockResource();
-  const pool = new ResourcePool({ factory, clock: new VirtualClock() });
+  const pool = new ResourcePool({
+    factory,
+    log: new Log({ rawLog: () => {} }),
+    clock: new VirtualClock(),
+  });
 
   await pool.waitForFull();
 
@@ -191,7 +221,12 @@ test('ResourcePool: creation-failed event emitted on factory error', async () =>
     return createMockResource();
   };
 
-  const pool = new ResourcePool({ factory, clock, targetSize: 1 });
+  const pool = new ResourcePool({
+    factory,
+    log: new Log({ rawLog: () => {} }),
+    clock,
+    targetSize: 1,
+  });
   pool.on('creation-failed', () => {
     failureCount++;
   });
@@ -220,7 +255,12 @@ test('ResourcePool: backoff increases delay after failures', async () => {
     return createMockResource();
   };
 
-  const pool = new ResourcePool({ factory, clock, targetSize: 1 });
+  const pool = new ResourcePool({
+    factory,
+    log: new Log({ rawLog: () => {} }),
+    clock,
+    targetSize: 1,
+  });
 
   for (let i = 0; i < 15; i++) {
     await clock.advanceTime(10000);
@@ -235,6 +275,7 @@ test('ResourcePool: backoff increases delay after failures', async () => {
 test('ResourcePool: dispose throws on subsequent operations', async () => {
   const pool = new ResourcePool({
     factory: async () => createMockResource(),
+    log: new Log({ rawLog: () => {} }),
     clock: new VirtualClock(),
   });
   pool.dispose();
@@ -259,7 +300,11 @@ test('ResourcePool: racing multiple concurrent acquires', async () => {
     return resource;
   };
 
-  const pool = new ResourcePool({ factory, clock });
+  const pool = new ResourcePool({
+    factory,
+    log: new Log({ rawLog: () => {} }),
+    clock,
+  });
 
   const promises = [pool.acquire(), pool.acquire(), pool.acquire()];
   const results = await Promise.all(promises);
@@ -287,6 +332,7 @@ test('ResourcePool: concurrency limit prevents too many concurrent creations', a
 
   const pool = new ResourcePool({
     factory,
+    log: new Log({ rawLog: () => {} }),
     clock,
     targetSize: 10,
     concurrencyLimit: 2,
@@ -304,7 +350,12 @@ test('ResourcePool: target-size-reached event emitted when pool fills', async ()
   let reachedCount = 0;
 
   const factory = async () => createMockResource();
-  const pool = new ResourcePool({ factory, clock, targetSize: 2 });
+  const pool = new ResourcePool({
+    factory,
+    log: new Log({ rawLog: () => {} }),
+    clock,
+    targetSize: 2,
+  });
   pool.on('target-size-reached', () => {
     reachedCount++;
   });
@@ -331,6 +382,7 @@ test('ResourcePool: configurable backoff parameters', async () => {
 
   const pool = new ResourcePool({
     factory,
+    log: new Log({ rawLog: () => {} }),
     clock,
     targetSize: 1,
     backoffMinMs: 100,
@@ -361,7 +413,11 @@ test('ResourcePool: minInFlightCount=0 (default) maintains backward compatibilit
     return createMockResource(`r${createCount}`);
   };
 
-  const pool = new ResourcePool({ factory, clock });
+  const pool = new ResourcePool({
+    factory,
+    log: new Log({ rawLog: () => {} }),
+    clock,
+  });
   // No minInFlightCount specified, should default to 0
 
   const resource = await pool.acquire();
@@ -385,6 +441,7 @@ test('ResourcePool: minInFlightCount races multiple creations on empty acquire',
 
   const pool = new ResourcePool({
     factory,
+    log: new Log({ rawLog: () => {} }),
     clock,
     minInFlightCount: 3,
   });
@@ -411,6 +468,7 @@ test('ResourcePool: minInFlightCount leftover creations fill buffer', async () =
 
   const pool = new ResourcePool({
     factory,
+    log: new Log({ rawLog: () => {} }),
     clock,
     minInFlightCount: 3,
   });
@@ -448,6 +506,7 @@ test('ResourcePool: minInFlightCount error handling ignores failures from race',
 
   const pool = new ResourcePool({
     factory,
+    log: new Log({ rawLog: () => {} }),
     clock,
     minInFlightCount: 3,
   });
@@ -485,6 +544,7 @@ test('ResourcePool: minInFlightCount with partial errors buffers successes', asy
 
   const pool = new ResourcePool({
     factory,
+    log: new Log({ rawLog: () => {} }),
     clock,
     minInFlightCount: 3,
   });
@@ -518,6 +578,7 @@ test('ResourcePool: minInFlightCount with targetSize maintains wholistic account
 
   const pool = new ResourcePool({
     factory,
+    log: new Log({ rawLog: () => {} }),
     clock,
     targetSize: 2,
     minInFlightCount: 2,
@@ -557,6 +618,7 @@ test('ResourcePool: minInFlightCount with targetSize=0 can overfill', async () =
 
   const pool = new ResourcePool({
     factory,
+    log: new Log({ rawLog: () => {} }),
     clock,
     targetSize: 0,
     minInFlightCount: 3,
@@ -590,6 +652,7 @@ test('ResourcePool: minInFlightCount sequential acquires reuse buffered resource
 
   const pool = new ResourcePool({
     factory,
+    log: new Log({ rawLog: () => {} }),
     clock,
     minInFlightCount: 3,
   });
