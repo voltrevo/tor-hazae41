@@ -192,9 +192,9 @@
         border-radius: 6px;
         font-family: 'Courier New', monospace;
         font-size: 12px;
-        color: #90ee90;
+        color: #e0e0e0;
         min-height: 32px;
-        border: 1px solid rgba(144, 238, 144, 0.2);
+        border: 1px solid rgba(224, 224, 224, 0.15);
       }
 
       .request-output.error {
@@ -231,7 +231,7 @@
 
       .status-details div {
         margin-bottom: 8px;
-        color: #90ee90;
+        color: #e0e0e0;
       }
 
       .status-details div:last-child {
@@ -248,7 +248,7 @@
 
       #output {
         background: #000;
-        color: #00ff00;
+        color: #e0e0e0;
         padding: 16px;
         font-family: 'Courier New', monospace;
         white-space: pre-wrap;
@@ -311,10 +311,60 @@
         color: #888;
         margin-top: 8px;
       }
+
+      .disclaimer {
+        background: linear-gradient(
+          135deg,
+          rgba(255, 193, 7, 0.12) 0%,
+          rgba(255, 193, 7, 0.05) 100%
+        );
+        border: 1px solid rgba(255, 193, 7, 0.25);
+        border-radius: 12px;
+        padding: 16px 20px;
+        margin-bottom: 30px;
+        font-size: 13px;
+        color: #e0e0e0;
+      }
+
+      .disclaimer strong {
+        color: #ffc107;
+      }
+
+      .request-card.hidden {
+        display: none;
+      }
+
+      .request-controls {
+        display: flex;
+        gap: 8px;
+      }
+
+      .request-controls button {
+        flex: 1;
+      }
+
+      .add-request-btn {
+        background: rgba(79, 172, 254, 0.15);
+        color: #4facfe;
+        border: 1px solid rgba(79, 172, 254, 0.3);
+        padding: 10px 20px;
+        margin-bottom: 16px;
+      }
+
+      .add-request-btn:hover:not(:disabled) {
+        background: rgba(79, 172, 254, 0.25);
+        border-color: rgba(79, 172, 254, 0.5);
+      }
     </style>
   </head>
   <body>
     <div class="container">
+      <!-- Disclaimer at Top -->
+      <div class="disclaimer">
+        <strong>⚠️ Disclaimer:</strong> This is experimental software. Initial
+        connection may take 30-90 seconds.
+      </div>
+
       <header>
         <h1>🧅 Tor Client Demo</h1>
         <a
@@ -336,61 +386,42 @@
       <div class="section">
         <div class="section-title">Make Requests</div>
 
-        <div class="request-card">
-          <div class="request-label">Request 1</div>
-          <div class="request-input-group">
-            <input
-              type="text"
-              id="url1"
-              value="https://check.torproject.org/api/ip"
-              placeholder="Enter URL..."
-            />
-            <button id="btn1" onclick="makeRequest(1)" style="flex-shrink: 0">
-              Make Request
-            </button>
-          </div>
-          <div id="output1" class="request-output">Ready</div>
-        </div>
-
-        <div class="request-card">
-          <div class="request-label">Request 2</div>
-          <div class="request-input-group">
-            <input
-              type="text"
-              id="url2"
-              value="https://google.com/"
-              placeholder="Enter URL..."
-            />
-            <button id="btn2" onclick="makeRequest(2)" style="flex-shrink: 0">
-              Make Request
-            </button>
-          </div>
-          <div id="output2" class="request-output">Ready</div>
-        </div>
-
-        <div class="request-card">
-          <div class="request-label">Request 3</div>
-          <div class="request-input-group">
-            <input
-              type="text"
-              id="url3"
-              value="https://cloudflare.com/cdn-cgi/trace"
-              placeholder="Enter URL..."
-            />
-            <button id="btn3" onclick="makeRequest(3)" style="flex-shrink: 0">
-              Make Request
-            </button>
-          </div>
-          <div id="output3" class="request-output">Ready</div>
-        </div>
-      </div>
-
-      <!-- Control Buttons -->
-      <div class="section">
-        <button onclick="triggerCircuitUpdate()">⚡ Update Circuit Now</button>
-        <button onclick="clearOutput()" style="margin-left: 10px">
-          🧹 Clear Log
+        <button class="add-request-btn" onclick="addRequestBox()">
+          + Add Request
         </button>
+
+        <div id="requestsContainer">
+          <div class="request-card" data-request-index="1">
+            <div class="request-label">Request 1</div>
+            <div class="request-input-group">
+              <input
+                type="text"
+                id="url1"
+                value="https://check.torproject.org/api/ip"
+                placeholder="Enter URL..."
+              />
+              <button id="btn1" onclick="makeRequest(1)" style="flex-shrink: 0">
+                Make Request
+              </button>
+            </div>
+            <div id="output1" class="request-output">Ready</div>
+            <div
+              class="request-controls"
+              style="margin-top: 10px; display: none"
+            >
+              <button
+                onclick="removeRequestBox(1)"
+                style="
+                  background: rgba(255, 107, 107, 0.15);
+                  color: #ff6b6b;
+                  border: 1px solid rgba(255, 107, 107, 0.3);
+                "
+              >
+                Remove
+              </button>
+            </div>
+          </div>
+        </div>
       </div>
 
       <!-- Circuit Status Display -->
@@ -432,20 +463,6 @@
             </div>
           </div>
         </div>
-      </div>
-
-      <!-- Info -->
-      <div
-        style="
-          margin-top: 40px;
-          padding-top: 20px;
-          border-top: 1px solid rgba(255, 255, 255, 0.1);
-          font-size: 12px;
-          color: #666;
-        "
-      >
-        <strong>⚠️ Disclaimer:</strong> This is experimental software. Initial
-        connection may take 30-90 seconds.
       </div>
     </div>
 

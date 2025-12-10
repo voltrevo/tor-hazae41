@@ -5,7 +5,6 @@ export default defineConfig(({ command }) => ({
   base: command === 'build' ? '/tor-hazae41/' : '/',
 
   server: {
-    port: 3000,
     open: !process.env.TEST_BROWSER,
   },
 

@@ -44,9 +44,9 @@ declare global {
   interface Window {
     openTorClient: () => Promise<void>;
     closeTorClient: () => void;
-    clearOutput: () => void;
     makeRequest: (index: number) => Promise<void>;
-    triggerCircuitUpdate: () => Promise<void>;
+    addRequestBox: () => void;
+    removeRequestBox: (index: number) => void;
   }
 }
 
@@ -54,6 +54,7 @@ let isRunning = false;
 let torClient: TorClient | null = null;
 let statusUpdateTimer: unknown | null = null;
 const clock = new SystemClock();
+let nextRequestIndex = 2;
 
 // Root logger that outputs to both DOM and console
 const log = new Log({
@@ -105,13 +106,6 @@ function updateStatus(): void {
   }
 }
 
-function clearOutput(): void {
-  const output = document.getElementById('output');
-  if (output) {
-    output.textContent = '';
-  }
-}
-
 function setRequestOutput(
   id: string,
   message: string,
@@ -143,6 +137,67 @@ function setButtonState(
   if (text) {
     button.textContent = text;
   }
+}
+
+function addRequestBox(): void {
+  const index = nextRequestIndex++;
+  const container = document.getElementById('requestsContainer');
+  if (!container) return;
+
+  const card = document.createElement('div');
+  card.className = 'request-card';
+  card.setAttribute('data-request-index', String(index));
+  card.innerHTML = `
+    <div class="request-label">Request ${index}</div>
+    <div class="request-input-group">
+      <input
+        type="text"
+        id="url${index}"
+        placeholder="Enter URL..."
+      />
+      <button id="btn${index}" onclick="makeRequest(${index})" style="flex-shrink: 0">
+        Make Request
+      </button>
+    </div>
+    <div id="output${index}" class="request-output">Ready</div>
+    <div class="request-controls" style="margin-top: 10px;">
+      <button onclick="removeRequestBox(${index})" style="background: rgba(255, 107, 107, 0.15); color: #ff6b6b; border: 1px solid rgba(255, 107, 107, 0.3)">
+        Remove
+      </button>
+    </div>
+  `;
+
+  container.appendChild(card);
+  updateRemoveButtons();
+}
+
+function removeRequestBox(index: number): void {
+  const container = document.getElementById('requestsContainer');
+  if (!container) return;
+
+  const card = container.querySelector(
+    `[data-request-index="${index}"]`
+  ) as HTMLElement;
+  if (card) {
+    card.remove();
+  }
+
+  updateRemoveButtons();
+}
+
+function updateRemoveButtons(): void {
+  const container = document.getElementById('requestsContainer');
+  if (!container) return;
+
+  const cards = container.querySelectorAll('.request-card');
+  cards.forEach(card => {
+    const removeBtn = card.querySelector('.request-controls');
+    if (removeBtn) {
+      // Show remove button only if there's more than one card
+      (removeBtn as HTMLElement).style.display =
+        cards.length > 1 ? 'flex' : 'none';
+    }
+  });
 }
 
 function closeTorClient(): void {
@@ -263,21 +318,6 @@ async function makeRequest(index: number): Promise<void> {
   }
 }
 
-async function triggerCircuitUpdate(): Promise<void> {
-  if (!torClient) {
-    log.error('❌ No persistent client available');
-    return;
-  }
-
-  try {
-    log.info('🔄 Triggering status update...');
-    updateStatus();
-    log.info('🔄 Status update completed');
-  } catch (error) {
-    log.error(`❌ Status update failed: ${(error as Error).message}`);
-  }
-}
-
 async function openTorClient(): Promise<void> {
   if (isRunning || torClient) return;
 
@@ -349,9 +389,9 @@ async function openTorClient(): Promise<void> {
 // Make functions globally available
 window.openTorClient = openTorClient;
 window.closeTorClient = closeTorClient;
-window.clearOutput = clearOutput;
 window.makeRequest = makeRequest;
-window.triggerCircuitUpdate = triggerCircuitUpdate;
+window.addRequestBox = addRequestBox;
+window.removeRequestBox = removeRequestBox;
 
 // Initial log
 log.info('🌐 Vite browser environment ready');
