@@ -439,11 +439,11 @@
         </div>
       </div>
 
-      <!-- Advanced Settings -->
+      <!-- Settings -->
       <div class="section">
         <div class="advanced-section">
           <div class="advanced-toggle" onclick="toggleAdvanced()">
-            <span class="advanced-toggle-label">Advanced Settings</span>
+            <span class="advanced-toggle-label">Settings</span>
             <span class="advanced-toggle-icon">▸</span>
           </div>
           <div id="advancedContent" class="advanced-content">
@@ -457,9 +457,15 @@
               placeholder="Enter Snowflake WebSocket URL"
             />
             <div class="info-text">
-              Change before opening connection to use a different Snowflake
-              proxy
+              Change and click Apply to use a different Snowflake proxy
             </div>
+            <button
+              id="applyBtn"
+              onclick="applySettings()"
+              style="margin-top: 12px; width: 100%"
+            >
+              Apply
+            </button>
           </div>
         </div>
       </div>

@@ -47,6 +47,7 @@ declare global {
     makeRequest: (index: number) => Promise<void>;
     addRequestBox: () => void;
     removeRequestBox: (index: number) => void;
+    applySettings: () => void;
   }
 }
 
@@ -225,6 +226,21 @@ function closeTorClient(): void {
   log.info('🛑 TorClient closed');
 }
 
+async function applySettings(): Promise<void> {
+  log.info('⚙️ Applying settings...');
+
+  // Close existing TorClient if it exists
+  if (torClient) {
+    log.info('🔄 Closing existing TorClient...');
+    closeTorClient();
+
+    // Brief delay to ensure clean shutdown
+    await new Promise(resolve => setTimeout(resolve, 500));
+  }
+
+  log.info('✅ Settings applied. You can now open a new connection.');
+}
+
 async function makeRequest(index: number): Promise<void> {
   const outputId = `output${index}`;
   const buttonId = `btn${index}`;
@@ -392,6 +408,7 @@ window.closeTorClient = closeTorClient;
 window.makeRequest = makeRequest;
 window.addRequestBox = addRequestBox;
 window.removeRequestBox = removeRequestBox;
+window.applySettings = applySettings;
 
 // Initial log
 log.info('🌐 Vite browser environment ready');
