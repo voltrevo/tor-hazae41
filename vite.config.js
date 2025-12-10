@@ -32,6 +32,7 @@ export default defineConfig(({ command }) => ({
     alias: {
       buffer: 'buffer',
       events: 'events',
+      'tor-hazae41/storage': '/src/storage/index-browser.ts',
     },
   },
 }));
