@@ -81,32 +81,20 @@ function updateStatus(): void {
   const circuitStatusElement = document.getElementById('circuitStatus');
   if (!statusElement || !torClient) return;
 
-  const statusData = torClient.getCircuitStatus();
-  const statusStrings = torClient.getCircuitStatusString();
+  const statusStrings = torClient.getCircuitStateString();
 
   let statusText = '✅ Connected';
   let circuitHTML = '';
 
-  if (typeof statusData === 'object' && statusData !== null) {
-    if ('idleTime' in statusData) {
-      // Single circuit in initialization state
-      statusText = '⏳ Initializing...';
-      circuitHTML = '<div>Initializing circuits...</div>';
-    } else {
-      // Multiple circuits - use the status strings
-      if (typeof statusStrings === 'object' && statusStrings !== null) {
-        statusText = `✅ Connected`;
+  if (typeof statusStrings === 'object' && statusStrings !== null) {
+    statusText = `✅ Connected`;
 
-        // Build circuit status details using the proper status strings
-        circuitHTML = '<div>';
-        for (const [host, statusStr] of Object.entries(statusStrings)) {
-          circuitHTML += `<div><strong>${host}</strong>: ${statusStr}</div>`;
-        }
-        circuitHTML += '</div>';
-      } else {
-        circuitHTML = '<div>No circuits active</div>';
-      }
+    // Build circuit status details using the status strings
+    circuitHTML = '<div>';
+    for (const [host, statusStr] of Object.entries(statusStrings)) {
+      circuitHTML += `<div><strong>${host}</strong>: ${statusStr}</div>`;
     }
+    circuitHTML += '</div>';
   } else {
     circuitHTML = '<div>No circuits active</div>';
   }
@@ -277,16 +265,16 @@ async function makeRequest(index: number): Promise<void> {
 
 async function triggerCircuitUpdate(): Promise<void> {
   if (!torClient) {
-    log.error('❌ No persistent client available for circuit update');
+    log.error('❌ No persistent client available');
     return;
   }
 
   try {
-    log.info('🔄 Manually triggering circuit update with 10s deadline...');
-    await torClient.updateCircuit(10000);
-    log.info('🔄 Circuit update completed successfully');
+    log.info('🔄 Triggering status update...');
+    updateStatus();
+    log.info('🔄 Status update completed');
   } catch (error) {
-    log.error(`❌ Circuit update failed: ${(error as Error).message}`);
+    log.error(`❌ Status update failed: ${(error as Error).message}`);
   }
 }
 
@@ -337,8 +325,6 @@ async function openTorClient(): Promise<void> {
       connectionTimeout: 15000,
       circuitTimeout: 90000,
       circuitBuffer: 2, // Maintain 2 circuits in buffer
-      circuitUpdateInterval: 2 * 60_000, // 2 minutes for demo
-      circuitUpdateAdvance: 30_000, // 30 seconds advance
       log: log.child('tor'),
     });
 

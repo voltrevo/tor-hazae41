@@ -28,8 +28,8 @@ export interface TorClientOptions {
   circuitTimeout?: number;
   /** Number of circuits to pre-create and maintain in buffer (default: 0, disabled) */
   circuitBuffer?: number;
-  /** Maximum lifetime in milliseconds for circuits before disposal, or null to disable (default: 600000 = 10 minutes) */
-  maxCircuitLifetime?: number | null;
+  /** Maximum lifetime in milliseconds for circuits before disposal (default: 600000 = 10 minutes) */
+  maxCircuitLifetime?: number;
   /** Optional logger instance for hierarchical logging */
   log?: Log;
   /** Storage interface */
@@ -66,7 +66,7 @@ export class TorClient {
   private connectionTimeout: number;
   private circuitTimeout: number;
   private circuitBuffer: number;
-  private maxCircuitLifetime: number | null;
+  private maxCircuitLifetime: number;
   private log: Log;
   private storage: IStorage;
   private clock: SystemClock;
@@ -167,7 +167,6 @@ export class TorClient {
       circuitTimeout,
       log,
       circuitBuffer: 0, // No pre-creation for one-time use
-      maxCircuitLifetime: null, // No lifetime limit for one-time use
     });
 
     try {
@@ -269,18 +268,18 @@ export class TorClient {
   }
 
   /**
-   * Gets the current circuit status information.
+   * Gets the current circuit state information.
    * @returns Object containing circuit state, update status, and timing information
    */
-  getCircuitStatus() {
-    return this.circuitManager.getCircuitStatus();
+  getCircuitState() {
+    return this.circuitManager.getCircuitState();
   }
 
   /**
    * Gets a human-readable status string for the current circuit state.
    */
-  getCircuitStatusString(): string | Record<string, string> {
-    return this.circuitManager.getCircuitStatusString();
+  getCircuitStateString(): string | Record<string, string> {
+    return this.circuitManager.getCircuitStateString();
   }
 
   /**

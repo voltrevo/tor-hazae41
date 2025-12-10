@@ -17,8 +17,8 @@ export interface CircuitManagerOptions {
   clock: IClock;
   /** Timeout in milliseconds for circuit creation and readiness (default: 90000) */
   circuitTimeout?: number;
-  /** Maximum lifetime in milliseconds for circuits before disposal, or null to disable (default: 600000 = 10 minutes) */
-  maxCircuitLifetime?: number | null;
+  /** Maximum lifetime in milliseconds for circuits before disposal (default: 600000 = 10 minutes) */
+  maxCircuitLifetime?: number;
   /** Number of circuits to maintain in buffer (default: 0, disabled) */
   circuitBuffer?: number;
   /** Logger instance for hierarchical logging */
@@ -32,22 +32,25 @@ export interface CircuitManagerOptions {
 }
 
 /**
- * Circuit status information for a specific host
+ * Circuit state information tracking all aspects of a circuit's lifecycle.
+ *
+ * @internal This is an internal interface and should not be used directly by external consumers.
  */
-export interface CircuitStatus {
+export interface CircuitState {
+  /** When allocated to a host (timestamp in milliseconds) */
+  allocatedAt: number;
+  /** Which host owns this circuit */
+  host: string;
+  /** Timer to dispose circuit at end of lifetime */
+  lifetimeTimer?: unknown;
+  /** Last time this circuit was used (timestamp in milliseconds) */
+  lastUsed: number;
+  /** Whether a circuit exists for this host */
   hasCircuit: boolean;
+  /** Whether a circuit is currently being created */
   isCreating: boolean;
-  lastUsed: number;
-}
-
-/**
- * Per-circuit state tracking
- */
-interface CircuitState {
-  allocatedAt: number; // When allocated to a host (0 if buffered)
-  allocatedHost?: string; // Which host owns this circuit
-  lifetimeTimer?: unknown; // Timer to dispose circuit at end of lifetime
-  lastUsed: number;
+  /** Absolute timestamp when circuit will expire (milliseconds) */
+  expiry: number;
 }
 
 /**
@@ -59,7 +62,7 @@ interface CircuitState {
  */
 export class CircuitManager {
   private clock: IClock;
-  private maxCircuitLifetime: number | null;
+  private maxCircuitLifetime: number;
   private circuitBufferSize: number;
   private log: Log;
   private createTorConnection: () => Promise<TorClientDuplex>;
@@ -169,10 +172,14 @@ export class CircuitManager {
     }
 
     // Initialize circuit state
+    const now = Date.now();
     this.circuitStates.set(circuit, {
-      allocatedAt: Date.now(),
-      allocatedHost: hostname,
-      lastUsed: Date.now(),
+      allocatedAt: now,
+      host: hostname,
+      lastUsed: now,
+      hasCircuit: true,
+      isCreating: false,
+      expiry: now + this.maxCircuitLifetime,
     });
 
     this.circuitOwnershipMap.set(circuit, hostname);
@@ -214,83 +221,87 @@ export class CircuitManager {
   }
 
   /**
-   * Gets the current circuit status for a specific host or all hosts.
+   * Gets the current circuit state for a specific host or all hosts.
    */
-  getCircuitStatus(
+  getCircuitState(
     hostname?: string
-  ): CircuitStatus | Record<string, CircuitStatus> {
+  ): CircuitState | Record<string, CircuitState> {
     if (hostname === undefined) {
-      // Return status for all allocated hosts
-      const result: Record<string, CircuitStatus> = {};
+      // Return state for all allocated hosts
+      const result: Record<string, CircuitState> = {};
       for (const host of this.hostCircuitMap.keys()) {
-        result[host] = this.getCircuitStatusForHost(host);
+        result[host] = this.getCircuitStateForHost(host);
       }
-      // Include pool status
+      // Include pool state
       result['[pool]'] = {
+        allocatedAt: 0,
+        host: '[pool]',
+        lastUsed: 0,
         hasCircuit: this.circuitPool.size() > 0,
         isCreating: this.circuitPool.inFlightCount() > 0,
-        lastUsed: 0,
+        expiry: 0,
       };
       return result;
     }
 
-    return this.getCircuitStatusForHost(hostname);
+    return this.getCircuitStateForHost(hostname);
   }
 
   /**
-   * Gets status for a specific host's circuit.
+   * Gets state for a specific host's circuit.
    */
-  private getCircuitStatusForHost(hostname: string): CircuitStatus {
+  private getCircuitStateForHost(hostname: string): CircuitState {
     const circuit = this.hostCircuitMap.get(hostname);
     const state = circuit ? this.circuitStates.get(circuit) : undefined;
 
     if (!state) {
       return {
+        allocatedAt: 0,
+        host: hostname,
+        lastUsed: 0,
         hasCircuit: false,
         isCreating: this.circuitAllocationTasks.has(hostname),
-        lastUsed: 0,
+        expiry: 0,
       };
     }
 
-    return {
-      hasCircuit: !!circuit,
-      isCreating: this.circuitAllocationTasks.has(hostname) && !circuit,
-      lastUsed: state.lastUsed,
-    };
+    return state;
   }
 
   /**
    * Gets a human-readable status string for a circuit.
    */
-  getCircuitStatusString(hostname?: string): string | Record<string, string> {
+  getCircuitStateString(hostname?: string): string | Record<string, string> {
     if (hostname === undefined) {
       const result: Record<string, string> = {};
       for (const host of this.hostCircuitMap.keys()) {
-        result[host] = this.getCircuitStatusStringForHost(host);
+        result[host] = this.getCircuitStateStringForHost(host);
       }
       result['[pool]'] =
         `${this.circuitPool.size()}/${this.circuitBufferSize} buffered (${this.circuitPool.inFlightCount()} in-flight)`;
       return result;
     }
 
-    return this.getCircuitStatusStringForHost(hostname);
+    return this.getCircuitStateStringForHost(hostname);
   }
 
   /**
    * Gets a human-readable status string for a specific host's circuit.
    */
-  private getCircuitStatusStringForHost(hostname: string): string {
-    const status = this.getCircuitStatusForHost(hostname);
+  private getCircuitStateStringForHost(hostname: string): string {
+    const state = this.getCircuitStateForHost(hostname);
 
-    if (!status.hasCircuit && status.isCreating) {
+    if (!state.hasCircuit && state.isCreating) {
       return 'Creating...';
     }
 
-    if (!status.hasCircuit) {
+    if (!state.hasCircuit) {
       return 'None';
     }
 
-    return 'Ready';
+    const msToExpiry = Math.max(0, state.expiry - Date.now());
+    const expirySeconds = Math.ceil(msToExpiry / 1000);
+    return `Ready (${expirySeconds}s to expiry)`;
   }
 
   /**
@@ -400,11 +411,6 @@ export class CircuitManager {
   private scheduleCircuitDisposal(circuit: Circuit, hostname: string) {
     const state = this.circuitStates.get(circuit);
     if (!state) {
-      return;
-    }
-
-    if (this.maxCircuitLifetime === null || this.maxCircuitLifetime <= 0) {
-      this.log.info(`[${hostname}] Circuit lifetime tracking disabled`);
       return;
     }
 
