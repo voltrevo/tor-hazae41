@@ -1,4 +1,5 @@
-import { test, assert } from '@hazae41/phobos';
+import { test } from '@hazae41/phobos';
+import { assert } from '../../../../../../utils/assert';
 import { Ed25519Cert } from './cert.js';
 import { Cursor } from '@hazae41/cursor';
 

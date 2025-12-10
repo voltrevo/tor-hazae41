@@ -1,4 +1,5 @@
-import { test, assert } from '@hazae41/phobos';
+import { test } from '@hazae41/phobos';
+import { assert } from '../utils/assert';
 import { Log } from '../Log';
 import { ResourcePool } from './ResourcePool';
 import { VirtualClock } from '../clock/VirtualClock';

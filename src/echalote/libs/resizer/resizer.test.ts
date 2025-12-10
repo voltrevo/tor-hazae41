@@ -1,4 +1,5 @@
-import { assert, test } from '@hazae41/phobos';
+import { test } from '@hazae41/phobos';
+import { assert } from '../../../utils/assert';
 import { Resizer } from './resizer.js';
 import { Cursor } from '@hazae41/cursor';
 import { Writable } from '@hazae41/binary';
@@ -41,7 +42,7 @@ test('Resizer - writeOrThrow multiple times within buffer', async () => {
   assert(resizer.inner.offset === 100);
 
   resizer.writeOrThrow(chunk2);
-  assert(resizer.inner.offset === 200);
+  assert(resizer.inner.offset === (200 as number));
 });
 
 test('Resizer - writeOrThrow triggers resize when needed', async () => {
@@ -247,7 +248,7 @@ test('Resizer - writeOrThrow multiple times within buffer', async () => {
   assert(resizer.inner.offset === 100);
 
   resizer.writeOrThrow(chunk2);
-  assert(resizer.inner.offset === 200);
+  assert(resizer.inner.offset === (200 as number));
 });
 
 test('Resizer - writeOrThrow triggers resize when needed', async () => {

@@ -1,4 +1,5 @@
-import { assert, test } from '@hazae41/phobos';
+import { test } from '@hazae41/phobos';
+import { assert } from './assert';
 import { getErrorDetails } from './getErrorDetails.js';
 
 type ErrorWithCause = Error & { cause?: Error };

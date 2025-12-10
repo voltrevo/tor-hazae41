@@ -1,4 +1,5 @@
-import { assert, test } from '@hazae41/phobos';
+import { test } from '@hazae41/phobos';
+import { assert } from '../utils/assert';
 import { MicrodescManager } from './MicrodescManager';
 import { createMemoryStorage } from '../storage';
 import { Log } from '../Log';

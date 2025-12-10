@@ -1,4 +1,5 @@
-import { test, assert } from '@hazae41/phobos';
+import { test } from '@hazae41/phobos';
+import { assert } from '../utils/assert';
 import { SystemClock } from './SystemClock';
 import { VirtualClock } from './VirtualClock';
 
@@ -126,10 +127,10 @@ test('VirtualClock - manual mode - setInterval', async () => {
   assert(count === 1, 'should execute once after 50ms');
 
   await clock.advanceTime(50);
-  assert(count === 2, 'should execute twice after 100ms');
+  assert(count === (2 as number), 'should execute twice after 100ms');
 
   await clock.advanceTime(100);
-  assert(count === 4, 'should execute four times after 200ms');
+  assert(count === (4 as number), 'should execute four times after 200ms');
 });
 
 test('VirtualClock - manual mode - clearTimeout', async () => {
