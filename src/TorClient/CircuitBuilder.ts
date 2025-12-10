@@ -239,7 +239,9 @@ export class CircuitBuilder extends EventEmitter<CircuitBuilderEvents> {
     let keynetNode: Consensus.Microdesc | undefined;
 
     for (const candidate of fullCandidates) {
-      if (Buffer.from(candidate.idEd25519, 'base64').equals(pubkey)) {
+      if (
+        Buffer.from(candidate.idEd25519, 'base64').equals(Buffer.from(pubkey))
+      ) {
         keynetNode = candidate;
         break;
       }
