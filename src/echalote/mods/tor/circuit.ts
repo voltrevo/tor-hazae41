@@ -40,6 +40,7 @@ import { RelayEarlyCell } from './binary/cells/direct/relay_early/cell.js';
 import { RelayBeginDirCell } from './binary/cells/relayed/relay_begin_dir/cell.js';
 import { Consensus } from './consensus/consensus.js';
 import { HASH_LEN } from './constants.js';
+import { invariant } from '../../../utils/debug';
 
 export const IPv6 = {
   always: 3,
@@ -561,6 +562,15 @@ export class SecretCircuit {
       this
     );
 
+    invariant(
+      stream.id > 0 && stream.id < 65536,
+      `Stream ID must be in valid range (1-65535), got ${stream.id}`
+    );
+    invariant(
+      !this.streams.has(stream.id),
+      `Stream ID must be unique, but ${stream.id} already exists in circuit`
+    );
+
     this.streams.set(stream.id, stream);
 
     const begin = new RelayBeginDirCell();
@@ -595,6 +605,15 @@ export class SecretCircuit {
       'external',
       this.#streamId++,
       this
+    );
+
+    invariant(
+      stream.id > 0 && stream.id < 65536,
+      `Stream ID must be in valid range (1-65535), got ${stream.id}`
+    );
+    invariant(
+      !this.streams.has(stream.id),
+      `Stream ID must be unique, but ${stream.id} already exists in circuit`
     );
 
     this.streams.set(stream.id, stream);

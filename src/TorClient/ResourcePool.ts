@@ -2,7 +2,7 @@ import limit from 'p-limit';
 import { IClock } from '../clock/IClock';
 import { Log } from '../Log';
 import { EventEmitter } from './EventEmitter';
-import { assert } from '../utils/assert.js';
+import { invariant } from '../utils/debug';
 
 /**
  * Factory function type for creating resources.
@@ -126,7 +126,10 @@ export class ResourcePool<R> extends EventEmitter<ResourcePoolEvents<R>> {
     }
 
     const r = this.pool.shift();
-    assert(r, 'Unexpected: pool should have a resource');
+    invariant(
+      r !== undefined,
+      'Pool must have at least one resource after waiting'
+    );
 
     this.emit('resource-acquired', r);
     this.emitUpdate();

@@ -60,6 +60,7 @@ import {
   TorState,
   TorVersionedState,
 } from './state.js';
+import { invariant } from '../../../utils/debug';
 
 export interface Guard {
   readonly identity: Uint8Array<20>;
@@ -362,6 +363,11 @@ export class SecretTorClientDuplex {
 
     Console.debug(cell2);
 
+    invariant(
+      state.type === 'none',
+      `State must be 'none' to receive VERSIONS cell`
+    );
+
     if (!cell2.fragment.versions.includes(5))
       throw new InvalidTorVersionError();
 
@@ -372,6 +378,11 @@ export class SecretTorClientDuplex {
     const cell2 = Cell.Circuitless.intoOrThrow(cell, CertsCell);
 
     Console.debug(cell2);
+
+    invariant(
+      state.type === 'versioned',
+      `State must be 'versioned' to receive CERTS cell, current: ${state.type}`
+    );
 
     const tlsCerts = await this.#resolveOnTlsCertificates.promise;
     const torCerts = await Certs.verifyOrThrow(cell2.fragment.certs, tlsCerts);
@@ -390,6 +401,15 @@ export class SecretTorClientDuplex {
     const cell2 = Cell.Circuitless.intoOrThrow(cell, NetinfoCell);
 
     Console.debug(cell2);
+
+    invariant(
+      state.type === 'handshaking',
+      `State must be 'handshaking' to receive NETINFO cell, current: ${state.type}`
+    );
+    invariant(
+      state.guard !== undefined,
+      `Handshaking state must have guard information`
+    );
 
     const address = new TypedAddress(4, new Uint8Array([127, 0, 0, 1]));
     const netinfo = new NetinfoCell(0, address, []);

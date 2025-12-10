@@ -7,6 +7,7 @@ import { initWasm } from './initWasm';
 import { EventEmitter } from './EventEmitter';
 import { decodeKeynetPubKey } from '../keynet/decodeKeynetPubkey';
 import { MicrodescManager } from './MicrodescManager';
+import { assert } from '../utils/assert';
 
 /**
  * Events emitted by CircuitBuilder.
@@ -167,9 +168,10 @@ export class CircuitBuilder extends EventEmitter<CircuitBuilderEvents> {
 
     this.log.info(`[CircuitBuilder] Found ${middles.length} middle relays`);
 
-    if (middles.length === 0) {
-      throw new Error(`Insufficient relays: ${middles.length} middles`);
-    }
+    assert(
+      middles.length > 0,
+      `Must have at least one middle relay available for keynet circuit`
+    );
 
     // Try building circuit with retries
     let lastError: unknown;
@@ -247,9 +249,10 @@ export class CircuitBuilder extends EventEmitter<CircuitBuilderEvents> {
       }
     }
 
-    if (!keynetNode) {
-      throw new Error('Failed to find keynet exit node');
-    }
+    assert(
+      keynetNode !== undefined,
+      `Must find keynet exit node matching hostname ${hostname}`
+    );
 
     await circuit.extendOrThrow(
       keynetNode,
@@ -267,9 +270,10 @@ export class CircuitBuilder extends EventEmitter<CircuitBuilderEvents> {
     candidates: Echalote.Consensus.Microdesc.Head[],
     relayType: string
   ): Promise<void> {
-    if (candidates.length === 0) {
-      throw new Error(`No ${relayType} relay candidates available`);
-    }
+    assert(
+      candidates.length > 0,
+      `Cannot extend circuit through ${relayType}: no candidates available`
+    );
 
     const candidate = selectRandomElement(candidates);
     this.emit('relay-selected', relayType);

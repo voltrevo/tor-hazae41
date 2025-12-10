@@ -1,6 +1,7 @@
 import { Circuit, Echalote } from '../echalote';
 import { IStorage } from '../storage';
 import { Log } from '../Log';
+import { invariant } from '../utils/debug';
 
 export interface MicrodescManagerOptions {
   storage: IStorage;
@@ -42,6 +43,10 @@ export class MicrodescManager {
     // Check cache first
     const cached = await this.loadCachedMicrodesc(ref.microdesc);
     if (cached) {
+      invariant(
+        cached.microdesc === ref.microdesc,
+        `Cached microdesc hash must match requested hash`
+      );
       this.log.info(`Using cached microdesc for ${ref.identity.slice(0, 8)}`);
       return cached;
     }
@@ -52,6 +57,11 @@ export class MicrodescManager {
     const microdesc = await Echalote.Consensus.Microdesc.fetchOrThrow(
       circuit,
       ref
+    );
+
+    invariant(
+      microdesc.microdesc === ref.microdesc,
+      `Fetched microdesc hash must match requested hash`
     );
 
     // Save to cache
@@ -89,6 +99,10 @@ export class MicrodescManager {
 
     for (const { ref, microdesc } of cachedResults) {
       if (microdesc) {
+        invariant(
+          microdesc.microdesc === ref.microdesc,
+          `Cached microdesc hash must match requested hash`
+        );
         cachedMicrodescs.push(microdesc);
         this.log.info(`Using cached microdesc for ${ref.identity.slice(0, 8)}`);
       } else {
@@ -105,6 +119,11 @@ export class MicrodescManager {
           uncachedRefs
         );
 
+      invariant(
+        fetchedMicrodescs.length === uncachedRefs.length,
+        `Fetched microdesc count must match requested count`
+      );
+
       // Cache the newly fetched microdescs
       await Promise.all(fetchedMicrodescs.map(md => this.saveToCache(md)));
 
@@ -117,9 +136,16 @@ export class MicrodescManager {
     // Return in the same order as the input refs
     const hashToMicrodesc = new Map(microdescs.map(md => [md.microdesc, md]));
 
-    return refs
+    const result = refs
       .map(ref => hashToMicrodesc.get(ref.microdesc))
       .filter((md): md is Echalote.Consensus.Microdesc => md !== undefined);
+
+    invariant(
+      result.length === refs.length,
+      `All requested microdescs must be returned, got ${result.length}/${refs.length}`
+    );
+
+    return result;
   }
 
   /**

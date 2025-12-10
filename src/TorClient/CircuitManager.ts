@@ -5,6 +5,7 @@ import { IClock } from '../clock';
 import { CircuitBuilder } from './CircuitBuilder';
 import { ResourcePool } from './ResourcePool';
 import { MicrodescManager } from './MicrodescManager';
+import { invariant } from '../utils/debug';
 
 /**
  * Configuration options for the CircuitManager.
@@ -114,13 +115,15 @@ export class CircuitManager {
    */
   private incrementRefCount(circuit: Circuit): void {
     const state = this.circuitStates.get(circuit);
-    if (!state) {
-      this.log.error(
-        `Cannot increment refCount for unknown circuit ${circuit.id}`
-      );
-      return;
-    }
+    invariant(
+      state,
+      `Circuit ${circuit.id} must have state when incrementing refCount`
+    );
     state.refCount++;
+    invariant(
+      state.refCount > 0,
+      `refCount must be positive after increment, got ${state.refCount}`
+    );
   }
 
   /**
@@ -130,21 +133,16 @@ export class CircuitManager {
    */
   private decrementRefCount(circuit: Circuit): void {
     const state = this.circuitStates.get(circuit);
-    if (!state) {
-      this.log.error(
-        `Cannot decrement refCount for unknown circuit ${circuit.id}`
-      );
-      return;
-    }
+    invariant(
+      state,
+      `Circuit ${circuit.id} must have state when decrementing refCount`
+    );
+    invariant(
+      state.refCount > 0,
+      `Cannot decrement refCount below 0 for circuit ${circuit.id}, current: ${state.refCount}`
+    );
 
     state.refCount--;
-
-    if (state.refCount < 0) {
-      this.log.error(
-        `Circuit ${circuit.id} refCount went negative (${state.refCount})`
-      );
-      state.refCount = 0; // Clamp to 0
-    }
 
     if (state.refCount === 0) {
       // Dispose the circuit when refCount hits 0
@@ -178,9 +176,16 @@ export class CircuitManager {
     const existingCircuit = this.hostCircuitMap.get(hostname);
     if (existingCircuit) {
       const state = this.circuitStates.get(existingCircuit);
-      if (state) {
-        state.lastUsed = Date.now();
-      }
+      invariant(
+        state,
+        `Circuit ${existingCircuit.id} in hostCircuitMap must have state`
+      );
+      // Ensure bidirectional mapping is consistent
+      invariant(
+        this.circuitOwnershipMap.get(existingCircuit) === hostname,
+        `Bidirectional mapping broken: hostCircuitMap[${hostname}] exists but circuitOwnershipMap mismatch`
+      );
+      state.lastUsed = Date.now();
       return existingCircuit;
     }
 
@@ -302,6 +307,12 @@ export class CircuitManager {
 
     const circuit = this.hostCircuitMap.get(hostname);
     if (circuit) {
+      // Verify the bidirectional mapping before clearing
+      invariant(
+        this.circuitOwnershipMap.get(circuit) === hostname,
+        `Bidirectional mapping must be consistent when clearing, hostname: ${hostname}, circuit: ${circuit.id}`
+      );
+
       // Remove from ownership tracking
       this.hostCircuitMap.delete(hostname);
 
@@ -355,6 +366,14 @@ export class CircuitManager {
   private getCircuitStateForHost(hostname: string): CircuitState {
     const circuit = this.hostCircuitMap.get(hostname);
     const state = circuit ? this.circuitStates.get(circuit) : undefined;
+
+    // Verify bidirectional consistency
+    if (circuit) {
+      invariant(
+        this.circuitOwnershipMap.get(circuit) === hostname,
+        `Bidirectional mapping broken when getting state for ${hostname}`
+      );
+    }
 
     if (!state) {
       return {
