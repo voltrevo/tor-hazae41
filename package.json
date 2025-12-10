@@ -61,6 +61,7 @@
     "prepublishOnly": "npm run build",
     "test": "for file in $(find src -name '*.test.ts'); do echo \"Running: $file\"; tsx \"$file\" || exit 1; done",
     "test:browser": "bash scripts/test-browser.sh",
+    "screenshot": "tsx browser-testing/screenshot.ts",
     "coverage": "c8 --reporter=text-summary --reporter=html npm run test",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
