@@ -242,9 +242,11 @@ export class CircuitManager {
     this.log.info(
       `⏳ waitForCircuitReady: Waiting for circuits (target=${this.circuitBufferSize})`
     );
-    // Wait for pool to reach target size
-    await this.circuitPool.waitForFull();
-    this.log.info(`✅ waitForCircuitReady: Circuits ready!`);
+    // Wait for pool to be non-empty
+    while (this.circuitPool.size() === 0) {
+      await this.circuitPool.nextUpdate();
+    }
+    this.log.info(`✅ waitForCircuitReady: Circuit ready!`);
   }
 
   /**
@@ -255,6 +257,7 @@ export class CircuitManager {
 
     if (!hostname.endsWith('.keynet')) {
       // Use ResourcePool to acquire a circuit
+      this.log.info(`[${hostname}] Allocating circuit from pool`);
       circuit = await this.circuitPool.acquire();
       this.log.info(`[${hostname}] Allocated circuit from pool`);
     } else {

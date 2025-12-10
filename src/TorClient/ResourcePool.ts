@@ -229,6 +229,12 @@ export class ResourcePool<R> extends EventEmitter<ResourcePoolEvents<R>> {
     return this.inFlight.length;
   }
 
+  async nextUpdate() {
+    return new Promise<void>(resolve => {
+      this.once('update', resolve);
+    });
+  }
+
   // ==================== Private Implementation ====================
 
   private ensureInFlight() {
@@ -299,12 +305,6 @@ export class ResourcePool<R> extends EventEmitter<ResourcePoolEvents<R>> {
       this.targetSizeReachedEmitted = true;
       this.emit('target-size-reached');
     }
-  }
-
-  private async nextUpdate() {
-    return new Promise<void>(resolve => {
-      this.once('update', resolve);
-    });
   }
 
   private emitUpdate() {
