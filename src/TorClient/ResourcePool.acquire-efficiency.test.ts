@@ -28,7 +28,7 @@ function createMockResource(
   return resource;
 }
 
-test('ResourcePool.acquire-efficiency: races minInFlightCount creations regardless of existing in-flight', async () => {
+test('ResourcePool.acquire-efficiency: concurrent acquires reuse in-flight creations', async () => {
   const clock = new VirtualClock();
   const createdIds: string[] = [];
 
@@ -52,19 +52,24 @@ test('ResourcePool.acquire-efficiency: races minInFlightCount creations regardle
   assert(results[0].id !== '', 'first acquire succeeded');
   assert(results[1].id !== '', 'second acquire succeeded');
 
-  // With current buggy code:
+  // With efficient concurrent acquire handling:
   // First acquire() races 2 creations: r1, r2
-  // Second acquire() ALSO races 2 creations: r3, r4
-  // Total: 4 creations
+  // Second acquire() reuses the same 2 in-flight creations (doesn't create new ones)
+  // Total: 2 creations (not 4)
   //
-  // With the fix we want:
-  // First acquire() races 2 creations: r1, r2
-  // Second acquire() should wait for first's in-flight to complete
-  // Total: 2 creations
+  // Both acquires get different resources from the racing:
+  // First acquire() gets the first one to complete
+  // Second acquire() gets the second one to complete
 
   assert(
-    createdIds.length === 4,
-    `Expected current buggy behavior (4 creations from 2 concurrent acquires), but got ${createdIds.length}. If this assertion fails, the fix was applied.`
+    createdIds.length === 2,
+    `Expected efficient behavior (2 creations from 2 concurrent acquires), but got ${createdIds.length}`
+  );
+
+  // Verify we got different resources
+  assert(
+    results[0].id !== results[1].id,
+    'concurrent acquires should get different resources'
   );
 
   pool.dispose();

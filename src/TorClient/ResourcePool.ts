@@ -316,6 +316,15 @@ export class ResourcePool<R> extends EventEmitter<ResourcePoolEvents<R>> {
     (async () => {
       while (!this.disposed && !signal.aborted) {
         try {
+          // Reset flag if we drop below target (so we can emit again)
+          if (
+            this.targetSize > 0 &&
+            this.pool.length + this.inFlight.length < this.targetSize &&
+            this.targetSizeReachedEmitted
+          ) {
+            this.targetSizeReachedEmitted = false;
+          }
+
           while (
             !this.disposed &&
             !signal.aborted &&

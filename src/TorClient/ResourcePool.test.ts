@@ -599,8 +599,8 @@ test('ResourcePool: minInFlightCount with targetSize maintains wholistic account
 
   // At target, should have 2 in buffer
   assert(
-    pool.size() === 2 || pool.size() === pool.size(),
-    'pool accounting should be consistent'
+    pool.size() === 2,
+    `should have exactly 2 resources at target size, but got ${pool.size()}`
   );
 
   pool.dispose();
@@ -672,6 +672,61 @@ test('ResourcePool: minInFlightCount sequential acquires reuse buffered resource
     'should reuse buffered resource without creating new one'
   );
   assert(r1.id !== r2.id, 'should get different resource from buffer');
+
+  pool.dispose();
+});
+
+test('ResourcePool: target-size-reached emitted again when pool drops below target', async () => {
+  const clock = new VirtualClock();
+  let createCount = 0;
+  let targetReachedCount = 0;
+
+  const factory = async () => {
+    createCount++;
+    await clock.delay(10);
+    return createMockResource(`r${createCount}`);
+  };
+
+  const pool = new ResourcePool({
+    factory,
+    log: new Log({ rawLog: () => {} }),
+    clock,
+    targetSize: 2,
+  });
+
+  pool.on('target-size-reached', () => {
+    targetReachedCount++;
+  });
+
+  // Wait for target size to be reached
+  for (let i = 0; i < 10; i++) {
+    await clock.advanceTime(5000);
+    if (pool.atTargetSize()) break;
+  }
+
+  assert(pool.size() === 2, 'should have 2 resources in pool at target size');
+  assert(
+    targetReachedCount === 1,
+    'target-size-reached should emit exactly once'
+  );
+
+  // Acquire one resource, dropping pool below target
+  const r1 = await pool.acquire();
+  assert(pool.size() === 1, 'should have 1 resource after acquire');
+  assert(r1.id.startsWith('r'), 'should get a valid resource');
+
+  // Wait for maintenance to refill back to target size
+  targetReachedCount = 0; // Reset counter
+  for (let i = 0; i < 10; i++) {
+    await clock.advanceTime(5000);
+    if (pool.atTargetSize()) break;
+  }
+
+  assert(pool.size() === 2, 'should refill back to 2 resources');
+  assert(
+    targetReachedCount === 1,
+    'target-size-reached should emit again when reaching target second time'
+  );
 
   pool.dispose();
 });
