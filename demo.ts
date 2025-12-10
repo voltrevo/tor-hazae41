@@ -4,7 +4,6 @@ globalThis.Buffer = Buffer;
 
 // Import the TorClient abstraction
 import { TorClient } from './src/TorClient';
-import { waitForWebSocket } from './src/TorClient/WebSocketDuplex.js';
 import { Log } from './src/Log/index.js';
 import { SystemClock } from './src/clock';
 
@@ -355,20 +354,6 @@ async function openTorClient(): Promise<void> {
       snowflakeUrlInput?.value?.trim() || 'wss://snowflake.torproject.net/';
 
     log.info(`🌨️ Using Snowflake URL: ${snowflakeUrl}`);
-
-    // Test basic WebSocket connectivity first
-    log.info('🔌 Testing basic WebSocket connectivity...');
-    const testSocket = new WebSocket('wss://echo.websocket.org/');
-    testSocket.binaryType = 'arraybuffer';
-
-    try {
-      await waitForWebSocket(testSocket, AbortSignal.timeout(5000));
-      log.info('✅ Basic WebSocket connectivity works');
-      testSocket.close();
-    } catch (error) {
-      log.error(`❌ Basic WebSocket test failed: ${(error as Error).message}`);
-      return;
-    }
 
     // Create persistent TorClient with circuit buffer
     log.info(
