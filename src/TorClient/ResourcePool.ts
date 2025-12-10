@@ -79,6 +79,7 @@ export class ResourcePool<R> extends EventEmitter<ResourcePoolEvents<R>> {
   private disposed: boolean = false;
   private maintenancePromise: Promise<void> | null = null;
   private maintenanceAbortController: AbortController | null = null;
+  private inFlightPromises: Promise<R>[] = [];
 
   /**
    * Creates a new resource pool instance.
@@ -130,42 +131,80 @@ export class ResourcePool<R> extends EventEmitter<ResourcePoolEvents<R>> {
       return buffered;
     }
 
-    // Slow path: buffer is empty, race minInFlightCount creations
+    // Slow path: buffer is empty
     if (this.minInFlightCount > 0) {
-      const creationPromises: Promise<R>[] = [];
-      for (let i = 0; i < this.minInFlightCount; i++) {
-        creationPromises.push(this.createResource());
+      // Calculate how many more in-flight creations we need to reach minInFlightCount
+      const needed = Math.max(0, this.minInFlightCount - this.inFlightCounter);
+
+      // Collect all candidates to race: existing in-flight + new creations
+      const raceCandidates = [...this.inFlightPromises];
+      const newCreatedPromises: Promise<R>[] = [];
+
+      // If we need more, create them
+      if (needed > 0) {
+        for (let i = 0; i < needed; i++) {
+          const promise = this.createResource();
+          newCreatedPromises.push(promise);
+          this.inFlightPromises.push(promise);
+          raceCandidates.push(promise);
+        }
       }
 
-      // Race them: return first successful, buffer the rest
-      const resource = await Promise.race(creationPromises);
+      // If we have nothing to race (no in-flight and needed=0), create at least 1
+      if (raceCandidates.length === 0) {
+        const promise = this.createResource();
+        newCreatedPromises.push(promise);
+        this.inFlightPromises.push(promise);
+        raceCandidates.push(promise);
+      }
+
+      // Race all candidates (existing + new) to get soonest completion
+      const resource = await Promise.race(raceCandidates);
       this.emit('resource-acquired', resource);
 
-      // Background: buffer any other successful creations
-      Promise.allSettled(creationPromises)
-        .then(results => {
-          for (const result of results) {
-            if (result.status === 'fulfilled' && result.value !== resource) {
-              if (!this.disposed) {
-                this.buffered.push(result.value);
-                // Emit resource-created after buffering
-                this.emit('resource-created', result.value);
-              } else {
-                this.disposeResource(result.value);
+      // Remove completed resource from in-flight tracking
+      const idx = this.inFlightPromises.findIndex(p =>
+        p.then(
+          r => r === resource,
+          () => false
+        )
+      );
+      if (idx >= 0) {
+        this.inFlightPromises.splice(idx, 1);
+      }
+
+      // Background: collect any other successful creations and buffer them
+      if (newCreatedPromises.length > 0) {
+        Promise.allSettled(newCreatedPromises)
+          .then(results => {
+            for (const result of results) {
+              if (result.status === 'fulfilled' && result.value !== resource) {
+                if (!this.disposed) {
+                  this.buffered.push(result.value);
+                  this.emit('resource-created', result.value);
+                } else {
+                  this.disposeResource(result.value);
+                }
               }
             }
-            // Errors (result.status === 'rejected') are silently dropped
-          }
-        })
-        .catch(() => {
-          // Ignore errors from background buffering task
-        });
+          })
+          .catch(() => {
+            // Ignore errors from background buffering task
+          });
+      }
 
       return resource;
     }
 
     // No minimum in-flight, just create one resource
-    const resource = await this.createResource();
+    const promise = this.createResource();
+    this.inFlightPromises.push(promise);
+    const resource = await promise;
+    // Remove from in-flight tracking
+    const idx = this.inFlightPromises.indexOf(promise);
+    if (idx >= 0) {
+      this.inFlightPromises.splice(idx, 1);
+    }
     this.emit('resource-created', resource);
     return resource;
   }
