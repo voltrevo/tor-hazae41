@@ -1,5 +1,6 @@
 import { Bytes } from '@hazae41/bytes';
 import { sha3 } from 'hash-wasm';
+import { assert } from '../../../../utils/assert.js';
 
 export interface ConsensusDiff {
   readonly version: number;
@@ -42,15 +43,17 @@ export function parseDiffOrThrow(diffText: string): ConsensusDiff {
   let i = 0;
 
   // Parse header
-  if (!lines[i] || !lines[i].startsWith('network-status-diff-version ')) {
-    throw new Error('Invalid diff: missing version line');
-  }
+  assert(
+    lines[i] && lines[i].startsWith('network-status-diff-version '),
+    'Invalid diff: missing version line'
+  );
   const version = parseInt(lines[i].split(' ')[1], 10);
   i++;
 
-  if (!lines[i] || !lines[i].startsWith('hash ')) {
-    throw new Error('Invalid diff: missing hash line');
-  }
+  assert(
+    lines[i] && lines[i].startsWith('hash '),
+    'Invalid diff: missing hash line'
+  );
   const [, fromHash, toHash] = lines[i].split(' ');
   i++;
 

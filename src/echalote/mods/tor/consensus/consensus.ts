@@ -6,6 +6,7 @@ import { fetch } from '../../../../fleche';
 import { RsaWasm } from '@hazae41/rsa.wasm';
 import { OIDs, X509 } from '@hazae41/x509';
 import { Mutable } from '../../../libs/typescript/typescript';
+import { assert } from '../../../../utils/assert.js';
 import { Circuit } from '../circuit.js';
 import pLimit from 'p-limit';
 import {
@@ -137,20 +138,20 @@ export namespace Consensus {
       console.warn(
         'Received 304 Not Modified - the known consensus is still current'
       );
-      if (known.length === 0) {
-        throw new Error('Received 304 but no known consensus was provided');
-      }
+      assert(
+        known.length > 0,
+        'Received 304 but no known consensus was provided'
+      );
       // Return the most recent known consensus based on validAfter date (already verified)
       const mostRecent = known.reduce((latest, current) =>
         current.validAfter > latest.validAfter ? current : latest
       );
 
       // Check if the most recent consensus has expired
-      if (requestTime > mostRecent.validUntil) {
-        throw new Error(
-          `Most recent known consensus has expired (validUntil: ${mostRecent.validUntil.toISOString()}, requestTime: ${requestTime.toISOString()})`
-        );
-      }
+      assert(
+        requestTime <= mostRecent.validUntil,
+        `Most recent known consensus has expired (validUntil: ${mostRecent.validUntil.toISOString()}, requestTime: ${requestTime.toISOString()})`
+      );
 
       return mostRecent;
     }
@@ -185,11 +186,10 @@ export namespace Consensus {
         }
       }
 
-      if (!baseConsensus) {
-        throw new Error(
-          `No matching base consensus found for diff (hash: ${diff.fromHash})`
-        );
-      }
+      assert(
+        baseConsensus,
+        `No matching base consensus found for diff (hash: ${diff.fromHash})`
+      );
 
       console.log(
         `[CONSENSUS DIFF] Applying diff from ${diff.fromHash.substring(0, 8)}... to ${diff.toHash.substring(0, 8)}...`
@@ -201,11 +201,10 @@ export namespace Consensus {
       // Verify the result hash matches
       const resultHash = await computeFullConsensusHash(fullConsensusTxt);
 
-      if (resultHash.toLowerCase() !== diff.toHash.toLowerCase()) {
-        throw new Error(
-          `Diff result hash mismatch: expected ${diff.toHash}, got ${resultHash}`
-        );
-      }
+      assert(
+        resultHash.toLowerCase() === diff.toHash.toLowerCase(),
+        `Diff result hash mismatch: expected ${diff.toHash}, got ${resultHash}`
+      );
 
       console.log(
         `[CONSENSUS DIFF] ✓ Successfully applied diff (${fullConsensusTxt.length} bytes)`
@@ -217,22 +216,21 @@ export namespace Consensus {
       consensus = await Consensus.parseOrThrow(consensusTxt);
     }
 
-    if (
+    assert(
       (await Consensus.verifyOrThrow(
         circuit,
         consensus,
         signal,
         certificateManager
-      )) !== true
-    )
-      throw new Error(`Could not verify`);
+      )) === true,
+      `Could not verify`
+    );
 
     // Check if the fetched consensus has already expired
-    if (requestTime > consensus.validUntil) {
-      throw new Error(
-        `Fetched consensus has already expired (validUntil: ${consensus.validUntil.toISOString()}, requestTime: ${requestTime.toISOString()})`
-      );
-    }
+    assert(
+      requestTime <= consensus.validUntil,
+      `Fetched consensus has already expired (validUntil: ${consensus.validUntil.toISOString()}, requestTime: ${requestTime.toISOString()})`
+    );
 
     return consensus;
   }
@@ -392,11 +390,10 @@ export namespace Consensus {
 
             item.signature = readSignatureOrThrow(lines, i);
 
-            if (item.algorithm == null) throw new Error('Missing algorithm');
-            if (item.identity == null) throw new Error('Missing identity');
-            if (item.signingKeyDigest == null)
-              throw new Error('Missing signingKeyDigest');
-            if (item.signature == null) throw new Error('Missing signature');
+            assert(item.algorithm != null, 'Missing algorithm');
+            assert(item.identity != null, 'Missing identity');
+            assert(item.signingKeyDigest != null, 'Missing signingKeyDigest');
+            assert(item.signature != null, 'Missing signature');
 
             const signature = item as Consensus.Signature;
             signatures.push(signature);
@@ -451,14 +448,14 @@ export namespace Consensus {
           continue;
         }
 
-        if (item.nickname == null) throw new Error('Missing nickname');
-        if (item.identity == null) throw new Error('Missing identity');
-        if (item.hostname == null) throw new Error('Missing hostname');
-        if (item.ipaddress == null) throw new Error('Missing ipaddress');
-        if (item.dirport == null) throw new Error('Missing dirport');
-        if (item.orport == null) throw new Error('Missing orport');
-        if (item.contact == null) throw new Error('Missing contact');
-        if (item.digest == null) throw new Error('Missing digest');
+        assert(item.nickname != null, 'Missing nickname');
+        assert(item.identity != null, 'Missing identity');
+        assert(item.hostname != null, 'Missing hostname');
+        assert(item.ipaddress != null, 'Missing ipaddress');
+        assert(item.dirport != null, 'Missing dirport');
+        assert(item.orport != null, 'Missing orport');
+        assert(item.contact != null, 'Missing contact');
+        assert(item.digest != null, 'Missing digest');
 
         const authority = item as Authority;
         authorities.push(authority);
@@ -634,9 +631,7 @@ export namespace Consensus {
     consensus.fullTextHash = await computeFullConsensusHash(text);
 
     // Store the signature portion (everything after preimage)
-    if (!consensus.preimage) {
-      throw new Error('Missing preimage');
-    }
+    assert(consensus.preimage, 'Missing preimage');
     consensus.signatureText = text.slice(consensus.preimage.length);
 
     return consensus as Consensus;
@@ -694,8 +689,7 @@ export namespace Consensus {
       const it = signaturesNeedingVerification[i];
       const certificate = certificates[i];
 
-      if (certificate == null)
-        throw new Error(`Missing certificate for ${it.identity}`);
+      assert(certificate != null, `Missing certificate for ${it.identity}`);
 
       const signed = Bytes.fromUtf8(consensus.preimage);
       const hashed = new Uint8Array(
@@ -740,12 +734,12 @@ export namespace Consensus {
         signatureM
       );
 
-      if (verified !== true) throw new Error(`Could not verify`);
+      assert(verified === true, `Could not verify`);
 
       count++;
     }
 
-    if (count < 3) throw new Error(`Not enough signatures`);
+    assert(count >= 3, `Not enough signatures`);
 
     return true;
   }
@@ -774,14 +768,13 @@ export namespace Consensus {
         signal,
       });
 
-      if (!response.ok) throw new Error(`Could not fetch`);
+      assert(response.ok, `Could not fetch`);
 
       const certificates = parseOrThrow(await response.text());
 
       const verifieds = await Promise.all(certificates.map(verifyOrThrow));
 
-      if (verifieds.some(result => result !== true))
-        throw new Error(`Could not verify`);
+      assert(!verifieds.some(result => result !== true), `Could not verify`);
 
       return certificates;
     }
@@ -797,14 +790,13 @@ export namespace Consensus {
         { stream: stream.outer, signal }
       );
 
-      if (!response.ok) throw new Error(`Could not fetch`);
-
       const [certificate] = parseOrThrow(await response.text());
 
-      if (certificate == null) throw new Error(`Missing certificate`);
+      assert(response.ok, `Could not fetch`);
 
-      if ((await verifyOrThrow(certificate)) !== true)
-        throw new Error(`Could not verify`);
+      assert(certificate != null, `Missing certificate`);
+
+      assert((await verifyOrThrow(certificate)) === true, `Could not verify`);
 
       return certificate;
     }
@@ -819,8 +811,10 @@ export namespace Consensus {
       );
       const fingerprint = Base16.get().getOrThrow().encodeOrThrow(identity);
 
-      if (fingerprint.toLowerCase() !== cert.fingerprint.toLowerCase())
-        throw new Error(`Fingerprint mismatch`);
+      assert(
+        fingerprint.toLowerCase() === cert.fingerprint.toLowerCase(),
+        `Fingerprint mismatch`
+      );
 
       const signed = Bytes.fromUtf8(cert.preimage);
       const hashed = new Uint8Array(
@@ -861,7 +855,7 @@ export namespace Consensus {
         signatureM
       );
 
-      if (verified !== true) throw new Error(`Could not verify`);
+      assert(verified === true, `Could not verify`);
 
       return true;
     }
@@ -935,14 +929,14 @@ export namespace Consensus {
             continue;
           }
 
-          if (cert.version == null) throw new Error('Missing version');
-          if (cert.fingerprint == null) throw new Error('Missing fingerprint');
-          if (cert.published == null) throw new Error('Missing published');
-          if (cert.expires == null) throw new Error('Missing expires');
-          if (cert.identityKey == null) throw new Error('Missing identityKey');
-          if (cert.signingKey == null) throw new Error('Missing signingKey');
-          if (cert.crossCert == null) throw new Error('Missing crossCert');
-          if (cert.signature == null) throw new Error('Missing certification');
+          assert(cert.version != null, 'Missing version');
+          assert(cert.fingerprint != null, 'Missing fingerprint');
+          assert(cert.published != null, 'Missing published');
+          assert(cert.expires != null, 'Missing expires');
+          assert(cert.identityKey != null, 'Missing identityKey');
+          assert(cert.signingKey != null, 'Missing signingKey');
+          assert(cert.crossCert != null, 'Missing crossCert');
+          assert(cert.signature != null, 'Missing certification');
 
           items.push(cert as Certificate);
           continue;
@@ -991,10 +985,10 @@ export namespace Consensus {
         { stream: stream.outer, signal }
       );
 
-      if (!response.ok)
-        throw new Error(
-          `Could not fetch ${response.status} ${response.statusText}: ${await response.text()}`
-        );
+      assert(
+        response.ok,
+        `Could not fetch ${response.status} ${response.statusText}: ${await response.text()}`
+      );
 
       const buffer = await response.arrayBuffer();
       const digest = new Uint8Array(
@@ -1003,12 +997,12 @@ export namespace Consensus {
 
       const digest64 = Base64.get().getOrThrow().encodeUnpaddedOrThrow(digest);
 
-      if (digest64 !== microdescHash) throw new Error(`Digest mismatch`);
+      assert(digest64 === microdescHash, `Digest mismatch`);
 
       const text = Bytes.toUtf8(new Uint8Array(buffer));
       const [data] = parseOrThrow(text);
 
-      if (data == null) throw new Error(`Empty microdescriptor`);
+      assert(data != null, `Empty microdescriptor`);
 
       return data;
     }
@@ -1051,20 +1045,19 @@ export namespace Consensus {
           { stream: stream.outer, signal }
         );
 
-        if (!response.ok)
-          throw new Error(
-            `Could not fetch batch ${response.status} ${response.statusText}: ${await response.text()}`
-          );
+        assert(
+          response.ok,
+          `Could not fetch batch ${response.status} ${response.statusText}: ${await response.text()}`
+        );
 
         const buffer = await response.arrayBuffer();
         const text = Bytes.toUtf8(new Uint8Array(buffer));
         const bodiesWithText = parseWithRawTextOrThrow(text);
 
-        if (bodiesWithText.length !== batch.length) {
-          throw new Error(
-            `Expected ${batch.length} microdescriptors but got ${bodiesWithText.length}`
-          );
-        }
+        assert(
+          bodiesWithText.length === batch.length,
+          `Expected ${batch.length} microdescriptors but got ${bodiesWithText.length}`
+        );
 
         for (let idx = 0; idx < bodiesWithText.length; idx++) {
           const { body, rawText } = bodiesWithText[idx];
@@ -1096,11 +1089,10 @@ export namespace Consensus {
         result.push({ ...ref, ...entry.body } as Microdesc);
       }
 
-      if (missingHashes.length > 0) {
-        throw new Error(
-          `${missingHashes.length} requested microdesc(s) not found in response: ${missingHashes.slice(0, 3).join(', ')}${missingHashes.length > 3 ? '...' : ''}`
-        );
-      }
+      assert(
+        missingHashes.length === 0,
+        `${missingHashes.length} requested microdesc(s) not found in response: ${missingHashes.slice(0, 3).join(', ')}${missingHashes.length > 3 ? '...' : ''}`
+      );
 
       return result;
     }
@@ -1139,10 +1131,9 @@ export namespace Consensus {
             continue;
           }
 
-          if (item.onionKey == null) throw new Error('Missing onion-key');
-          if (item.ntorOnionKey == null)
-            throw new Error('Missing ntor-onion-key');
-          if (item.idEd25519 == null) throw new Error('Missing id ed25519');
+          assert(item.onionKey != null, 'Missing onion-key');
+          assert(item.ntorOnionKey != null, 'Missing ntor-onion-key');
+          assert(item.idEd25519 != null, 'Missing id ed25519');
 
           // Extract the raw text for this microdesc (for hash verification)
           const endLine = i.x + 1;
@@ -1171,8 +1162,10 @@ export namespace Consensus {
 }
 
 function readRsaPublicKeyOrThrow(lines: string[], i: { x: number }) {
-  if (lines[i.x] !== '-----BEGIN RSA PUBLIC KEY-----')
-    throw new Error('Missing BEGIN RSA PUBLIC KEY');
+  assert(
+    lines[i.x] === '-----BEGIN RSA PUBLIC KEY-----',
+    'Missing BEGIN RSA PUBLIC KEY'
+  );
 
   let text = '';
 
@@ -1181,12 +1174,11 @@ function readRsaPublicKeyOrThrow(lines: string[], i: { x: number }) {
     text += lines[i.x];
   }
 
-  throw new Error('Missing END RSA PUBLIC KEY');
+  assert(false, 'Missing END RSA PUBLIC KEY');
 }
 
 function readSignatureOrThrow(lines: string[], i: { x: number }) {
-  if (lines[i.x] !== '-----BEGIN SIGNATURE-----')
-    throw new Error('Missing BEGIN SIGNATURE');
+  assert(lines[i.x] === '-----BEGIN SIGNATURE-----', 'Missing BEGIN SIGNATURE');
 
   let text = '';
 
@@ -1195,12 +1187,14 @@ function readSignatureOrThrow(lines: string[], i: { x: number }) {
     text += lines[i.x];
   }
 
-  throw new Error('Missing END SIGNATURE');
+  assert(false, 'Missing END SIGNATURE');
 }
 
 function readIdSignatureOrThrow(lines: string[], i: { x: number }) {
-  if (lines[i.x] !== '-----BEGIN ID SIGNATURE-----')
-    throw new Error('Missing BEGIN ID SIGNATURE');
+  assert(
+    lines[i.x] === '-----BEGIN ID SIGNATURE-----',
+    'Missing BEGIN ID SIGNATURE'
+  );
 
   let text = '';
 
@@ -1209,5 +1203,5 @@ function readIdSignatureOrThrow(lines: string[], i: { x: number }) {
     text += lines[i.x];
   }
 
-  throw new Error('Missing END ID SIGNATURE');
+  assert(false, 'Missing END ID SIGNATURE');
 }

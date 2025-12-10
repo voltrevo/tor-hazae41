@@ -1,5 +1,6 @@
 import { Writable } from '@hazae41/binary';
 import { Cursor } from '@hazae41/cursor';
+import { assert } from '../../../utils/assert.js';
 
 export class Resizer {
   inner: Cursor<Uint8Array>;
@@ -14,7 +15,7 @@ export class Resizer {
   writeOrThrow(chunk: Uint8Array) {
     const length = this.inner.offset + chunk.length;
 
-    if (length > this.maximum) throw new Error(`Maximum size exceeded`);
+    assert(length <= this.maximum, `Maximum size exceeded`);
 
     if (length > this.inner.length) {
       const resized = new Cursor(new Uint8Array(length));
@@ -28,7 +29,7 @@ export class Resizer {
   writeFromOrThrow(writable: Writable) {
     const length = this.inner.offset + writable.sizeOrThrow();
 
-    if (length > this.maximum) throw new Error(`Maximum size exceeded`);
+    assert(length <= this.maximum, `Maximum size exceeded`);
 
     if (length > this.inner.length) {
       const resized = new Cursor(new Uint8Array(length));

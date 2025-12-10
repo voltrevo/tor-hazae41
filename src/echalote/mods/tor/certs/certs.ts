@@ -3,6 +3,7 @@ import { Bytes } from '@hazae41/bytes';
 import { Ed25519 } from '@hazae41/ed25519';
 import { RsaPublicKey, RsaWasm } from '@hazae41/rsa.wasm';
 import { X509 } from '@hazae41/x509';
+import { assert } from '../../../../utils/assert.js';
 import {
   CrossCert,
   Ed25519Cert,
@@ -116,14 +117,16 @@ export namespace Certs {
       verifySigningToTlsOrThrow(certs, tlsCerts),
     ]).then(all => all.every(x => x === true));
 
-    if (result !== true) throw new Error(`Could not verify certs`);
+    assert(result === true, `Could not verify certs`);
 
     return certs;
   }
 
   async function verifyRsaSelfOrThrow(certs: Certs): Promise<true> {
-    if (certs.rsa_self.verifyOrThrow() !== true)
-      throw new Error(`Could not verify ID_SELF cert`);
+    assert(
+      certs.rsa_self.verifyOrThrow() === true,
+      `Could not verify ID_SELF cert`
+    );
 
     const length =
       certs.rsa_self.x509.tbsCertificate.subjectPublicKeyInfo.subjectPublicKey
@@ -169,8 +172,10 @@ export namespace Certs {
   }
 
   async function verifyRsaToEdOrThrow(certs: Certs): Promise<true> {
-    if (certs.rsa_to_ed.verifyOrThrow() !== true)
-      throw new Error(`Could not verify ID_TO_ED cert`);
+    assert(
+      certs.rsa_to_ed.verifyOrThrow() === true,
+      `Could not verify ID_TO_ED cert`
+    );
 
     const publicKeyBytes = X509.writeToBytesOrThrow(
       certs.rsa_self.x509.tbsCertificate.subjectPublicKeyInfo
@@ -203,8 +208,10 @@ export namespace Certs {
   }
 
   async function verifyEdToSigningOrThrow(certs: Certs): Promise<true> {
-    if ((await certs.ed_to_sign.verifyOrThrow()) !== true)
-      throw new Error(`Could not verify ED_TO_SIGN cert`);
+    assert(
+      (await certs.ed_to_sign.verifyOrThrow()) === true,
+      `Could not verify ED_TO_SIGN cert`
+    );
 
     using identity = await Ed25519.get()
       .getOrThrow()
@@ -227,8 +234,10 @@ export namespace Certs {
     certs: Certs,
     tlsCerts: X509.Certificate[]
   ): Promise<true> {
-    if ((await certs.sign_to_tls.verifyOrThrow()) !== true)
-      throw new Error(`Could not verify SIGNING_TO_TLS cert`);
+    assert(
+      (await certs.sign_to_tls.verifyOrThrow()) === true,
+      `Could not verify SIGNING_TO_TLS cert`
+    );
 
     using identity = await Ed25519.get()
       .getOrThrow()
