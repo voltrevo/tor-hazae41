@@ -1,5 +1,7 @@
 // See AbstractApp.md
 
+import { assert } from './assert';
+
 export type IAbstractApp<
   ComponentMap extends Record<
     string,
@@ -191,20 +193,28 @@ export class AbstractApp<
     }
   }
 
+  tryGet<N extends keyof ComponentMap>(
+    name: N,
+    subname?: string
+  ): ComponentMap[N]['interface'] | undefined {
+    const key = this.makeKey(name, subname);
+    const instance = this.instances.get(key);
+
+    return instance as ComponentMap[N]['interface'] | undefined;
+  }
+
   get<N extends keyof ComponentMap>(
     name: N,
     subname?: string
   ): ComponentMap[N]['interface'] {
-    const key = this.makeKey(name, subname);
-    const instance = this.instances.get(key);
+    const instance = this.tryGet(name, subname);
 
-    if (!instance) {
-      throw new Error(
-        `No instance registered for component "${String(name)}" with subname "${subname ?? 'default'}"`
-      );
-    }
+    assert(
+      instance,
+      `No instance registered for component "${String(name)}" with subname "${subname ?? 'default'}"`
+    );
 
-    return instance as ComponentMap[N]['interface'];
+    return instance;
   }
 
   set<N extends keyof ComponentMap>(

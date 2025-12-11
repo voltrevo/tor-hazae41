@@ -166,9 +166,9 @@ export class TorClientBase {
     };
 
     for (const name of Object.keys(components) as (keyof ComponentMap)[]) {
-      const component = this.app.get(name);
+      const component = this.app.tryGet(name);
 
-      if ('close' in component) {
+      if (component && 'close' in component) {
         component.close();
       }
     }
