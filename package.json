@@ -67,6 +67,7 @@
     "lint:fix": "eslint . --fix",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
+    "measure-size": "node scripts/measure-size.mjs",
     "commit-checks": "concurrently \"npm test\" \"npm run tsc\" \"npm run lint\" \"npm run format:check\" && echo && echo \"✅ All checks passed! Remember to confirm with the user before committing.\"",
     "tsc": "tsc --noEmit"
   },
@@ -133,6 +134,9 @@
     "@eslint/js": "^9.38.0",
     "@hazae41/deimos": "^1.0.0",
     "@hazae41/phobos": "^1.0.0",
+    "@rollup/plugin-commonjs": "^29.0.0",
+    "@rollup/plugin-node-resolve": "^16.0.3",
+    "@rollup/plugin-terser": "^0.4.4",
     "@types/node": "^22.0.0",
     "buffer": "^6.0.3",
     "c8": "^10.1.3",
