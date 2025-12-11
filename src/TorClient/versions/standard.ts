@@ -77,9 +77,11 @@ export class TorClient extends TorClientBase {
     app.set(
       'CircuitManager',
       new CircuitManager({
-        circuitBuffer: options.circuitBuffer,
-        maxCircuitLifetime: options.maxCircuitLifetime,
-        circuitTimeout: options.circuitTimeout,
+        snowflakeUrl: options.snowflakeUrl,
+        connectionTimeout: options.connectionTimeout ?? 15_000,
+        circuitTimeout: options.circuitTimeout ?? 90_000,
+        maxCircuitLifetime: options.maxCircuitLifetime ?? 600_000,
+        circuitBuffer: options.circuitBuffer ?? 2,
         app,
       })
     );

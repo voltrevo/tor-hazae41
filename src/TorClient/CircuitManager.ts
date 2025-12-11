@@ -1,4 +1,4 @@
-import { Circuit, TorClientDuplex } from '../echalote';
+import { Circuit, createSnowflakeStream, TorClientDuplex } from '../echalote';
 import { initWasm } from './initWasm';
 import { Log } from '../Log';
 import { IClock } from '../clock';
@@ -6,6 +6,8 @@ import { CircuitBuilder } from './CircuitBuilder';
 import { ResourcePool } from './ResourcePool';
 import { invariant } from '../utils/debug';
 import type { App } from './App';
+import { WebSocketDuplex } from './WebSocketDuplex';
+import { getErrorDetails } from '../utils/getErrorDetails';
 
 /**
  * Configuration options for the CircuitManager.
@@ -14,12 +16,16 @@ import type { App } from './App';
  * Instances are created by TorClient and should not be instantiated manually.
  */
 export interface CircuitManagerOptions {
+  /** The Snowflake bridge WebSocket URL for Tor connections */
+  snowflakeUrl: string;
+  /** Timeout in milliseconds for establishing initial connections (default: 15000) */
+  connectionTimeout: number;
   /** Timeout in milliseconds for circuit creation and readiness (default: 90000) */
-  circuitTimeout?: number;
+  circuitTimeout: number;
   /** Maximum lifetime in milliseconds for circuits before disposal (default: 600000 = 10 minutes) */
-  maxCircuitLifetime?: number;
+  maxCircuitLifetime: number;
   /** Number of circuits to maintain in buffer (default: 0, disabled) */
-  circuitBuffer?: number;
+  circuitBuffer: number;
   /** Manages component dependencies */
   app: App;
 }
@@ -60,6 +66,9 @@ export interface CircuitState {
  * Instances are created by TorClient and should not be instantiated manually.
  */
 export class CircuitManager {
+  private snowflakeUrl: string;
+  private connectionTimeout: number;
+  private circuitTimeout: number;
   private clock: IClock;
   private maxCircuitLifetime: number;
   private circuitBufferSize: number;
@@ -80,6 +89,9 @@ export class CircuitManager {
   private circuitStates: Map<Circuit, CircuitState> = new Map();
 
   constructor(options: CircuitManagerOptions) {
+    this.snowflakeUrl = options.snowflakeUrl;
+    this.connectionTimeout = options.connectionTimeout;
+    this.circuitTimeout = options.circuitTimeout;
     this.clock = options.app.get('Clock');
     this.maxCircuitLifetime = options.maxCircuitLifetime ?? 10 * 60_000;
     this.circuitBufferSize = options.circuitBuffer ?? 0;
@@ -467,7 +479,7 @@ export class CircuitManager {
       if (!this.torConnection) {
         if (!this.torConnectionPromise) {
           this.log.info(`[${hostLabel}] 🔌 Creating shared Tor connection`);
-          this.torConnectionPromise = this.app.create('TorClientDuplex');
+          this.torConnectionPromise = this.createTorConnection();
         }
         this.torConnection = await this.torConnectionPromise;
 
@@ -545,5 +557,54 @@ export class CircuitManager {
         );
       }
     }, safetyCheckDelay);
+  }
+
+  private async createTorConnection(): Promise<TorClientDuplex> {
+    this.log.info(`Connecting to Snowflake bridge at ${this.snowflakeUrl}`);
+
+    const stream = await WebSocketDuplex.connect(
+      this.snowflakeUrl,
+      AbortSignal.timeout(this.connectionTimeout)
+    );
+
+    this.log.info('Creating Snowflake stream');
+    const tcp = createSnowflakeStream(stream);
+    const tor = new TorClientDuplex();
+
+    this.log.info('Connecting streams');
+    tcp.outer.readable.pipeTo(tor.inner.writable).catch((error: unknown) => {
+      this.log.error(`TCP -> Tor stream error: ${getErrorDetails(error)}`);
+    });
+
+    tor.inner.readable.pipeTo(tcp.outer.writable).catch((error: unknown) => {
+      this.log.error(`Tor -> TCP stream error: ${getErrorDetails(error)}`);
+    });
+
+    // Add event listeners for debugging
+    tor.events.on('error', (error: unknown) => {
+      this.log.error(`Tor client error: ${getErrorDetails(error)}`);
+    });
+
+    tor.events.on('close', (reason: unknown) => {
+      const reasonMessage =
+        reason instanceof Error
+          ? reason.message
+          : String(reason || 'Connection closed normally');
+      // Only log as error if there's an actual error reason
+      const logLevel = reason && reason !== undefined ? 'error' : 'info';
+      if (logLevel === 'error') {
+        this.log.error(`Tor client closed: ${reasonMessage}`);
+      } else {
+        this.log.info(`Tor client closed: ${reasonMessage}`);
+      }
+    });
+
+    this.log.info(
+      `Waiting for Tor to be ready (timeout: ${this.circuitTimeout}ms)`
+    );
+    await tor.waitOrThrow(AbortSignal.timeout(this.circuitTimeout));
+    this.log.info('Tor client ready!');
+
+    return tor;
   }
 }

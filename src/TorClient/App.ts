@@ -15,7 +15,6 @@ import {
 import { CircuitBuilder, type CircuitBuilderOptions } from './CircuitBuilder';
 import type { IStorage } from '../storage';
 import { CircuitManager } from './CircuitManager';
-import { TorClientDuplex } from '../echalote';
 import { AbstractApp } from '../utils/AbstractApp';
 
 type LogConstructorParams = ConstructorParameters<typeof Log>[0];
@@ -52,10 +51,6 @@ export type ComponentMap = {
   Storage: {
     constructorParams: [];
     interface: IStorage;
-  };
-  TorClientDuplex: {
-    constructorParams: [];
-    interface: Promise<TorClientDuplex>;
   };
 };
 
