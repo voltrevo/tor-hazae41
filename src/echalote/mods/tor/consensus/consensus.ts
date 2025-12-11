@@ -1045,10 +1045,13 @@ export namespace Consensus {
           { stream: stream.outer, signal }
         );
 
-        assert(
-          response.ok,
-          `Could not fetch batch ${response.status} ${response.statusText}: ${await response.text()}`
-        );
+        if (!response.ok) {
+          // Note: we cannot use assert here because it is critical that we only
+          // read the response if needed
+          throw new Error(
+            `Could not fetch batch ${response.status} ${response.statusText}: ${await response.text()}`
+          );
+        }
 
         const buffer = await response.arrayBuffer();
         const text = Bytes.toUtf8(new Uint8Array(buffer));
