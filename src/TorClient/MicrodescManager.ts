@@ -104,10 +104,13 @@ export class MicrodescManager {
           `Cached microdesc hash must match requested hash`
         );
         cachedMicrodescs.push(microdesc);
-        this.log.info(`Using cached microdesc for ${ref.identity.slice(0, 8)}`);
       } else {
         uncachedRefs.push(ref);
       }
+    }
+
+    if (cachedMicrodescs.length > 0) {
+      this.log.info(`Using ${cachedMicrodescs.length} cached microdescs`);
     }
 
     // Fetch uncached microdescs in batch
@@ -188,9 +191,6 @@ export class MicrodescManager {
 
           this.microdescCache.set(microdesc.microdesc, microdesc);
           loadedCount++;
-          this.log.info(
-            `Loaded cached microdesc for ${microdesc.identity.slice(0, 8)}`
-          );
         } catch (error) {
           errorCount++;
           this.log.error(
