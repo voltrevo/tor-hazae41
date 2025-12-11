@@ -27,5 +27,6 @@
     "typescript",
     "typescriptreact"
   ],
-  "prettier.requireConfig": true
+  "prettier.requireConfig": true,
+  "prettier.prettierPath": "./node_modules/prettier"
 }
