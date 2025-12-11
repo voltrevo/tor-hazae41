@@ -117,8 +117,7 @@ export class AbstractApp<
     string,
     { constructorParams: unknown[]; interface: unknown }
   >,
-> implements IAbstractApp<ComponentMap>
-{
+> implements IAbstractApp<ComponentMap> {
   /**
    * Map of registered constructors/classes for each component type.
    *
