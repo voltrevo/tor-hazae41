@@ -83,82 +83,68 @@ export class CircuitBuilder extends EventEmitter<CircuitBuilderEvents> {
 
     this.log.info('[CircuitBuilder] Creating circuit');
 
-    // Create consensus circuit and fetch consensus
-    const consensusCircuit = await this.torConnection.createOrThrow();
-    this.log.info('[CircuitBuilder] Consensus circuit created');
+    const consensus = await this.consensusManager.getConsensus();
 
-    try {
-      const consensus =
-        await this.consensusManager.getConsensus(consensusCircuit);
+    // Select relay candidates
+    const middles = consensus.microdescs.filter(isMiddleRelay);
+    const exits = consensus.microdescs.filter(isExitRelay);
 
-      // Select relay candidates
-      const middles = consensus.microdescs.filter(isMiddleRelay);
-      const exits = consensus.microdescs.filter(isExitRelay);
+    this.log.info(
+      `[CircuitBuilder] Found ${middles.length} middle and ${exits.length} exit relays`
+    );
 
-      this.log.info(
-        `[CircuitBuilder] Found ${middles.length} middle and ${exits.length} exit relays`
+    if (middles.length === 0 || exits.length === 0) {
+      throw new Error(
+        `Insufficient relays: ${middles.length} middles, ${exits.length} exits`
       );
+    }
 
-      if (middles.length === 0 || exits.length === 0) {
-        throw new Error(
-          `Insufficient relays: ${middles.length} middles, ${exits.length} exits`
+    // Try building circuit with retries
+    let lastError: unknown;
+
+    for (let attempt = 1; attempt <= this.maxAttempts; attempt++) {
+      try {
+        this.log.info(
+          `[CircuitBuilder] Building circuit (attempt ${attempt}/${this.maxAttempts})`
         );
-      }
 
-      // Try building circuit with retries
-      let lastError: unknown;
+        const circuit = await this.torConnection.createOrThrow();
 
-      for (let attempt = 1; attempt <= this.maxAttempts; attempt++) {
         try {
-          this.log.info(
-            `[CircuitBuilder] Building circuit (attempt ${attempt}/${this.maxAttempts})`
-          );
+          // Extend through middle relay
+          await this.extendCircuit(circuit, middles, 'middle');
 
-          const circuit = await this.torConnection.createOrThrow();
+          // Extend through exit relay
+          await this.extendCircuit(circuit, exits, 'exit');
 
-          try {
-            // Extend through middle relay
-            await this.extendCircuit(circuit, middles, 'middle');
-
-            // Extend through exit relay
-            await this.extendCircuit(circuit, exits, 'exit');
-
-            this.log.info('[CircuitBuilder] Circuit built successfully');
-            this.emit('circuit-created', circuit);
-            return circuit;
-          } catch (e) {
-            // Dispose failed circuit
-            try {
-              (circuit as unknown as Disposable)[Symbol.dispose]();
-            } catch {
-              // Ignore disposal errors
-            }
-            throw e;
-          }
+          this.log.info('[CircuitBuilder] Circuit built successfully');
+          this.emit('circuit-created', circuit);
+          return circuit;
         } catch (e) {
-          lastError = e;
-          const error = e instanceof Error ? e : new Error(String(e));
-          this.emit('circuit-failed', error, attempt, this.maxAttempts);
-
-          if (attempt === this.maxAttempts) {
-            this.log.error(
-              `[CircuitBuilder] Failed after ${this.maxAttempts} attempts: ${getErrorDetails(e)}`
-            );
+          // Dispose failed circuit
+          try {
+            (circuit as unknown as Disposable)[Symbol.dispose]();
+          } catch {
+            // Ignore disposal errors
           }
+          throw e;
+        }
+      } catch (e) {
+        lastError = e;
+        const error = e instanceof Error ? e : new Error(String(e));
+        this.emit('circuit-failed', error, attempt, this.maxAttempts);
+
+        if (attempt === this.maxAttempts) {
+          this.log.error(
+            `[CircuitBuilder] Failed after ${this.maxAttempts} attempts: ${getErrorDetails(e)}`
+          );
         }
       }
-
-      throw new Error(
-        `Circuit build failed after ${this.maxAttempts} attempts: ${getErrorDetails(lastError)}`
-      );
-    } finally {
-      // Dispose consensus circuit
-      try {
-        (consensusCircuit as unknown as Disposable)[Symbol.dispose]();
-      } catch {
-        // Ignore disposal errors
-      }
     }
+
+    throw new Error(
+      `Circuit build failed after ${this.maxAttempts} attempts: ${getErrorDetails(lastError)}`
+    );
   }
 
   async extendCircuitToKeynet(

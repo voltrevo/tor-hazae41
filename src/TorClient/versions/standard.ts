@@ -63,6 +63,7 @@ export class TorClient extends TorClientBase {
 
     const clock = new SystemClock();
     app.set('Clock', clock);
+
     app.set('Log', options.log ?? new Log({ clock }));
     app.set('Storage', createAutoStorage('tor-hazae41-cache'));
 
@@ -70,8 +71,8 @@ export class TorClient extends TorClientBase {
       'CertificateManager',
       new CertificateManager({ app, maxCached: 20 })
     );
+
     app.set('MicrodescManager', new MicrodescManager({ app, maxCached: 1000 }));
-    app.set('ConsensusManager', new ConsensusManager({ app, maxCached: 5 }));
     app.register('CircuitBuilder', CircuitBuilder);
 
     app.set(
@@ -85,6 +86,8 @@ export class TorClient extends TorClientBase {
         app,
       })
     );
+
+    app.set('ConsensusManager', new ConsensusManager({ app, maxCached: 5 }));
 
     return app;
   }

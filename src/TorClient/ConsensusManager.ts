@@ -1,4 +1,4 @@
-import { Circuit, Consensus, Echalote } from '../echalote';
+import { Consensus, Echalote } from '../echalote';
 import { IStorage } from '../storage';
 import { computeFullConsensusHash } from '../echalote/mods/tor/consensus/diff';
 import { getErrorDetails } from '../utils/getErrorDetails';
@@ -7,13 +7,7 @@ import { Future } from '@hazae41/future';
 import { CertificateManager } from './CertificateManager';
 import { Log } from '../Log';
 import { App } from './App';
-
-// FIXME
-// - ConsensusManager should be given a way to get its circuit on construction
-// - this should be implemented by CircuitManager and it should keep the same
-//   circuit for ConsensusManager unless it needs to be rebuilt (new tor
-//   connection)
-// - by the way, these circuits are currently not getting cleaned up!
+import { CircuitManager } from './CircuitManager';
 
 export interface ConsensusManagerOptions {
   app: App;
@@ -32,6 +26,7 @@ export class ConsensusManager {
   private storage: IStorage;
   private maxCached: number;
   private log: Log;
+  private circuitManager: CircuitManager;
   // Cache maintains chronological order (oldest first, newest last)
   // This order is required for Tor nodes to properly return 304 responses
   private consensusCache: Echalote.Consensus[] = [];
@@ -50,6 +45,7 @@ export class ConsensusManager {
     this.storage = app.get('Storage');
     this.maxCached = options.maxCached;
     this.log = app.get('Log').child(this.constructor.name);
+    this.circuitManager = app.get('CircuitManager');
     this.certificateManager = app.get('CertificateManager');
   }
 
@@ -58,8 +54,8 @@ export class ConsensusManager {
    * @param circuit The circuit to use for fetching if needed
    * @returns A fresh consensus document
    */
-  async getConsensus(circuit: Circuit): Promise<Echalote.Consensus> {
-    this.backgroundUpdate(circuit);
+  async getConsensus(): Promise<Echalote.Consensus> {
+    this.backgroundUpdate();
 
     const { consensus, status } = await this.loadCachedConsensus();
 
@@ -79,27 +75,30 @@ export class ConsensusManager {
       return consensus;
     }
 
-    const newConsensus = await this.fetchConsensus(circuit);
-
-    return newConsensus;
+    return await this.fetchConsensus();
   }
 
-  private async fetchConsensus(circuit: Circuit) {
-    if (!this.inFlightFetch) {
-      this.inFlightFetch = this.rawFetchConsensus(circuit);
-
-      this.inFlightFetch.finally(() => {
-        this.inFlightFetch = undefined;
-      });
+  private async fetchConsensus() {
+    if (this.inFlightFetch) {
+      return await this.inFlightFetch;
     }
+
+    this.inFlightFetch = this.rawFetchConsensus();
+
+    this.inFlightFetch.finally(() => {
+      this.inFlightFetch = undefined;
+    });
 
     return await this.inFlightFetch;
   }
 
-  private async rawFetchConsensus(circuit: Circuit) {
+  private async rawFetchConsensus() {
     const cache = await this.loadCache();
 
     this.log.info('Fetching consensus from network');
+
+    const circuit = await this.circuitManager.getBaseCircuit();
+
     const consensus = await Echalote.Consensus.fetchOrThrow(
       circuit,
       cache,
@@ -268,7 +267,7 @@ export class ConsensusManager {
     }
   }
 
-  private async backgroundUpdate(circuit: Circuit) {
+  private async backgroundUpdate() {
     if (this.backgroundUpdating) {
       return;
     }
@@ -276,7 +275,7 @@ export class ConsensusManager {
     this.backgroundUpdating = true;
 
     try {
-      await this.rawBackgroundUpdate(circuit);
+      await this.rawBackgroundUpdate();
     } catch (e) {
       this.log.error(`backgroundUpdate failed: ${getErrorDetails(e)}`);
     } finally {
@@ -284,7 +283,7 @@ export class ConsensusManager {
     }
   }
 
-  private async rawBackgroundUpdate(circuit: Circuit) {
+  private async rawBackgroundUpdate() {
     const info = await this.loadCachedConsensus();
 
     if (info.status === 'fresh') {
@@ -295,7 +294,7 @@ export class ConsensusManager {
     const endTime = Date.now() + 3_600_000;
 
     while (Date.now() < endTime && !this.isClosed) {
-      const consensus = await this.fetchConsensus(circuit);
+      const consensus = await this.fetchConsensus();
       const isFresh = new Date() < consensus.freshUntil;
 
       if (isFresh) {
