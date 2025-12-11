@@ -4,8 +4,9 @@ import { Log } from '../Log';
 import { IClock } from '../clock';
 import { CircuitBuilder } from './CircuitBuilder';
 import { ResourcePool } from './ResourcePool';
-import { MicrodescManager } from './MicrodescManager';
 import { invariant } from '../utils/debug';
+import { Factory } from '../utils/Factory';
+import type { TorClientComponentMap } from './factory';
 
 /**
  * Configuration options for the CircuitManager.
@@ -28,8 +29,8 @@ export interface CircuitManagerOptions {
   createTorConnection: () => Promise<TorClientDuplex>;
   /** Function to get the current consensus */
   getConsensus: (circuit: Circuit) => Promise<Echalote.Consensus>;
-  /** Manager for microdescriptor caching */
-  microdescManager: MicrodescManager;
+  /** Factory for creating component dependencies */
+  factory: Factory<TorClientComponentMap>;
 }
 
 /**
@@ -74,7 +75,7 @@ export class CircuitManager {
   private log: Log;
   private createTorConnection: () => Promise<TorClientDuplex>;
   private getConsensus: (circuit: Circuit) => Promise<Echalote.Consensus>;
-  private microdescManager: MicrodescManager;
+  private factory: Factory<TorClientComponentMap>;
   private circuitPool: ResourcePool<Circuit>;
 
   // Shared Tor connection
@@ -96,7 +97,7 @@ export class CircuitManager {
     this.log = options.log;
     this.createTorConnection = options.createTorConnection;
     this.getConsensus = options.getConsensus;
-    this.microdescManager = options.microdescManager;
+    this.factory = options.factory;
 
     // Always initialize ResourcePool for circuit buffering
     // If bufferSize is 0, ResourcePool won't maintain a buffer but still provides acquire()
@@ -519,12 +520,12 @@ export class CircuitManager {
    */
   private async buildCircuit(hostname?: string): Promise<Circuit> {
     // Use CircuitBuilder to build the circuit
-    const circuitBuilder = new CircuitBuilder(
-      this.torConnection!,
-      this.getConsensus,
-      this.log.child('CircuitBuilder'),
-      this.microdescManager
-    );
+    const circuitBuilder = new CircuitBuilder({
+      torConnection: this.torConnection!,
+      getConsensus: this.getConsensus,
+      log: this.log.child('CircuitBuilder'),
+      factory: this.factory,
+    });
     return await circuitBuilder.buildCircuit(hostname);
   }
 

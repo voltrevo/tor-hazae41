@@ -12,7 +12,8 @@ import { CircuitManager } from './CircuitManager';
 import { MicrodescManager } from './MicrodescManager';
 import { getErrorDetails } from '../utils/getErrorDetails';
 import { Log } from '../Log';
-import { SystemClock, IClock } from '../clock';
+import { IClock } from '../clock';
+import { createTorClientFactory } from './factory';
 
 /**
  * Configuration options for the TorClient.
@@ -69,7 +70,7 @@ export class TorClient {
   private maxCircuitLifetime: number;
   private log: Log;
   private storage: IStorage;
-  private clock: SystemClock;
+  private clock: IClock;
 
   // Consensus management
   private consensusManager: ConsensusManager;
@@ -103,20 +104,32 @@ export class TorClient {
     this.circuitTimeout = options.circuitTimeout ?? 90000;
     this.circuitBuffer = options.circuitBuffer ?? 2;
     this.maxCircuitLifetime = options.maxCircuitLifetime ?? 10 * 60_000; // 10 minutes
-    this.log = options.log ?? new Log();
+    const factory = createTorClientFactory({
+      clock: options.clock,
+      log: options.log,
+      storage: options.storage,
+    });
+    this.clock = factory.create('clock');
+    this.log = factory.create('log', { clock: this.clock });
     this.storage = options.storage ?? createAutoStorage('tor-hazae41-cache');
-    this.clock = options.clock ?? new SystemClock();
 
-    this.consensusManager = new ConsensusManager({
+    // Update factory with actual storage
+    factory.set('storage', this.storage);
+
+    // Create managers using factory
+    this.consensusManager = factory.create('consensusManager', {
       clock: this.clock,
       storage: this.storage,
       log: this.log.child('consensus'),
     });
 
-    this.microdescManager = new MicrodescManager({
+    this.microdescManager = factory.create('microdescManager', {
       storage: this.storage,
       log: this.log.child('microdesc'),
     });
+
+    // Store the microdescManager in the factory for access by other components
+    factory.set('microdescManager', this.microdescManager);
 
     // Initialize circuit manager with circuit buffer
     this.circuitManager = new CircuitManager({
@@ -127,7 +140,7 @@ export class TorClient {
       log: this.log.child('circuit'),
       createTorConnection: () => this.createTorConnection(),
       getConsensus: circuit => this.consensusManager.getConsensus(circuit),
-      microdescManager: this.microdescManager,
+      factory,
     });
 
     // Note: Circuits are created proactively via circuitBuffer parameter.

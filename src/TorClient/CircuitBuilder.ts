@@ -8,6 +8,8 @@ import { EventEmitter } from './EventEmitter';
 import { decodeKeynetPubKey } from '../keynet/decodeKeynetPubkey';
 import { MicrodescManager } from './MicrodescManager';
 import { assert } from '../utils/assert';
+import { Factory } from '../utils/Factory';
+import type { TorClientComponentMap } from './factory';
 
 /**
  * Events emitted by CircuitBuilder.
@@ -24,33 +26,64 @@ export type CircuitBuilderEvents = {
 };
 
 /**
+ * Configuration options for CircuitBuilder.
+ */
+export interface CircuitBuilderOptions {
+  /** Tor connection to build circuits through */
+  torConnection: TorClientDuplex;
+  /** Function to fetch consensus information */
+  getConsensus: (circuit: Circuit) => Promise<Echalote.Consensus>;
+  /** Logger instance */
+  log: Log;
+  /** Factory for creating component dependencies */
+  factory: Factory<TorClientComponentMap>;
+  /** Maximum build attempts per circuit (default: 10) */
+  maxAttempts?: number;
+  /** Timeout for circuit extension in milliseconds (default: 10000) */
+  extendTimeout?: number;
+}
+
+/**
  * Builds individual circuits through the Tor network.
  * Handles relay selection, circuit extension, and retry logic.
  *
  * @internal This is an internal class and should not be used directly by external consumers.
  */
 export class CircuitBuilder extends EventEmitter<CircuitBuilderEvents> {
+  private readonly torConnection: TorClientDuplex;
+  private readonly getConsensus: (
+    circuit: Circuit
+  ) => Promise<Echalote.Consensus>;
+  private readonly log: Log;
+  private readonly microdescManager: MicrodescManager;
+  private readonly maxAttempts: number;
+  private readonly extendTimeout: number;
+
   /**
    * Creates a new circuit builder instance.
    *
-   * @param torConnection Tor connection to build circuits through
-   * @param getConsensus Function to fetch consensus information
-   * @param log Logger instance
-   * @param microdescManager Manager for caching microdescs
-   * @param maxAttempts Maximum build attempts per circuit (default: 10)
-   * @param extendTimeout Timeout for circuit extension in milliseconds (default: 10000)
+   * @param options Circuit builder configuration options
    */
-  constructor(
-    private readonly torConnection: TorClientDuplex,
-    private readonly getConsensus: (
-      circuit: Circuit
-    ) => Promise<Echalote.Consensus>,
-    private readonly log: Log,
-    private readonly microdescManager: MicrodescManager,
-    private readonly maxAttempts: number = 10,
-    private readonly extendTimeout: number = 10000
-  ) {
+  constructor(options: CircuitBuilderOptions) {
     super();
+    this.torConnection = options.torConnection;
+    this.getConsensus = options.getConsensus;
+    this.log = options.log;
+
+    // Get microdescManager from factory
+    try {
+      this.microdescManager = options.factory.get('microdescManager');
+    } catch {
+      // If not available in factory, create a new one
+      const storage = options.factory.get('storage');
+      this.microdescManager = options.factory.create('microdescManager', {
+        storage,
+        log: this.log.child('microdescs'),
+      });
+    }
+
+    this.maxAttempts = options.maxAttempts ?? 10;
+    this.extendTimeout = options.extendTimeout ?? 10000;
   }
 
   /**
