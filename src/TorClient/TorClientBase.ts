@@ -6,14 +6,15 @@ import { TorClientDuplex, createSnowflakeStream } from '../echalote';
 import { fetch } from '../fleche';
 
 import { WebSocketDuplex } from './WebSocketDuplex';
-import { createAutoStorage, IStorage } from 'tor-hazae41/storage';
-import { ConsensusManager } from './ConsensusManager';
+import { IStorage } from 'tor-hazae41/storage';
 import { CircuitManager } from './CircuitManager';
-import { MicrodescManager } from './MicrodescManager';
 import { getErrorDetails } from '../utils/getErrorDetails';
 import { Log } from '../Log';
 import { IClock } from '../clock';
-import { createTorClientFactory } from './factory';
+import { TorClientComponentMap } from './factory';
+import { Factory } from '../utils/Factory';
+import { ConsensusManager } from './ConsensusManager';
+import { MicrodescManager } from './MicrodescManager';
 
 /**
  * Configuration options for the TorClient.
@@ -21,8 +22,6 @@ import { createTorClientFactory } from './factory';
 export interface TorClientOptions {
   /** The Snowflake bridge WebSocket URL for Tor connections */
   snowflakeUrl: string;
-  /** Clock instance for managing timeouts and delays (default: new SystemClock()) */
-  clock?: IClock;
   /** Timeout in milliseconds for establishing initial connections (default: 15000) */
   connectionTimeout?: number;
   /** Timeout in milliseconds for circuit creation and readiness (default: 90000) */
@@ -33,36 +32,10 @@ export interface TorClientOptions {
   maxCircuitLifetime?: number;
   /** Optional logger instance for hierarchical logging */
   log?: Log;
-  /** Storage interface */
-  storage?: IStorage;
 }
 
-/**
- * A Tor client that provides secure, anonymous HTTP/HTTPS requests through the Tor network.
- *
- * Features:
- * - Automatic circuit creation and updates
- * - Persistent connections for multiple requests
- * - Graceful circuit transitions with configurable deadlines
- * - Support for both HTTP and HTTPS requests
- * - Comprehensive logging and status monitoring
- * - Resource cleanup and disposal
- *
- * @example
- * ```typescript
- * const client = new TorClient({
- *   snowflakeUrl: 'wss://snowflake.torproject.net/',
- *   onLog: (msg, type) => console.log(`[${type}] ${msg}`)
- * });
- *
- * const response = await client.fetch('https://httpbin.org/ip');
- * const data = await response.json();
- * console.log('My Tor IP:', data.origin);
- *
- * client.dispose(); // Clean up when done
- * ```
- */
-export class TorClient {
+export class TorClientBase {
+  // FIXME: unused fields
   private snowflakeUrl: string;
   private connectionTimeout: number;
   private circuitTimeout: number;
@@ -71,6 +44,8 @@ export class TorClient {
   private log: Log;
   private storage: IStorage;
   private clock: IClock;
+
+  private factory: Factory<TorClientComponentMap>;
 
   // Consensus management
   private consensusManager: ConsensusManager;
@@ -81,112 +56,28 @@ export class TorClient {
   // Circuit management
   private circuitManager: CircuitManager;
 
-  /**
-   * Creates a new TorClient instance with the specified configuration.
-   *
-   * @example
-   * ```typescript
-   * const client = new TorClient({
-   *   snowflakeUrl: 'wss://snowflake.torproject.net/',
-   *   log: new Log()
-   * });
-   *
-   * const response = await client.fetch('https://httpbin.org/ip');
-   * const data = await response.json();
-   * console.log('My Tor IP:', data.origin);
-   *
-   * client.dispose(); // Clean up when done
-   * ```
-   */
-  constructor(options: TorClientOptions) {
+  constructor(
+    options: TorClientOptions & { factory: Factory<TorClientComponentMap> }
+  ) {
     this.snowflakeUrl = options.snowflakeUrl;
     this.connectionTimeout = options.connectionTimeout ?? 15000;
     this.circuitTimeout = options.circuitTimeout ?? 90000;
     this.circuitBuffer = options.circuitBuffer ?? 2;
     this.maxCircuitLifetime = options.maxCircuitLifetime ?? 10 * 60_000; // 10 minutes
-    const factory = createTorClientFactory({
-      clock: options.clock,
-      log: options.log,
-      storage: options.storage,
-    });
-    this.clock = factory.create('clock');
-    this.log = factory.create('log', { clock: this.clock });
-    this.storage = options.storage ?? createAutoStorage('tor-hazae41-cache');
+    this.factory = options.factory;
+    this.clock = this.factory.get('Clock');
+    this.log = this.factory.get('Log').child('TorClient');
+    this.storage = this.factory.get('Storage');
+    this.consensusManager = this.factory.get('ConsensusManager');
+    this.microdescManager = this.factory.get('MicrodescManager');
+    this.circuitManager = this.factory.get('CircuitManager');
 
-    // Update factory with actual storage
-    factory.set('storage', this.storage);
-
-    // Create managers using factory
-    this.consensusManager = factory.create('consensusManager', {
-      clock: this.clock,
-      storage: this.storage,
-      log: this.log.child('consensus'),
-    });
-
-    this.microdescManager = factory.create('microdescManager', {
-      storage: this.storage,
-      log: this.log.child('microdesc'),
-    });
-
-    // Store the microdescManager in the factory for access by other components
-    factory.set('microdescManager', this.microdescManager);
-
-    // Initialize circuit manager with circuit buffer
-    this.circuitManager = new CircuitManager({
-      clock: this.clock,
-      circuitTimeout: this.circuitTimeout,
-      maxCircuitLifetime: this.maxCircuitLifetime,
-      circuitBuffer: this.circuitBuffer,
-      log: this.log.child('circuit'),
-      createTorConnection: () => this.createTorConnection(),
-      getConsensus: circuit => this.consensusManager.getConsensus(circuit),
-      factory,
-    });
+    // FIXME: I don't think TorClientDuplex needs to be in factory?
+    //        maybe CircuitManager should implement createTorConnection?
+    this.factory.register('TorClientDuplex', () => this.createTorConnection());
 
     // Note: Circuits are created proactively via circuitBuffer parameter.
     // The buffer maintains N ready-to-use circuits in the background.
-  }
-
-  /**
-   * Makes a one-time fetch request through Tor with a temporary circuit.
-   * Creates a new TorClient with no auto-updates, makes the request, and
-   * disposes of the circuit. This is ideal for single requests where you
-   * don't need persistent circuit management.
-   *
-   * The circuit is created specifically for this request and disposed
-   * immediately after completion, providing maximum isolation but less
-   * efficiency for multiple requests.
-   *
-   * @param snowflakeUrl The Snowflake bridge WebSocket URL
-   * @param url The URL to fetch
-   * @param options Optional fetch options and TorClient configuration
-   * @returns Promise resolving to the fetch Response
-   */
-  static async fetch(
-    snowflakeUrl: string,
-    url: string,
-    options?: RequestInit & {
-      connectionTimeout?: number;
-      circuitTimeout?: number;
-      log?: Log;
-    }
-  ): Promise<Response> {
-    const { connectionTimeout, circuitTimeout, log, ...fetchOptions } =
-      options || {};
-
-    const client = new TorClient({
-      snowflakeUrl,
-      connectionTimeout,
-      circuitTimeout,
-      log,
-      circuitBuffer: 0, // No pre-creation for one-time use
-    });
-
-    try {
-      return await client.fetch(url, fetchOptions);
-    } finally {
-      client.close();
-    }
   }
 
   /**

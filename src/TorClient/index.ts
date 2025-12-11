@@ -1,1 +1,1 @@
-export { TorClient, type TorClientOptions } from './TorClient';
+export { TorClient, type TorClientOptions } from './versions/standard';

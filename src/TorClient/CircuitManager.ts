@@ -1,4 +1,4 @@
-import { Circuit, Echalote, TorClientDuplex } from '../echalote';
+import { Circuit, TorClientDuplex } from '../echalote';
 import { initWasm } from './initWasm';
 import { Log } from '../Log';
 import { IClock } from '../clock';
@@ -15,20 +15,12 @@ import type { TorClientComponentMap } from './factory';
  * Instances are created by TorClient and should not be instantiated manually.
  */
 export interface CircuitManagerOptions {
-  /** Clock instance for managing timeouts and delays */
-  clock: IClock;
   /** Timeout in milliseconds for circuit creation and readiness (default: 90000) */
   circuitTimeout?: number;
   /** Maximum lifetime in milliseconds for circuits before disposal (default: 600000 = 10 minutes) */
   maxCircuitLifetime?: number;
   /** Number of circuits to maintain in buffer (default: 0, disabled) */
   circuitBuffer?: number;
-  /** Logger instance for hierarchical logging */
-  log: Log;
-  /** Function to create a Tor connection */
-  createTorConnection: () => Promise<TorClientDuplex>;
-  /** Function to get the current consensus */
-  getConsensus: (circuit: Circuit) => Promise<Echalote.Consensus>;
   /** Factory for creating component dependencies */
   factory: Factory<TorClientComponentMap>;
 }
@@ -73,8 +65,6 @@ export class CircuitManager {
   private maxCircuitLifetime: number;
   private circuitBufferSize: number;
   private log: Log;
-  private createTorConnection: () => Promise<TorClientDuplex>;
-  private getConsensus: (circuit: Circuit) => Promise<Echalote.Consensus>;
   private factory: Factory<TorClientComponentMap>;
   private circuitPool: ResourcePool<Circuit>;
 
@@ -91,12 +81,10 @@ export class CircuitManager {
   private circuitStates: Map<Circuit, CircuitState> = new Map();
 
   constructor(options: CircuitManagerOptions) {
-    this.clock = options.clock;
+    this.clock = options.factory.get('Clock');
     this.maxCircuitLifetime = options.maxCircuitLifetime ?? 10 * 60_000;
     this.circuitBufferSize = options.circuitBuffer ?? 0;
-    this.log = options.log;
-    this.createTorConnection = options.createTorConnection;
-    this.getConsensus = options.getConsensus;
+    this.log = options.factory.get('Log').child(this.constructor.name);
     this.factory = options.factory;
 
     // Always initialize ResourcePool for circuit buffering
@@ -480,7 +468,7 @@ export class CircuitManager {
       if (!this.torConnection) {
         if (!this.torConnectionPromise) {
           this.log.info(`[${hostLabel}] 🔌 Creating shared Tor connection`);
-          this.torConnectionPromise = this.createTorConnection();
+          this.torConnectionPromise = this.factory.create('TorClientDuplex');
         }
         this.torConnection = await this.torConnectionPromise;
 
@@ -522,7 +510,6 @@ export class CircuitManager {
     // Use CircuitBuilder to build the circuit
     const circuitBuilder = new CircuitBuilder({
       torConnection: this.torConnection!,
-      getConsensus: this.getConsensus,
       log: this.log.child('CircuitBuilder'),
       factory: this.factory,
     });

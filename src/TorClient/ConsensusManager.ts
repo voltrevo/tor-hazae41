@@ -6,6 +6,8 @@ import { IClock } from '../clock';
 import { Future } from '@hazae41/future';
 import { CertificateManager } from './CertificateManager';
 import { Log } from '../Log';
+import { Factory } from '../utils/Factory';
+import { TorClientComponentMap } from './factory';
 
 // FIXME
 // - ConsensusManager should be given a way to get its circuit on construction
@@ -14,11 +16,8 @@ import { Log } from '../Log';
 //   connection)
 
 export interface ConsensusManagerOptions {
-  /** Clock instance for managing delays */
-  clock: IClock;
-  storage: IStorage;
-  maxCached?: number;
-  log: Log;
+  factory: Factory<TorClientComponentMap>;
+  maxCached: number;
 }
 
 /**
@@ -46,15 +45,12 @@ export class ConsensusManager {
   isClosed = false;
 
   constructor(options: ConsensusManagerOptions) {
-    this.clock = options.clock;
-    this.storage = options.storage;
-    this.maxCached = options.maxCached ?? 5;
-    this.log = options.log;
-    this.certificateManager = new CertificateManager({
-      storage: options.storage,
-      maxCached: 20,
-      log: this.log.child('certificates'),
-    });
+    const factory = options.factory;
+    this.clock = factory.get('Clock');
+    this.storage = factory.get('Storage');
+    this.maxCached = options.maxCached;
+    this.log = factory.get('Log').child(this.constructor.name);
+    this.certificateManager = factory.get('CertificateManager');
   }
 
   /**

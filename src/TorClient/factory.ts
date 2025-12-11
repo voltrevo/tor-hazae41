@@ -1,7 +1,5 @@
-import { Factory } from '../utils/Factory';
 import { Log } from '../Log';
 import type { IClock } from '../clock';
-import { SystemClock } from '../clock';
 import {
   ConsensusManager,
   type ConsensusManagerOptions,
@@ -16,65 +14,46 @@ import {
 } from './CertificateManager';
 import { CircuitBuilder, type CircuitBuilderOptions } from './CircuitBuilder';
 import type { IStorage } from '../storage';
+import { CircuitManager } from './CircuitManager';
+import { TorClientDuplex } from '../echalote';
 
 type LogConstructorParams = ConstructorParameters<typeof Log>[0];
 
 export type TorClientComponentMap = {
-  clock: {
+  Clock: {
     constructorParams: [];
     interface: IClock;
   };
-  log: {
+  Log: {
     constructorParams: [LogConstructorParams?];
     interface: Log;
   };
-  consensusManager: {
+  ConsensusManager: {
     constructorParams: [ConsensusManagerOptions];
     interface: ConsensusManager;
   };
-  microdescManager: {
+  MicrodescManager: {
     constructorParams: [MicrodescManagerOptions];
     interface: MicrodescManager;
   };
-  certificateManager: {
+  CertificateManager: {
     constructorParams: [CertificateManagerOptions];
     interface: CertificateManager;
   };
-  circuitBuilder: {
+  CircuitBuilder: {
     constructorParams: [CircuitBuilderOptions];
     interface: CircuitBuilder;
   };
-  // Context items
-  storage: {
+  CircuitManager: {
+    constructorParams: ConstructorParameters<typeof CircuitManager>;
+    interface: CircuitManager;
+  };
+  Storage: {
     constructorParams: [];
     interface: IStorage;
   };
+  TorClientDuplex: {
+    constructorParams: [];
+    interface: Promise<TorClientDuplex>;
+  };
 };
-
-export interface TorClientFactoryOptions {
-  clock?: IClock;
-  log?: Log;
-  storage?: IStorage;
-}
-
-export function createTorClientFactory(
-  options: TorClientFactoryOptions = {}
-): Factory<TorClientComponentMap> {
-  const factory = new Factory<TorClientComponentMap>();
-
-  factory.register('clock', () => options.clock ?? new SystemClock());
-  factory.register('log', params => options.log ?? new Log(params));
-
-  // Register manager factories
-  factory.register('certificateManager', opts => new CertificateManager(opts));
-  factory.register('microdescManager', opts => new MicrodescManager(opts));
-  factory.register('consensusManager', opts => new ConsensusManager(opts));
-  factory.register('circuitBuilder', opts => new CircuitBuilder(opts));
-
-  // Store context values using the factory's instance storage
-  if (options.storage) {
-    factory.set('storage', options.storage);
-  }
-
-  return factory;
-}

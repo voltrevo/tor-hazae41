@@ -1,11 +1,12 @@
 import { Circuit, Echalote } from '../echalote';
 import { IStorage } from '../storage';
 import { Log } from '../Log';
+import { Factory } from '../utils/Factory';
+import { TorClientComponentMap } from './factory';
 
 export interface CertificateManagerOptions {
-  storage: IStorage;
-  maxCached?: number;
-  log: Log;
+  factory: Factory<TorClientComponentMap>;
+  maxCached: number;
 }
 
 /**
@@ -24,9 +25,9 @@ export class CertificateManager {
   isClosed = false;
 
   constructor(options: CertificateManagerOptions) {
-    this.storage = options.storage;
-    this.maxCached = options.maxCached ?? 20; // More certificates than consensuses
-    this.log = options.log;
+    this.storage = options.factory.get('Storage');
+    this.maxCached = options.maxCached; // More certificates than consensuses
+    this.log = options.factory.get('Log').child(CertificateManager.name);
   }
 
   /**

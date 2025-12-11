@@ -5,16 +5,31 @@ import { WebSocketDuplex } from './WebSocketDuplex';
 import { createSnowflakeStream } from '../echalote';
 import { computeFullConsensusHash } from '../echalote/mods/tor/consensus/diff';
 import { ConsensusManager } from './ConsensusManager';
-import { createFsStorage } from '../storage/fs';
 import { Log } from '../Log';
 import { SystemClock } from '../clock';
+import { Factory } from '../utils/Factory';
+import { TorClientComponentMap } from './factory';
+import { createMemoryStorage } from '../storage';
+import { CertificateManager } from './CertificateManager';
+
+function createFactory() {
+  const factory = new Factory<TorClientComponentMap>();
+  factory.set('Log', new Log());
+  factory.set('Clock', new SystemClock());
+  factory.set('Storage', createMemoryStorage());
+  factory.set(
+    'CertificateManager',
+    new CertificateManager({ factory, maxCached: 20 })
+  );
+
+  return factory;
+}
 
 test('ConsensusManager: fetch and reconstruct consensus', async () => {
   // Initialize WASM
   await initWasm();
 
-  // Create storage for caching
-  const storage = createFsStorage('/tmp/tor-consensus-test-cache');
+  const factory = createFactory();
 
   // Create a Tor connection
   const snowflakeUrl = 'wss://snowflake.pse.dev/';
@@ -110,11 +125,9 @@ test('ConsensusManager: fetch and reconstruct consensus', async () => {
 
   // Test caching: manually save and load
   console.log('\nTesting consensus caching...');
-  const log = new Log();
   const consensusManager = new ConsensusManager({
-    clock: new SystemClock(),
-    storage,
-    log,
+    factory,
+    maxCached: 5,
   });
 
   // Manually save to cache (bypassing getConsensus to avoid diff issues)

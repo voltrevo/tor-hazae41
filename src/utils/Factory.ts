@@ -1,4 +1,5 @@
 // See Factory.md
+// FIXME: Rename this to AbstractApp
 
 export type IFactory<
   ComponentMap extends Record<

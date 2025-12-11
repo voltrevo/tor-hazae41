@@ -1,5 +1,5 @@
 import { test } from '@hazae41/phobos';
-import { TorClient } from '../TorClient/TorClient.js';
+import { TorClient } from '../TorClient';
 
 test('Keynet connection through TorClient (transparent)', async () => {
   const keynetAddr =

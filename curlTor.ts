@@ -205,11 +205,6 @@ function parseArgs(argv: string[]): Opts {
   return opts;
 }
 
-function hasHeader(headers: [string, string][], name: string): boolean {
-  const n = name.toLowerCase();
-  return headers.some(([k]) => k.toLowerCase() === n);
-}
-
 async function main() {
   const opts = parseArgs(process.argv.slice(2));
   if (!opts.url) die('Usage: curl.ts [options] <url>');
@@ -234,19 +229,19 @@ async function main() {
     // FormData sets its own content-type with boundary.
   } else if (opts.data) {
     if (opts.data.kind === 'json') {
-      if (!hasHeader(Array.from(headers.entries()), 'Content-Type')) {
+      if (!headers.has('Content-Type')) {
         headers.set('Content-Type', 'application/json');
       }
       body = opts.data.value as string;
     } else if (opts.data.kind === 'raw') {
-      if (!hasHeader(Array.from(headers.entries()), 'Content-Type')) {
+      if (!headers.has('Content-Type')) {
         headers.set('Content-Type', 'application/x-www-form-urlencoded');
       }
       body = opts.data.value as string;
     } else {
       // binary
       body = new Uint8Array(opts.data.value as Buffer);
-      if (!hasHeader(Array.from(headers.entries()), 'Content-Type')) {
+      if (!headers.has('Content-Type')) {
         headers.set('Content-Type', 'application/octet-stream');
       }
     }

@@ -4,6 +4,9 @@ import { MicrodescManager } from './MicrodescManager';
 import { createMemoryStorage } from '../storage';
 import { Log } from '../Log';
 import { Echalote } from '../echalote';
+import { Factory } from '../utils/Factory';
+import { TorClientComponentMap } from './factory';
+import { VirtualClock } from '../clock';
 
 // Mock microdesc factory
 function createMockMicrodesc(
@@ -33,13 +36,23 @@ function createMockMicrodesc(
   } as Echalote.Consensus.Microdesc;
 }
 
+function createFactory() {
+  const factory = new Factory<TorClientComponentMap>();
+  const clock = new VirtualClock();
+  factory.set('Clock', clock);
+  factory.set('Log', new Log({ clock, rawLog: () => {} }));
+  factory.set('Storage', createMemoryStorage());
+
+  return factory;
+}
+
 test('MicrodescManager: saveToCache and retrieval', async () => {
-  const storage = createMemoryStorage();
-  const log = new Log({ rawLog: () => {} });
+  const factory = createFactory();
+  const storage = factory.get('Storage');
+
   const microdescManager = new MicrodescManager({
-    storage,
+    factory,
     maxCached: 10,
-    log,
   });
 
   try {
@@ -68,12 +81,12 @@ test('MicrodescManager: saveToCache and retrieval', async () => {
 });
 
 test('MicrodescManager: cache size limit enforcement', async () => {
-  const storage = createMemoryStorage();
-  const log = new Log({ rawLog: () => {} });
+  const factory = createFactory();
+  const storage = factory.get('Storage');
+
   const microdescManager = new MicrodescManager({
-    storage,
+    factory,
     maxCached: 2, // Small cache for testing
-    log,
   });
 
   try {
@@ -98,12 +111,12 @@ test('MicrodescManager: cache size limit enforcement', async () => {
 });
 
 test('MicrodescManager: multiple microdescs in cache', async () => {
-  const storage = createMemoryStorage();
-  const log = new Log({ rawLog: () => {} });
+  const factory = createFactory();
+  const storage = factory.get('Storage');
+
   const microdescManager = new MicrodescManager({
-    storage,
+    factory,
     maxCached: 100,
-    log,
   });
 
   try {

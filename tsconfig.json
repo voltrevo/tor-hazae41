@@ -23,6 +23,5 @@
       "tor-hazae41/storage": ["./src/storage/index-node.ts"]
     }
   },
-  "include": ["src/**/*", "demo.ts"],
   "exclude": ["node_modules", "dist", "index.html", "public"]
 }

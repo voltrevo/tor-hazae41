@@ -10,6 +10,7 @@ import { MicrodescManager } from './MicrodescManager';
 import { assert } from '../utils/assert';
 import { Factory } from '../utils/Factory';
 import type { TorClientComponentMap } from './factory';
+import { ConsensusManager } from './ConsensusManager';
 
 /**
  * Events emitted by CircuitBuilder.
@@ -31,8 +32,6 @@ export type CircuitBuilderEvents = {
 export interface CircuitBuilderOptions {
   /** Tor connection to build circuits through */
   torConnection: TorClientDuplex;
-  /** Function to fetch consensus information */
-  getConsensus: (circuit: Circuit) => Promise<Echalote.Consensus>;
   /** Logger instance */
   log: Log;
   /** Factory for creating component dependencies */
@@ -51,11 +50,9 @@ export interface CircuitBuilderOptions {
  */
 export class CircuitBuilder extends EventEmitter<CircuitBuilderEvents> {
   private readonly torConnection: TorClientDuplex;
-  private readonly getConsensus: (
-    circuit: Circuit
-  ) => Promise<Echalote.Consensus>;
   private readonly log: Log;
   private readonly microdescManager: MicrodescManager;
+  private readonly consensusManager: ConsensusManager;
   private readonly maxAttempts: number;
   private readonly extendTimeout: number;
 
@@ -67,20 +64,10 @@ export class CircuitBuilder extends EventEmitter<CircuitBuilderEvents> {
   constructor(options: CircuitBuilderOptions) {
     super();
     this.torConnection = options.torConnection;
-    this.getConsensus = options.getConsensus;
     this.log = options.log;
 
-    // Get microdescManager from factory
-    try {
-      this.microdescManager = options.factory.get('microdescManager');
-    } catch {
-      // If not available in factory, create a new one
-      const storage = options.factory.get('storage');
-      this.microdescManager = options.factory.create('microdescManager', {
-        storage,
-        log: this.log.child('microdescs'),
-      });
-    }
+    this.microdescManager = options.factory.get('MicrodescManager');
+    this.consensusManager = options.factory.get('ConsensusManager');
 
     this.maxAttempts = options.maxAttempts ?? 10;
     this.extendTimeout = options.extendTimeout ?? 10000;
@@ -106,7 +93,8 @@ export class CircuitBuilder extends EventEmitter<CircuitBuilderEvents> {
     this.log.info('[CircuitBuilder] Consensus circuit created');
 
     try {
-      const consensus = await this.getConsensus(consensusCircuit);
+      const consensus =
+        await this.consensusManager.getConsensus(consensusCircuit);
 
       // Select relay candidates
       const middles = consensus.microdescs.filter(isMiddleRelay);
@@ -190,7 +178,7 @@ export class CircuitBuilder extends EventEmitter<CircuitBuilderEvents> {
     let consensus;
 
     try {
-      consensus = await this.getConsensus(consensusCircuit);
+      consensus = await this.consensusManager.getConsensus(consensusCircuit);
     } catch (e) {
       consensusCircuit[Symbol.dispose]();
       throw e;
