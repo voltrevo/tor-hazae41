@@ -5,8 +5,7 @@ import { createMemoryStorage } from '../storage';
 import { Log } from '../Log';
 import { Circuit } from '../echalote';
 import { Echalote } from '../echalote';
-import { Factory } from '../utils/Factory';
-import { TorClientComponentMap } from './factory';
+import { App } from './App';
 import { SystemClock } from '../clock';
 
 // Mock circuit implementation
@@ -37,20 +36,20 @@ function createMockCertificate(
   };
 }
 
-function createFactory() {
-  const factory = new Factory<TorClientComponentMap>();
+function createApp() {
+  const app = new App();
   const clock = new SystemClock(); // FIXME: should use virtual clock
-  factory.set('Clock', clock);
-  factory.set('Log', new Log({ clock, rawLog: () => {} }));
-  factory.set('Storage', createMemoryStorage());
+  app.set('Clock', clock);
+  app.set('Log', new Log({ clock, rawLog: () => {} }));
+  app.set('Storage', createMemoryStorage());
 
-  return factory;
+  return app;
 }
 
 test('CertificateManager: basic functionality', async () => {
-  const factory = createFactory();
+  const app = createApp();
   const certificateManager = new CertificateManager({
-    factory,
+    app,
     maxCached: 3,
   });
   const mockCircuit = new MockCircuit() as Circuit;
@@ -80,13 +79,13 @@ test('CertificateManager: basic functionality', async () => {
     assert(fetchCallCount === 1, 'Should call fetchOrThrow once');
 
     // Verify certificate was cached
-    const cachedData = await factory.get('Storage').read('cert:test-fp-basic');
+    const cachedData = await app.get('Storage').read('cert:test-fp-basic');
     assert(cachedData !== undefined, 'Certificate should be cached');
 
     // Restore original method
     Echalote.Consensus.Certificate.fetchOrThrow = originalFetchOrThrow;
   } finally {
     certificateManager.close();
-    factory.get('Storage').removeAll();
+    app.get('Storage').removeAll();
   }
 });

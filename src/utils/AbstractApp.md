@@ -1,4 +1,4 @@
-# `Factory` – Typed Component Factory
+# `App` – Typed Component Factory
 
 A small, strongly-typed factory for creating and managing named component instances.
 
@@ -29,7 +29,7 @@ type ComponentMap = {
 ## API Overview
 
 ```ts
-export interface IFactory<ComponentMap> {
+export interface IApp<ComponentMap> {
   create<N extends keyof ComponentMap>(
     name: N,
     ...params: ComponentMap[N]['constructorParams']
@@ -115,25 +115,25 @@ type Components = {
   };
 };
 
-const factory = new Factory<Components>();
+const app = new App<Components>();
 
 // Register using a class
-factory.register('logger', Logger);
+app.register('logger', Logger);
 
 // Or using a factory function
-factory.register('httpClient', (baseUrl: string) => new HttpClient(baseUrl));
+app.register('httpClient', (baseUrl: string) => new HttpClient(baseUrl));
 
 // Construct instances (not stored yet)
-const logger = factory.create('logger', 'info');
-const apiClient = factory.create('httpClient', 'https://api.example.com');
+const logger = app.create('logger', 'info');
+const apiClient = app.create('httpClient', 'https://api.example.com');
 
 // Store instances
-factory.set('logger', logger); // default logger
-factory.set('httpClient', 'primary', apiClient); // named client
+app.set('logger', logger); // default logger
+app.set('httpClient', 'primary', apiClient); // named client
 
 // Retrieve instances later
-const defaultLogger = factory.get('logger');
-const primaryClient = factory.get('httpClient', 'primary');
+const defaultLogger = app.get('logger');
+const primaryClient = app.get('httpClient', 'primary');
 ```
 
 ---
@@ -143,19 +143,19 @@ const primaryClient = factory.get('httpClient', 'primary');
 Subnames let you hold multiple instances of the same component type:
 
 ```ts
-factory.set(
+app.set(
   'httpClient',
   'primary',
-  factory.create('httpClient', 'https://api.example.com')
+  app.create('httpClient', 'https://api.example.com')
 );
-factory.set(
+app.set(
   'httpClient',
   'secondary',
-  factory.create('httpClient', 'https://backup.example.com')
+  app.create('httpClient', 'https://backup.example.com')
 );
 
-const primary = factory.get('httpClient', 'primary');
-const secondary = factory.get('httpClient', 'secondary');
+const primary = app.get('httpClient', 'primary');
+const secondary = app.get('httpClient', 'secondary');
 ```
 
 If you don’t care about multiple instances, just rely on the `"default"` subname (omit it in `set` / `get`).
@@ -173,7 +173,3 @@ If you don’t care about multiple instances, just rely on the `"default"` subna
   - `get` throws if you ask for an instance that hasn’t been `set`.
 
 This keeps the implementation small while still giving you a strongly typed mini DI container.
-
-## TorClient Integration
-
-`TorClient` now constructs its base helpers through `src/TorClient/factory.ts`, which exposes `createTorClientFactory`. That factory registers `log` and `clock`, ensuring the client always receives the same instances (or allows swapping them out via the factory options), while downstream managers keep using fields like `this.log` and `this.clock` as before.

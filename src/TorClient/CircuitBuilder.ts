@@ -8,8 +8,7 @@ import { EventEmitter } from './EventEmitter';
 import { decodeKeynetPubKey } from '../keynet/decodeKeynetPubkey';
 import { MicrodescManager } from './MicrodescManager';
 import { assert } from '../utils/assert';
-import { Factory } from '../utils/Factory';
-import type { TorClientComponentMap } from './factory';
+import type { App } from './App';
 import { ConsensusManager } from './ConsensusManager';
 
 /**
@@ -34,8 +33,8 @@ export interface CircuitBuilderOptions {
   torConnection: TorClientDuplex;
   /** Logger instance */
   log: Log;
-  /** Factory for creating component dependencies */
-  factory: Factory<TorClientComponentMap>;
+  /** App manages components */
+  app: App;
   /** Maximum build attempts per circuit (default: 10) */
   maxAttempts?: number;
   /** Timeout for circuit extension in milliseconds (default: 10000) */
@@ -66,8 +65,8 @@ export class CircuitBuilder extends EventEmitter<CircuitBuilderEvents> {
     this.torConnection = options.torConnection;
     this.log = options.log;
 
-    this.microdescManager = options.factory.get('MicrodescManager');
-    this.consensusManager = options.factory.get('ConsensusManager');
+    this.microdescManager = options.app.get('MicrodescManager');
+    this.consensusManager = options.app.get('ConsensusManager');
 
     this.maxAttempts = options.maxAttempts ?? 10;
     this.extendTimeout = options.extendTimeout ?? 10000;

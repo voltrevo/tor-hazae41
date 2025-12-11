@@ -16,10 +16,11 @@ import { CircuitBuilder, type CircuitBuilderOptions } from './CircuitBuilder';
 import type { IStorage } from '../storage';
 import { CircuitManager } from './CircuitManager';
 import { TorClientDuplex } from '../echalote';
+import { AbstractApp } from '../utils/AbstractApp';
 
 type LogConstructorParams = ConstructorParameters<typeof Log>[0];
 
-export type TorClientComponentMap = {
+export type ComponentMap = {
   Clock: {
     constructorParams: [];
     interface: IClock;
@@ -57,3 +58,5 @@ export type TorClientComponentMap = {
     interface: Promise<TorClientDuplex>;
   };
 };
+
+export class App extends AbstractApp<ComponentMap> {}

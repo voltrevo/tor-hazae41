@@ -2,11 +2,10 @@ import { Circuit, Echalote } from '../echalote';
 import { IStorage } from '../storage';
 import { Log } from '../Log';
 import { invariant } from '../utils/debug';
-import { Factory } from '../utils/Factory';
-import { TorClientComponentMap } from './factory';
+import { App } from './App';
 
 export interface MicrodescManagerOptions {
-  factory: Factory<TorClientComponentMap>;
+  app: App;
   maxCached: number;
 }
 
@@ -26,9 +25,9 @@ export class MicrodescManager {
   isClosed = false;
 
   constructor(options: MicrodescManagerOptions) {
-    this.storage = options.factory.get('Storage');
+    this.storage = options.app.get('Storage');
     this.maxCached = options.maxCached; // Large cache for frequently-used relays
-    this.log = options.factory.get('Log').child(this.constructor.name);
+    this.log = options.app.get('Log').child(this.constructor.name);
   }
 
   /**

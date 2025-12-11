@@ -11,8 +11,7 @@ import { CircuitManager } from './CircuitManager';
 import { getErrorDetails } from '../utils/getErrorDetails';
 import { Log } from '../Log';
 import { IClock } from '../clock';
-import { TorClientComponentMap } from './factory';
-import { Factory } from '../utils/Factory';
+import { App } from './App';
 import { ConsensusManager } from './ConsensusManager';
 import { MicrodescManager } from './MicrodescManager';
 
@@ -45,7 +44,7 @@ export class TorClientBase {
   private storage: IStorage;
   private clock: IClock;
 
-  private factory: Factory<TorClientComponentMap>;
+  private app: App;
 
   // Consensus management
   private consensusManager: ConsensusManager;
@@ -56,25 +55,23 @@ export class TorClientBase {
   // Circuit management
   private circuitManager: CircuitManager;
 
-  constructor(
-    options: TorClientOptions & { factory: Factory<TorClientComponentMap> }
-  ) {
+  constructor(options: TorClientOptions & { app: App }) {
     this.snowflakeUrl = options.snowflakeUrl;
     this.connectionTimeout = options.connectionTimeout ?? 15000;
     this.circuitTimeout = options.circuitTimeout ?? 90000;
     this.circuitBuffer = options.circuitBuffer ?? 2;
     this.maxCircuitLifetime = options.maxCircuitLifetime ?? 10 * 60_000; // 10 minutes
-    this.factory = options.factory;
-    this.clock = this.factory.get('Clock');
-    this.log = this.factory.get('Log').child('TorClient');
-    this.storage = this.factory.get('Storage');
-    this.consensusManager = this.factory.get('ConsensusManager');
-    this.microdescManager = this.factory.get('MicrodescManager');
-    this.circuitManager = this.factory.get('CircuitManager');
+    this.app = options.app;
+    this.clock = this.app.get('Clock');
+    this.log = this.app.get('Log').child('TorClient');
+    this.storage = this.app.get('Storage');
+    this.consensusManager = this.app.get('ConsensusManager');
+    this.microdescManager = this.app.get('MicrodescManager');
+    this.circuitManager = this.app.get('CircuitManager');
 
     // FIXME: I don't think TorClientDuplex needs to be in factory?
     //        maybe CircuitManager should implement createTorConnection?
-    this.factory.register('TorClientDuplex', () => this.createTorConnection());
+    this.app.register('TorClientDuplex', () => this.createTorConnection());
 
     // Note: Circuits are created proactively via circuitBuffer parameter.
     // The buffer maintains N ready-to-use circuits in the background.

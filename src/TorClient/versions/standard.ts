@@ -1,7 +1,6 @@
 import { createAutoStorage } from 'tor-hazae41/storage';
 import { SystemClock } from '../../clock';
-import { Factory } from '../../utils/Factory';
-import { TorClientComponentMap } from '../factory';
+import { App } from '../App';
 import { TorClientBase, TorClientOptions } from '../TorClientBase';
 import { Log } from '../../Log';
 import { CertificateManager } from '../CertificateManager';
@@ -56,44 +55,36 @@ export class TorClient extends TorClientBase {
    * ```
    */
   constructor(options: TorClientOptions) {
-    super({ ...options, factory: TorClient.makeFactory(options) });
+    super({ ...options, app: TorClient.makeApp(options) });
   }
 
-  private static makeFactory(
-    options: TorClientOptions
-  ): Factory<TorClientComponentMap> {
-    const factory = new Factory<TorClientComponentMap>();
+  private static makeApp(options: TorClientOptions): App {
+    const app = new App();
 
     const clock = new SystemClock();
-    factory.set('Clock', clock);
-    factory.set('Log', options.log ?? new Log({ clock }));
-    factory.set('Storage', createAutoStorage('tor-hazae41-cache'));
+    app.set('Clock', clock);
+    app.set('Log', options.log ?? new Log({ clock }));
+    app.set('Storage', createAutoStorage('tor-hazae41-cache'));
 
-    factory.set(
+    app.set(
       'CertificateManager',
-      new CertificateManager({ factory, maxCached: 20 })
+      new CertificateManager({ app, maxCached: 20 })
     );
-    factory.set(
-      'MicrodescManager',
-      new MicrodescManager({ factory, maxCached: 1000 })
-    );
-    factory.set(
-      'ConsensusManager',
-      new ConsensusManager({ factory, maxCached: 5 })
-    );
-    factory.register('CircuitBuilder', CircuitBuilder);
+    app.set('MicrodescManager', new MicrodescManager({ app, maxCached: 1000 }));
+    app.set('ConsensusManager', new ConsensusManager({ app, maxCached: 5 }));
+    app.register('CircuitBuilder', CircuitBuilder);
 
-    factory.set(
+    app.set(
       'CircuitManager',
       new CircuitManager({
         circuitBuffer: options.circuitBuffer,
         maxCircuitLifetime: options.maxCircuitLifetime,
         circuitTimeout: options.circuitTimeout,
-        factory,
+        app,
       })
     );
 
-    return factory;
+    return app;
   }
 
   /**

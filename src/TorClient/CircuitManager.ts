@@ -5,8 +5,7 @@ import { IClock } from '../clock';
 import { CircuitBuilder } from './CircuitBuilder';
 import { ResourcePool } from './ResourcePool';
 import { invariant } from '../utils/debug';
-import { Factory } from '../utils/Factory';
-import type { TorClientComponentMap } from './factory';
+import type { App } from './App';
 
 /**
  * Configuration options for the CircuitManager.
@@ -21,8 +20,8 @@ export interface CircuitManagerOptions {
   maxCircuitLifetime?: number;
   /** Number of circuits to maintain in buffer (default: 0, disabled) */
   circuitBuffer?: number;
-  /** Factory for creating component dependencies */
-  factory: Factory<TorClientComponentMap>;
+  /** Manages component dependencies */
+  app: App;
 }
 
 /**
@@ -65,7 +64,7 @@ export class CircuitManager {
   private maxCircuitLifetime: number;
   private circuitBufferSize: number;
   private log: Log;
-  private factory: Factory<TorClientComponentMap>;
+  private app: App;
   private circuitPool: ResourcePool<Circuit>;
 
   // Shared Tor connection
@@ -81,11 +80,11 @@ export class CircuitManager {
   private circuitStates: Map<Circuit, CircuitState> = new Map();
 
   constructor(options: CircuitManagerOptions) {
-    this.clock = options.factory.get('Clock');
+    this.clock = options.app.get('Clock');
     this.maxCircuitLifetime = options.maxCircuitLifetime ?? 10 * 60_000;
     this.circuitBufferSize = options.circuitBuffer ?? 0;
-    this.log = options.factory.get('Log').child(this.constructor.name);
-    this.factory = options.factory;
+    this.log = options.app.get('Log').child(this.constructor.name);
+    this.app = options.app;
 
     // Always initialize ResourcePool for circuit buffering
     // If bufferSize is 0, ResourcePool won't maintain a buffer but still provides acquire()
@@ -468,7 +467,7 @@ export class CircuitManager {
       if (!this.torConnection) {
         if (!this.torConnectionPromise) {
           this.log.info(`[${hostLabel}] 🔌 Creating shared Tor connection`);
-          this.torConnectionPromise = this.factory.create('TorClientDuplex');
+          this.torConnectionPromise = this.app.create('TorClientDuplex');
         }
         this.torConnection = await this.torConnectionPromise;
 
@@ -511,7 +510,7 @@ export class CircuitManager {
     const circuitBuilder = new CircuitBuilder({
       torConnection: this.torConnection!,
       log: this.log.child('CircuitBuilder'),
-      factory: this.factory,
+      app: this.app,
     });
     return await circuitBuilder.buildCircuit(hostname);
   }

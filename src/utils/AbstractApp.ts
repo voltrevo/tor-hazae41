@@ -1,7 +1,6 @@
-// See Factory.md
-// FIXME: Rename this to AbstractApp
+// See AbstractApp.md
 
-export type IFactory<
+export type IAbstractApp<
   ComponentMap extends Record<
     string,
     { constructorParams: unknown[]; interface: unknown }
@@ -9,8 +8,6 @@ export type IFactory<
 > = {
   /**
    * Create a new instance of a registered component.
-   *
-   * This is a pure helper: it does NOT store the instance in the factory.
    *
    * Throws if no constructor or class is registered for the component.
    */
@@ -106,19 +103,19 @@ type ComponentCtorOrFactoryMap<
 };
 
 /**
- * Generic factory for creating and managing named component instances.
+ * Creates and manages named component instances.
  *
  * - `register()` adds either a class or a factory function lazily.
  * - `create()` returns a fresh instance without storing it.
  * - `set()` stores an existing instance under (name, subname).
  * - `get()` retrieves a stored instance.
  */
-export class Factory<
+export class AbstractApp<
   ComponentMap extends Record<
     string,
     { constructorParams: unknown[]; interface: unknown }
   >,
-> implements IFactory<ComponentMap>
+> implements IAbstractApp<ComponentMap>
 {
   /**
    * Map of registered constructors/classes for each component type.
@@ -136,7 +133,7 @@ export class Factory<
   private readonly instances = new Map<string, unknown>();
 
   /**
-   * Create an empty factory.
+   * Create an empty app.
    *
    * Use `register()` to add constructors before calling `create()`.
    */

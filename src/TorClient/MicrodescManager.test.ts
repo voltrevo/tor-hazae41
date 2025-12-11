@@ -4,8 +4,7 @@ import { MicrodescManager } from './MicrodescManager';
 import { createMemoryStorage } from '../storage';
 import { Log } from '../Log';
 import { Echalote } from '../echalote';
-import { Factory } from '../utils/Factory';
-import { TorClientComponentMap } from './factory';
+import { App } from './App';
 import { VirtualClock } from '../clock';
 
 // Mock microdesc factory
@@ -36,22 +35,22 @@ function createMockMicrodesc(
   } as Echalote.Consensus.Microdesc;
 }
 
-function createFactory() {
-  const factory = new Factory<TorClientComponentMap>();
+function createApp() {
+  const app = new App();
   const clock = new VirtualClock();
-  factory.set('Clock', clock);
-  factory.set('Log', new Log({ clock, rawLog: () => {} }));
-  factory.set('Storage', createMemoryStorage());
+  app.set('Clock', clock);
+  app.set('Log', new Log({ clock, rawLog: () => {} }));
+  app.set('Storage', createMemoryStorage());
 
-  return factory;
+  return app;
 }
 
 test('MicrodescManager: saveToCache and retrieval', async () => {
-  const factory = createFactory();
-  const storage = factory.get('Storage');
+  const app = createApp();
+  const storage = app.get('Storage');
 
   const microdescManager = new MicrodescManager({
-    factory,
+    app,
     maxCached: 10,
   });
 
@@ -81,11 +80,11 @@ test('MicrodescManager: saveToCache and retrieval', async () => {
 });
 
 test('MicrodescManager: cache size limit enforcement', async () => {
-  const factory = createFactory();
-  const storage = factory.get('Storage');
+  const app = createApp();
+  const storage = app.get('Storage');
 
   const microdescManager = new MicrodescManager({
-    factory,
+    app,
     maxCached: 2, // Small cache for testing
   });
 
@@ -111,11 +110,11 @@ test('MicrodescManager: cache size limit enforcement', async () => {
 });
 
 test('MicrodescManager: multiple microdescs in cache', async () => {
-  const factory = createFactory();
-  const storage = factory.get('Storage');
+  const app = createApp();
+  const storage = app.get('Storage');
 
   const microdescManager = new MicrodescManager({
-    factory,
+    app,
     maxCached: 100,
   });
 
