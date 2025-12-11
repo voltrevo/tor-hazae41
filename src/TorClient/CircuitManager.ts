@@ -8,6 +8,7 @@ import { invariant } from '../utils/debug';
 import type { App } from './App';
 import { WebSocketDuplex } from './WebSocketDuplex';
 import { getErrorDetails } from '../utils/getErrorDetails';
+import { assert } from '../utils/assert';
 
 /**
  * Configuration options for the CircuitManager.
@@ -266,8 +267,7 @@ export class CircuitManager {
       circuit = await this.circuitPool.acquire();
       this.log.info(`[${hostname}] Allocated circuit from pool`);
     } else {
-      // keynet circuits are special and can't come from the pool
-      circuit = await this.createNewCircuit(hostname);
+      circuit = await this.acquireKeynetCircuit(hostname);
     }
 
     // Initialize circuit state
@@ -290,6 +290,45 @@ export class CircuitManager {
     this.scheduleCircuitDisposal(circuit, hostname);
 
     return circuit;
+  }
+
+  private async acquireKeynetCircuit(hostname: string): Promise<Circuit> {
+    const extendToKeynet = async (circuit: Circuit) => {
+      assert(this.torConnection);
+
+      const builder = new CircuitBuilder({
+        torConnection: this.torConnection,
+        log: this.log.child(CircuitBuilder.name),
+        app: this.app,
+      });
+
+      const consensusCircuit = await this.torConnection.createOrThrow();
+      const consensus = await this.app
+        .get('ConsensusManager')
+        .getConsensus(consensusCircuit);
+
+      await builder.extendCircuitToKeynet(consensus, circuit, hostname);
+    };
+
+    let lastError;
+
+    for (let i = 1; i <= 3; i++) {
+      try {
+        // Use ResourcePool to acquire a circuit
+        this.log.info(`[${hostname}] Allocating circuit from pool`);
+        const circuit = await this.circuitPool.acquire();
+        this.log.info(
+          `[${hostname}] Allocated circuit from pool, extending to keynet host`
+        );
+        await extendToKeynet(circuit);
+        this.log.info(`[${hostname}] Extended to keynet host`);
+        return circuit;
+      } catch (e) {
+        lastError = e;
+      }
+    }
+
+    throw lastError;
   }
 
   /**
@@ -502,7 +541,7 @@ export class CircuitManager {
       }
 
       this.log.info(`[${hostLabel}] 🔨 Building circuit`);
-      const circuit = await this.buildCircuit(hostname);
+      const circuit = await this.buildCircuit();
 
       this.log.info(`[${hostLabel}] ✅ Circuit created successfully`);
       return circuit;
@@ -517,14 +556,17 @@ export class CircuitManager {
   /**
    * Builds a new circuit through the Tor network.
    */
-  private async buildCircuit(hostname?: string): Promise<Circuit> {
+  private async buildCircuit(): Promise<Circuit> {
     // Use CircuitBuilder to build the circuit
+
+    assert(this.torConnection);
+
     const circuitBuilder = new CircuitBuilder({
-      torConnection: this.torConnection!,
+      torConnection: this.torConnection,
       log: this.log.child('CircuitBuilder'),
       app: this.app,
     });
-    return await circuitBuilder.buildCircuit(hostname);
+    return await circuitBuilder.buildCircuit();
   }
 
   /**

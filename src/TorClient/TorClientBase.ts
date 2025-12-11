@@ -116,7 +116,7 @@ export class TorClientBase {
         }
       });
     } catch (error) {
-      this.log.error(`Request failed: ${(error as Error).message}`);
+      this.log.error(`Request failed: ${getErrorDetails(error)}`);
 
       // If circuit fails, clear only this host's circuit so Tor connection can be reused
       this.circuitManager.clearCircuit(hostname);

@@ -33,7 +33,7 @@ export interface CircuitBuilderOptions {
   torConnection: TorClientDuplex;
   /** Logger instance */
   log: Log;
-  /** App manages components */
+  /** App manages component dependencies */
   app: App;
   /** Maximum build attempts per circuit (default: 10) */
   maxAttempts?: number;
@@ -78,11 +78,7 @@ export class CircuitBuilder extends EventEmitter<CircuitBuilderEvents> {
    *
    * @throws Error if circuit building fails after all retry attempts
    */
-  async buildCircuit(hostname?: string): Promise<Circuit> {
-    if (hostname?.endsWith('.keynet')) {
-      return await this.buildKeynetCircuit(hostname);
-    }
-
+  async buildCircuit(): Promise<Circuit> {
     await initWasm();
 
     this.log.info('[CircuitBuilder] Creating circuit');
@@ -163,80 +159,6 @@ export class CircuitBuilder extends EventEmitter<CircuitBuilderEvents> {
         // Ignore disposal errors
       }
     }
-  }
-
-  async buildKeynetCircuit(hostname: string): Promise<Circuit> {
-    await initWasm();
-
-    this.log.info('[CircuitBuilder] Creating keynet circuit');
-
-    // Create consensus circuit and fetch consensus
-    const consensusCircuit = await this.torConnection.createOrThrow();
-    this.log.info('[CircuitBuilder] Consensus circuit created');
-
-    let consensus;
-
-    try {
-      consensus = await this.consensusManager.getConsensus(consensusCircuit);
-    } catch (e) {
-      consensusCircuit[Symbol.dispose]();
-      throw e;
-    }
-
-    // Select relay candidates
-    const middles = consensus.microdescs.filter(isMiddleRelay);
-
-    this.log.info(`[CircuitBuilder] Found ${middles.length} middle relays`);
-
-    assert(
-      middles.length > 0,
-      `Must have at least one middle relay available for keynet circuit`
-    );
-
-    // Try building circuit with retries
-    let lastError: unknown;
-
-    for (let attempt = 1; attempt <= this.maxAttempts; attempt++) {
-      try {
-        this.log.info(
-          `[CircuitBuilder] Building keynet circuit (attempt ${attempt}/${this.maxAttempts})`
-        );
-
-        const circuit = await this.torConnection.createOrThrow();
-
-        try {
-          // Extend through middle relay
-          await this.extendCircuit(circuit, middles, 'middle');
-
-          // Extend through another middle relay
-          await this.extendCircuit(circuit, middles, 'middle (2)');
-
-          await this.extendCircuitToKeynet(consensus, circuit, hostname);
-
-          this.log.info('[CircuitBuilder] Keynet circuit built successfully');
-          this.emit('circuit-created', circuit);
-          return circuit;
-        } catch (e) {
-          // Dispose failed circuit
-          circuit[Symbol.dispose]();
-          throw e;
-        }
-      } catch (e) {
-        lastError = e;
-        const error = e instanceof Error ? e : new Error(String(e));
-        this.emit('circuit-failed', error, attempt, this.maxAttempts);
-
-        if (attempt === this.maxAttempts) {
-          this.log.error(
-            `[CircuitBuilder] Failed after ${this.maxAttempts} attempts: ${getErrorDetails(e)}`
-          );
-        }
-      }
-    }
-
-    throw new Error(
-      `Circuit build failed after ${this.maxAttempts} attempts: ${getErrorDetails(lastError)}`
-    );
   }
 
   async extendCircuitToKeynet(

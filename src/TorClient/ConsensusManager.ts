@@ -13,6 +13,7 @@ import { App } from './App';
 // - this should be implemented by CircuitManager and it should keep the same
 //   circuit for ConsensusManager unless it needs to be rebuilt (new tor
 //   connection)
+// - by the way, these circuits are currently not getting cleaned up!
 
 export interface ConsensusManagerOptions {
   app: App;
