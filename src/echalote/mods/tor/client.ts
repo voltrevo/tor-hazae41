@@ -1,4 +1,4 @@
-import { Aes128Ctr128BEKey, AesWasm } from '@hazae41/aes.wasm';
+import { VerifiedAes128Ctr } from '../../../TorClient/VerifiedAes128Ctr';
 import { Opaque, Readable, Writable } from '@hazae41/binary';
 import { Bitset } from '@hazae41/bitset';
 import { Bytes, type Uint8Array } from '@hazae41/bytes';
@@ -61,6 +61,7 @@ import {
   TorVersionedState,
 } from './state.js';
 import { invariant } from '../../../utils/debug';
+import { AesWasm } from '@hazae41/aes.wasm';
 
 export interface Guard {
   readonly identity: Uint8Array<20>;
@@ -660,16 +661,13 @@ export class SecretTorClientDuplex {
     await forwardDigest.updateOrThrow(result.forwardDigest);
     await backwardDigest.updateOrThrow(result.backwardDigest);
 
-    using forwardKeyMemory = new AesWasm.Memory(result.forwardKey);
-    using forwardIvMemory = new AesWasm.Memory(new Uint8Array(16));
-
-    using backwardKeyMemory = new AesWasm.Memory(result.backwardKey);
-    using backwardIvMemory = new AesWasm.Memory(new Uint8Array(16));
-
-    const forwardKey = new Aes128Ctr128BEKey(forwardKeyMemory, forwardIvMemory);
-    const backwardKey = new Aes128Ctr128BEKey(
-      backwardKeyMemory,
-      backwardIvMemory
+    const forwardKey = new VerifiedAes128Ctr(
+      result.forwardKey,
+      new Uint8Array(16)
+    );
+    const backwardKey = new VerifiedAes128Ctr(
+      result.backwardKey,
+      new Uint8Array(16)
     );
 
     const target = new Target(

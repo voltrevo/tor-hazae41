@@ -1,4 +1,4 @@
-import { Aes128Ctr128BEKey, AesWasm } from '@hazae41/aes.wasm';
+import { VerifiedAes128Ctr } from '../../../TorClient/VerifiedAes128Ctr';
 import { Base64 } from '@hazae41/base64';
 import { Opaque } from '@hazae41/binary';
 import { Bitset } from '@hazae41/bitset';
@@ -493,16 +493,13 @@ export class SecretCircuit {
     await forward_digest.updateOrThrow(result.forwardDigest);
     await backward_digest.updateOrThrow(result.backwardDigest);
 
-    using forwardKeyMemory = new AesWasm.Memory(result.forwardKey);
-    using forwardIvMemory = new AesWasm.Memory(new Uint8Array(16));
-
-    using backwardKeyMemory = new AesWasm.Memory(result.backwardKey);
-    using backwardIvMemory = new AesWasm.Memory(new Uint8Array(16));
-
-    const forwardKey = new Aes128Ctr128BEKey(forwardKeyMemory, forwardIvMemory);
-    const backwardKey = new Aes128Ctr128BEKey(
-      backwardKeyMemory,
-      backwardIvMemory
+    const forwardKey = new VerifiedAes128Ctr(
+      result.forwardKey,
+      new Uint8Array(16)
+    );
+    const backwardKey = new VerifiedAes128Ctr(
+      result.backwardKey,
+      new Uint8Array(16)
     );
 
     const target = new Target(

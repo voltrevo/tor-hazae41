@@ -1,4 +1,3 @@
-import { AesWasm } from '@hazae41/aes.wasm';
 import { Opaque, Readable, Writable } from '@hazae41/binary';
 import { Bytes, type Uint8Array } from '@hazae41/bytes';
 import { Cursor } from '@hazae41/cursor';
@@ -108,12 +107,12 @@ export namespace RelayCell {
       cursor.offset = digestOffset;
       cursor.writeOrThrow(digest20.subarray(0, 4));
 
-      using memory = new AesWasm.Memory(cursor.bytes);
+      const bytes = new Uint8Array(cursor.bytes);
 
       for (let i = this.circuit.targets.length - 1; i >= 0; i--)
-        this.circuit.targets[i].forward_key.apply_keystream(memory);
+        this.circuit.targets[i].forward_key.apply_keystream(bytes);
 
-      const fragment = new Opaque(new Uint8Array(memory.bytes));
+      const fragment = new Opaque(bytes);
 
       return new Cell.Circuitful(this.circuit, RelayCell.command, fragment);
     }
@@ -121,12 +120,12 @@ export namespace RelayCell {
     static async uncellOrThrow(cell: Cell<Opaque>) {
       if (cell instanceof Cell.Circuitless) throw new ExpectedCircuitError();
 
-      using memory = new AesWasm.Memory(cell.fragment.bytes);
+      const bytes = new Uint8Array(cell.fragment.bytes);
 
       for (const target of cell.circuit.targets) {
-        target.backward_key.apply_keystream(memory);
+        target.backward_key.apply_keystream(bytes);
 
-        const cursor = new Cursor(memory.bytes);
+        const cursor = new Cursor(bytes);
 
         const rcommand = cursor.readUint8OrThrow();
         const recognised = cursor.readUint16OrThrow();
@@ -153,8 +152,8 @@ export namespace RelayCell {
         target.backward_digest.updateOrThrow(cursor.bytes);
 
         const length = cursor.readUint16OrThrow();
-        const bytes = cursor.readAndCopyOrThrow(length);
-        const data = new Opaque(bytes);
+        const bytes_data = cursor.readAndCopyOrThrow(length);
+        const data = new Opaque(bytes_data);
 
         return new Raw<Opaque>(cell.circuit, stream, rcommand, data, digest20);
       }
