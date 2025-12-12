@@ -213,17 +213,10 @@ export namespace Certs {
       `Could not verify ED_TO_SIGN cert`
     );
 
-    using identity = await Ed25519.VerifyingKey.importOrThrow(
-      certs.rsa_to_ed.key
-    );
-    using signature = Ed25519.Signature.importOrThrow(
-      certs.ed_to_sign.signature
-    );
+    const identity = await Ed25519.VerifyingKey.import(certs.rsa_to_ed.key);
+    const signature = Ed25519.Signature.import(certs.ed_to_sign.signature);
 
-    const verified = await identity.verifyOrThrow(
-      certs.ed_to_sign.payload,
-      signature
-    );
+    const verified = await identity.verify(certs.ed_to_sign.payload, signature);
 
     if (verified !== true) throw new InvalidSignatureError();
 
@@ -239,14 +232,12 @@ export namespace Certs {
       `Could not verify SIGNING_TO_TLS cert`
     );
 
-    using identity = await Ed25519.VerifyingKey.importOrThrow(
+    const identity = await Ed25519.VerifyingKey.import(
       certs.ed_to_sign.certKey
     );
-    using signature = Ed25519.Signature.importOrThrow(
-      certs.sign_to_tls.signature
-    );
+    const signature = Ed25519.Signature.import(certs.sign_to_tls.signature);
 
-    const verified = await identity.verifyOrThrow(
+    const verified = await identity.verify(
       certs.sign_to_tls.payload,
       signature
     );

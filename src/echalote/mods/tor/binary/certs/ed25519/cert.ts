@@ -47,12 +47,12 @@ export class Ed25519Cert {
 
     if (!this.extensions.signer) return true; // TODO maybe do additionnal check?
 
-    using signer = await Ed25519.VerifyingKey.importOrThrow(
+    const signer = await Ed25519.VerifyingKey.import(
       this.extensions.signer.key
     );
-    using signature = Ed25519.Signature.importOrThrow(this.signature);
+    const signature = Ed25519.Signature.import(this.signature);
 
-    const verified = await signer.verifyOrThrow(this.payload, signature);
+    const verified = await signer.verify(this.payload, signature);
 
     if (verified !== true) throw new InvalidSignatureError();
 
