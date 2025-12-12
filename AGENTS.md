@@ -12,6 +12,9 @@
   - do not insert trivial invariants, like when the exact condition has immediately been checked previously
   - only use invariant(cond) when you expect cond will _always_ be true because it is logically guaranteed by the design
     - do not use it when something bad but possible happens and you just want to throw an exception (use assert instead)
+- ideally, you should write tests for any new changes
+  - warn the user if these are difficult to add (the relevant code is not testable)
+  - if you can test, use src/TorClient/MicrodescManager.test.ts as a reference for the testing pattern
 - UI changes to demo app
   - make changes to `demo.ts` or `index.html`
   - check dev server is running, if not, use `npm run dev -- --no-open` in background
