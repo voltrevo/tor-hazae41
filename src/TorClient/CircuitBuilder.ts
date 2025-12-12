@@ -3,7 +3,6 @@ import { Log } from '../Log';
 import { selectRandomElement } from '../utils/random';
 import { isMiddleRelay, isExitRelay } from '../utils/relayFilters';
 import { getErrorDetails } from '../utils/getErrorDetails';
-import { initWasm } from './initWasm';
 import { EventEmitter } from './EventEmitter';
 import { decodeKeynetPubKey } from '../keynet/decodeKeynetPubkey';
 import { MicrodescManager } from './MicrodescManager';
@@ -79,8 +78,6 @@ export class CircuitBuilder extends EventEmitter<CircuitBuilderEvents> {
    * @throws Error if circuit building fails after all retry attempts
    */
   async buildCircuit(): Promise<Circuit> {
-    await initWasm();
-
     this.log.info('[CircuitBuilder] Creating circuit');
 
     const consensus = await this.consensusManager.getConsensus();

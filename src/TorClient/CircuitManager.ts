@@ -1,5 +1,4 @@
 import { Circuit, createSnowflakeStream, TorClientDuplex } from '../echalote';
-import { initWasm } from './initWasm';
 import { Log } from '../Log';
 import { IClock } from '../clock';
 import { CircuitBuilder } from './CircuitBuilder';
@@ -544,8 +543,6 @@ export class CircuitManager {
     this.log.info(`Creating shared Tor connection`);
 
     try {
-      await initWasm();
-
       // Get or create the shared Tor connection
       this.torConnectionPromise = this.createTorConnection();
       this.torConnection = await this.torConnectionPromise;

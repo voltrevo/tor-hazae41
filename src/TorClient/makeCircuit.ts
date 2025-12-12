@@ -1,6 +1,5 @@
 import { Circuit, TorClientDuplex, createSnowflakeStream } from '../echalote';
 import { WebSocketDuplex } from './WebSocketDuplex';
-import { initWasm } from './initWasm';
 import { Log } from '../Log';
 import { getErrorDetails } from '../utils/getErrorDetails';
 
@@ -25,9 +24,6 @@ export async function makeCircuit(options: {
   let circuit: Circuit | undefined;
 
   try {
-    // Initialize WASM
-    await initWasm();
-
     // Create Tor connection
     log.info(`Connecting to Snowflake bridge at ${snowflakeUrl}`);
     const stream = await WebSocketDuplex.connect(

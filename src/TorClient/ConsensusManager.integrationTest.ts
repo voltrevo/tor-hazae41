@@ -1,6 +1,5 @@
 import { test } from '@hazae41/phobos';
 import { Circuit, Echalote, TorClientDuplex } from '../echalote';
-import { initWasm } from './initWasm';
 import { WebSocketDuplex } from './WebSocketDuplex';
 import { createSnowflakeStream } from '../echalote';
 import { computeFullConsensusHash } from '../echalote/mods/tor/consensus/diff';
@@ -22,9 +21,6 @@ function createApp() {
 }
 
 test('ConsensusManager: fetch and reconstruct consensus', async () => {
-  // Initialize WASM
-  await initWasm();
-
   const app = createApp();
 
   // Create a Tor connection

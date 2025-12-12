@@ -1,7 +1,6 @@
 import { test } from '@hazae41/phobos';
 import { assert } from '../../../utils/assert';
 import { Sha1Hasher } from './Sha1Hasher';
-import { initWasm } from '../../../TorClient/initWasm';
 
 // Helper function to convert Uint8Array to hex string
 function toHex(bytes: Uint8Array): string {
@@ -15,19 +14,7 @@ function toBytes(str: string): Uint8Array {
   return new TextEncoder().encode(str);
 }
 
-// Track if WASM is initialized
-let wasmInitialized = false;
-
-// Helper to ensure WASM is initialized
-async function ensureWasm() {
-  if (!wasmInitialized) {
-    await initWasm();
-    wasmInitialized = true;
-  }
-}
-
 test('Sha1Hasher: basic single hash', async () => {
-  await ensureWasm();
   const hasher = await Sha1Hasher.createOrThrow();
 
   hasher.updateOrThrow(toBytes('hello world'));
@@ -41,7 +28,6 @@ test('Sha1Hasher: basic single hash', async () => {
 });
 
 test('Sha1Hasher: empty input', async () => {
-  await ensureWasm();
   const hasher = await Sha1Hasher.createOrThrow();
 
   hasher.updateOrThrow(toBytes(''));
@@ -55,7 +41,6 @@ test('Sha1Hasher: empty input', async () => {
 });
 
 test('Sha1Hasher: incremental hashing', async () => {
-  await ensureWasm();
   const hasher = await Sha1Hasher.createOrThrow();
 
   // Update with multiple chunks
@@ -73,7 +58,6 @@ test('Sha1Hasher: incremental hashing', async () => {
 });
 
 test('Sha1Hasher: long input', async () => {
-  await ensureWasm();
   const hasher = await Sha1Hasher.createOrThrow();
 
   // Create 1000 'a' characters
@@ -89,7 +73,6 @@ test('Sha1Hasher: long input', async () => {
 });
 
 test('Sha1Hasher: pancake fox hash', async () => {
-  await ensureWasm();
   const hasher = await Sha1Hasher.createOrThrow();
 
   hasher.updateOrThrow(toBytes('The quick brown fox jumps over the lazy dog'));
@@ -103,7 +86,6 @@ test('Sha1Hasher: pancake fox hash', async () => {
 });
 
 test('Sha1Hasher: cloneOrThrow does not modify original', async () => {
-  await ensureWasm();
   const hasher = await Sha1Hasher.createOrThrow();
 
   // Update original
@@ -141,7 +123,6 @@ test('Sha1Hasher: cloneOrThrow does not modify original', async () => {
 });
 
 test('Sha1Hasher: output length is always 20 bytes', async () => {
-  await ensureWasm();
   const testInputs = ['', 'a', 'hello world', 'a'.repeat(1000)];
 
   for (const input of testInputs) {
@@ -158,7 +139,6 @@ test('Sha1Hasher: output length is always 20 bytes', async () => {
 });
 
 test('Sha1Hasher: binary data handling', async () => {
-  await ensureWasm();
   const hasher = await Sha1Hasher.createOrThrow();
 
   // Create binary data with all byte values
@@ -185,7 +165,6 @@ test('Sha1Hasher: binary data handling', async () => {
 });
 
 test('Sha1Hasher: deterministic hashing', async () => {
-  await ensureWasm();
   const input = toBytes('consistent input');
 
   // Hash the same input 5 times
@@ -210,8 +189,6 @@ test('Sha1Hasher: deterministic hashing', async () => {
 });
 
 test('Sha1Hasher: allows update after finalize', async () => {
-  await ensureWasm();
-
   // This test verifies the critical behavior for Tor circuit digest verification:
   // after finalize(), the hasher must still be usable for update().
   // This is required because Tor circuits compute digests and then continue
