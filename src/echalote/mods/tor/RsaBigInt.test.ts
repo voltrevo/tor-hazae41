@@ -8,6 +8,7 @@ import { RsaWasm, Memory as WasmMemory } from '@hazae41/rsa.wasm';
 import { RsaBigInt } from './RsaBigInt.js';
 import { DualRsaWasm } from './DualRsaWasm.js';
 import { assert } from '../../../utils/assert.js';
+import testVectors from './rsa-test-vectors.json' assert { type: 'json' };
 
 // Initialize WASM module once before any tests
 let wasmInitialized = false;
@@ -98,4 +99,150 @@ test('RSA Dual: DualMemory works with same bytes as input', async () => {
     dualMem.bytes.every((b, i) => b === testBytes[i]),
     'DualMemory.bytes should match input'
   );
+});
+
+test('RSA BigInt: Test vector from real Tor certificate (captured from integration test)', async () => {
+  await ensureWasmInit();
+
+  /**
+   * Test vectors captured during real Tor network integration tests
+   * - 1 directory certificate (1024-bit RSA, SHA-256)
+   * - 7 consensus documents (3072-bit RSA, SHA-1)
+   * - 7 more consensus documents (2048-bit RSA, SHA-256)
+   *
+   * All vectors verified by WASM implementation (ground truth) and matched by BigInt implementation
+   * Total: 15 real-world Tor network signatures
+   */
+
+  // Test all vectors
+  for (let vectorIdx = 0; vectorIdx < testVectors.length; vectorIdx++) {
+    const { publicKeyDerHex, hashHex, signatureHex } = testVectors[vectorIdx];
+
+    // Convert hex strings to Uint8Array
+    const publicKeyDer = new Uint8Array(
+      publicKeyDerHex
+        .match(/.{1,2}/g)!
+        .map((byte: string) => parseInt(byte, 16))
+    );
+    const testHash = new Uint8Array(
+      hashHex.match(/.{1,2}/g)!.map((byte: string) => parseInt(byte, 16))
+    );
+    const testSignature = new Uint8Array(
+      signatureHex.match(/.{1,2}/g)!.map((byte: string) => parseInt(byte, 16))
+    );
+
+    // Verify test vector format
+    assert(
+      publicKeyDer.length > 0,
+      `Vector ${vectorIdx}: Public key DER should be non-empty`
+    );
+    assert(
+      testHash.length === 32 || testHash.length === 20,
+      `Vector ${vectorIdx}: Hash should be 32 bytes (SHA-256) or 20 bytes (SHA-1)`
+    );
+    assert(
+      testSignature.length === 128 ||
+        testSignature.length === 256 ||
+        testSignature.length === 384,
+      `Vector ${vectorIdx}: Signature should be 128 bytes (1024-bit RSA), 256 bytes (2048-bit RSA), or 384 bytes (3072-bit RSA)`
+    );
+
+    // Parse the public key
+    const publicKeyMemory = new RsaBigInt.Memory(publicKeyDer);
+    const publicKey =
+      RsaBigInt.RsaPublicKey.from_public_key_der(publicKeyMemory);
+
+    assert(
+      publicKey !== null,
+      `Vector ${vectorIdx}: Public key should parse successfully from DER`
+    );
+
+    // Verify the signature using BigInt implementation
+    const hashMemory = new RsaBigInt.Memory(testHash);
+    const signatureMemory = new RsaBigInt.Memory(testSignature);
+    const verified = publicKey.verify_pkcs1v15_unprefixed(
+      hashMemory,
+      signatureMemory
+    );
+
+    assert(
+      verified === true,
+      `Vector ${vectorIdx}: BigInt RSA verification should succeed with real test vector`
+    );
+
+    // Test corruption: flip bits in hash at various positions
+    // Use positions appropriate for hash size (20 or 32 bytes)
+    const hashLen = testHash.length;
+    const hashCorruptionPositions = [0, Math.floor(hashLen / 2), hashLen - 1];
+    for (const pos of hashCorruptionPositions) {
+      const corruptedHash = new Uint8Array(testHash);
+      corruptedHash[pos] ^= 0xff; // Flip all bits
+
+      const corruptedHashMemory = new RsaBigInt.Memory(corruptedHash);
+      const corruptedVerified = publicKey!.verify_pkcs1v15_unprefixed(
+        corruptedHashMemory,
+        signatureMemory
+      );
+
+      assert(
+        corruptedVerified === false,
+        `Vector ${vectorIdx}: Corruption at hash byte ${pos} should fail verification`
+      );
+    }
+
+    // Test corruption: flip bits in signature at various positions
+    // Use positions appropriate for signature size (128, 256, or 384 bytes)
+    const sigLen = testSignature.length;
+    const sigCorruptionPositions = [0, Math.floor(sigLen / 2), sigLen - 1];
+    for (const pos of sigCorruptionPositions) {
+      const corruptedSignature = new Uint8Array(testSignature);
+      corruptedSignature[pos] ^= 0xff; // Flip all bits
+
+      const corruptedSignatureMemory = new RsaBigInt.Memory(corruptedSignature);
+      const corruptedVerified = publicKey!.verify_pkcs1v15_unprefixed(
+        hashMemory,
+        corruptedSignatureMemory
+      );
+
+      assert(
+        corruptedVerified === false,
+        `Vector ${vectorIdx}: Corruption at signature byte ${pos} should fail verification`
+      );
+    }
+
+    // Test corruption: flip single bit at various positions
+    const singleBitPositions = [0, Math.floor(sigLen / 2), sigLen - 1];
+    for (const pos of singleBitPositions) {
+      const corruptedSignature = new Uint8Array(testSignature);
+      corruptedSignature[pos] ^= 0x01; // Flip single bit
+
+      const corruptedSignatureMemory = new RsaBigInt.Memory(corruptedSignature);
+      const corruptedVerified = publicKey!.verify_pkcs1v15_unprefixed(
+        hashMemory,
+        corruptedSignatureMemory
+      );
+
+      assert(
+        corruptedVerified === false,
+        `Vector ${vectorIdx}: Single bit corruption at signature byte ${pos} should fail verification`
+      );
+    }
+  }
+
+  // Log the test vectors for documentation
+  console.info('[INTEGRATION_TEST_VECTORS]', {
+    source: 'Tor network integration test (Snowflake + check.torproject.org)',
+    totalVectors: testVectors.length,
+    breakdown:
+      '1 directory certificate (1024-bit RSA, SHA-256) + 7 consensus documents (3072-bit RSA, SHA-1) + 7 consensus documents (2048-bit RSA, SHA-256)',
+    corruptionTests: {
+      hashCorruptions: 3, // 3 positions tested
+      signatureCorruptions: 3, // 3 positions tested
+      singleBitCorruptions: 3, // 3 positions tested
+      totalCorruptionTestsPerVector: 9,
+    },
+    totalCorruptionTestsRun: testVectors.length * 9,
+    allTestsPassed: true,
+    note: 'All vectors verified successfully by both WASM (ground truth) and BigInt implementations, all corruptions correctly detected as failures',
+  });
 });

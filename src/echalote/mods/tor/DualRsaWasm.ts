@@ -13,6 +13,15 @@ import {
   Memory as WasmMemory,
 } from '@hazae41/rsa.wasm';
 import { RsaBigInt, getLastVerificationDetails } from './RsaBigInt.js';
+import { appendFileSync } from 'fs';
+/**
+ * Convert Uint8Array to hex string
+ */
+function toHex(bytes: Uint8Array): string {
+  return Array.from(bytes)
+    .map(b => b.toString(16).padStart(2, '0'))
+    .join('');
+}
 
 interface VerificationResult {
   wasmResult: boolean;
@@ -67,31 +76,78 @@ class DualMemory {
 export class DualRsaPublicKey {
   private wasmKey: WasmRsaPublicKey;
   private bigIntKey: RsaBigInt.RsaPublicKey;
+  private publicKeyDerHex: string;
 
   private constructor(
     wasmKey: WasmRsaPublicKey,
-    bigIntKey: RsaBigInt.RsaPublicKey
+    bigIntKey: RsaBigInt.RsaPublicKey,
+    publicKeyDerHex: string
   ) {
     this.wasmKey = wasmKey;
     this.bigIntKey = bigIntKey;
+    this.publicKeyDerHex = publicKeyDerHex;
   }
 
   static from_public_key_der(memory: DualMemory): DualRsaPublicKey {
-    const wasmKey = WasmRsaPublicKey.from_public_key_der(memory.wasmMemory);
-    const bigIntKey = RsaBigInt.RsaPublicKey.from_public_key_der(
-      memory.bigIntMemory
-    );
+    let wasmKey: WasmRsaPublicKey | null = null;
+    let bigIntKey: RsaBigInt.RsaPublicKey | null = null;
+    let wasmError: Error | null = null;
+    let bigIntError: Error | null = null;
 
-    return new DualRsaPublicKey(wasmKey, bigIntKey);
+    // Try WASM implementation
+    try {
+      wasmKey = WasmRsaPublicKey.from_public_key_der(memory.wasmMemory);
+    } catch (e) {
+      wasmError = e instanceof Error ? e : new Error(String(e));
+    }
+
+    // Try BigInt implementation
+    try {
+      bigIntKey = RsaBigInt.RsaPublicKey.from_public_key_der(
+        memory.bigIntMemory
+      );
+    } catch (e) {
+      bigIntError = e instanceof Error ? e : new Error(String(e));
+    }
+
+    // Both must succeed with the same result
+    if (wasmKey === null || bigIntKey === null) {
+      const mismatchMsg = `from_public_key_der: Implementation mismatch - WASM: ${wasmKey ? 'success' : `failed (${wasmError?.message})`}, BigInt: ${bigIntKey ? 'success' : `failed (${bigIntError?.message})`}`;
+      throw new Error(mismatchMsg);
+    }
+
+    const publicKeyDerHex = toHex(memory.bigIntMemory.bytes);
+    return new DualRsaPublicKey(wasmKey, bigIntKey, publicKeyDerHex);
   }
 
   static from_pkcs1_der(memory: DualMemory): DualRsaPublicKey {
-    const wasmKey = WasmRsaPublicKey.from_pkcs1_der(memory.wasmMemory);
-    const bigIntKey = RsaBigInt.RsaPublicKey.from_pkcs1_der(
-      memory.bigIntMemory
-    );
+    let wasmKey: WasmRsaPublicKey | null = null;
+    let bigIntKey: RsaBigInt.RsaPublicKey | null = null;
+    let wasmError: Error | null = null;
+    let bigIntError: Error | null = null;
 
-    return new DualRsaPublicKey(wasmKey, bigIntKey);
+    // Try WASM implementation
+    try {
+      wasmKey = WasmRsaPublicKey.from_pkcs1_der(memory.wasmMemory);
+    } catch (e) {
+      wasmError = e instanceof Error ? e : new Error(String(e));
+    }
+
+    // Try BigInt implementation
+    try {
+      bigIntKey = RsaBigInt.RsaPublicKey.from_pkcs1_der(memory.bigIntMemory);
+    } catch (e) {
+      bigIntError = e instanceof Error ? e : new Error(String(e));
+    }
+
+    // Both must succeed with the same result
+    if (wasmKey === null || bigIntKey === null) {
+      const mismatchMsg = `from_pkcs1_der: Implementation mismatch - WASM: ${wasmKey ? 'success' : `failed (${wasmError?.message})`}, BigInt: ${bigIntKey ? 'success' : `failed (${bigIntError?.message})`}`;
+      throw new Error(mismatchMsg);
+    }
+
+    const publicKeyDerHex = toHex(memory.bigIntMemory.bytes);
+    return new DualRsaPublicKey(wasmKey, bigIntKey, publicKeyDerHex);
   }
 
   /**
@@ -149,6 +205,30 @@ export class DualRsaPublicKey {
 
     // Check if results match
     results.match = results.wasmResult === results.bigIntResult;
+
+    // Log test vectors for verification and debugging
+    const vectorData = {
+      publicKeyDerHex: this.publicKeyDerHex,
+      hashHex: toHex(hashMemory.wasmMemory.bytes),
+      signatureHex: toHex(signatureMemory.wasmMemory.bytes),
+      wasmResult: results.wasmResult,
+      bigIntResult: results.bigIntResult,
+      match: results.match,
+    };
+
+    console.info('[TEST_VECTOR]', vectorData);
+
+    // Write test vector to file for later use - only if WASM verifies successfully
+    if (results.wasmResult) {
+      try {
+        appendFileSync(
+          '/tmp/rsa_test_vectors.jsonl',
+          JSON.stringify(vectorData) + '\n'
+        );
+      } catch {
+        // Silently ignore file writing errors
+      }
+    }
 
     // Log results with intermediate validation details
     if (!results.match) {
