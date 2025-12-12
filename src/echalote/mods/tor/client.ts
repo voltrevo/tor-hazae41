@@ -13,7 +13,6 @@ import {
   Plume,
   SuperEventTarget,
 } from '@hazae41/plume';
-import { RsaWasm } from '@hazae41/rsa.wasm';
 import { X509 } from '@hazae41/x509';
 import { Resizer } from '../../libs/resizer/resizer';
 import { Console } from '../console/index';
@@ -180,10 +179,6 @@ export class SecretTorClientDuplex {
     this.close();
   }
 
-  async #init() {
-    await RsaWasm.initBundled();
-  }
-
   get state() {
     return this.#state;
   }
@@ -225,8 +220,6 @@ export class SecretTorClientDuplex {
 
   async #onOutputStart() {
     await this.#resolveOnStart.promise;
-
-    await this.#init();
 
     this.output.enqueue(
       OldCell.Circuitless.from(undefined, new VersionsCell([5]))

@@ -7,7 +7,7 @@ import { OIDs, X509 } from '@hazae41/x509';
 import { Mutable } from '../../../libs/typescript/typescript';
 import { assert } from '../../../../utils/assert.js';
 import { Circuit } from '../circuit.js';
-import { DualRsaWasm } from '../DualRsaWasm.js';
+import { RsaBigInt } from '../RsaBigInt.js';
 import pLimit from 'p-limit';
 import {
   computeSignedPartHash,
@@ -724,12 +724,11 @@ export namespace Consensus {
         .getOrThrow()
         .decodePaddedOrThrow(it.signature);
 
-      using signatureM = new DualRsaWasm.Memory(signature.bytes);
-      using hashedM = new DualRsaWasm.Memory(hashed);
-      using publicKeyM = new DualRsaWasm.Memory(publicKey);
+      const signatureM = new RsaBigInt.Memory(signature.bytes);
+      const hashedM = new RsaBigInt.Memory(hashed);
+      const publicKeyM = new RsaBigInt.Memory(publicKey);
 
-      using publicKeyX =
-        DualRsaWasm.RsaPublicKey.from_public_key_der(publicKeyM);
+      const publicKeyX = RsaBigInt.RsaPublicKey.from_public_key_der(publicKeyM);
       const verified = publicKeyX.verify_pkcs1v15_unprefixed(
         hashedM,
         signatureM
@@ -846,12 +845,11 @@ export namespace Consensus {
         .getOrThrow()
         .decodePaddedOrThrow(cert.signature);
 
-      using hashedM = new DualRsaWasm.Memory(hashed);
-      using publicKeyM = new DualRsaWasm.Memory(publicKey);
-      using signatureM = new DualRsaWasm.Memory(signature.bytes);
+      const hashedM = new RsaBigInt.Memory(hashed);
+      const publicKeyM = new RsaBigInt.Memory(publicKey);
+      const signatureM = new RsaBigInt.Memory(signature.bytes);
 
-      using publicKeyX =
-        DualRsaWasm.RsaPublicKey.from_public_key_der(publicKeyM);
+      const publicKeyX = RsaBigInt.RsaPublicKey.from_public_key_der(publicKeyM);
       const verified = publicKeyX.verify_pkcs1v15_unprefixed(
         hashedM,
         signatureM

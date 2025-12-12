@@ -1,39 +1,25 @@
 /**
- * Test file for dual RSA implementation
- * Runs both rsa.wasm and BigInt implementations side-by-side
+ * Test file for RSA BigInt implementation
+ * Tests cryptographic signature verification against 15 real Tor network vectors
  */
 
 import { test } from '@hazae41/phobos';
-import { RsaWasm, Memory as WasmMemory } from '@hazae41/rsa.wasm';
 import { RsaBigInt } from './RsaBigInt.js';
-import { DualRsaWasm } from './DualRsaWasm.js';
 import { assert } from '../../../utils/assert.js';
 import testVectors from './rsa-test-vectors.json' assert { type: 'json' };
 
-// Initialize WASM module once before any tests
-let wasmInitialized = false;
-async function ensureWasmInit() {
-  if (!wasmInitialized) {
-    await RsaWasm.initBundled();
-    await DualRsaWasm.initBundled();
-    wasmInitialized = true;
-  }
-}
+// No WASM initialization needed
 
 test('RSA BigInt: Memory wrapper interface is compatible', async () => {
-  await ensureWasmInit();
-
   const testBytes = new Uint8Array([0x01, 0x02, 0x03, 0x04]);
 
   const bigIntMem = new RsaBigInt.Memory(testBytes);
-  const wasmMem = new WasmMemory(testBytes);
 
-  // Both should have same interface
+  // Check interface
   assert(
     bigIntMem.len() === testBytes.length,
     'BigInt Memory.len() should match'
   );
-  assert(wasmMem.len() === testBytes.length, 'Wasm Memory.len() should match');
 
   assert(
     bigIntMem.bytes.every((b, i) => b === testBytes[i]),
@@ -78,32 +64,7 @@ test('RSA BigInt: handles invalid DER gracefully', async () => {
   }
 });
 
-test('RSA Dual: initializes successfully', async () => {
-  await ensureWasmInit();
-
-  assert(DualRsaWasm.Memory !== undefined, 'DualRsaWasm.Memory should exist');
-  assert(
-    DualRsaWasm.RsaPublicKey !== undefined,
-    'DualRsaWasm.RsaPublicKey should exist'
-  );
-});
-
-test('RSA Dual: DualMemory works with same bytes as input', async () => {
-  await ensureWasmInit();
-
-  const testBytes = new Uint8Array([0x30, 0x81, 0x01, 0x02, 0x03]);
-  const dualMem = new DualRsaWasm.Memory(testBytes);
-
-  assert(dualMem.len() === testBytes.length, 'DualMemory.len() should match');
-  assert(
-    dualMem.bytes.every((b, i) => b === testBytes[i]),
-    'DualMemory.bytes should match input'
-  );
-});
-
 test('RSA BigInt: Test vector from real Tor certificate (captured from integration test)', async () => {
-  await ensureWasmInit();
-
   /**
    * Test vectors captured during real Tor network integration tests
    * - 1 directory certificate (1024-bit RSA, SHA-256)

@@ -213,12 +213,6 @@ export namespace RsaBigInt {
     len(): number {
       return this.bytes.length;
     }
-
-    get [Symbol.dispose]() {
-      return () => {
-        /* no-op for JS */
-      };
-    }
   }
 
   export class RsaPublicKey {

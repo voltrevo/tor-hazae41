@@ -3,7 +3,7 @@ import { Bytes } from '@hazae41/bytes';
 import { X509 } from '@hazae41/x509';
 import { Ed25519 } from '../../../../TorClient/WebCryptoEd25519.js';
 import { assert } from '../../../../utils/assert.js';
-import { DualRsaWasm } from '../DualRsaWasm.js';
+import { RsaBigInt } from '../RsaBigInt.js';
 import {
   CrossCert,
   Ed25519Cert,
@@ -181,9 +181,9 @@ export namespace Certs {
       certs.rsa_self.x509.tbsCertificate.subjectPublicKeyInfo
     );
 
-    using publicKeyMemory = new DualRsaWasm.Memory(publicKeyBytes);
-    using publicKeyPointer =
-      DualRsaWasm.RsaPublicKey.from_public_key_der(publicKeyMemory);
+    const publicKeyMemory = new RsaBigInt.Memory(publicKeyBytes);
+    const publicKeyPointer =
+      RsaBigInt.RsaPublicKey.from_public_key_der(publicKeyMemory);
 
     const prefix = Bytes.fromUtf8('Tor TLS RSA/Ed25519 cross-certificate');
     const prefixed = Bytes.concat([prefix, certs.rsa_to_ed.payload]);
@@ -191,8 +191,8 @@ export namespace Certs {
       await crypto.subtle.digest('SHA-256', prefixed)
     );
 
-    using hashedMemory = new DualRsaWasm.Memory(hashed);
-    using signatureMemory = new DualRsaWasm.Memory(certs.rsa_to_ed.signature);
+    const hashedMemory = new RsaBigInt.Memory(hashed);
+    const signatureMemory = new RsaBigInt.Memory(certs.rsa_to_ed.signature);
 
     const verified = publicKeyPointer.verify_pkcs1v15_unprefixed(
       hashedMemory,
