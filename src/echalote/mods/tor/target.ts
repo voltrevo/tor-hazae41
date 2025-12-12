@@ -1,4 +1,4 @@
-import { VerifiedAes128Ctr } from '../../../TorClient/VerifiedAes128Ctr';
+import { AesJsAes128Ctr } from '../../../TorClient/AesJsAes128Ctr';
 import type { Uint8Array } from '@hazae41/bytes';
 import { SecretCircuit } from './circuit';
 import { Sha1Hasher } from './Sha1Hasher';
@@ -16,7 +16,7 @@ export class Target {
     readonly circuit: SecretCircuit,
     readonly forward_digest: Sha1Hasher,
     readonly backward_digest: Sha1Hasher,
-    readonly forward_key: VerifiedAes128Ctr,
-    readonly backward_key: VerifiedAes128Ctr
+    readonly forward_key: AesJsAes128Ctr,
+    readonly backward_key: AesJsAes128Ctr
   ) {}
 }
