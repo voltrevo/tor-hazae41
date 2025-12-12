@@ -94,7 +94,6 @@
     "@hazae41/base64": "1.0.15",
     "@hazae41/binary": "1.3.5",
     "@hazae41/bitset": "1.0.1",
-    "@hazae41/bitwise.wasm": "1.0.6",
     "@hazae41/box": "2.0.1",
     "@hazae41/bytes": "1.2.11",
     "@hazae41/cadenas": "0.4.2",

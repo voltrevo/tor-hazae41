@@ -1,10 +1,6 @@
 import { Base64 } from '@hazae41/base64';
 import { Readable, Writable } from '@hazae41/binary';
-import {
-  bitwise_pack_right,
-  bitwise_unpack,
-  BitwiseWasm,
-} from '@hazae41/bitwise.wasm';
+import { bitwise_pack_right, bitwise_unpack } from '../../../utils/bitwise';
 import { Bytes } from '@hazae41/bytes';
 import { HalfDuplex } from '@hazae41/cascade';
 import { Cursor } from '@hazae41/cursor';
@@ -376,19 +372,18 @@ export class WebSocketClientDuplex extends EventTarget implements WebSocket {
   }
 
   async #onInputStart() {
-    await BitwiseWasm.initBundled();
+    // No initialization needed for pure JS implementation
   }
 
   async #onInputWrite(chunk: Uint8Array) {
     // Console.debug(this.constructor.name, "<-", chunk.length)
 
-    using bytesMemory = new BitwiseWasm.Memory(chunk);
-    using bitsMemory = bitwise_unpack(bytesMemory);
+    const bitsMemory = bitwise_unpack(chunk);
 
     if (this.#buffer.inner.offset)
-      return await this.#onReadBuffered(bitsMemory.bytes);
+      return await this.#onReadBuffered(bitsMemory);
 
-    return await this.#onReadDirect(bitsMemory.bytes);
+    return await this.#onReadDirect(bitsMemory);
   }
 
   async #onReadBuffered(chunk: Uint8Array) {
@@ -532,11 +527,7 @@ export class WebSocketClientDuplex extends EventTarget implements WebSocket {
 
   async #writeOrThrow(frame: WebSocketFrame) {
     const bits = Writable.writeToBytesOrThrow(frame);
-
-    using bitsMemory = new BitwiseWasm.Memory(bits);
-    using bytesMemory = bitwise_pack_right(bitsMemory);
-
-    this.duplex.output.enqueue(bytesMemory.bytes.slice());
+    this.duplex.output.enqueue(bitwise_pack_right(bits));
   }
 
   async #splitOrThrow(opcode: number, data: Uint8Array) {

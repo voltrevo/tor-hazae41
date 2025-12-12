@@ -1,4 +1,4 @@
-import { bitwise_unpack, BitwiseWasm } from '@hazae41/bitwise.wasm';
+import { bitwise_unpack } from '../../../utils/bitwise';
 import { Bytes } from '@hazae41/bytes';
 import { Cursor } from '@hazae41/cursor';
 
@@ -13,11 +13,9 @@ export class Length {
 
   #writeOrThrow7(cursor: Cursor) {
     const lengthBytesBytes = new Uint8Array([this.value]);
+    const lengthBitsMemory = bitwise_unpack(lengthBytesBytes);
 
-    using lengthBytesMemory = new BitwiseWasm.Memory(lengthBytesBytes);
-    using lengthBitsMemory = bitwise_unpack(lengthBytesMemory);
-
-    cursor.writeOrThrow(lengthBitsMemory.bytes.subarray(1)); // 8 - 1
+    cursor.writeOrThrow(lengthBitsMemory.subarray(1)); // 8 - 1
   }
 
   #writeOrThrow16(cursor: Cursor) {
@@ -25,10 +23,9 @@ export class Length {
     lengthBytesCursor.writeUint8OrThrow(126);
     lengthBytesCursor.writeUint16OrThrow(this.value);
 
-    using lengthBytesMemory = new BitwiseWasm.Memory(lengthBytesCursor.bytes);
-    using lengthBitsMemory = bitwise_unpack(lengthBytesMemory);
+    const lengthBitsMemory = bitwise_unpack(lengthBytesCursor.bytes);
 
-    cursor.writeOrThrow(lengthBitsMemory.bytes.subarray(1)); // (8 + 16) - 1
+    cursor.writeOrThrow(lengthBitsMemory.subarray(1)); // (8 + 16) - 1
   }
 
   #writeOrThrow64(cursor: Cursor) {
@@ -36,10 +33,9 @@ export class Length {
     subcursor.writeUint8OrThrow(127);
     subcursor.writeUint64OrThrow(BigInt(this.value));
 
-    using lengthBytesMemory = new BitwiseWasm.Memory(subcursor.bytes);
-    using lengthBitsMemory = bitwise_unpack(lengthBytesMemory);
+    const lengthBitsMemory = bitwise_unpack(subcursor.bytes);
 
-    cursor.writeOrThrow(lengthBitsMemory.bytes.subarray(1)); // (8 + 64) - 1
+    cursor.writeOrThrow(lengthBitsMemory.subarray(1)); // (8 + 64) - 1
   }
 
   writeOrThrow(cursor: Cursor) {

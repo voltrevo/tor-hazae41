@@ -1,13 +1,12 @@
 import { ReadUnderflowError } from '@hazae41/binary';
+import { Bytes, Uint8Array } from '@hazae41/bytes';
+import { Cursor } from '@hazae41/cursor';
+import { Length } from './length';
 import {
   bitwise_pack_left,
   bitwise_unpack,
   bitwise_xor_mod,
-  BitwiseWasm,
-} from '@hazae41/bitwise.wasm';
-import { Bytes, Uint8Array } from '@hazae41/bytes';
-import { Cursor } from '@hazae41/cursor';
-import { Length } from './length';
+} from '../../../utils/bitwise';
 
 export class WebSocketFrame {
   readonly #class = WebSocketFrame;
@@ -81,10 +80,7 @@ export class WebSocketFrame {
     const opcodeBytesCursor = new Cursor(Bytes.alloc(1));
     opcodeBytesCursor.writeUint8OrThrow(this.opcode);
 
-    using opcodeBytesMemory = new BitwiseWasm.Memory(opcodeBytesCursor.bytes);
-    using opcodeBitsMemory = bitwise_unpack(opcodeBytesMemory);
-
-    cursor.writeOrThrow(opcodeBitsMemory.bytes.subarray(4)); // 8 - 4
+    cursor.writeOrThrow(bitwise_unpack(opcodeBytesCursor.bytes).subarray(4)); // 8 - 4
 
     const masked = Boolean(this.mask);
     cursor.writeUint8OrThrow(Number(masked));
@@ -92,22 +88,14 @@ export class WebSocketFrame {
     this.length.writeOrThrow(cursor);
 
     if (this.mask != null) {
-      using maskBytesMemory = new BitwiseWasm.Memory(this.mask);
-      using maskBitsMemory = bitwise_unpack(maskBytesMemory);
-      cursor.writeOrThrow(maskBitsMemory.bytes);
-
-      using xoredBytesMemory = new BitwiseWasm.Memory(this.payload);
-      bitwise_xor_mod(xoredBytesMemory, maskBytesMemory);
-
-      using xoredBitsMemory = bitwise_unpack(xoredBytesMemory);
-      cursor.writeOrThrow(xoredBitsMemory.bytes);
+      cursor.writeOrThrow(bitwise_unpack(this.mask));
+      bitwise_xor_mod(this.payload, this.mask);
+      cursor.writeOrThrow(bitwise_unpack(this.payload));
 
       return;
     }
 
-    using payloadBytesMemory = new BitwiseWasm.Memory(this.payload);
-    using payloadBitsMemory = bitwise_unpack(payloadBytesMemory);
-    cursor.writeOrThrow(payloadBitsMemory.bytes);
+    cursor.writeOrThrow(bitwise_unpack(this.payload));
   }
 
   /**
@@ -130,26 +118,23 @@ export class WebSocketFrame {
 
     if (masked) {
       const maskBitsBytes = cursor.readOrThrow(4 * 8);
-      using maskBitsMemory = new BitwiseWasm.Memory(maskBitsBytes);
-      using maskBytesMemory = bitwise_pack_left(maskBitsMemory);
+      const maskBytesMemory = bitwise_pack_left(maskBitsBytes);
 
       const xoredBitsBytes = cursor.readOrThrow(length.value * 8);
-      using xoredBitsMemory = new BitwiseWasm.Memory(xoredBitsBytes);
-      using xoredBytesMemory = bitwise_pack_left(xoredBitsMemory);
+      const xoredBytesMemory = bitwise_pack_left(xoredBitsBytes);
 
       bitwise_xor_mod(xoredBytesMemory, maskBytesMemory);
 
-      const mask = maskBytesMemory.bytes.slice() as Uint8Array<4>;
-      const payload = xoredBytesMemory.bytes.slice();
+      const mask = maskBytesMemory.slice() as Uint8Array<4>;
+      const payload = xoredBytesMemory.slice();
 
       return WebSocketFrame.from({ final, opcode, payload, mask });
     }
 
     const payloadBitsBytes = cursor.readOrThrow(length.value * 8);
-    using payloadBitsMemory = new BitwiseWasm.Memory(payloadBitsBytes);
-    using payloadBytesMemory = bitwise_pack_left(payloadBitsMemory);
+    const payloadBytesMemory = bitwise_pack_left(payloadBitsBytes);
 
-    const payload = payloadBytesMemory.bytes.slice();
+    const payload = payloadBytesMemory.slice();
 
     return WebSocketFrame.from({ final, opcode, payload });
   }
