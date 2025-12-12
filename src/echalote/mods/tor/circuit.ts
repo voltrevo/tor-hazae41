@@ -41,6 +41,7 @@ import { RelayBeginDirCell } from './binary/cells/relayed/relay_begin_dir/cell.j
 import { Consensus } from './consensus/consensus.js';
 import { HASH_LEN } from './constants.js';
 import { invariant } from '../../../utils/debug';
+import { getErrorDetails } from '../../../utils/getErrorDetails';
 
 export const IPv6 = {
   always: 3,
@@ -274,8 +275,8 @@ export class SecretCircuit {
 
   [Symbol.dispose]() {
     // FIXME: Use Log instance for error reporting
-    this.close().catch(() => {
-      /* silent catch */
+    this.close().catch(e => {
+      console.error(getErrorDetails(e));
     });
   }
 
@@ -427,10 +428,10 @@ export class SecretCircuit {
     if (relayid_ed != null)
       links.push(new RelayExtend2LinkModernID(relayid_ed));
 
-    using wasm_secret_x = await X25519.PrivateKey.randomOrThrow();
-    using wasm_public_x = wasm_secret_x.getPublicKeyOrThrow();
+    const wasm_secret_x = await X25519.PrivateKey.randomOrThrow();
+    const wasm_public_x = wasm_secret_x.getPublicKeyOrThrow();
 
-    using public_x_memory = await wasm_public_x.exportOrThrow();
+    const public_x_memory = wasm_public_x.exportOrThrow();
 
     const public_x = Bytes.castOrThrow(public_x_memory.bytes.slice(), 32);
     const public_b = ntor_key;
@@ -463,14 +464,14 @@ export class SecretCircuit {
 
     const { public_y } = response;
 
-    using wasm_public_y = await X25519.PublicKey.importOrThrow(public_y);
-    using wasm_public_b = await X25519.PublicKey.importOrThrow(public_b);
+    const wasm_public_y = await X25519.PublicKey.importOrThrow(public_y);
+    const wasm_public_b = await X25519.PublicKey.importOrThrow(public_b);
 
-    using wasm_shared_xy = await wasm_secret_x.computeOrThrow(wasm_public_y);
-    using wasm_shared_xb = await wasm_secret_x.computeOrThrow(wasm_public_b);
+    const wasm_shared_xy = await wasm_secret_x.computeOrThrow(wasm_public_y);
+    const wasm_shared_xb = await wasm_secret_x.computeOrThrow(wasm_public_b);
 
-    using shared_xy_memory = wasm_shared_xy.exportOrThrow();
-    using shared_xb_memory = wasm_shared_xb.exportOrThrow();
+    const shared_xy_memory = wasm_shared_xy.exportOrThrow();
+    const shared_xb_memory = wasm_shared_xb.exportOrThrow();
 
     const shared_xy = Bytes.castOrThrow(shared_xy_memory.bytes.slice(), 32);
     const shared_xb = Bytes.castOrThrow(shared_xb_memory.bytes.slice(), 32);

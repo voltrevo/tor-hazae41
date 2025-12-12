@@ -40,18 +40,14 @@ test('X25519: PublicKey.import consistency', async () => {
     // Import the public key
     const importedKey = await X25519.PublicKey.importOrThrow(inputKey);
 
-    try {
-      // Export it to verify it matches
-      const exported = await importedKey.exportOrThrow();
-      const exportedHex = uint8ArrayToHex(exported.bytes as Uint8Array);
+    // Export it to verify it matches
+    const exported = importedKey.exportOrThrow();
+    const exportedHex = uint8ArrayToHex(exported.bytes as Uint8Array);
 
-      assert(
-        exportedHex === inputKeyHex,
-        `PublicKey.import ${i}: exported key should match input`
-      );
-    } finally {
-      importedKey[Symbol.dispose]?.();
-    }
+    assert(
+      exportedHex === inputKeyHex,
+      `PublicKey.import ${i}: exported key should match input`
+    );
   }
 });
 
@@ -106,23 +102,16 @@ test('X25519: PrivateKey.compute with known test vectors', async () => {
       hexToUint8Array(vector.publicKeyHex)
     );
 
-    try {
-      // Compute shared secret with the recorded keys
-      const sharedSecret = await privateKey.computeOrThrow(publicKey);
-      const secretExported = sharedSecret.exportOrThrow();
-      const secretHex = uint8ArrayToHex(secretExported.bytes as Uint8Array);
+    // Compute shared secret with the recorded keys
+    const sharedSecret = await privateKey.computeOrThrow(publicKey);
+    const secretExported = sharedSecret.exportOrThrow();
+    const secretHex = uint8ArrayToHex(secretExported.bytes as Uint8Array);
 
-      // Verify the computed secret matches what was recorded
-      assert(
-        secretHex === vector.expectedSecretHex,
-        `PrivateKey.compute ${i}: computed shared secret should match expected value (got ${secretHex})`
-      );
-
-      sharedSecret[Symbol.dispose]?.();
-    } finally {
-      privateKey[Symbol.dispose]?.();
-      publicKey[Symbol.dispose]?.();
-    }
+    // Verify the computed secret matches what was recorded
+    assert(
+      secretHex === vector.expectedSecretHex,
+      `PrivateKey.compute ${i}: computed shared secret should match expected value (got ${secretHex})`
+    );
   }
 });
 
@@ -131,43 +120,31 @@ test('X25519: PrivateKey.random generates valid keys', async () => {
     // Generate a private key
     const privateKey = await X25519.PrivateKey.randomOrThrow();
 
-    try {
-      // Get its public key
-      const publicKey = privateKey.getPublicKeyOrThrow();
+    // Get its public key
+    const publicKey = privateKey.getPublicKeyOrThrow();
 
-      try {
-        // Export the public key
-        const exported = await publicKey.exportOrThrow();
-        const publicKeyHex = uint8ArrayToHex(exported.bytes as Uint8Array);
+    // Export the public key
+    const exported = await publicKey.exportOrThrow();
+    const publicKeyHex = uint8ArrayToHex(exported.bytes as Uint8Array);
 
-        // Verify it's 32 bytes
-        assert(
-          publicKeyHex.length === 64,
-          'Generated public key should be 64 hex chars (32 bytes)'
-        );
+    // Verify it's 32 bytes
+    assert(
+      publicKeyHex.length === 64,
+      'Generated public key should be 64 hex chars (32 bytes)'
+    );
 
-        // Verify we can import it back
-        const importedKey = await X25519.PublicKey.importOrThrow(
-          exported.bytes as Uint8Array
-        );
+    // Verify we can import it back
+    const importedKey = await X25519.PublicKey.importOrThrow(
+      exported.bytes as Uint8Array
+    );
 
-        try {
-          const reimported = await importedKey.exportOrThrow();
-          const reimportedHex = uint8ArrayToHex(reimported.bytes as Uint8Array);
+    const reimported = await importedKey.exportOrThrow();
+    const reimportedHex = uint8ArrayToHex(reimported.bytes as Uint8Array);
 
-          assert(
-            reimportedHex === publicKeyHex,
-            `Generated key ${i} should re-import identically`
-          );
-        } finally {
-          importedKey[Symbol.dispose]?.();
-        }
-      } finally {
-        publicKey[Symbol.dispose]?.();
-      }
-    } finally {
-      privateKey[Symbol.dispose]?.();
-    }
+    assert(
+      reimportedHex === publicKeyHex,
+      `Generated key ${i} should re-import identically`
+    );
   }
 });
 
@@ -175,58 +152,39 @@ test('X25519: circuit extension sequence', async () => {
   // Simulate a circuit extension: generate ephemeral key, compute shared secrets with two peer keys
   const ephemeralPrivateKey = await X25519.PrivateKey.randomOrThrow();
 
-  try {
-    const ephemeralPublicKey = ephemeralPrivateKey.getPublicKeyOrThrow();
+  const ephemeralPublicKey = ephemeralPrivateKey.getPublicKeyOrThrow();
 
-    try {
-      const ephemeralPublicKeyExported =
-        await ephemeralPublicKey.exportOrThrow();
+  const ephemeralPublicKeyExported = await ephemeralPublicKey.exportOrThrow();
 
-      // Verify we got a valid public key
-      const ephemeralKeyHex = uint8ArrayToHex(
-        ephemeralPublicKeyExported.bytes as Uint8Array
-      );
+  // Verify we got a valid public key
+  const ephemeralKeyHex = uint8ArrayToHex(
+    ephemeralPublicKeyExported.bytes as Uint8Array
+  );
 
-      assert(
-        ephemeralKeyHex.length === 64,
-        'Ephemeral public key should be 32 bytes'
-      );
+  assert(
+    ephemeralKeyHex.length === 64,
+    'Ephemeral public key should be 32 bytes'
+  );
 
-      // Simulate getting relay public keys and computing shared secrets
-      const relayPublicKeys = [
-        '47c13d1fa3b1595fe37d8f875631fec3596fd88cc8497d29463156f403f77a21',
-        '65d990975829be64934db6016bbfa62022de82577d6bab8ec590da9a9d7c6a1a',
-      ];
+  // Simulate getting relay public keys and computing shared secrets
+  const relayPublicKeys = [
+    '47c13d1fa3b1595fe37d8f875631fec3596fd88cc8497d29463156f403f77a21',
+    '65d990975829be64934db6016bbfa62022de82577d6bab8ec590da9a9d7c6a1a',
+  ];
 
-      for (const relayKeyHex of relayPublicKeys) {
-        const relayPublicKey = await X25519.PublicKey.importOrThrow(
-          hexToUint8Array(relayKeyHex)
-        );
+  for (const relayKeyHex of relayPublicKeys) {
+    const relayPublicKey = await X25519.PublicKey.importOrThrow(
+      hexToUint8Array(relayKeyHex)
+    );
 
-        try {
-          // Compute shared secret
-          const sharedSecret =
-            await ephemeralPrivateKey.computeOrThrow(relayPublicKey);
+    // Compute shared secret
+    const sharedSecret =
+      await ephemeralPrivateKey.computeOrThrow(relayPublicKey);
 
-          try {
-            const secretExported = sharedSecret.exportOrThrow();
-            const secretHex = uint8ArrayToHex(
-              secretExported.bytes as Uint8Array
-            );
+    const secretExported = sharedSecret.exportOrThrow();
+    const secretHex = uint8ArrayToHex(secretExported.bytes as Uint8Array);
 
-            // Verify we got a valid secret
-            assert(secretHex.length === 64, 'Shared secret should be 32 bytes');
-          } finally {
-            sharedSecret[Symbol.dispose]?.();
-          }
-        } finally {
-          relayPublicKey[Symbol.dispose]?.();
-        }
-      }
-    } finally {
-      ephemeralPublicKey[Symbol.dispose]?.();
-    }
-  } finally {
-    ephemeralPrivateKey[Symbol.dispose]?.();
+    // Verify we got a valid secret
+    assert(secretHex.length === 64, 'Shared secret should be 32 bytes');
   }
 });

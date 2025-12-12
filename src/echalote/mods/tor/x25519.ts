@@ -10,22 +10,18 @@ import { Bytes } from '@hazae41/bytes';
 
 export interface IExportable<T> {
   readonly bytes: T;
-  readonly [Symbol.dispose]: () => void;
 }
 
 export interface IPrivateKey {
-  readonly [Symbol.dispose]: () => void;
   getPublicKeyOrThrow(): IPublicKey;
   computeOrThrow(publicKey: IPublicKey): Promise<ISharedSecret>;
 }
 
 export interface IPublicKey {
-  readonly [Symbol.dispose]: () => void;
   exportOrThrow(): IExportable<Uint8Array>;
 }
 
 export interface ISharedSecret {
-  readonly [Symbol.dispose]: () => void;
   exportOrThrow(): IExportable<Uint8Array>;
 }
 
@@ -46,11 +42,6 @@ class PrivateKey implements IPrivateKey {
     const sharedSecret = x25519.getSharedSecret(this.keyBytes, publicKeyBytes);
     return new SharedSecret(new Uint8Array(sharedSecret));
   }
-
-  [Symbol.dispose]() {
-    // Clear the key material from memory
-    this.keyBytes.fill(0);
-  }
 }
 
 class PublicKey implements IPublicKey {
@@ -59,14 +50,7 @@ class PublicKey implements IPublicKey {
   exportOrThrow(): IExportable<Uint8Array> {
     return {
       bytes: new Uint8Array(this.keyBytes),
-      [Symbol.dispose]: () => {
-        // Public keys don't need special cleanup
-      },
     };
-  }
-
-  [Symbol.dispose]() {
-    // Public keys don't need special cleanup
   }
 }
 
@@ -76,16 +60,7 @@ class SharedSecret implements ISharedSecret {
   exportOrThrow(): IExportable<Uint8Array> {
     return {
       bytes: new Uint8Array(this.keyBytes),
-      [Symbol.dispose]: () => {
-        // Clear the shared secret from memory
-        this.keyBytes.fill(0);
-      },
     };
-  }
-
-  [Symbol.dispose]() {
-    // Clear the shared secret from memory
-    this.keyBytes.fill(0);
   }
 }
 

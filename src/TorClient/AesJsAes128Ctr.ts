@@ -72,13 +72,6 @@ export class AesJsAes128Ctr {
   }
 
   /**
-   * Resource cleanup (for 'using' statements)
-   */
-  [Symbol.dispose](): void {
-    // No resources to clean up
-  }
-
-  /**
    * Async resource cleanup (for async context managers)
    */
   async [Symbol.asyncDispose](): Promise<void> {
