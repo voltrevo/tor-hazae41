@@ -1,5 +1,3 @@
-import { Ed25519 } from '@hazae41/ed25519';
-
 let done = false;
 
 export async function initWasm() {
@@ -7,8 +5,7 @@ export async function initWasm() {
     return;
   }
 
-  // Initialize Ed25519 from native implementation
-  Ed25519.set(Ed25519.fromNative());
+  // No initialization needed - Ed25519 WebCrypto is stateless
 
   done = true;
 }

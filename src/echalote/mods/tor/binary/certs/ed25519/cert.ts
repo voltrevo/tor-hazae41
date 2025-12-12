@@ -1,6 +1,6 @@
 import { Uint8Array } from '@hazae41/bytes';
 import { Cursor } from '@hazae41/cursor';
-import { Ed25519 } from '@hazae41/ed25519';
+import { Ed25519 } from '../../../../../../TorClient/WebCryptoEd25519.js';
 import { SignedWithEd25519Key } from './extensions/signer';
 import { ExpiredCertError, InvalidSignatureError } from '../../../certs/certs';
 
@@ -47,12 +47,10 @@ export class Ed25519Cert {
 
     if (!this.extensions.signer) return true; // TODO maybe do additionnal check?
 
-    using signer = await Ed25519.get()
-      .getOrThrow()
-      .VerifyingKey.importOrThrow(this.extensions.signer.key);
-    using signature = Ed25519.get()
-      .getOrThrow()
-      .Signature.importOrThrow(this.signature);
+    using signer = await Ed25519.VerifyingKey.importOrThrow(
+      this.extensions.signer.key
+    );
+    using signature = Ed25519.Signature.importOrThrow(this.signature);
 
     const verified = await signer.verifyOrThrow(this.payload, signature);
 

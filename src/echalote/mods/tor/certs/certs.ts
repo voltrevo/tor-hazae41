@@ -1,8 +1,8 @@
 import { Writable } from '@hazae41/binary';
 import { Bytes } from '@hazae41/bytes';
-import { Ed25519 } from '@hazae41/ed25519';
 import { RsaPublicKey, RsaWasm } from '@hazae41/rsa.wasm';
 import { X509 } from '@hazae41/x509';
+import { Ed25519 } from '../../../../TorClient/WebCryptoEd25519.js';
 import { assert } from '../../../../utils/assert.js';
 import {
   CrossCert,
@@ -213,12 +213,12 @@ export namespace Certs {
       `Could not verify ED_TO_SIGN cert`
     );
 
-    using identity = await Ed25519.get()
-      .getOrThrow()
-      .VerifyingKey.importOrThrow(certs.rsa_to_ed.key);
-    using signature = Ed25519.get()
-      .getOrThrow()
-      .Signature.importOrThrow(certs.ed_to_sign.signature);
+    using identity = await Ed25519.VerifyingKey.importOrThrow(
+      certs.rsa_to_ed.key
+    );
+    using signature = Ed25519.Signature.importOrThrow(
+      certs.ed_to_sign.signature
+    );
 
     const verified = await identity.verifyOrThrow(
       certs.ed_to_sign.payload,
@@ -239,12 +239,12 @@ export namespace Certs {
       `Could not verify SIGNING_TO_TLS cert`
     );
 
-    using identity = await Ed25519.get()
-      .getOrThrow()
-      .VerifyingKey.importOrThrow(certs.ed_to_sign.certKey);
-    using signature = Ed25519.get()
-      .getOrThrow()
-      .Signature.importOrThrow(certs.sign_to_tls.signature);
+    using identity = await Ed25519.VerifyingKey.importOrThrow(
+      certs.ed_to_sign.certKey
+    );
+    using signature = Ed25519.Signature.importOrThrow(
+      certs.sign_to_tls.signature
+    );
 
     const verified = await identity.verifyOrThrow(
       certs.sign_to_tls.payload,
