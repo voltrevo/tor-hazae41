@@ -8,8 +8,7 @@
 
 import { test } from '@hazae41/phobos';
 import { assert } from '../../../utils/assert';
-import { X25519 } from '@hazae41/x25519';
-import { X25519Wasm } from '@hazae41/x25519.wasm';
+import { X25519 } from './x25519';
 
 function hexToUint8Array(hex: string): Uint8Array {
   const bytes = new Uint8Array(hex.length / 2);
@@ -25,15 +24,7 @@ function uint8ArrayToHex(bytes: Uint8Array): string {
     .join('');
 }
 
-async function initializeX25519() {
-  // Initialize X25519 WASM module before running tests
-  await X25519Wasm.initBundled();
-  X25519.set(X25519.fromWasm(X25519Wasm));
-}
-
 test('X25519: PublicKey.import consistency', async () => {
-  await initializeX25519();
-
   // Test vectors: known public keys that should round-trip correctly
   const publicKeyVectors = [
     'dee7289aa2a85152f93e138f1e3382fe8e38c8983f30bd2d815b8774f11be236',
@@ -47,9 +38,7 @@ test('X25519: PublicKey.import consistency', async () => {
     const inputKey = hexToUint8Array(inputKeyHex);
 
     // Import the public key
-    const importedKey = await X25519.get()
-      .getOrThrow()
-      .PublicKey.importOrThrow(inputKey);
+    const importedKey = await X25519.PublicKey.importOrThrow(inputKey);
 
     try {
       // Export it to verify it matches
@@ -67,8 +56,6 @@ test('X25519: PublicKey.import consistency', async () => {
 });
 
 test('X25519: PrivateKey.compute with known test vectors', async () => {
-  await initializeX25519();
-
   // Test vectors extracted from actual X25519 circuit extension operations
   // Each vector contains a private key, peer public key, and expected shared secret
   const testVectors = [
@@ -109,17 +96,15 @@ test('X25519: PrivateKey.compute with known test vectors', async () => {
   for (let i = 0; i < testVectors.length; i++) {
     const vector = testVectors[i];
 
-    // Import the private key from test vector (WASM backend supports this)
-    const privateKey =
-      await // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (X25519.get().getOrThrow().PrivateKey as any).importOrThrow(
-        hexToUint8Array(vector.privateKeyHex)
-      );
+    // Import the private key from test vector
+    const privateKey = await X25519.PrivateKey.importOrThrow(
+      hexToUint8Array(vector.privateKeyHex)
+    );
 
     // Import the peer's public key from test vector
-    const publicKey = await X25519.get()
-      .getOrThrow()
-      .PublicKey.importOrThrow(hexToUint8Array(vector.publicKeyHex));
+    const publicKey = await X25519.PublicKey.importOrThrow(
+      hexToUint8Array(vector.publicKeyHex)
+    );
 
     try {
       // Compute shared secret with the recorded keys
@@ -142,13 +127,9 @@ test('X25519: PrivateKey.compute with known test vectors', async () => {
 });
 
 test('X25519: PrivateKey.random generates valid keys', async () => {
-  await initializeX25519();
-
   for (let i = 0; i < 3; i++) {
     // Generate a private key
-    const privateKey = await X25519.get()
-      .getOrThrow()
-      .PrivateKey.randomOrThrow();
+    const privateKey = await X25519.PrivateKey.randomOrThrow();
 
     try {
       // Get its public key
@@ -166,9 +147,9 @@ test('X25519: PrivateKey.random generates valid keys', async () => {
         );
 
         // Verify we can import it back
-        const importedKey = await X25519.get()
-          .getOrThrow()
-          .PublicKey.importOrThrow(exported.bytes as Uint8Array);
+        const importedKey = await X25519.PublicKey.importOrThrow(
+          exported.bytes as Uint8Array
+        );
 
         try {
           const reimported = await importedKey.exportOrThrow();
@@ -191,12 +172,8 @@ test('X25519: PrivateKey.random generates valid keys', async () => {
 });
 
 test('X25519: circuit extension sequence', async () => {
-  await initializeX25519();
-
   // Simulate a circuit extension: generate ephemeral key, compute shared secrets with two peer keys
-  const ephemeralPrivateKey = await X25519.get()
-    .getOrThrow()
-    .PrivateKey.randomOrThrow();
+  const ephemeralPrivateKey = await X25519.PrivateKey.randomOrThrow();
 
   try {
     const ephemeralPublicKey = ephemeralPrivateKey.getPublicKeyOrThrow();
@@ -222,9 +199,9 @@ test('X25519: circuit extension sequence', async () => {
       ];
 
       for (const relayKeyHex of relayPublicKeys) {
-        const relayPublicKey = await X25519.get()
-          .getOrThrow()
-          .PublicKey.importOrThrow(hexToUint8Array(relayKeyHex));
+        const relayPublicKey = await X25519.PublicKey.importOrThrow(
+          hexToUint8Array(relayKeyHex)
+        );
 
         try {
           // Compute shared secret

@@ -12,7 +12,7 @@ import {
   SuperEventTarget,
 } from '@hazae41/plume';
 import { Sha1Hasher } from './Sha1Hasher';
-import { X25519 } from '@hazae41/x25519';
+import { X25519 } from './x25519';
 import { Console } from '../console/index';
 import { Ntor } from './algorithms/ntor/index';
 import { DestroyCell } from './binary/cells/direct/destroy/cell';
@@ -427,9 +427,7 @@ export class SecretCircuit {
     if (relayid_ed != null)
       links.push(new RelayExtend2LinkModernID(relayid_ed));
 
-    using wasm_secret_x = await X25519.get()
-      .getOrThrow()
-      .PrivateKey.randomOrThrow();
+    using wasm_secret_x = await X25519.PrivateKey.randomOrThrow();
     using wasm_public_x = wasm_secret_x.getPublicKeyOrThrow();
 
     using public_x_memory = await wasm_public_x.exportOrThrow();
@@ -465,12 +463,8 @@ export class SecretCircuit {
 
     const { public_y } = response;
 
-    using wasm_public_y = await X25519.get()
-      .getOrThrow()
-      .PublicKey.importOrThrow(public_y);
-    using wasm_public_b = await X25519.get()
-      .getOrThrow()
-      .PublicKey.importOrThrow(public_b);
+    using wasm_public_y = await X25519.PublicKey.importOrThrow(public_y);
+    using wasm_public_b = await X25519.PublicKey.importOrThrow(public_b);
 
     using wasm_shared_xy = await wasm_secret_x.computeOrThrow(wasm_public_y);
     using wasm_shared_xb = await wasm_secret_x.computeOrThrow(wasm_public_b);
