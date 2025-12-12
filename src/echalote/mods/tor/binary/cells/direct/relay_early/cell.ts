@@ -90,10 +90,10 @@ export namespace RelayEarlyCell {
 
       exit.forward_digest.updateOrThrow(cursor.bytes);
 
-      using digestSlice = exit.forward_digest.finalizeOrThrow();
+      const digestSlice = exit.forward_digest.finalizeOrThrow();
 
       cursor.offset = digestOffset;
-      cursor.writeOrThrow(digestSlice.bytes.subarray(0, 4));
+      cursor.writeOrThrow(digestSlice.subarray(0, 4));
 
       using memory = new AesWasm.Memory(cursor.bytes);
 
@@ -109,7 +109,7 @@ export namespace RelayEarlyCell {
       );
     }
 
-    static uncellOrThrow(cell: Cell<Opaque>) {
+    static async uncellOrThrow(cell: Cell<Opaque>) {
       if (cell instanceof Cell.Circuitless) throw new ExpectedCircuitError();
 
       using memory = new AesWasm.Memory(cell.fragment.bytes);
@@ -131,10 +131,11 @@ export namespace RelayEarlyCell {
 
         cursor.writeUint32OrThrow(0);
 
-        using hasher = target.backward_digest.cloneOrThrow();
-        using digest = hasher.updateOrThrow(cursor.bytes).finalizeOrThrow();
+        const hasher = await target.backward_digest.cloneOrThrow();
+        hasher.updateOrThrow(cursor.bytes);
+        const digest = hasher.finalizeOrThrow();
 
-        if (!Bytes.equals2(digest4, digest.bytes.subarray(0, 4))) {
+        if (!Bytes.equals2(digest4, digest.subarray(0, 4))) {
           cursor.offset = offset;
           cursor.writeOrThrow(digest4);
           continue;

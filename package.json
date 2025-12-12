@@ -113,8 +113,6 @@
     "@hazae41/ripemd.wasm": "1.0.6",
     "@hazae41/ripemd160": "1.0.3",
     "@hazae41/rsa.wasm": "1.0.10",
-    "@hazae41/sha1": "1.1.14",
-    "@hazae41/sha1.wasm": "1.0.5",
     "@hazae41/sha3.wasm": "1.0.4",
     "@hazae41/signals": "1.0.2",
     "@hazae41/smux": "1.1.3",

@@ -5,8 +5,6 @@ import { Sha3Wasm } from '@hazae41/sha3.wasm';
 import { Keccak256 } from '@hazae41/keccak256';
 import { RipemdWasm } from '@hazae41/ripemd.wasm';
 import { Ripemd160 } from '@hazae41/ripemd160';
-import { Sha1Wasm } from '@hazae41/sha1.wasm';
-import { Sha1 } from '@hazae41/sha1';
 import { X25519Wasm } from '@hazae41/x25519.wasm';
 import { X25519 } from '@hazae41/x25519';
 
@@ -18,14 +16,12 @@ export async function initWasm() {
   }
 
   await Promise.all([
-    Sha1Wasm.initBundled(),
     Sha3Wasm.initBundled(),
     RipemdWasm.initBundled(),
     ChaCha20Poly1305Wasm.initBundled(),
     X25519Wasm.initBundled(),
   ]);
 
-  Sha1.set(Sha1.fromWasm(Sha1Wasm));
   Keccak256.set(Keccak256.fromWasm(Sha3Wasm));
   Ripemd160.set(Ripemd160.fromWasm(RipemdWasm));
   ChaCha20Poly1305.set(ChaCha20Poly1305.fromWasm(ChaCha20Poly1305Wasm));

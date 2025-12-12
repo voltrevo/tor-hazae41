@@ -11,7 +11,7 @@ import {
   Plume,
   SuperEventTarget,
 } from '@hazae41/plume';
-import { Sha1 } from '@hazae41/sha1';
+import { Sha1Hasher } from './Sha1Hasher';
 import { X25519 } from '@hazae41/x25519';
 import { Console } from '../console/index';
 import { Ntor } from './algorithms/ntor/index';
@@ -254,8 +254,6 @@ export class SecretCircuit {
     this.#onClean = () => {
       for (const stream of this.streams.values()) stream[Symbol.dispose]();
 
-      for (const target of this.targets) target[Symbol.dispose]();
-
       this.tor.events.off('close', onClose);
       this.tor.events.off('error', onError);
 
@@ -445,13 +443,12 @@ export class SecretCircuit {
       links,
       ntor_request
     );
-    this.tor.output.enqueue(
-      RelayEarlyCell.Streamless.from(
-        this,
-        undefined,
-        relay_extend2
-      ).cellOrThrow()
+    const relay_early_cell = RelayEarlyCell.Streamless.from(
+      this,
+      undefined,
+      relay_extend2
     );
+    this.tor.output.enqueue(relay_early_cell.cellOrThrow());
 
     const msg_extended2 = await Plume.waitWithCloseAndErrorOrThrow(
       this.events,
@@ -496,11 +493,11 @@ export class SecretCircuit {
     if (!Bytes.equals(response.auth, result.auth))
       throw new InvalidNtorAuthError();
 
-    const forward_digest = Sha1.get().getOrThrow().Hasher.createOrThrow();
-    const backward_digest = Sha1.get().getOrThrow().Hasher.createOrThrow();
+    const forward_digest = await Sha1Hasher.createOrThrow();
+    const backward_digest = await Sha1Hasher.createOrThrow();
 
-    forward_digest.updateOrThrow(result.forwardDigest);
-    backward_digest.updateOrThrow(result.backwardDigest);
+    await forward_digest.updateOrThrow(result.forwardDigest);
+    await backward_digest.updateOrThrow(result.backwardDigest);
 
     using forwardKeyMemory = new AesWasm.Memory(result.forwardKey);
     using forwardIvMemory = new AesWasm.Memory(new Uint8Array(16));
@@ -538,7 +535,8 @@ export class SecretCircuit {
       undefined,
       relay_truncate
     );
-    this.tor.output.enqueue(relay_truncate_cell.cellOrThrow());
+    const cell = relay_truncate_cell.cellOrThrow();
+    this.tor.output.enqueue(cell);
 
     await Plume.waitWithCloseAndErrorOrThrow(
       this.events,
@@ -575,7 +573,8 @@ export class SecretCircuit {
 
     const begin = new RelayBeginDirCell();
     const begin_cell = RelayCell.Streamful.from(this, stream, begin);
-    this.tor.output.enqueue(begin_cell.cellOrThrow());
+    const cell = begin_cell.cellOrThrow();
+    this.tor.output.enqueue(cell);
 
     if (!params.wait) return new TorStreamDuplex(stream);
 
@@ -626,7 +625,8 @@ export class SecretCircuit {
 
     const begin = RelayBeginCell.create(`${hostname}:${port}`, flags);
     const begin_cell = RelayCell.Streamful.from(this, stream, begin);
-    this.tor.output.enqueue(begin_cell.cellOrThrow());
+    const cell = begin_cell.cellOrThrow();
+    this.tor.output.enqueue(cell);
 
     if (!params.wait) return new TorStreamDuplex(stream);
 

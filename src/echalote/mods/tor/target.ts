@@ -1,7 +1,7 @@
 import { Aes128Ctr128BEKey } from '@hazae41/aes.wasm';
-import { Uint8Array } from '@hazae41/bytes';
-import type { Sha1 } from '@hazae41/sha1';
+import type { Uint8Array } from '@hazae41/bytes';
 import { SecretCircuit } from './circuit';
+import { Sha1Hasher } from './Sha1Hasher';
 
 export class Target {
   readonly #class = Target;
@@ -14,14 +14,9 @@ export class Target {
   constructor(
     readonly relayid_rsa: Uint8Array,
     readonly circuit: SecretCircuit,
-    readonly forward_digest: Sha1.Hasher,
-    readonly backward_digest: Sha1.Hasher,
+    readonly forward_digest: Sha1Hasher,
+    readonly backward_digest: Sha1Hasher,
     readonly forward_key: Aes128Ctr128BEKey,
     readonly backward_key: Aes128Ctr128BEKey
   ) {}
-
-  [Symbol.dispose]() {
-    this.forward_digest[Symbol.dispose]();
-    this.backward_digest[Symbol.dispose]();
-  }
 }

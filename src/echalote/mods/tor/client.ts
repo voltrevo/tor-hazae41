@@ -14,10 +14,10 @@ import {
   SuperEventTarget,
 } from '@hazae41/plume';
 import { RsaWasm } from '@hazae41/rsa.wasm';
-import { Sha1 } from '@hazae41/sha1';
 import { X509 } from '@hazae41/x509';
 import { Resizer } from '../../libs/resizer/resizer';
 import { Console } from '../console/index';
+import { Sha1Hasher } from './Sha1Hasher';
 import { TypedAddress } from './binary/address';
 import { Cell } from './binary/cells/cell';
 import { AuthChallengeCell } from './binary/cells/direct/auth_challenge/cell';
@@ -449,7 +449,7 @@ export class SecretTorClientDuplex {
   }
 
   async #onRelayCell(parent: Cell<Opaque>) {
-    const raw = RelayCell.Raw.uncellOrThrow(parent);
+    const raw = await RelayCell.Raw.uncellOrThrow(parent);
     const cell = raw.unpackOrNull();
 
     if (cell == null) return;
@@ -513,7 +513,8 @@ export class SecretTorClientDuplex {
         undefined,
         sendme
       );
-      this.output.enqueue(sendme_cell.cellOrThrow());
+      const cell = await sendme_cell.cellOrThrow();
+      this.output.enqueue(cell);
     }
 
     await this.events.emit('RELAY_DATA', cell2);
@@ -653,11 +654,11 @@ export class SecretTorClientDuplex {
     if (!Bytes.equals(result.keyHash, created_fast.fragment.derivative))
       throw new InvalidKdfKeyHashError();
 
-    const forwardDigest = Sha1.get().getOrThrow().Hasher.createOrThrow();
-    const backwardDigest = Sha1.get().getOrThrow().Hasher.createOrThrow();
+    const forwardDigest = await Sha1Hasher.createOrThrow();
+    const backwardDigest = await Sha1Hasher.createOrThrow();
 
-    forwardDigest.updateOrThrow(result.forwardDigest);
-    backwardDigest.updateOrThrow(result.backwardDigest);
+    await forwardDigest.updateOrThrow(result.forwardDigest);
+    await backwardDigest.updateOrThrow(result.backwardDigest);
 
     using forwardKeyMemory = new AesWasm.Memory(result.forwardKey);
     using forwardIvMemory = new AesWasm.Memory(new Uint8Array(16));
