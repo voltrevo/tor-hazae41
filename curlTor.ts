@@ -15,7 +15,7 @@
     -v, --verbose          (show request + response status/headers)
     -L, --location         (follow redirects; default in fetch)
         --max-time <sec>   (timeout)
-        --snowflake-url <url>  (Tor Snowflake proxy URL; default: wss://snowflake.torproject.net/)
+        --snowflake-url <url>  (Tor Snowflake proxy URL; default: wss://snowflake.pse.dev/)
   
   Notes:
     * TLS “-k/--insecure” is not supported per-request by built-in fetch.
@@ -277,7 +277,8 @@ async function main() {
     }
   }
 
-  const snowflakeUrl = opts.snowflakeUrl || 'wss://snowflake.torproject.net/';
+  // const snowflakeUrl = opts.snowflakeUrl || 'wss://snowflake.torproject.net/';
+  const snowflakeUrl = opts.snowflakeUrl || 'wss://snowflake.pse.dev/';
 
   let res: Response;
   try {

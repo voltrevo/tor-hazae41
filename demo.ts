@@ -351,7 +351,7 @@ async function openTorClient(): Promise<void> {
       'snowflakeUrl'
     ) as HTMLInputElement;
     const snowflakeUrl =
-      snowflakeUrlInput?.value?.trim() || 'wss://snowflake.torproject.net/';
+      snowflakeUrlInput?.value?.trim() || 'wss://snowflake.pse.dev/';
 
     log.info(`🌨️ Using Snowflake URL: ${snowflakeUrl}`);
 
