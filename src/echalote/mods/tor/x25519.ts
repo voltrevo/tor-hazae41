@@ -6,7 +6,7 @@
  */
 
 import { x25519 } from '@noble/curves/ed25519.js';
-import { getRandomValues } from 'crypto';
+import { Bytes } from '@hazae41/bytes';
 
 export interface IExportable<T> {
   readonly bytes: T;
@@ -96,10 +96,9 @@ class SharedSecret implements ISharedSecret {
 export const X25519 = {
   PrivateKey: {
     randomOrThrow: async (): Promise<IPrivateKey> => {
-      // Generate 32 random bytes for private key
-      const privateKeyBytes = new Uint8Array(32);
-      getRandomValues(privateKeyBytes);
-      return new PrivateKey(privateKeyBytes);
+      // Generate 32 random bytes for private key using browser-compatible random
+      const privateKeyBytes = Bytes.random(32);
+      return new PrivateKey(new Uint8Array(privateKeyBytes));
     },
 
     importOrThrow: async (bytes: Uint8Array): Promise<IPrivateKey> => {
