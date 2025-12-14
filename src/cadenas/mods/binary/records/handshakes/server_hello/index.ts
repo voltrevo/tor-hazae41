@@ -1,1 +1,1 @@
-export * from "./server_hello2.js";
+export * from './server_hello2.js';

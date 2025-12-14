@@ -1,15 +1,15 @@
-import { Opaque, Writable } from "@hazae41/binary"
-import { Cursor } from "@hazae41/cursor"
-import { Record } from "mods/binary/records/record.js"
+import { Opaque, Writable } from '@hazae41/binary';
+import { Cursor } from '@hazae41/cursor';
+import { Record } from '../../../../mods/binary/records/record.js';
 
 export interface Handshakeable extends Writable {
-  readonly handshake_type: number
+  readonly handshake_type: number;
 }
 
 export class Handshake<T extends Writable> {
-  readonly #class = Handshake
+  readonly #class = Handshake;
 
-  static readonly record_type = Record.types.handshake
+  static readonly record_type = Record.types.handshake;
 
   static readonly types = {
     hello_request: 0,
@@ -22,41 +22,40 @@ export class Handshake<T extends Writable> {
     certificate_verify: 15,
     client_key_exchange: 16,
     finished: 20,
-  } as const
+  } as const;
 
   constructor(
     readonly type: number,
     readonly fragment: T
-  ) { }
+  ) {}
 
   static from<T extends Handshakeable>(handshake: T) {
-    return new Handshake(handshake.handshake_type, handshake)
+    return new Handshake(handshake.handshake_type, handshake);
   }
 
   get record_type() {
-    return this.#class.record_type
+    return this.#class.record_type;
   }
 
   sizeOrThrow() {
-    return 1 + 3 + this.fragment.sizeOrThrow()
+    return 1 + 3 + this.fragment.sizeOrThrow();
   }
 
   writeOrThrow(cursor: Cursor) {
-    cursor.writeUint8OrThrow(this.type)
+    cursor.writeUint8OrThrow(this.type);
 
-    const size = this.fragment.sizeOrThrow()
-    cursor.writeUint24OrThrow(size)
+    const size = this.fragment.sizeOrThrow();
+    cursor.writeUint24OrThrow(size);
 
-    this.fragment.writeOrThrow(cursor)
+    this.fragment.writeOrThrow(cursor);
   }
 
   static readOrThrow(cursor: Cursor) {
-    const type = cursor.readUint8OrThrow()
-    const size = cursor.readUint24OrThrow()
-    const bytes = cursor.readAndCopyOrThrow(size)
-    const fragment = new Opaque(bytes)
+    const type = cursor.readUint8OrThrow();
+    const size = cursor.readUint24OrThrow();
+    const bytes = cursor.readAndCopyOrThrow(size);
+    const fragment = new Opaque(bytes);
 
-    return new Handshake<Opaque>(type, fragment)
+    return new Handshake<Opaque>(type, fragment);
   }
-
 }

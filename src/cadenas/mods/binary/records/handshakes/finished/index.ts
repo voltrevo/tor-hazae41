@@ -1,1 +1,1 @@
-export * from "./finished2.js";
+export * from './finished2.js';

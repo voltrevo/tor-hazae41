@@ -1,3 +1,1 @@
-export class X25519 {
-
-}
+export class X25519 {}

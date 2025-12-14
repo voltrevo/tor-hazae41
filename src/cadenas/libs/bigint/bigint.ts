@@ -1,14 +1,11 @@
-import { Base16 } from "@hazae41/base16";
-import { BytesOrCopiable, Copiable } from "libs/copiable/index.js";
+import { Base16 } from '@hazae41/base16';
 
 export namespace BigBytes {
-
   export function exportOrThrow(value: bigint) {
-    return Copiable.copyAndDispose(Base16.get().getOrThrow().padStartAndDecodeOrThrow(value.toString(16)))
+    return Base16.padStartAndDecodeOrThrow(value.toString(16));
   }
 
-  export function importOrThrow(bytes: BytesOrCopiable) {
-    return BigInt("0x" + Base16.get().getOrThrow().encodeOrThrow(bytes))
+  export function importOrThrow(bytes: Uint8Array) {
+    return BigInt('0x' + Base16.encodeOrThrow(bytes));
   }
-
 }

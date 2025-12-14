@@ -1,28 +1,25 @@
-import { Cursor } from "@hazae41/cursor"
+import { Cursor } from '@hazae41/cursor';
 
 export class Number24 {
-  readonly #class = Number24
+  readonly #class = Number24;
 
-  static readonly size = 3 as const
+  static readonly size = 3 as const;
 
-  constructor(
-    readonly value: number
-  ) { }
+  constructor(readonly value: number) {}
 
   static new(value: number) {
-    return new Number24(value)
+    return new Number24(value);
   }
 
   sizeOrThrow() {
-    return this.#class.size
+    return this.#class.size;
   }
 
   writeOrThrow(cursor: Cursor) {
-    cursor.writeUint24OrThrow(this.value)
+    cursor.writeUint24OrThrow(this.value);
   }
 
   static readOrThrow(cursor: Cursor) {
-    return new Number24(cursor.readUint24OrThrow())
+    return new Number24(cursor.readUint24OrThrow());
   }
-
 }

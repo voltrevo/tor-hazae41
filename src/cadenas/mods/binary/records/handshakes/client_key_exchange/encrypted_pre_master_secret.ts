@@ -1,3 +1,1 @@
-export class EncryptedPreMasterSecret {
-
-}
+export class EncryptedPreMasterSecret {}

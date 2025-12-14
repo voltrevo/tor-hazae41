@@ -1,33 +1,29 @@
-import { Cursor } from "@hazae41/cursor"
+import { Cursor } from '@hazae41/cursor';
 
 export class NameType {
-
   static readonly types = {
     host_name: 0,
-  } as const
+  } as const;
 
   static readonly instances = {
     host_name: new NameType(NameType.types.host_name),
-  } as const
+  } as const;
 
-  constructor(
-    readonly type: number
-  ) { }
+  constructor(readonly type: number) {}
 
   static new(type: number) {
-    return new NameType(type)
+    return new NameType(type);
   }
 
   sizeOrThrow() {
-    return 1
+    return 1;
   }
 
   writeOrThrow(cursor: Cursor) {
-    cursor.writeUint8OrThrow(this.type)
+    cursor.writeUint8OrThrow(this.type);
   }
 
   static readOrThrow(cursor: Cursor) {
-    return new NameType(cursor.readUint8OrThrow())
+    return new NameType(cursor.readUint8OrThrow());
   }
-
 }

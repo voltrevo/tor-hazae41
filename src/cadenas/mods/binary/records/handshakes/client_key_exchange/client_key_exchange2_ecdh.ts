@@ -1,38 +1,37 @@
-import { Cursor } from "@hazae41/cursor";
-import { Handshake } from "mods/binary/records/handshakes/handshake.js";
-import { ClientECDiffieHellmanPublic } from "./client_ec_diffie_hellman_public.js";
+import { Cursor } from '@hazae41/cursor';
+import { Handshake } from '../../../../../mods/binary/records/handshakes/handshake.js';
+import { ClientECDiffieHellmanPublic } from './client_ec_diffie_hellman_public.js';
 
 export class ClientKeyExchange2ECDH {
-  readonly #class = ClientKeyExchange2ECDH
+  readonly #class = ClientKeyExchange2ECDH;
 
-  static readonly handshake_type = Handshake.types.client_key_exchange
+  static readonly handshake_type = Handshake.types.client_key_exchange;
 
-  constructor(
-    readonly exchange_keys: ClientECDiffieHellmanPublic
-  ) { }
+  constructor(readonly exchange_keys: ClientECDiffieHellmanPublic) {}
 
   static new(exchange_keys: ClientECDiffieHellmanPublic) {
-    return new ClientKeyExchange2ECDH(exchange_keys)
+    return new ClientKeyExchange2ECDH(exchange_keys);
   }
 
   static from(bytes: Uint8Array) {
-    return new ClientKeyExchange2ECDH(ClientECDiffieHellmanPublic.from(bytes))
+    return new ClientKeyExchange2ECDH(ClientECDiffieHellmanPublic.from(bytes));
   }
 
   get handshake_type() {
-    return this.#class.handshake_type
+    return this.#class.handshake_type;
   }
 
   sizeOrThrow() {
-    return this.exchange_keys.sizeOrThrow()
+    return this.exchange_keys.sizeOrThrow();
   }
 
   writeOrThrow(cursor: Cursor) {
-    return this.exchange_keys.writeOrThrow(cursor)
+    return this.exchange_keys.writeOrThrow(cursor);
   }
 
   static readOrThrow(cursor: Cursor) {
-    return new ClientKeyExchange2ECDH(ClientECDiffieHellmanPublic.readOrThrow(cursor))
+    return new ClientKeyExchange2ECDH(
+      ClientECDiffieHellmanPublic.readOrThrow(cursor)
+    );
   }
-
 }

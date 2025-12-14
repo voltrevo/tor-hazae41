@@ -1,1 +1,1 @@
-export * from "./certificate2.js";
+export * from './certificate2.js';

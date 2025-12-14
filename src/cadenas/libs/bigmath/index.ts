@@ -1,1 +1,1 @@
-export * as BigMath from "./bigmath.js";
+export * as BigMath from './bigmath.js';

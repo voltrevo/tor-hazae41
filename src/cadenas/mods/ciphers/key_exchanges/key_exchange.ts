@@ -1,6 +1,6 @@
 export interface KeyExchange {
-  readonly name: string
+  readonly name: string;
 
-  readonly ephemeral: boolean
-  readonly anonymous: boolean
+  readonly ephemeral: boolean;
+  readonly anonymous: boolean;
 }

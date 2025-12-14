@@ -1,33 +1,27 @@
-import { Writable } from "@hazae41/binary";
-import { Cursor } from "@hazae41/cursor";
+import { Writable } from '@hazae41/binary';
+import { Cursor } from '@hazae41/cursor';
 
 export interface List<T extends Writable> extends Writable {
-  readonly array: T[]
+  readonly array: T[];
 }
 
 export class List<T extends Writable> {
-
-  constructor(
-    readonly array: T[]
-  ) { }
+  constructor(readonly array: T[]) {}
 
   static from<T extends Writable>(array: T[]) {
-    return new this(array)
+    return new this(array);
   }
 
   sizeOrThrow() {
-    let size = 0
+    let size = 0;
 
-    for (const element of this.array)
-      size += element.sizeOrThrow()
+    for (const element of this.array) size += element.sizeOrThrow();
 
-    return size
+    return size;
   }
 
   writeOrThrow(cursor: Cursor) {
-    for (const element of this.array)
-      element.writeOrThrow(cursor)
-    return
+    for (const element of this.array) element.writeOrThrow(cursor);
+    return;
   }
-
 }

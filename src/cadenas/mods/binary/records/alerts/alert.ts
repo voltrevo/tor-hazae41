@@ -1,15 +1,15 @@
-import { Cursor } from "@hazae41/cursor"
-import { Record } from "mods/binary/records/record.js"
+import { Cursor } from '@hazae41/cursor';
+import { Record } from '../../../../mods/binary/records/record.js';
 
 export class Alert {
-  readonly #class = Alert
+  readonly #class = Alert;
 
-  static readonly record_type = Record.types.alert
+  static readonly record_type = Record.types.alert;
 
   static readonly levels = {
     warning: 1,
-    fatal: 2
-  } as const
+    fatal: 2,
+  } as const;
 
   static readonly descriptions = {
     close_notify: 0,
@@ -39,31 +39,30 @@ export class Alert {
     unknown_psk_identity: 115,
     certificate_required: 116,
     no_application_protocol: 120,
-  } as const
+  } as const;
 
   constructor(
     readonly level: number,
     readonly description: number
-  ) { }
+  ) {}
 
   get record_type() {
-    return this.#class.record_type
+    return this.#class.record_type;
   }
 
   sizeOrThrow() {
-    return 2 // 1 + 1
+    return 2; // 1 + 1
   }
 
   writeOrThrow(cursor: Cursor) {
-    cursor.writeUint8OrThrow(this.level)
-    cursor.writeUint8OrThrow(this.description)
+    cursor.writeUint8OrThrow(this.level);
+    cursor.writeUint8OrThrow(this.description);
   }
 
   static readOrThrow(cursor: Cursor) {
-    const level = cursor.readUint8OrThrow()
-    const description = cursor.readUint8OrThrow()
+    const level = cursor.readUint8OrThrow();
+    const description = cursor.readUint8OrThrow();
 
-    return new Alert(level, description)
+    return new Alert(level, description);
   }
-
 }
