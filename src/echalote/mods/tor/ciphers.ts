@@ -1,4 +1,4 @@
-import { AES_256_CBC, Cipher, Ciphers, DHE_RSA, SHA } from '@hazae41/cadenas';
+import { AES_256_CBC, Cipher, Ciphers, DHE_RSA, SHA } from '../../../cadenas';
 
 export namespace TorCiphers {
   export const TLS_ECDHE_ECDSA_WITH_AES_256_CBC_SHA = new Cipher(
