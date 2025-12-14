@@ -14,8 +14,13 @@ export class NamedCurveList {
   }
 
   static default() {
-    const { secp256r1, secp384r1, secp521r1, x25519, x448 } =
-      NamedCurve.instances;
+    const {
+      secp256r1,
+      secp384r1: _1,
+      secp521r1: _2,
+      x25519: _3,
+      x448: _4,
+    } = NamedCurve.instances;
 
     return this.from([secp256r1]); // TODO
   }

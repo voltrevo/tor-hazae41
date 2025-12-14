@@ -809,7 +809,7 @@ export namespace Consensus {
       const identity = new Uint8Array(
         await crypto.subtle.digest('SHA-1', identityKey.bytes)
       );
-      const fingerprint = Base16.get().getOrThrow().encodeOrThrow(identity);
+      const fingerprint = Base16.encodeOrThrow(identity);
 
       assert(
         fingerprint.toLowerCase() === cert.fingerprint.toLowerCase(),

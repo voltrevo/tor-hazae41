@@ -1,8 +1,8 @@
 import { IA5String, Integer, ObjectIdentifier, Sequence } from '@hazae41/asn1';
 import { Base16 } from '@hazae41/base16';
 import { Opaque, Readable, Writable } from '@hazae41/binary';
+import { type Uint8Array } from '@hazae41/bytes';
 import { Cursor } from '@hazae41/cursor';
-import { Lengthed } from '@hazae41/lengthed';
 import { Certificate, OtherName, SubjectAltName, X509 } from '@hazae41/x509';
 import { BigBytes } from '../libs/bigint/bigint.js';
 import { BigMath } from '../libs/bigmath/index.js';
@@ -97,7 +97,7 @@ export class TlsClientNoneState {
 
     const client_random = Writable.writeToBytesOrThrow(
       client_hello.random
-    ) as Uint8Array<ArrayBuffer> & Lengthed<32>;
+    ) as Uint8Array<32>;
     const client_extensions = Extensions.getClientExtensions(client_hello);
 
     const client_hello_handshake = Handshake.from(client_hello);
@@ -132,11 +132,11 @@ export class TlsClientNoneState {
     ]);
   }
 
-  async onOutputWrite(chunk: Writable) {
+  async onOutputWrite(_chunk: Writable) {
     throw new InvalidTlsStateError();
   }
 
-  async onRecord(record: PlaintextRecord<Opaque>) {
+  async onRecord(_record: PlaintextRecord<Opaque>) {
     throw new InvalidTlsStateError();
   }
 }
@@ -147,7 +147,7 @@ export type TlsClientHandshakeState =
   | TlsClientHandshakeClientFinishedState;
 
 export interface TlsClientHandshakeClientHelloStateParams {
-  readonly client_random: Uint8Array<ArrayBuffer> & Lengthed<32>;
+  readonly client_random: Uint8Array<32>;
   readonly client_extensions: Extensions;
 }
 
@@ -158,7 +158,7 @@ export class TlsClientHandshakeClientHelloState implements TlsClientHandshakeCli
   readonly client_encrypted = false;
   readonly server_encrypted = false;
 
-  readonly client_random: Uint8Array<ArrayBuffer> & Lengthed<32>;
+  readonly client_random: Uint8Array<32>;
   readonly client_extensions: Extensions;
 
   readonly messages = new Array<Uint8Array>();
@@ -175,7 +175,7 @@ export class TlsClientHandshakeClientHelloState implements TlsClientHandshakeCli
     throw new InvalidTlsStateError();
   }
 
-  async onOutputWrite(chunk: Writable) {
+  async onOutputWrite(_chunk: Writable) {
     throw new InvalidTlsStateError();
   }
 
@@ -220,7 +220,7 @@ export class TlsClientHandshakeClientHelloState implements TlsClientHandshakeCli
 
     const server_random = Writable.writeToBytesOrThrow(
       server_hello.random
-    ) as Uint8Array<ArrayBuffer> & Lengthed<32>;
+    ) as Uint8Array<32>;
     const server_extensions = Extensions.getServerExtensions(
       server_hello,
       this.client_extensions
@@ -245,10 +245,10 @@ export interface TlsClientHandshakeServerHelloStateParams {
   readonly version: number;
   readonly cipher: Cipher;
 
-  readonly client_random: Uint8Array<ArrayBuffer> & Lengthed<32>;
+  readonly client_random: Uint8Array<32>;
   readonly client_extensions: Extensions;
 
-  readonly server_random: Uint8Array<ArrayBuffer> & Lengthed<32>;
+  readonly server_random: Uint8Array<32>;
   readonly server_extensions: Extensions;
 
   readonly messages: Uint8Array[];
@@ -264,10 +264,10 @@ export class TlsClientHandshakeServerHelloState implements TlsClientHandshakeSer
   readonly version: number;
   readonly cipher: Cipher;
 
-  readonly client_random: Uint8Array<ArrayBuffer> & Lengthed<32>;
+  readonly client_random: Uint8Array<32>;
   readonly client_extensions: Extensions;
 
-  readonly server_random: Uint8Array<ArrayBuffer> & Lengthed<32>;
+  readonly server_random: Uint8Array<32>;
   readonly server_extensions: Extensions;
 
   readonly messages: Uint8Array[];
@@ -299,7 +299,7 @@ export class TlsClientHandshakeServerHelloState implements TlsClientHandshakeSer
     throw new InvalidTlsStateError();
   }
 
-  async onOutputWrite(chunk: Writable) {
+  async onOutputWrite(_chunk: Writable) {
     throw new InvalidTlsStateError();
   }
 
@@ -343,7 +343,7 @@ export class TlsClientHandshakeServerHelloState implements TlsClientHandshakeSer
     if (certificate.tbsCertificate.extensions == null)
       throw new Error('Could not verify domain name');
 
-    for (const extension of certificate.tbsCertificate.extensions?.extensions) {
+    for (const extension of certificate.tbsCertificate.extensions.extensions) {
       if (extension.extnID.value === '2.5.29.17' /* subjectAltName */) {
         const subjectAltName = extension.extnValue as SubjectAltName;
 
@@ -800,9 +800,7 @@ export class TlsClientHandshakeServerHelloState implements TlsClientHandshakeSer
     throw new InvalidTlsStateError();
   }
 
-  async #computeSecretsOrThrow(
-    premaster_secret: Uint8Array<ArrayBuffer>
-  ): Promise<Secrets> {
+  async #computeSecretsOrThrow(premaster_secret: Uint8Array): Promise<Secrets> {
     const { cipher, client_random, server_random } = this;
     const { prf_md } = cipher.hash;
 
@@ -961,7 +959,7 @@ export class TlsClientHandshakeServerHelloState implements TlsClientHandshakeSer
 
     const { handshake_md, prf_md } = this.cipher.hash;
 
-    const handshake_messages = Bytes.concat(this.messages);
+    const handshake_messages = Bytes.concat(...this.messages);
     const handshake_messages_hash = new Uint8Array(
       await crypto.subtle.digest(handshake_md, handshake_messages)
     );
@@ -1074,7 +1072,7 @@ export class TlsClientHandshakeClientFinishedState implements TlsClientHandshake
     throw new InvalidTlsStateError();
   }
 
-  async onOutputWrite(chunk: Writable) {
+  async onOutputWrite(_chunk: Writable) {
     throw new InvalidTlsStateError();
   }
 
@@ -1219,7 +1217,7 @@ export class TlsClientHandshakeServerCipheredState implements TlsClientHandshake
     throw new InvalidTlsStateError();
   }
 
-  async onOutputWrite(chunk: Writable) {
+  async onOutputWrite(_chunk: Writable) {
     throw new InvalidTlsStateError();
   }
 
@@ -1304,10 +1302,10 @@ export class TlsClientHandshakedState implements TlsClientHandshakedStateParams 
   readonly version: number;
   readonly cipher: Cipher;
 
-  readonly client_random: Uint8Array<ArrayBuffer> & Lengthed<32>;
+  readonly client_random: Uint8Array<32>;
   readonly client_extensions: Extensions;
 
-  readonly server_random: Uint8Array<ArrayBuffer> & Lengthed<32>;
+  readonly server_random: Uint8Array<32>;
   readonly server_extensions: Extensions;
 
   client_sequence: bigint;

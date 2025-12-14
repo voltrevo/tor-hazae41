@@ -1,4 +1,3 @@
-import { Writable } from '@hazae41/binary';
 import { Nullable } from '@hazae41/option';
 
 export namespace CCADB {

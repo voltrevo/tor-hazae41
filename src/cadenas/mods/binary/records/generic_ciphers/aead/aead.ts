@@ -41,7 +41,7 @@ export class GenericAEADCipher {
     nonce.writeUint64OrThrow(sequence);
 
     nonce.offset = 0;
-    const nonce_implicit = new Uint8Array(nonce.readOrThrow(4));
+    const _nonce_implicit = new Uint8Array(nonce.readOrThrow(4));
     const nonce_explicit = new Uint8Array(
       nonce.readOrThrow(8)
     ) as Uint8Array<ArrayBuffer> & Lengthed<8>;

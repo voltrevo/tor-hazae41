@@ -5,6 +5,7 @@ export interface List<T extends Writable> extends Writable {
   readonly array: T[];
 }
 
+// eslint-disable-next-line @typescript-eslint/no-unsafe-declaration-merging
 export class List<T extends Writable> {
   constructor(readonly array: T[]) {}
 

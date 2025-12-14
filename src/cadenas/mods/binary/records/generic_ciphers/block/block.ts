@@ -76,12 +76,12 @@ export class GenericBlockCipher {
   async decryptOrThrow(
     record: BlockCiphertextRecord,
     encrypter: BlockEncrypter,
-    sequence: bigint
+    _sequence: bigint
   ) {
     const plaintext = await encrypter.decryptOrThrow(this.iv, this.block);
 
     const content = plaintext.subarray(0, -encrypter.macher.mac_length);
-    const mac = plaintext.subarray(-encrypter.macher.mac_length);
+    const _mac = plaintext.subarray(-encrypter.macher.mac_length);
 
     // Console.debug("<- content", content.length, Bytes.toHex(content))
     // Console.debug("<- mac", mac.length, Bytes.toHex(mac))

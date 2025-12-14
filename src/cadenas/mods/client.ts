@@ -163,6 +163,7 @@ export class TlsClientDuplex {
       try {
         record = Readable.readOrRollbackAndThrow(PlaintextRecord, cursor);
       } catch (e) {
+        console.error(e);
         this.#buffer.writeOrThrow(cursor.after);
         break;
       }
