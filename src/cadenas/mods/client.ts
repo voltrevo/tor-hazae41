@@ -162,8 +162,9 @@ export class TlsClientDuplex {
 
       try {
         record = Readable.readOrRollbackAndThrow(PlaintextRecord, cursor);
-      } catch (e) {
-        console.error(e);
+      } catch {
+        // FIXME: This throws a lot but seems to be intended.
+        //        (Tried logging this and it was noisy but no actual issues.)
         this.#buffer.writeOrThrow(cursor.after);
         break;
       }
