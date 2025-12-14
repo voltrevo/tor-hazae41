@@ -189,21 +189,4 @@ test('RSA BigInt: Test vector from real Tor certificate (captured from integrati
       );
     }
   }
-
-  // Log the test vectors for documentation
-  console.info('[INTEGRATION_TEST_VECTORS]', {
-    source: 'Tor network integration test (Snowflake + check.torproject.org)',
-    totalVectors: testVectors.length,
-    breakdown:
-      '1 directory certificate (1024-bit RSA, SHA-256) + 7 consensus documents (3072-bit RSA, SHA-1) + 7 consensus documents (2048-bit RSA, SHA-256)',
-    corruptionTests: {
-      hashCorruptions: 3, // 3 positions tested
-      signatureCorruptions: 3, // 3 positions tested
-      singleBitCorruptions: 3, // 3 positions tested
-      totalCorruptionTestsPerVector: 9,
-    },
-    totalCorruptionTestsRun: testVectors.length * 9,
-    allTestsPassed: true,
-    note: 'All vectors verified successfully by both WASM (ground truth) and BigInt implementations, all corruptions correctly detected as failures',
-  });
 });

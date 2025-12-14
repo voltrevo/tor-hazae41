@@ -1,19 +1,14 @@
 import { Bytes } from '@hazae41/bytes';
 import { assert, test } from '@hazae41/phobos';
-import { relative, resolve } from 'path';
 import { prfOrThrow } from './prf.js';
 
-const directory = resolve('./dist/test/');
-const { pathname } = new URL(import.meta.url);
-console.log(relative(directory, pathname.replace('.cjs', '.ts')));
-
-test('PRF (master secret)', async ({ message }) => {
+test('PRF (master secret)', async ({ message: _1 }) => {
   const premaster_secret = Bytes.random(128);
 
   const client_random = Bytes.random(32);
   const server_random = Bytes.random(32);
 
-  const start = Date.now();
+  const _start = Date.now();
 
   const seed = Bytes.concat([client_random, server_random]);
   const result = await prfOrThrow(
@@ -24,9 +19,9 @@ test('PRF (master secret)', async ({ message }) => {
     48
   );
 
-  const end = Date.now();
+  const _end = Date.now();
 
   assert(result.length === 48, `result length should be 48`);
 
-  console.info(message, 'took', end - start, 'ms');
+  // console.info(message, 'took', end - start, 'ms');
 });
