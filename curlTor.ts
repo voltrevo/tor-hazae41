@@ -26,7 +26,7 @@
 import { readFileSync, writeFileSync, existsSync } from 'node:fs';
 import { stdout, stderr } from 'node:process';
 
-import { TorClient } from './src/TorClient';
+import { TorClient } from './src/TorClient/versions/standard';
 import { getErrorDetails } from './src/utils/getErrorDetails';
 import { Log } from './src/Log';
 
