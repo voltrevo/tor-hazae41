@@ -35,7 +35,9 @@ export class AesJsAes128Ctr {
    *
    * @param data Data to XOR with keystream
    */
-  apply_keystream(data: Uint8Array): void {
+  async apply_keystream(data: Uint8Array): Promise<void> {
+    await Promise.resolve();
+
     // aes-js.ModeOfOperation.ctr.encrypt does XOR by default for CTR mode
     // It modifies the data in-place and returns the encrypted data
     const encrypted = this.modeOfOperation.encrypt(data);

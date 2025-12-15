@@ -75,7 +75,7 @@ export namespace RelayCell {
       );
     }
 
-    cellOrThrow() {
+    async cellOrThrow() {
       const cursor = new Cursor(new Uint8Array(Cell.PAYLOAD_LEN));
 
       cursor.writeUint8OrThrow(this.rcommand);
@@ -110,7 +110,7 @@ export namespace RelayCell {
       const bytes = new Uint8Array(cursor.bytes);
 
       for (let i = this.circuit.targets.length - 1; i >= 0; i--)
-        this.circuit.targets[i].forward_key.apply_keystream(bytes);
+        await this.circuit.targets[i].forward_key.apply_keystream(bytes);
 
       const fragment = new Opaque(bytes);
 
@@ -123,7 +123,7 @@ export namespace RelayCell {
       const bytes = new Uint8Array(cell.fragment.bytes);
 
       for (const target of cell.circuit.targets) {
-        target.backward_key.apply_keystream(bytes);
+        await target.backward_key.apply_keystream(bytes);
 
         const cursor = new Cursor(bytes);
 
@@ -183,8 +183,8 @@ export namespace RelayCell {
       return new Streamful(circuit, stream, fragment.rcommand, fragment);
     }
 
-    cellOrThrow() {
-      return this.#raw.cellOrThrow();
+    async cellOrThrow() {
+      return await this.#raw.cellOrThrow();
     }
 
     static intoOrThrow<T extends Writable>(
@@ -228,8 +228,8 @@ export namespace RelayCell {
       return new Streamless(circuit, stream, fragment.rcommand, fragment);
     }
 
-    cellOrThrow(): Cell.Circuitful<Opaque> {
-      return this.#raw.cellOrThrow();
+    async cellOrThrow(): Promise<Cell.Circuitful<Opaque>> {
+      return await this.#raw.cellOrThrow();
     }
 
     static intoOrThrow<T extends Writable>(

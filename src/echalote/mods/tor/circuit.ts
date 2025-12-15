@@ -447,7 +447,7 @@ export class SecretCircuit {
       undefined,
       relay_extend2
     );
-    this.tor.output.enqueue(relay_early_cell.cellOrThrow());
+    this.tor.output.enqueue(await relay_early_cell.cellOrThrow());
 
     const msg_extended2 = await Plume.waitWithCloseAndErrorOrThrow(
       this.events,
@@ -521,7 +521,7 @@ export class SecretCircuit {
       undefined,
       relay_truncate
     );
-    const cell = relay_truncate_cell.cellOrThrow();
+    const cell = await relay_truncate_cell.cellOrThrow();
     this.tor.output.enqueue(cell);
 
     await Plume.waitWithCloseAndErrorOrThrow(
@@ -559,7 +559,7 @@ export class SecretCircuit {
 
     const begin = new RelayBeginDirCell();
     const begin_cell = RelayCell.Streamful.from(this, stream, begin);
-    const cell = begin_cell.cellOrThrow();
+    const cell = await begin_cell.cellOrThrow();
     this.tor.output.enqueue(cell);
 
     if (!params.wait) return new TorStreamDuplex(stream);
@@ -611,7 +611,7 @@ export class SecretCircuit {
 
     const begin = RelayBeginCell.create(`${hostname}:${port}`, flags);
     const begin_cell = RelayCell.Streamful.from(this, stream, begin);
-    const cell = begin_cell.cellOrThrow();
+    const cell = await begin_cell.cellOrThrow();
     this.tor.output.enqueue(cell);
 
     if (!params.wait) return new TorStreamDuplex(stream);

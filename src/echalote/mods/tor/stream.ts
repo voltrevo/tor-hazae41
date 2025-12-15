@@ -161,7 +161,7 @@ export class SecretTorStreamDuplex {
         this,
         relay_end_cell
       );
-      this.circuit.tor.output.enqueue(relay_cell.cellOrThrow());
+      this.circuit.tor.output.enqueue(await relay_cell.cellOrThrow());
 
       this.package--;
     }
@@ -181,7 +181,7 @@ export class SecretTorStreamDuplex {
         this,
         relay_end_cell
       );
-      const cell = relay_cell.cellOrThrow();
+      const cell = await relay_cell.cellOrThrow();
       this.circuit.tor.output.enqueue(cell);
 
       this.package--;
@@ -238,7 +238,7 @@ export class SecretTorStreamDuplex {
 
       const sendme = new RelaySendmeStreamCell();
       const sendme_cell = RelayCell.Streamful.from(this.circuit, this, sendme);
-      const cell = sendme_cell.cellOrThrow();
+      const cell = await sendme_cell.cellOrThrow();
       this.circuit.tor.output.enqueue(cell);
     }
 
@@ -272,7 +272,7 @@ export class SecretTorStreamDuplex {
       relay_data_cell
     );
 
-    const cell = relay_cell.cellOrThrow();
+    const cell = await relay_cell.cellOrThrow();
     this.circuit.tor.output.enqueue(cell);
 
     this.package--;
