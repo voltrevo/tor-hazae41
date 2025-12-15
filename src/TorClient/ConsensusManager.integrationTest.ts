@@ -10,7 +10,7 @@ import { App } from './App';
 import { createMemoryStorage } from '../storage';
 import { CertificateManager } from './CertificateManager';
 import { staticCerts } from '../cadenas/mods/ccadb/staticCerts';
-import { CCADB } from '../cadenas/mods/ccadb/ccadb';
+import { CCADB } from '../cadenas/mods/ccadb/CCADB';
 import { CircuitManager } from './CircuitManager';
 
 function createApp() {

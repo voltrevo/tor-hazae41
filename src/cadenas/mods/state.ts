@@ -54,7 +54,7 @@ import {
 } from './errors.js';
 import { Extensions } from './extensions.js';
 import { App } from '../../TorClient/App.js';
-import { CCADB } from './ccadb/ccadb.js';
+import { CCADB } from './ccadb/CCADB.js';
 
 export type TlsClientState =
   | TlsClientNoneState

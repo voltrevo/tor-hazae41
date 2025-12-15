@@ -6,7 +6,7 @@ import { Echalote } from '../../../index.js';
 import { makeCircuit } from '../../../../TorClient/makeCircuit.js';
 import { App } from '../../../../TorClient/App.js';
 import { staticCerts } from '../../../../cadenas/mods/ccadb/staticCerts.js';
-import { CCADB } from '../../../../cadenas/mods/ccadb/ccadb.js';
+import { CCADB } from '../../../../cadenas/mods/ccadb/CCADB.js';
 
 /**
  * Integration test for consensus diff mechanism.

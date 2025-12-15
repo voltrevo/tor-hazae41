@@ -9,7 +9,7 @@ import { ConsensusManager } from '../ConsensusManager';
 import { CircuitBuilder } from '../CircuitBuilder';
 import { CircuitManager } from '../CircuitManager';
 import { staticCerts } from '../../cadenas/mods/ccadb/staticCerts';
-import { CCADB } from '../../cadenas/mods/ccadb/ccadb';
+import { CCADB } from '../../cadenas/mods/ccadb/CCADB';
 
 export { type TorClientOptions } from '../TorClientBase';
 
