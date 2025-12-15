@@ -1,7 +1,13 @@
 #!/usr/bin/env node
 
 import { execSync } from 'child_process';
-import { readFileSync, existsSync, readdirSync } from 'fs';
+import {
+  readFileSync,
+  existsSync,
+  readdirSync,
+  writeFileSync,
+  unlinkSync,
+} from 'fs';
 import { gzipSync } from 'zlib';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
@@ -46,57 +52,39 @@ async function measureSize() {
     const distInput = `dist/TorClient/versions/${variation}.mjs`;
     const bundleOutput = `dist/bundle-size-check-${variation}.js`;
 
-    // Create a temporary rollup config for this variation
+    // Create a temporary rollup config for this variation that extends the base config
+    const configPath = join(projectRoot, 'rollup.measure-size.config.js');
     const rollupConfig = `
 import { nodeResolve } from '@rollup/plugin-node-resolve';
 import commonjs from '@rollup/plugin-commonjs';
 import terser from '@rollup/plugin-terser';
+import baseConfig from '${configPath}';
 
 export default {
+  ...baseConfig,
   input: '${distInput}',
   output: {
+    ...baseConfig.output,
     file: '${bundleOutput}',
-    format: 'iife',
-    name: 'TorClient',
   },
-  external: ['fs/promises', 'path'],
-  plugins: [
-    nodeResolve({
-      browser: true,
-      preferBuiltins: false,
-      exportConditions: ['browser', 'default'],
-    }),
-    commonjs(),
-    terser({
-      compress: false,
-      mangle: true,
-      format: {
-        comments: false,
-      },
-    }),
-  ],
 };
 `;
 
     // Write temporary config file
-    const tempConfigPath = join(projectRoot, `.rollup-temp-${variation}.js`);
-    const fs = await import('fs');
-    fs.writeFileSync(tempConfigPath, rollupConfig);
+    const tempConfigPath = join(projectRoot, `.rollup-temp-${variation}.mjs`);
+    writeFileSync(tempConfigPath, rollupConfig);
 
     try {
-      execSync(
-        `npx rollup -c ${tempConfigPath} 2>&1 | grep -v "MODULE_TYPELESS_PACKAGE_JSON" | grep -v "Circular dependencies"`,
-        {
-          cwd: projectRoot,
-          shell: '/bin/bash',
-        }
-      );
-    } catch {
-      // Some warnings are expected, check if file was created
-      const bundleExists = existsSync(join(projectRoot, bundleOutput));
-      if (!bundleExists) {
+      execSync(`npx rollup -c ${tempConfigPath}`, {
+        cwd: projectRoot,
+        stdio: 'pipe',
+      });
+    } catch (error) {
+      // Rollup may exit with non-zero even on success due to warnings
+      // Check if file was created
+      if (!existsSync(join(projectRoot, bundleOutput))) {
         console.error(`❌ Rollup bundling failed for ${variation}`);
-        fs.unlinkSync(tempConfigPath);
+        unlinkSync(tempConfigPath);
         process.exit(1);
       }
     }
@@ -109,7 +97,7 @@ export default {
       bundleContent = readFileSync(bundlePath, 'utf8');
     } catch {
       console.error(`❌ Could not read bundle at ${bundlePath}`);
-      fs.unlinkSync(tempConfigPath);
+      unlinkSync(tempConfigPath);
       process.exit(1);
     }
 
@@ -126,7 +114,7 @@ export default {
     });
 
     // Cleanup temp config
-    fs.unlinkSync(tempConfigPath);
+    unlinkSync(tempConfigPath);
   }
 
   // Output all results together
