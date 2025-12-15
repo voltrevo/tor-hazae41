@@ -39,7 +39,7 @@ import {
 import { HashAlgorithm } from './binary/signatures/hash_algorithm.js';
 import { SignatureAlgorithm } from './binary/signatures/signature_algorithm.js';
 import { Vector } from './binary/vectors/writable.js';
-import { CCADB } from './ccadb/ccadb.js';
+import { ccadb } from './ccadb/ccadb.js';
 import { Cipher } from './ciphers/cipher.js';
 import { Secp256r1 } from './ciphers/curves/secp256r1.js';
 import { Encrypter } from './ciphers/encryptions/encryption.js';
@@ -423,7 +423,7 @@ export class TlsClientHandshakeServerHelloState implements TlsClientHandshakeSer
       let next = server_certificates.at(i + 1);
 
       if (next == null) {
-        const trusteds = await CCADB.getTrusteds();
+        const trusteds = await ccadb.get();
         const trusted = trusteds[issuer];
 
         if (trusted == null) continue;
@@ -593,7 +593,7 @@ export class TlsClientHandshakeServerHelloState implements TlsClientHandshakeSer
 
       if (!verified) throw new Error(`Invalid signature`);
 
-      const trusteds = await CCADB.getTrusteds();
+      const trusteds = await ccadb.get();
       const trusted = trusteds[issuer];
 
       if (trusted == null) continue;

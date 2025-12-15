@@ -2,31 +2,38 @@ import { X509 } from '@hazae41/x509';
 import { Writable } from '@hazae41/binary';
 import { ccadbStaticBase64 } from './ccadbStatic.js';
 
-export namespace CCADB {
-  export interface Trusted {
-    readonly hashBase16: string;
-    readonly certBase16: string;
-    readonly notAfter?: string;
-  }
+export interface Trusted {
+  readonly hashBase16: string;
+  readonly certBase16: string;
+  readonly notAfter?: string;
+}
 
-  let cachedTrusteds: Record<string, Trusted> | undefined;
+/**
+ * Certificate provider that parses and caches root certificates.
+ */
+export class CCADB {
+  private cached?: Record<string, Trusted>;
+
+  constructor(private getCerts: () => Promise<readonly string[]>) {}
 
   /**
-   * Get all trusted root certificates.
+   * Get all trusted root certificates indexed by subject DN.
    *
    * Dynamically parses base64-encoded X.509 certificates to extract:
    * - Subject DN (x501)
    * - SPKI hash (hashBase16)
+   * - DER bytes (certBase16)
    * - Expiration date (notAfter)
    *
    * Results are memoized on first call.
    */
-  export async function getTrusteds(): Promise<Record<string, Trusted>> {
-    if (cachedTrusteds) return cachedTrusteds;
+  async get(): Promise<Record<string, Trusted>> {
+    if (this.cached) return this.cached;
 
     const result: Record<string, Trusted> = {};
+    const base64Certs = await this.getCerts();
 
-    for (const base64 of ccadbStaticBase64) {
+    for (const base64 of base64Certs) {
       try {
         // Decode base64 to DER bytes
         const derBytes = Buffer.from(base64, 'base64');
@@ -66,7 +73,12 @@ export namespace CCADB {
       }
     }
 
-    cachedTrusteds = result;
-    return cachedTrusteds;
+    this.cached = result;
+    return this.cached;
   }
 }
+
+/**
+ * Default CCADB provider using static certificates.
+ */
+export const ccadb = new CCADB(() => Promise.resolve(ccadbStaticBase64));
