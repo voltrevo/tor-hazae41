@@ -5,6 +5,8 @@ import { computeSignedPartHash } from './diff.js';
 import { Echalote } from '../../../index.js';
 import { makeCircuit } from '../../../../TorClient/makeCircuit.js';
 import { App } from '../../../../TorClient/App.js';
+import { staticCerts } from '../../../../cadenas/mods/ccadb/staticCerts.js';
+import { CCADB } from '../../../../cadenas/mods/ccadb/ccadb.js';
 
 /**
  * Integration test for consensus diff mechanism.
@@ -16,6 +18,9 @@ import { App } from '../../../../TorClient/App.js';
  */
 test('Consensus diff mechanism with live fetch', async () => {
   const app = new App();
+
+  app.set('fetchCerts', () => Promise.resolve(staticCerts));
+  app.set('ccadb', new CCADB(app));
 
   const startTime = Date.now();
   const relTimestamp = () =>

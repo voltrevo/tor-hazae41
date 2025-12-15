@@ -3,7 +3,7 @@ import { TorClient } from '../TorClient/versions/standard';
 
 test('Keynet connection through TorClient (transparent)', async () => {
   const keynetAddr =
-    'http://hkggnoqjyx3zsdh4y3zau223ulchj4xd3b7xldqihngtacgyag3malyd.keynet';
+    'http://jyn6dehf3ttu4lblc7tr3i23xqsz76dn2du6keptg5kyo3r6mur36vad.keynet/';
 
   // TorClient.fetch transparently handles .keynet addresses
   const response = await TorClient.fetch(

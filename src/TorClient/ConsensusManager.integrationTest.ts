@@ -9,6 +9,9 @@ import { SystemClock } from '../clock';
 import { App } from './App';
 import { createMemoryStorage } from '../storage';
 import { CertificateManager } from './CertificateManager';
+import { staticCerts } from '../cadenas/mods/ccadb/staticCerts';
+import { CCADB } from '../cadenas/mods/ccadb/ccadb';
+import { CircuitManager } from './CircuitManager';
 
 function createApp() {
   const app = new App();
@@ -16,6 +19,19 @@ function createApp() {
   app.set('Clock', new SystemClock());
   app.set('Storage', createMemoryStorage());
   app.set('CertificateManager', new CertificateManager({ app, maxCached: 20 }));
+  app.set(
+    'CircuitManager',
+    new CircuitManager({
+      snowflakeUrl: 'wss://snowflake.pse.dev/',
+      connectionTimeout: 15_000,
+      circuitTimeout: 90_000,
+      maxCircuitLifetime: 600_000,
+      circuitBuffer: 0,
+      app,
+    })
+  );
+  app.set('fetchCerts', () => Promise.resolve(staticCerts));
+  app.set('ccadb', new CCADB(app));
 
   return app;
 }
