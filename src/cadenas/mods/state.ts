@@ -423,7 +423,8 @@ export class TlsClientHandshakeServerHelloState implements TlsClientHandshakeSer
       let next = server_certificates.at(i + 1);
 
       if (next == null) {
-        const trusted = CCADB.trusteds[issuer];
+        const trusteds = await CCADB.getTrusteds();
+        const trusted = trusteds[issuer];
 
         if (trusted == null) continue;
 
@@ -592,7 +593,8 @@ export class TlsClientHandshakeServerHelloState implements TlsClientHandshakeSer
 
       if (!verified) throw new Error(`Invalid signature`);
 
-      const trusted = CCADB.trusteds[issuer];
+      const trusteds = await CCADB.getTrusteds();
+      const trusted = trusteds[issuer];
 
       if (trusted == null) continue;
 
