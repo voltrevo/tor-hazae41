@@ -1,22 +1,23 @@
 import { Log } from '../Log';
 import type { IClock } from '../clock';
-import {
+import type {
   ConsensusManager,
-  type ConsensusManagerOptions,
+  ConsensusManagerOptions,
 } from './ConsensusManager';
-import {
+import type {
   MicrodescManager,
-  type MicrodescManagerOptions,
+  MicrodescManagerOptions,
 } from './MicrodescManager';
-import {
+import type {
   CertificateManager,
-  type CertificateManagerOptions,
+  CertificateManagerOptions,
 } from './CertificateManager';
-import { CircuitBuilder, type CircuitBuilderOptions } from './CircuitBuilder';
+import type { CircuitBuilder, CircuitBuilderOptions } from './CircuitBuilder';
 import type { IStorage } from '../storage';
-import { CircuitManager } from './CircuitManager';
+import type { CircuitManager } from './CircuitManager';
 import { AbstractApp } from '../utils/AbstractApp';
-import { CCADB } from '../cadenas/mods/ccadb/CCADB';
+import type { CCADB } from '../cadenas/mods/ccadb/CCADB';
+import { type FetchCerts } from '../cadenas/mods/ccadb/fetchCerts';
 
 type LogConstructorParams = ConstructorParameters<typeof Log>[0];
 
@@ -59,7 +60,7 @@ export type ComponentMap = {
   };
   fetchCerts: {
     constructorParams: never;
-    interface: () => Promise<string[]>;
+    interface: FetchCerts;
   };
 };
 

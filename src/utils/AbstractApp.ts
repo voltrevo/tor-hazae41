@@ -1,7 +1,5 @@
 // See AbstractApp.md
 
-import { assert } from './assert';
-
 export type IAbstractApp<
   ComponentMap extends Record<
     string,

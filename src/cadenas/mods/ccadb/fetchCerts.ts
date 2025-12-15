@@ -1,8 +1,4 @@
-import { X509 } from '@hazae41/x509';
-import { Writable } from '@hazae41/binary';
-import { certHashes } from './certHashes.js';
-
-type CertificateSource = 'curl' | 'ccadb' | 'certifi';
+export type CertificateSource = 'curl' | 'ccadb' | 'certifi';
 
 const sourceUrls: Record<CertificateSource, string> = {
   curl: 'https://curl.se/ca/cacert.pem',
@@ -12,22 +8,13 @@ const sourceUrls: Record<CertificateSource, string> = {
     'https://raw.githubusercontent.com/certifi/python-certifi/master/certifi/cacert.pem',
 };
 
-const whitelistSet = new Set(certHashes);
-
-export interface FetchResult {
-  matched: string[];
-  unrecognized: string[];
-  source: CertificateSource;
-  notFound: number;
-}
-
 /**
- * Fetch and validate certificates from a specific source.
- * Returns both matched and unrecognized certificates for analysis.
+ * Fetch certificates from a specific source.
+ * Returns base64-encoded certificate strings without validation.
  */
-export async function fetchAndValidateCerts(
+export async function getRawCerts(
   source: CertificateSource
-): Promise<FetchResult> {
+): Promise<string[]> {
   const url = sourceUrls[source];
   const response = await fetch(url);
 
@@ -38,8 +25,6 @@ export async function fetchAndValidateCerts(
   }
 
   const text = await response.text();
-  const matched: string[] = [];
-  const unrecognized: string[] = [];
 
   // Extract all PEM certificate blocks
   const certRegex =
@@ -50,27 +35,8 @@ export async function fetchAndValidateCerts(
     throw new Error('No certificates found in response');
   }
 
-  // Convert PEM to base64 and validate against whitelist
-  for (const pemCert of pemMatches) {
-    const base64 = pemToBase64(pemCert);
-    const isMatched = await validateCertHash(base64);
-
-    if (isMatched) {
-      matched.push(base64);
-    } else {
-      unrecognized.push(base64);
-    }
-  }
-
-  // Count how many whitelisted certs were not found in this source
-  const notFound = whitelistSet.size - matched.length;
-
-  return {
-    matched: matched.sort(),
-    unrecognized,
-    source,
-    notFound,
-  };
+  // Convert PEM to base64
+  return pemMatches.map(pemToBase64);
 }
 
 function pemToBase64(pem: string): string {
@@ -80,54 +46,37 @@ function pemToBase64(pem: string): string {
     .replace(/\s/g, '');
 }
 
-async function validateCertHash(base64: string): Promise<boolean> {
-  try {
-    const derBytes = Buffer.from(base64, 'base64');
-    const x509 = X509.readAndResolveFromBytesOrThrow(
-      X509.Certificate,
-      derBytes
-    );
-
-    // Extract SPKI hash
-    const spki = Writable.writeToBytesOrThrow(
-      x509.tbsCertificate.subjectPublicKeyInfo.toDER()
-    );
-    const hash = new Uint8Array(await crypto.subtle.digest('SHA-256', spki));
-    const hashBase16 = Buffer.from(hash).toString('hex');
-
-    return whitelistSet.has(hashBase16);
-  } catch {
-    return false;
-  }
-}
-
 /**
  * Fetch certificates with fallback chain:
  * 1. Try curl
  * 2. Fall back to ccadb
  * 3. Fall back to certifi
  *
- * Only includes certificates whose SPKI hash matches the whitelist.
+ * Returns a list of base64-encoded certificate strings.
  * Throws if no source succeeds.
  */
-export async function fetchCerts(): Promise<string[]> {
-  const sources: CertificateSource[] = ['curl', 'ccadb', 'certifi'];
+export async function fetchCerts(
+  source?: CertificateSource
+): Promise<string[]> {
+  const sources: CertificateSource[] = source
+    ? [source]
+    : ['curl', 'ccadb', 'certifi'];
 
   for (const source of sources) {
     try {
-      const result = await fetchAndValidateCerts(source);
-      if (result.matched.length > 0) {
+      const certs = await getRawCerts(source);
+      if (certs.length > 0) {
         console.debug(
-          `Successfully fetched ${result.matched.length} certs from ${source}`
+          `Successfully fetched ${certs.length} certs from ${source}`
         );
-        return result.matched;
+        return certs;
       }
     } catch (error) {
       console.debug(`Failed to fetch from ${source}:`, error);
     }
   }
 
-  throw new Error(
-    'All certificate sources failed or returned no whitelisted certificates'
-  );
+  throw new Error('All certificate sources failed');
 }
+
+export type FetchCerts = typeof fetchCerts;
