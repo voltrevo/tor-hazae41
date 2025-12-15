@@ -1,6 +1,6 @@
 import { X509 } from '@hazae41/x509';
 import { Writable } from '@hazae41/binary';
-import { ccadbStaticBase64 } from './ccadbStatic.js';
+import { staticCerts } from './staticCerts.js';
 
 export interface Trusted {
   readonly hashBase16: string;
@@ -81,4 +81,4 @@ export class CCADB {
 /**
  * Default CCADB provider using static certificates.
  */
-export const ccadb = new CCADB(() => Promise.resolve(ccadbStaticBase64));
+export const ccadb = new CCADB(() => Promise.resolve(staticCerts));

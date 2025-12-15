@@ -8,7 +8,7 @@
  * - How many unrecognized certs were found (not in whitelist)
  */
 
-import { fetchAndValidateCerts, getDynamicBase64 } from './ccadbDynamic.js';
+import { fetchAndValidateCerts, fetchCerts } from './fetchCerts.js';
 
 async function runIntegrationTest() {
   console.log('=== CCADB Dynamic Integration Test ===\n');
@@ -46,7 +46,7 @@ async function runIntegrationTest() {
 
   console.log('=== Testing fallback chain ===\n');
   try {
-    const certs = await getDynamicBase64();
+    const certs = await fetchCerts();
     console.log(`✅ Successfully fetched ${certs.length} certificates`);
   } catch (error) {
     console.log(

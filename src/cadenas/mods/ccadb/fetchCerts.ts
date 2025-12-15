@@ -1,6 +1,6 @@
 import { X509 } from '@hazae41/x509';
 import { Writable } from '@hazae41/binary';
-import { ccadbCertHashes } from './ccadbHashes.js';
+import { certHashes } from './certHashes.js';
 
 type CertificateSource = 'curl' | 'ccadb' | 'certifi';
 
@@ -12,7 +12,7 @@ const sourceUrls: Record<CertificateSource, string> = {
     'https://raw.githubusercontent.com/certifi/python-certifi/master/certifi/cacert.pem',
 };
 
-const whitelistSet = new Set(ccadbCertHashes);
+const whitelistSet = new Set(certHashes);
 
 export interface FetchResult {
   matched: string[];
@@ -110,7 +110,7 @@ async function validateCertHash(base64: string): Promise<boolean> {
  * Only includes certificates whose SPKI hash matches the whitelist.
  * Throws if no source succeeds.
  */
-export async function getDynamicBase64(): Promise<readonly string[]> {
+export async function fetchCerts(): Promise<readonly string[]> {
   const sources: CertificateSource[] = ['curl', 'ccadb', 'certifi'];
 
   for (const source of sources) {
