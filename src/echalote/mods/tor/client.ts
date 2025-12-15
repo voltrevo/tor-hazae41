@@ -653,14 +653,8 @@ export class SecretTorClientDuplex {
     await forwardDigest.updateOrThrow(result.forwardDigest);
     await backwardDigest.updateOrThrow(result.backwardDigest);
 
-    const forwardKey = new AesJsAes128Ctr(
-      result.forwardKey,
-      new Uint8Array(16)
-    );
-    const backwardKey = new AesJsAes128Ctr(
-      result.backwardKey,
-      new Uint8Array(16)
-    );
+    const forwardKey = new AesJsAes128Ctr(result.forwardKey);
+    const backwardKey = new AesJsAes128Ctr(result.backwardKey);
 
     const target = new Target(
       this.#state.guard.identity,

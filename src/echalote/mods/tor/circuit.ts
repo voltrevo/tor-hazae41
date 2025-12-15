@@ -494,14 +494,8 @@ export class SecretCircuit {
     await forward_digest.updateOrThrow(result.forwardDigest);
     await backward_digest.updateOrThrow(result.backwardDigest);
 
-    const forwardKey = new AesJsAes128Ctr(
-      result.forwardKey,
-      new Uint8Array(16)
-    );
-    const backwardKey = new AesJsAes128Ctr(
-      result.backwardKey,
-      new Uint8Array(16)
-    );
+    const forwardKey = new AesJsAes128Ctr(result.forwardKey);
+    const backwardKey = new AesJsAes128Ctr(result.backwardKey);
 
     const target = new Target(
       relayid_rsa,

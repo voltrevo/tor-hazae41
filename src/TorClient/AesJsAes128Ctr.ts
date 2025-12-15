@@ -12,34 +12,26 @@ import AES from 'aes-js';
  */
 export class AesJsAes128Ctr {
   private modeOfOperation: AES.ModeOfOperation.ModeOfOperationCTR;
-  private counter: Uint8Array;
 
   /**
    * Create a new AES-128-CTR key
    * @param keyBytes 16-byte AES key
    * @param counterBytes 16-byte initial counter value (typically zeros)
    */
-  constructor(keyBytes: Uint8Array, counterBytes: Uint8Array) {
+  constructor(keyBytes: Uint8Array) {
     if (keyBytes.length !== 16) {
       throw new Error('Key must be 16 bytes for AES-128');
     }
-    if (counterBytes.length !== 16) {
-      throw new Error('Counter must be 16 bytes');
-    }
-
-    // Copy the counter so we don't modify the input
-    this.counter = new Uint8Array(counterBytes);
-
-    // Create counter object from the bytes
-    const counterObj = new AES.Counter(Array.from(this.counter));
 
     // Create CTR mode cipher
-    this.modeOfOperation = new AES.ModeOfOperation.ctr(keyBytes, counterObj);
+    this.modeOfOperation = new AES.ModeOfOperation.ctr(
+      keyBytes,
+      new AES.Counter(0)
+    );
   }
 
   /**
    * Apply AES-CTR keystream to data in-place (XOR operation)
-   * Automatically increments counter by the number of blocks processed
    *
    * @param data Data to XOR with keystream
    */
@@ -50,31 +42,5 @@ export class AesJsAes128Ctr {
 
     // Copy the encrypted result back to data
     data.set(encrypted);
-
-    // Update our internal counter to track state
-    const blockCount = Math.ceil(data.length / 16);
-    this.incrementCounter(blockCount);
-  }
-
-  /**
-   * Increment the counter by a given number of blocks
-   * Handles overflow correctly for big-endian counter
-   */
-  private incrementCounter(blockCount: number): void {
-    let carry = blockCount;
-
-    // Increment from the end of the array (big-endian)
-    for (let i = 15; i >= 0 && carry > 0; i--) {
-      const sum = (this.counter[i] + carry) & 0xff;
-      this.counter[i] = sum;
-      carry = (this.counter[i] + carry) >>> 8;
-    }
-  }
-
-  /**
-   * Async resource cleanup (for async context managers)
-   */
-  async [Symbol.asyncDispose](): Promise<void> {
-    // No cleanup needed
   }
 }
