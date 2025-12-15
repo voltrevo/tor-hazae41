@@ -15,6 +15,7 @@ export interface ValidationResult {
   readonly diagnostics: {
     readonly matched: number;
     readonly unrecognized: number;
+    readonly notFound: number;
   };
 }
 
@@ -106,6 +107,7 @@ export class CCADB {
       diagnostics: {
         matched,
         unrecognized,
+        notFound: this.whitelistSet.size - matched,
       },
     };
   }

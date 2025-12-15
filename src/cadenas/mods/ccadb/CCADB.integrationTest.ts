@@ -30,14 +30,16 @@ async function runIntegrationTest() {
         const result = await ccadb.validateAndParseCerts(source);
 
         const matched = result.diagnostics.matched;
+        const notFound = result.diagnostics.notFound;
         const unrecognized = result.diagnostics.unrecognized;
-        const total = Object.keys(result.certificates).length;
 
         console.log(`  ✅ Matched:       ${matched}`);
-        if (unrecognized > 0) {
-          console.log(`  ⚠️  Unrecognized: ${unrecognized}`);
+        if (notFound > 0) {
+          console.log(`  ⚠️  Not found:    ${notFound} (from whitelist)`);
         }
-        console.log(`  📊 Total:        ${total}`);
+        if (unrecognized > 0) {
+          console.log(`  ⚠️  Unrecognized: ${unrecognized} (not in whitelist)`);
+        }
         console.log();
       } catch (error) {
         console.log(
@@ -52,20 +54,11 @@ async function runIntegrationTest() {
     const result = await ccadb.validateAndParseCerts();
     const matched = result.diagnostics.matched;
     const unrecognized = result.diagnostics.unrecognized;
-    const total = Object.keys(result.certificates).length;
 
-    console.log(`✅ Matched (whitelisted):   ${matched}`);
+    console.log(`✅ Successfully fetched ${matched} certificates`);
     if (unrecognized > 0) {
-      console.log(`⚠️  Unrecognized:           ${unrecognized}`);
+      console.log(`⚠️  Unrecognized: ${unrecognized}`);
     }
-    console.log(`📊 Total included:         ${total}\n`);
-
-    // Test memoization by calling get()
-    console.log('Testing memoization...');
-    const cached = await ccadb.get();
-    console.log(
-      `✅ Successfully retrieved ${Object.keys(cached).length} cached certificates\n`
-    );
   } catch (error) {
     console.log(
       `❌ Error: ${error instanceof Error ? error.message : String(error)}`
