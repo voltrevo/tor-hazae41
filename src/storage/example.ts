@@ -1,6 +1,6 @@
 // Example usage of the storage API
 import { createMemoryStorage } from './memory.js';
-import { createAutoStorage } from './auto-node.js';
+import { createAutoStorage } from './index.js';
 
 async function testMemoryStorage() {
   console.log('Testing memory storage...');

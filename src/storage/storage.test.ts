@@ -5,7 +5,7 @@ import {
   createAutoStorage,
   createFsStorage,
   createMemoryStorage,
-} from './index-node.js';
+} from './index.js';
 
 // Mangle/Unmangle Tests (for FS storage internal functions)
 test('FS Storage: list with colon prefix (consensus:)', async () => {

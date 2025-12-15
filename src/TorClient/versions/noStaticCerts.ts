@@ -1,4 +1,4 @@
-import { createAutoStorage } from 'tor-hazae41/storage';
+import { createAutoStorage } from '../../storage/index.js';
 import { SystemClock } from '../../clock';
 import { App } from '../App';
 import { TorClientBase, TorClientOptions } from '../TorClientBase';

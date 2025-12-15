@@ -5,7 +5,7 @@ import {
   createAutoStorage,
   createMemoryStorage,
   type IStorage,
-} from 'tor-hazae41/storage';
+} from './index.js';
 
 test('tsconfig path mapping: memory storage', async () => {
   const memory: IStorage = createMemoryStorage();

@@ -16,18 +16,8 @@
     },
     "./storage": {
       "types": "./dist/storage/index.d.ts",
-      "browser": {
-        "import": "./dist/storage/index-browser.mjs",
-        "require": "./dist/storage/index-browser.js"
-      },
-      "node": {
-        "import": "./dist/storage/index-node.mjs",
-        "require": "./dist/storage/index-node.js"
-      },
-      "default": {
-        "import": "./dist/storage/index.mjs",
-        "require": "./dist/storage/index.js"
-      }
+      "import": "./dist/storage/index.mjs",
+      "require": "./dist/storage/index.js"
     }
   },
   "files": [

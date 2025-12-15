@@ -35,11 +35,7 @@ export default defineConfig([
     external: ['*'],
   },
   {
-    entry: [
-      'src/storage/index.ts',
-      'src/storage/index-browser.ts',
-      'src/storage/index-node.ts',
-    ],
+    entry: ['src/storage/index.ts'],
     format: ['esm', 'cjs'],
     dts: true,
     sourcemap: true,

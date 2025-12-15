@@ -43,7 +43,10 @@ function findDependenciesInSource(distMjsPath) {
     if (
       importPath.startsWith('.') ||
       importPath === 'fs' ||
-      importPath === 'path'
+      importPath === 'path' ||
+      importPath === 'node:fs' ||
+      importPath === 'node:fs/promises' ||
+      importPath === 'node:path'
     )
       continue;
 
