@@ -2,17 +2,21 @@ import { Circuit, TorClientDuplex, createSnowflakeStream } from '../echalote';
 import { WebSocketDuplex } from './WebSocketDuplex';
 import { Log } from '../Log';
 import { getErrorDetails } from '../utils/getErrorDetails';
+import { App } from './App';
 
-export async function makeCircuit(options: {
-  /** The Snowflake bridge WebSocket URL for Tor connections */
-  snowflakeUrl: string;
-  /** Timeout in milliseconds for establishing initial connections (default: 15000) */
-  connectionTimeout?: number;
-  /** Timeout in milliseconds for circuit creation and readiness (default: 90000) */
-  circuitTimeout?: number;
-  /** Optional logger instance for hierarchical logging */
-  log?: Log;
-}) {
+export async function makeCircuit(
+  app: App,
+  options: {
+    /** The Snowflake bridge WebSocket URL for Tor connections */
+    snowflakeUrl: string;
+    /** Timeout in milliseconds for establishing initial connections (default: 15000) */
+    connectionTimeout?: number;
+    /** Timeout in milliseconds for circuit creation and readiness (default: 90000) */
+    circuitTimeout?: number;
+    /** Optional logger instance for hierarchical logging */
+    log?: Log;
+  }
+) {
   const {
     snowflakeUrl,
     connectionTimeout = 15000,
@@ -33,7 +37,7 @@ export async function makeCircuit(options: {
 
     log.info('Creating Snowflake stream');
     const tcp = createSnowflakeStream(stream);
-    tor = new TorClientDuplex();
+    tor = new TorClientDuplex(app);
 
     log.info('Connecting streams');
     tcp.outer.readable.pipeTo(tor.inner.writable).catch((error: unknown) => {

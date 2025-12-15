@@ -60,6 +60,7 @@ import {
   TorVersionedState,
 } from './state.js';
 import { invariant } from '../../../utils/debug';
+import { App } from '../../../TorClient/App';
 
 export interface Guard {
   readonly identity: Uint8Array<20>;
@@ -73,8 +74,8 @@ export class TorClientDuplex {
 
   readonly events = new SuperEventTarget<TorClientDuplexEvents>();
 
-  constructor() {
-    this.#secret = new SecretTorClientDuplex();
+  constructor(readonly app: App) {
+    this.#secret = new SecretTorClientDuplex(app);
 
     this.#secret.events.on('close', () => this.events.emit('close'));
     this.#secret.events.on('error', e => this.events.emit('error', e));
@@ -148,8 +149,8 @@ export class SecretTorClientDuplex {
 
   #state: TorState = { type: 'none' };
 
-  constructor() {
-    this.tls = new TlsClientDuplex({
+  constructor(readonly app: App) {
+    this.tls = new TlsClientDuplex(this.app, {
       /**
        * Do not validate root certificates
        */

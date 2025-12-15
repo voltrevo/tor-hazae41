@@ -208,10 +208,15 @@ export class AbstractApp<
   ): ComponentMap[N]['interface'] {
     const instance = this.tryGet(name, subname);
 
-    assert(
-      instance,
-      `No instance registered for component "${String(name)}" with subname "${subname ?? 'default'}"`
-    );
+    if (!instance) {
+      let msg = `No instance registered for component "${String(name)}"`;
+
+      if (subname) {
+        msg += `with subname "${subname}"`;
+      }
+
+      throw new Error(msg);
+    }
 
     return instance;
   }

@@ -16,6 +16,7 @@ import { CircuitBuilder, type CircuitBuilderOptions } from './CircuitBuilder';
 import type { IStorage } from '../storage';
 import { CircuitManager } from './CircuitManager';
 import { AbstractApp } from '../utils/AbstractApp';
+import { CCADB } from '../cadenas/mods/ccadb/ccadb';
 
 type LogConstructorParams = ConstructorParameters<typeof Log>[0];
 
@@ -51,6 +52,14 @@ export type ComponentMap = {
   Storage: {
     constructorParams: [];
     interface: IStorage;
+  };
+  ccadb: {
+    constructorParams: never;
+    interface: CCADB;
+  };
+  fetchCerts: {
+    constructorParams: never;
+    interface: () => Promise<string[]>;
   };
 };
 

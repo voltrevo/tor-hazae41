@@ -4,6 +4,7 @@ import { join } from 'path';
 import { computeSignedPartHash } from './diff.js';
 import { Echalote } from '../../../index.js';
 import { makeCircuit } from '../../../../TorClient/makeCircuit.js';
+import { App } from '../../../../TorClient/App.js';
 
 /**
  * Integration test for consensus diff mechanism.
@@ -14,6 +15,8 @@ import { makeCircuit } from '../../../../TorClient/makeCircuit.js';
  * 3. Verifies that the diff mechanism works correctly
  */
 test('Consensus diff mechanism with live fetch', async () => {
+  const app = new App();
+
   const startTime = Date.now();
   const relTimestamp = () =>
     ((Date.now() - startTime) / 1000).toFixed(1).padStart(5, '0');
@@ -74,7 +77,7 @@ test('Consensus diff mechanism with live fetch', async () => {
   console.log('\n--- Testing live consensus diff fetch ---');
   console.log(`${relTimestamp()} | Creating circuit...`);
 
-  const circuit = await makeCircuit({
+  const circuit = await makeCircuit(app, {
     snowflakeUrl: 'wss://snowflake.pse.dev/',
   });
 

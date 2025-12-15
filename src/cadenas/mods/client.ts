@@ -9,6 +9,7 @@ import { Resizer } from '../libs/resizer/resizer.js';
 import { PlaintextRecord } from '../mods/binary/records/record.js';
 import { Cipher } from '../mods/ciphers/cipher.js';
 import { TlsClientNoneState, TlsClientState } from './state.js';
+import { App } from '../../TorClient/App.js';
 
 export interface TlsClientDuplexParams {
   /**
@@ -55,14 +56,17 @@ export class TlsClientDuplex {
 
   readonly #buffer = new Resizer();
 
-  state: TlsClientState = new TlsClientNoneState(this);
+  state: TlsClientState;
 
   readonly resolveOnStart = new Future<void>();
   readonly resolveOnClose = new Future<void>();
   readonly resolveOnError = new Future<unknown>();
   readonly resolveOnHandshake = new Future<void>();
 
-  constructor(readonly params: TlsClientDuplexParams) {
+  constructor(
+    readonly app: App,
+    readonly params: TlsClientDuplexParams
+  ) {
     this.duplex = new FullDuplex<Opaque, Writable>({
       input: {
         write: m => this.#onInputWrite(m),
@@ -74,6 +78,8 @@ export class TlsClientDuplex {
       close: () => this.#onDuplexClose(),
       error: e => this.#onDuplexError(e),
     });
+
+    this.state = new TlsClientNoneState(app, this);
 
     this.resolveOnStart.resolve();
   }

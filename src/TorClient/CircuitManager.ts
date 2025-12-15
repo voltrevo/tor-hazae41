@@ -617,7 +617,7 @@ export class CircuitManager {
 
     this.log.info('Creating Snowflake stream');
     const tcp = createSnowflakeStream(stream);
-    const tor = new TorClientDuplex();
+    const tor = new TorClientDuplex(this.app);
 
     this.log.info('Connecting streams');
     tcp.outer.readable.pipeTo(tor.inner.writable).catch((error: unknown) => {

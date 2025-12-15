@@ -33,7 +33,7 @@ test('ConsensusManager: fetch and reconstruct consensus', async () => {
   );
 
   const tcp = createSnowflakeStream(stream);
-  const tor = new TorClientDuplex();
+  const tor = new TorClientDuplex(app);
 
   tcp.outer.readable.pipeTo(tor.inner.writable).catch(error => {
     console.error(`TCP -> Tor stream error: ${error}`);

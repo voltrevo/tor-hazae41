@@ -8,6 +8,8 @@ import { MicrodescManager } from '../MicrodescManager';
 import { ConsensusManager } from '../ConsensusManager';
 import { CircuitBuilder } from '../CircuitBuilder';
 import { CircuitManager } from '../CircuitManager';
+import { staticCerts } from '../../cadenas/mods/ccadb/staticCerts';
+import { CCADB } from '../../cadenas/mods/ccadb/ccadb';
 
 export { type TorClientOptions } from '../TorClientBase';
 
@@ -88,6 +90,9 @@ export class TorClient extends TorClientBase {
     );
 
     app.set('ConsensusManager', new ConsensusManager({ app, maxCached: 5 }));
+
+    app.set('fetchCerts', () => Promise.resolve(staticCerts));
+    app.set('ccadb', new CCADB(app));
 
     return app;
   }

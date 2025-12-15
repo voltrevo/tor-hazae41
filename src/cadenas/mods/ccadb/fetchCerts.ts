@@ -110,7 +110,7 @@ async function validateCertHash(base64: string): Promise<boolean> {
  * Only includes certificates whose SPKI hash matches the whitelist.
  * Throws if no source succeeds.
  */
-export async function fetchCerts(): Promise<readonly string[]> {
+export async function fetchCerts(): Promise<string[]> {
   const sources: CertificateSource[] = ['curl', 'ccadb', 'certifi'];
 
   for (const source of sources) {

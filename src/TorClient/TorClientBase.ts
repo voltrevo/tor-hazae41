@@ -78,7 +78,10 @@ export class TorClientBase {
             Ciphers.TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384,
             Ciphers.TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384,
           ];
-          const ttls = new TlsClientDuplex({ host_name: hostname, ciphers });
+          const ttls = new TlsClientDuplex(this.app, {
+            host_name: hostname,
+            ciphers,
+          });
 
           // Connect TLS streams
           ttcp.outer.readable
@@ -163,6 +166,8 @@ export class TorClientBase {
       CircuitBuilder: true,
       CircuitManager: true,
       Storage: true,
+      ccadb: true,
+      fetchCerts: true,
     };
 
     for (const name of Object.keys(components) as (keyof ComponentMap)[]) {

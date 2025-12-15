@@ -39,7 +39,6 @@ import {
 import { HashAlgorithm } from './binary/signatures/hash_algorithm.js';
 import { SignatureAlgorithm } from './binary/signatures/signature_algorithm.js';
 import { Vector } from './binary/vectors/writable.js';
-import { ccadb } from './ccadb/ccadb.js';
 import { Cipher } from './ciphers/cipher.js';
 import { Secp256r1 } from './ciphers/curves/secp256r1.js';
 import { Encrypter } from './ciphers/encryptions/encryption.js';
@@ -54,6 +53,8 @@ import {
   WarningAlertError,
 } from './errors.js';
 import { Extensions } from './extensions.js';
+import { App } from '../../TorClient/App.js';
+import { CCADB } from './ccadb/ccadb.js';
 
 export type TlsClientState =
   | TlsClientNoneState
@@ -85,7 +86,10 @@ export class TlsClientNoneState {
   readonly client_encrypted = false;
   readonly server_encrypted = false;
 
-  constructor(readonly client: TlsClientDuplex) {}
+  constructor(
+    readonly app: App,
+    readonly client: TlsClientDuplex
+  ) {}
 
   async onOutputStart() {
     const client_hello = ClientHello2.default(
@@ -102,10 +106,14 @@ export class TlsClientNoneState {
 
     const client_hello_handshake = Handshake.from(client_hello);
 
-    this.client.state = new TlsClientHandshakeClientHelloState(this.client, {
-      client_random,
-      client_extensions,
-    });
+    this.client.state = new TlsClientHandshakeClientHelloState(
+      this.app,
+      this.client,
+      {
+        client_random,
+        client_extensions,
+      }
+    );
 
     this.client.state.messages.push(
       Writable.writeToBytesOrThrow(client_hello_handshake)
@@ -164,6 +172,7 @@ export class TlsClientHandshakeClientHelloState implements TlsClientHandshakeCli
   readonly messages = new Array<Uint8Array>();
 
   constructor(
+    readonly app: App,
     readonly client: TlsClientDuplex,
     readonly params: TlsClientHandshakeClientHelloStateParams
   ) {
@@ -229,15 +238,19 @@ export class TlsClientHandshakeClientHelloState implements TlsClientHandshakeCli
     Console.debug(server_extensions);
 
     const { client_random, client_extensions, messages } = this;
-    this.client.state = new TlsClientHandshakeServerHelloState(this.client, {
-      version,
-      cipher,
-      client_random,
-      client_extensions,
-      server_random,
-      server_extensions,
-      messages,
-    });
+    this.client.state = new TlsClientHandshakeServerHelloState(
+      this.app,
+      this.client,
+      {
+        version,
+        cipher,
+        client_random,
+        client_extensions,
+        server_random,
+        server_extensions,
+        messages,
+      }
+    );
   }
 }
 
@@ -272,6 +285,8 @@ export class TlsClientHandshakeServerHelloState implements TlsClientHandshakeSer
 
   readonly messages: Uint8Array[];
 
+  readonly ccadb: CCADB;
+
   certificate_request?: CertificateRequest2;
 
   server_certificates?: readonly Certificate[];
@@ -280,6 +295,7 @@ export class TlsClientHandshakeServerHelloState implements TlsClientHandshakeSer
   server_ecdh_params?: ServerECDHParams;
 
   constructor(
+    readonly app: App,
     readonly client: TlsClientDuplex,
     readonly params: TlsClientHandshakeServerHelloStateParams
   ) {
@@ -293,6 +309,8 @@ export class TlsClientHandshakeServerHelloState implements TlsClientHandshakeSer
     this.server_extensions = params.server_extensions;
 
     this.messages = params.messages;
+
+    this.ccadb = app.get('ccadb');
   }
 
   async onOutputStart() {
@@ -423,7 +441,7 @@ export class TlsClientHandshakeServerHelloState implements TlsClientHandshakeSer
       let next = server_certificates.at(i + 1);
 
       if (next == null) {
-        const trusteds = await ccadb.get();
+        const trusteds = await this.ccadb.get();
         const trusted = trusteds[issuer];
 
         if (trusted == null) continue;
@@ -593,7 +611,7 @@ export class TlsClientHandshakeServerHelloState implements TlsClientHandshakeSer
 
       if (!verified) throw new Error(`Invalid signature`);
 
-      const trusteds = await ccadb.get();
+      const trusteds = await this.ccadb.get();
       const trusted = trusteds[issuer];
 
       if (trusted == null) continue;

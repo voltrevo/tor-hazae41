@@ -1,6 +1,6 @@
 import { X509 } from '@hazae41/x509';
 import { Writable } from '@hazae41/binary';
-import { staticCerts } from './staticCerts.js';
+import { App } from '../../../TorClient/App.js';
 
 export interface Trusted {
   readonly hashBase16: string;
@@ -13,8 +13,11 @@ export interface Trusted {
  */
 export class CCADB {
   private cached?: Record<string, Trusted>;
+  private fetchCerts: () => Promise<string[]>;
 
-  constructor(private getCerts: () => Promise<readonly string[]>) {}
+  constructor(private app: App) {
+    this.fetchCerts = app.get('fetchCerts');
+  }
 
   /**
    * Get all trusted root certificates indexed by subject DN.
@@ -31,7 +34,8 @@ export class CCADB {
     if (this.cached) return this.cached;
 
     const result: Record<string, Trusted> = {};
-    const base64Certs = await this.getCerts();
+
+    const base64Certs = await this.fetchCerts();
 
     for (const base64 of base64Certs) {
       try {
@@ -77,8 +81,3 @@ export class CCADB {
     return this.cached;
   }
 }
-
-/**
- * Default CCADB provider using static certificates.
- */
-export const ccadb = new CCADB(() => Promise.resolve(staticCerts));
