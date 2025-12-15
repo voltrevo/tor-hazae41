@@ -48,7 +48,7 @@ export class CCADB {
     this.fetchCerts = app.get('fetchCerts');
     this.storage = app.get('Storage');
     this.clock = app.get('Clock');
-    this.log = app.get('Log').child(CCADB.name);
+    this.log = app.get('Log').child('CCADB');
   }
 
   /**

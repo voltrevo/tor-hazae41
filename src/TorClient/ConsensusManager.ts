@@ -44,7 +44,7 @@ export class ConsensusManager {
     this.clock = app.get('Clock');
     this.storage = app.get('Storage');
     this.maxCached = options.maxCached;
-    this.log = app.get('Log').child(this.constructor.name);
+    this.log = app.get('Log').child('ConsensusManager');
     this.circuitManager = app.get('CircuitManager');
     this.certificateManager = app.get('CertificateManager');
   }

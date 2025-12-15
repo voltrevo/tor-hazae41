@@ -26,7 +26,7 @@ export class CertificateManager {
   constructor(options: CertificateManagerOptions) {
     this.storage = options.app.get('Storage');
     this.maxCached = options.maxCached; // More certificates than consensuses
-    this.log = options.app.get('Log').child(CertificateManager.name);
+    this.log = options.app.get('Log').child('CertificateManager');
   }
 
   /**

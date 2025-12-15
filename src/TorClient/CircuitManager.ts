@@ -96,7 +96,7 @@ export class CircuitManager {
     this.clock = options.app.get('Clock');
     this.maxCircuitLifetime = options.maxCircuitLifetime ?? 10 * 60_000;
     this.circuitBufferSize = options.circuitBuffer ?? 0;
-    this.log = options.app.get('Log').child(this.constructor.name);
+    this.log = options.app.get('Log').child('CircuitManager');
     this.app = options.app;
 
     // Always initialize ResourcePool for circuit buffering
@@ -306,7 +306,7 @@ export class CircuitManager {
   private async acquireKeynetCircuit(hostname: string): Promise<Circuit> {
     const builder = new CircuitBuilder({
       torConnection: await this.getTorConnection(),
-      log: this.log.child(CircuitBuilder.name),
+      log: this.log.child('CircuitBuilder'),
       app: this.app,
     });
 

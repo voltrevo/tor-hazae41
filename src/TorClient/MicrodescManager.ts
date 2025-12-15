@@ -27,7 +27,7 @@ export class MicrodescManager {
   constructor(options: MicrodescManagerOptions) {
     this.storage = options.app.get('Storage');
     this.maxCached = options.maxCached; // Large cache for frequently-used relays
-    this.log = options.app.get('Log').child(this.constructor.name);
+    this.log = options.app.get('Log').child('MicrodescManager');
   }
 
   /**
