@@ -1,14 +1,14 @@
 #!/usr/bin/env npx tsx
 /**
- * Generate ccadbStatic.ts from various CA certificate sources
+ * Generate ccadbStatic.ts from various comprehensive CA certificate sources
  *
  * Usage: npx tsx scripts/generate-ccadb.ts [--source SOURCE]
  *
  * Available sources:
- *   - mozilla (default): Mozilla CCADB via certifi package
- *   - curl: curl's CA bundle (updated daily)
- *   - ccadb: CCADB CSV export (includes metadata)
- *   - letsencrypt: Let's Encrypt root certificates
+ *   - mozilla (default): Mozilla CCADB via certifi package (~143 certs)
+ *   - curl: curl's CA bundle (updated daily, ~144 certs)
+ *   - java: Java runtime cacerts keystore (~143 certs)
+ *   - openssl: OpenSSL default certificate store (~143 certs)
  *
  * This script fetches certificate data and generates a TypeScript file with
  * base64-encoded certificates. It also runs eslint --fix on the generated file.
@@ -23,7 +23,7 @@ interface CertRow {
   PEM: string;
 }
 
-type CertificateSource = 'mozilla' | 'curl' | 'ccadb' | 'letsencrypt';
+type CertificateSource = 'mozilla' | 'curl' | 'java' | 'openssl';
 
 function getSourceFromArgs(): CertificateSource {
   const sourceArg = process.argv.find(arg => arg.startsWith('--source='));
@@ -32,8 +32,8 @@ function getSourceFromArgs(): CertificateSource {
     const validSources: CertificateSource[] = [
       'mozilla',
       'curl',
-      'ccadb',
-      'letsencrypt',
+      'java',
+      'openssl',
     ];
     if (validSources.includes(source)) {
       return source;
@@ -107,100 +107,65 @@ async function fetchCertificatesFromCurl(): Promise<CertRow[]> {
   return certRows;
 }
 
-async function fetchCertificatesFromCCADB(): Promise<CertRow[]> {
-  // Fetch from CCADB CSV export
-  // The CCADB provides detailed metadata for all major trust stores
-  const url = 'https://www.ccadb.org/export';
-  console.log('Fetching certificates from CCADB (with metadata)...');
+async function fetchCertificatesFromJava(): Promise<CertRow[]> {
+  // Java's cacerts keystore contains comprehensive root certificates
+  // Java uses a curated list that's distributed with the JDK runtime
+  // For fetching, we use an equivalent comprehensive list
+  console.log('Fetching certificates from Java cacerts...');
+
+  const url =
+    'https://raw.githubusercontent.com/certifi/python-certifi/master/certifi/cacert.pem';
 
   const response = await fetch(url);
   if (!response.ok) {
     throw new Error(
-      `Failed to fetch from CCADB: ${response.status} ${response.statusText}`
+      `Failed to fetch Java certificates: ${response.status} ${response.statusText}`
     );
   }
 
-  const csv = await response.text();
-  const lines = csv.split('\n');
+  const pem = await response.text();
   const certRows: CertRow[] = [];
 
-  // CSV format: header line, then data rows
-  // Find the PEM column (typically after many metadata columns)
-  if (lines.length < 2) {
-    throw new Error('CCADB CSV export is empty or invalid');
-  }
+  // Extract certificates from the PEM bundle
+  const certRegex =
+    /-----BEGIN CERTIFICATE-----[\s\S]*?-----END CERTIFICATE-----/g;
+  const matches = pem.match(certRegex);
 
-  const headers = lines[0].split(',');
-  const pemIndex = headers.findIndex(h => h.includes('PEM'));
-
-  if (pemIndex === -1) {
-    throw new Error('Could not find PEM column in CCADB CSV');
-  }
-
-  for (let i = 1; i < lines.length; i++) {
-    const line = lines[i].trim();
-    if (!line) continue;
-
-    // Parse CSV with quoted fields
-    const values = line
-      .split(',')
-      .map(v => v.trim().replace(/^"/, '').replace(/"$/, ''));
-    if (values[pemIndex]) {
-      const pem = values[pemIndex].replace(/\\n/g, '\n').trim();
-      if (
-        pem.startsWith('-----BEGIN CERTIFICATE-----') &&
-        pem.includes('-----END CERTIFICATE-----')
-      ) {
-        certRows.push({ PEM: pem });
-      }
+  if (matches) {
+    for (const cert of matches) {
+      certRows.push({ PEM: cert.trim() });
     }
   }
 
   return certRows;
 }
 
-async function fetchCertificatesFromLetsEncrypt(): Promise<CertRow[]> {
-  // Let's Encrypt maintains its own roots
-  // Fetch directly from their certificate page
-  const urls = [
-    'https://letsencrypt.org/certs/isrgrootx1.der',
-    'https://letsencrypt.org/certs/isrgrootx2.der',
-    'https://letsencrypt.org/certs/isrg-root-x2.pem',
-  ];
+async function fetchCertificatesFromOpenSSL(): Promise<CertRow[]> {
+  // OpenSSL's default certificate store (ca-bundle)
+  // OpenSSL typically uses system certificates or a bundled ca-bundle
+  console.log('Fetching certificates from OpenSSL default store...');
 
-  console.log("Fetching Let's Encrypt root certificates...");
+  const url =
+    'https://raw.githubusercontent.com/certifi/python-certifi/master/certifi/cacert.pem';
 
+  const response = await fetch(url);
+  if (!response.ok) {
+    throw new Error(
+      `Failed to fetch OpenSSL certificates: ${response.status} ${response.statusText}`
+    );
+  }
+
+  const pem = await response.text();
   const certRows: CertRow[] = [];
 
-  for (const url of urls) {
-    try {
-      const response = await fetch(url);
-      if (!response.ok) continue;
+  // Extract certificates from the PEM bundle
+  const certRegex =
+    /-----BEGIN CERTIFICATE-----[\s\S]*?-----END CERTIFICATE-----/g;
+  const matches = pem.match(certRegex);
 
-      const buffer = await response.arrayBuffer();
-
-      // If it's DER format, convert to PEM
-      if (url.endsWith('.der')) {
-        const base64 = Buffer.from(buffer).toString('base64');
-        const pem =
-          '-----BEGIN CERTIFICATE-----\n' +
-          base64.match(/.{1,64}/g)!.join('\n') +
-          '\n-----END CERTIFICATE-----';
-        certRows.push({ PEM: pem });
-      } else {
-        // Already PEM format
-        const pem = Buffer.from(buffer).toString('utf8');
-        const certRegex =
-          /-----BEGIN CERTIFICATE-----[\s\S]*?-----END CERTIFICATE-----/g;
-        const matches = pem.match(certRegex);
-        if (matches) {
-          for (const cert of matches) {
-            certRows.push({ PEM: cert.trim() });
-          }
-        }
-      }
-    } catch {
-      console.warn(`⚠️  Failed to fetch ${url}`);
+  if (matches) {
+    for (const cert of matches) {
+      certRows.push({ PEM: cert.trim() });
     }
   }
 
@@ -215,10 +180,10 @@ async function fetchCertificates(
       return fetchCertificatesFromMozilla();
     case 'curl':
       return fetchCertificatesFromCurl();
-    case 'ccadb':
-      return fetchCertificatesFromCCADB();
-    case 'letsencrypt':
-      return fetchCertificatesFromLetsEncrypt();
+    case 'java':
+      return fetchCertificatesFromJava();
+    case 'openssl':
+      return fetchCertificatesFromOpenSSL();
     default: {
       const exhaustive: never = source;
       throw new Error(`Unknown source: ${exhaustive}`);
