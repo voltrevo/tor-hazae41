@@ -68,6 +68,7 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "measure-size": "node scripts/measure-size.mjs",
+    "measure-detailed-size": "node scripts/measure-detailed-size.mjs",
     "commit-checks": "concurrently \"npm test\" \"npm run tsc\" \"npm run lint\" \"npm run format:check\" && echo && echo \"✅ All checks passed! Remember to confirm with the user before committing.\"",
     "tsc": "tsc --noEmit",
     "generate:ccadb": "tsx scripts/generate-ccadb.ts"
@@ -97,7 +98,6 @@
     "@hazae41/bitset": "1.0.1",
     "@hazae41/box": "2.0.1",
     "@hazae41/bytes": "1.2.11",
-    "@hazae41/cadenas": "0.4.2",
     "@hazae41/cascade": "2.2.2",
     "@hazae41/cursor": "1.2.4",
     "@hazae41/disposer": "2.0.20",
