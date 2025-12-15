@@ -16,6 +16,26 @@ export default defineConfig([
   },
   {
     entry: [
+      'src/TorClient/versions/standard.ts',
+      'src/TorClient/versions/noStaticCerts.ts',
+    ],
+    format: ['esm', 'cjs'],
+    dts: true,
+    sourcemap: true,
+    minify: false,
+    splitting: false,
+    outDir: 'dist/TorClient/versions',
+    outExtension({ format }) {
+      return {
+        js: format === 'esm' ? '.mjs' : '.js',
+      };
+    },
+    target: 'es2022',
+    treeshake: false,
+    external: ['*'],
+  },
+  {
+    entry: [
       'src/storage/index.ts',
       'src/storage/index-browser.ts',
       'src/storage/index-node.ts',
