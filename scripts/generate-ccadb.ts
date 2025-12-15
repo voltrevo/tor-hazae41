@@ -1,231 +1,97 @@
 #!/usr/bin/env npx tsx
 /**
- * Generate ccadbStatic.ts from various comprehensive CA certificate sources
+ * Generate ccadbStatic.ts from CA certificate sources
  *
- * Usage: npx tsx scripts/generate-ccadb.ts [--source SOURCE]
+ * Usage: npx tsx scripts/generate-ccadb.ts --source=<SOURCE>
  *
  * Available sources:
- *   - mozilla (default): Mozilla CCADB via certifi package (~143 certs)
- *   - curl: curl's CA bundle (updated daily, ~144 certs)
- *   - java: Java runtime cacerts keystore (~143 certs)
- *   - openssl: OpenSSL default certificate store (~143 certs)
+ *   - certifi: Python certifi CA bundle
+ *   - curl: curl's CA bundle
+ *   - ccadb: Mozilla CCADB
  *
- * This script fetches certificate data and generates a TypeScript file with
- * base64-encoded certificates. It also runs eslint --fix on the generated file.
+ * This script fetches certificate data, extracts PEM blocks, and generates
+ * a TypeScript file with base64-encoded certificates.
  */
 
-import { PEM, X509 } from '@hazae41/x509';
 import fs from 'fs/promises';
 import path from 'path';
 import { execSync } from 'child_process';
 
-interface CertRow {
-  PEM: string;
-}
+type CertificateSource = 'certifi' | 'curl' | 'ccadb';
 
-type CertificateSource = 'mozilla' | 'curl' | 'java' | 'openssl';
+const sourceUrls: Record<CertificateSource, string> = {
+  certifi:
+    'https://raw.githubusercontent.com/certifi/python-certifi/master/certifi/cacert.pem',
+  curl: 'https://curl.se/ca/cacert.pem',
+  ccadb:
+    'https://ccadb.my.salesforce-sites.com/mozilla/IncludedRootsPEMTxt?TrustBitsInclude=Websites',
+};
 
 function getSourceFromArgs(): CertificateSource {
   const sourceArg = process.argv.find(arg => arg.startsWith('--source='));
-  if (sourceArg) {
-    const source = sourceArg.split('=')[1] as CertificateSource;
-    const validSources: CertificateSource[] = [
-      'mozilla',
-      'curl',
-      'java',
-      'openssl',
-    ];
-    if (validSources.includes(source)) {
-      return source;
-    }
+  if (!sourceArg) {
     console.error(
-      `❌ Invalid source: ${source}. Valid options: ${validSources.join(', ')}`
+      `❌ Missing required --source parameter. Available options: ${Object.keys(sourceUrls).join(', ')}`
     );
     process.exit(1);
   }
-  return 'mozilla';
-}
 
-async function fetchCertificatesFromMozilla(): Promise<CertRow[]> {
-  // Fetch from certifi (Python's Mozilla CA bundle)
-  // This is the most reliable and regularly updated source
-  const url =
-    'https://raw.githubusercontent.com/certifi/python-certifi/master/certifi/cacert.pem';
-  console.log('Fetching certificates from Mozilla CCADB (via certifi)...');
-
-  const response = await fetch(url);
-  if (!response.ok) {
-    throw new Error(
-      `Failed to fetch certificates: ${response.status} ${response.statusText}`
+  const source = sourceArg.split('=')[1] as CertificateSource;
+  if (!Object.keys(sourceUrls).includes(source)) {
+    console.error(
+      `❌ Invalid source: ${source}. Available options: ${Object.keys(sourceUrls).join(', ')}`
     );
+    process.exit(1);
   }
 
-  const pem = await response.text();
-  const certRows: CertRow[] = [];
-
-  // Extract certificates from the PEM bundle
-  // Match complete certificate blocks (from BEGIN to END)
-  const certRegex =
-    /-----BEGIN CERTIFICATE-----[\s\S]*?-----END CERTIFICATE-----/g;
-  const matches = pem.match(certRegex);
-
-  if (matches) {
-    for (const cert of matches) {
-      certRows.push({ PEM: cert.trim() });
-    }
-  }
-
-  return certRows;
+  return source;
 }
 
-async function fetchCertificatesFromCurl(): Promise<CertRow[]> {
-  // Fetch from curl's CA bundle (updated daily)
-  const url = 'https://curl.se/ca/cacert.pem';
-  console.log('Fetching certificates from curl.se (daily updates)...');
-
-  const response = await fetch(url);
-  if (!response.ok) {
-    throw new Error(
-      `Failed to fetch certificates: ${response.status} ${response.statusText}`
-    );
-  }
-
-  const pem = await response.text();
-  const certRows: CertRow[] = [];
-
-  // Extract certificates from the PEM bundle
-  const certRegex =
-    /-----BEGIN CERTIFICATE-----[\s\S]*?-----END CERTIFICATE-----/g;
-  const matches = pem.match(certRegex);
-
-  if (matches) {
-    for (const cert of matches) {
-      certRows.push({ PEM: cert.trim() });
-    }
-  }
-
-  return certRows;
-}
-
-async function fetchCertificatesFromJava(): Promise<CertRow[]> {
-  // Java's cacerts keystore contains comprehensive root certificates
-  // Java uses a curated list that's distributed with the JDK runtime
-  // For fetching, we use an equivalent comprehensive list
-  console.log('Fetching certificates from Java cacerts...');
-
-  const url =
-    'https://raw.githubusercontent.com/certifi/python-certifi/master/certifi/cacert.pem';
-
-  const response = await fetch(url);
-  if (!response.ok) {
-    throw new Error(
-      `Failed to fetch Java certificates: ${response.status} ${response.statusText}`
-    );
-  }
-
-  const pem = await response.text();
-  const certRows: CertRow[] = [];
-
-  // Extract certificates from the PEM bundle
-  const certRegex =
-    /-----BEGIN CERTIFICATE-----[\s\S]*?-----END CERTIFICATE-----/g;
-  const matches = pem.match(certRegex);
-
-  if (matches) {
-    for (const cert of matches) {
-      certRows.push({ PEM: cert.trim() });
-    }
-  }
-
-  return certRows;
-}
-
-async function fetchCertificatesFromOpenSSL(): Promise<CertRow[]> {
-  // OpenSSL's default certificate store (ca-bundle)
-  // OpenSSL typically uses system certificates or a bundled ca-bundle
-  console.log('Fetching certificates from OpenSSL default store...');
-
-  const url =
-    'https://raw.githubusercontent.com/certifi/python-certifi/master/certifi/cacert.pem';
-
-  const response = await fetch(url);
-  if (!response.ok) {
-    throw new Error(
-      `Failed to fetch OpenSSL certificates: ${response.status} ${response.statusText}`
-    );
-  }
-
-  const pem = await response.text();
-  const certRows: CertRow[] = [];
-
-  // Extract certificates from the PEM bundle
-  const certRegex =
-    /-----BEGIN CERTIFICATE-----[\s\S]*?-----END CERTIFICATE-----/g;
-  const matches = pem.match(certRegex);
-
-  if (matches) {
-    for (const cert of matches) {
-      certRows.push({ PEM: cert.trim() });
-    }
-  }
-
-  return certRows;
-}
-
-async function fetchCertificates(
+async function fetchAndExtractCerts(
   source: CertificateSource
-): Promise<CertRow[]> {
-  switch (source) {
-    case 'mozilla':
-      return fetchCertificatesFromMozilla();
-    case 'curl':
-      return fetchCertificatesFromCurl();
-    case 'java':
-      return fetchCertificatesFromJava();
-    case 'openssl':
-      return fetchCertificatesFromOpenSSL();
-    default: {
-      const exhaustive: never = source;
-      throw new Error(`Unknown source: ${exhaustive}`);
+): Promise<string[]> {
+  const url = sourceUrls[source];
+  console.log(`Fetching certificates from ${source}...`);
+
+  const response = await fetch(url);
+  if (!response.ok) {
+    throw new Error(
+      `Failed to fetch certificates: ${response.status} ${response.statusText}`
+    );
+  }
+
+  const text = await response.text();
+  const certs: string[] = [];
+
+  // Extract all PEM certificate blocks
+  const certRegex =
+    /-----BEGIN CERTIFICATE-----[\s\S]*?-----END CERTIFICATE-----/g;
+  const matches = text.match(certRegex);
+
+  if (matches) {
+    for (const cert of matches) {
+      certs.push(cert.trim());
     }
   }
+
+  return certs;
+}
+
+function convertPemToBase64(pem: string): string {
+  // Remove PEM headers and newlines, then base64 encode the DER bytes
+  const derBase64 = pem
+    .replace(/-----BEGIN CERTIFICATE-----/, '')
+    .replace(/-----END CERTIFICATE-----/, '')
+    .replace(/\s/g, '');
+  return derBase64;
 }
 
 async function generateCCADB() {
   const source = getSourceFromArgs();
   console.log(`Using source: ${source}\n`);
 
-  const certRows = await fetchCertificates(source);
-
-  const base64Certs: string[] = [];
-  const seenSubjects = new Set<string>();
-  let skipped = 0;
-
-  for (const cert of certRows) {
-    try {
-      const pem = PEM.decodeOrThrow(cert.PEM);
-      const x509 = X509.readAndResolveFromBytesOrThrow(X509.Certificate, pem);
-
-      const x501 = x509.tbsCertificate.subject.toX501OrThrow();
-
-      // Check for duplicates
-      if (seenSubjects.has(x501)) {
-        skipped++;
-        continue;
-      }
-      seenSubjects.add(x501);
-
-      // Convert PEM to base64
-      const certBase16 = Buffer.from(pem).toString('hex');
-      const certBase64 = Buffer.from(Buffer.from(certBase16, 'hex')).toString(
-        'base64'
-      );
-
-      base64Certs.push(certBase64);
-    } catch {
-      skipped++;
-    }
-  }
+  const pemCerts = await fetchAndExtractCerts(source);
+  const base64Certs = pemCerts.map(convertPemToBase64).sort();
 
   // Generate ccadbStatic.ts with base64 certificates
   const staticOutputPath = path.join(
@@ -249,9 +115,8 @@ async function generateCCADB() {
     console.warn(`⚠️  eslint --fix failed:`, error);
   }
 
-  const total = base64Certs.length;
   console.log(`\n✅ Generated ${staticOutputPath}`);
-  console.log(`📊 ${total} certificates included, ${skipped} skipped`);
+  console.log(`📊 ${base64Certs.length} certificates included`);
   console.log(`📌 Source: ${source}`);
 }
 
