@@ -69,7 +69,8 @@
     "format:check": "prettier --check .",
     "measure-size": "node scripts/measure-size.mjs",
     "commit-checks": "concurrently \"npm test\" \"npm run tsc\" \"npm run lint\" \"npm run format:check\" && echo && echo \"✅ All checks passed! Remember to confirm with the user before committing.\"",
-    "tsc": "tsc --noEmit"
+    "tsc": "tsc --noEmit",
+    "generate:ccadb": "tsx scripts/generate-ccadb.ts"
   },
   "c8": {
     "include": [
