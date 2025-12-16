@@ -13,6 +13,8 @@ import { CCADB } from '../../cadenas/mods/ccadb/CCADB';
 import { getStorageName } from '../../storage/getStorageName.js';
 
 export { type TorClientOptions } from '../TorClientBase';
+export * as storage from '../../storage';
+export { Log, type LogLevel } from '../../Log';
 
 /**
  * A Tor client that provides secure, anonymous HTTP/HTTPS requests through the Tor network.

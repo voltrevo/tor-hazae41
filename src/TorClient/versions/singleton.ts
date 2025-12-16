@@ -1,7 +1,10 @@
 import { Log } from '../../Log';
 import { assert } from '../../utils/assert';
 import { TorClient, TorClientOptions } from './noStaticCerts';
-import * as storage from '../../storage';
+
+export { type TorClientOptions } from '../TorClientBase';
+export * as storage from '../../storage';
+export { Log, type LogLevel } from '../../Log';
 
 let client: TorClient | undefined;
 
@@ -13,7 +16,7 @@ let config: TorClientOptions = {
   log: new Log({ rawLog: () => {} }),
 };
 
-const tor = {
+export const tor = {
   /**
    * Same as standard fetch, but powered by tor.
    * https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API/Using_Fetch
@@ -67,5 +70,3 @@ const tor = {
     }
   },
 };
-
-export { tor, Log, storage };
