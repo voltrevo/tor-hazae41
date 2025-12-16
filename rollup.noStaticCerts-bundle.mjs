@@ -4,7 +4,7 @@ import commonjs from '@rollup/plugin-commonjs';
 export default {
   input: 'dist/TorClient/versions/noStaticCerts.mjs',
   output: {
-    file: 'bundled-builds/noStaticCerts/index.mjs',
+    file: 'bundled-builds/noStaticCerts/TorClient.mjs',
     format: 'es',
     sourcemap: false,
   },
