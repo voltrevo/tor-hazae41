@@ -44,22 +44,6 @@ Timestamps are relative to root logger creation and automatically format based o
 - **Hours:** `[01:05:07.138]` - for times up to 23:59:59.999
 - **Days:** `[3d 01:05:07.138]` - for times ≥ 1 day
 
-### Custom Clock
-
-For testing, pass a custom clock implementation:
-
-```typescript
-import { Log } from 'tor-js';
-import { VirtualClock } from 'tor-js/clock';
-
-const clock = new VirtualClock();
-const log = new Log({ clock });
-
-log.debug('Start'); // [00.000] Start
-await clock.advanceTime(5000);
-log.debug('After 5s'); // [05.000] After 5s
-```
-
 ### Custom Log Handler
 
 Provide a custom `rawLog` function to handle logs differently:
@@ -82,7 +66,7 @@ log.error('Database error');
 
 ```typescript
 new Log(params?: {
-  clock?: IClock;                                    // defaults to SystemClock
+  clock?: IClock; // defaults to SystemClock
   rawLog?: (level: LogLevel, ...args: unknown[]) => void;
 })
 ```
@@ -93,19 +77,10 @@ new Log(params?: {
 - `info(...args: unknown[]): void` - Log info message
 - `warn(...args: unknown[]): void` - Log warn message
 - `error(...args: unknown[]): void` - Log error message
-- `child(name: string): Log` - Create a child logger (always creates new instance)
+- `child(name: string): Log` - Create a child logger
 
 ### Types
 
 ```typescript
 type LogLevel = 'debug' | 'info' | 'warn' | 'error';
 ```
-
-## Implementation Details
-
-- Each log call passes: `[timestamp]`, `[prefix]` (if child), and message arguments to `rawLog`
-- Root logger calls `rawLog(level, '[timestamp]', ...args)`
-- Child logger calls `rawLog(level, '[timestamp]', '[prefix]', ...args)`
-- Timestamps are always formatted as `[HH:MM:SS.mmm]` or similar based on elapsed time
-- Each `child()` call creates a new Log instance (not memoized)
-- Child loggers inherit parent's clock and maintain relative timestamps to root creation

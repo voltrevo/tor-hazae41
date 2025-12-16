@@ -41,7 +41,7 @@ Uses real time from the system. Suitable for production code and browser environ
 ### Example:
 
 ```typescript
-import { SystemClock } from '@hazae41/echalote/clock';
+import { SystemClock } from '.';
 
 const clock = new SystemClock();
 console.log('Current time:', clock.now());
@@ -65,7 +65,7 @@ Simulates time progression for testing. Allows you to control when timers execut
 You explicitly control time progression via `advanceTime()`. Useful for step-by-step testing.
 
 ```typescript
-import { VirtualClock } from '@hazae41/echalote/clock';
+import { VirtualClock } from '.';
 
 const clock = new VirtualClock();
 
@@ -153,7 +153,7 @@ await clock.run();
 Use `SystemClock`:
 
 ```typescript
-import { SystemClock } from '@hazae41/echalote/clock';
+import { SystemClock } from '.';
 
 const clock = new SystemClock();
 
@@ -169,7 +169,7 @@ await clock.delayUnref(5000);
 Use `VirtualClock`:
 
 ```typescript
-import { VirtualClock } from '@hazae41/echalote/clock';
+import { VirtualClock } from '.';
 
 // Manual mode: control each step
 async function testStepByStep() {
@@ -258,8 +258,8 @@ See `example.ts` for complete working examples covering:
 Run tests with:
 
 ```bash
-npm test                 # Node.js tests
-npm run test:browser    # Browser tests
+npm test              # Node.js tests
+npm run test:browser  # Browser tests
 ```
 
 The clock module is tested in both Node.js and browser environments for cross-platform reliability.

@@ -23,14 +23,8 @@ interface IStorage {
 ### Import
 
 ```typescript
-import {
-  MemoryStorage,
-  createAutoStorage,
-  type IStorage,
-} from 'tor-js/storage';
+import { MemoryStorage, createAutoStorage, type IStorage } from '.';
 ```
-
-**Development Note**: When developing within this repository, the `tsconfig.json` has a path mapping that resolves `tor-js/storage` to `./src/storage/index-node.ts` for Node.js environments. This allows you to use the same import path during development that consumers will use. The build process uses the conditional exports in `package.json` instead.
 
 ### Memory Storage
 
@@ -73,7 +67,7 @@ const userKeys = await storage.list('user/'); // List all keys starting with 'us
 Only available in browser environments:
 
 ```typescript
-import { IndexedDBStorage } from 'tor-js/storage';
+import { IndexedDBStorage } from '.';
 
 const storage = new IndexedDBStorage('my-database');
 ```
@@ -83,7 +77,7 @@ const storage = new IndexedDBStorage('my-database');
 Only available in Node.js environments:
 
 ```typescript
-import { FsStorage } from 'tor-js/storage';
+import { FsStorage } from '.';
 
 // Direct path
 const storage = new FsStorage('/path/to/storage');
@@ -102,12 +96,3 @@ The file system storage mangles keys to create filesystem-friendly filenames:
 - Example: `hello:world` → `hello_3aworld`
 
 The mangling is bidirectional and preserves readability for alphanumeric keys.
-
-## Conditional Exports
-
-The package uses conditional exports to ensure:
-
-- Browser builds don't include Node.js `fs` module
-- Node.js builds don't include IndexedDB code
-
-This is handled automatically by the module system.
