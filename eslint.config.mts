@@ -10,6 +10,9 @@ import { fileURLToPath } from 'node:url';
 const gitignorePath = fileURLToPath(new URL('.gitignore', import.meta.url));
 
 export default defineConfig([
+  {
+    ignores: ['bundled-builds/**', 'dist/**', 'node_modules/**', '.next/**'],
+  },
   includeIgnoreFile(gitignorePath),
   js.configs.recommended,
   tseslint.configs.eslintRecommended,
