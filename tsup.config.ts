@@ -52,17 +52,4 @@ export default defineConfig([
     treeshake: false,
     external: ['node:fs/promises', 'node:path'],
   },
-  {
-    entry: ['curlTor.ts'],
-    format: ['cjs'],
-    dts: false,
-    sourcemap: true,
-    minify: false,
-    outDir: 'dist',
-    target: 'es2022',
-    treeshake: false,
-    external: ['*'],
-    shims: true,
-    noExternal: ['./src/TorClient'],
-  },
 ]);

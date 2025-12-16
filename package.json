@@ -6,7 +6,7 @@
   "module": "dist/index.mjs",
   "types": "dist/index.d.ts",
   "bin": {
-    "curlTor": "./dist/curlTor.js"
+    "curlTor": "./bin/curlTor"
   },
   "exports": {
     ".": {
@@ -31,6 +31,7 @@
     }
   },
   "files": [
+    "bin",
     "dist",
     "src",
     "README.md",

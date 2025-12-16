@@ -18,7 +18,7 @@
         --snowflake-url <url>  (Tor Snowflake proxy URL; default: wss://snowflake.pse.dev/)
   
   Notes:
-    * TLS “-k/--insecure” is not supported per-request by built-in fetch.
+    * TLS "-k/--insecure" is not supported per-request by built-in fetch.
       (Workaround: set env NODE_TLS_REJECT_UNAUTHORIZED=0 for the whole process.)
     * Redirects: fetch follows automatically; no per-request max-redirs here.
 */
@@ -26,9 +26,9 @@
 import { readFileSync, writeFileSync, existsSync } from 'node:fs';
 import { stdout, stderr } from 'node:process';
 
-import { TorClient } from './src/TorClient/versions/standard';
-import { getErrorDetails } from './src/utils/getErrorDetails';
-import { Log } from './src/Log';
+import { TorClient } from '../TorClient/versions/standard';
+import { getErrorDetails } from '../utils/getErrorDetails';
+import { Log } from '../Log';
 
 type Opts = {
   method?: string;
@@ -49,7 +49,7 @@ type Opts = {
 };
 
 function die(msg: string, code = 2): never {
-  stderr.write(`curlTor.ts: ${msg}\n`);
+  stderr.write(`curlTor: ${msg}\n`);
   process.exit(code);
 }
 
@@ -81,7 +81,7 @@ function readStdinSync(): Buffer {
 }
 
 function showHelp(): never {
-  stdout.write(`Usage: curlTor.ts [options...] <url>
+  stdout.write(`Usage: curlTor [options...] <url>
 
  -d, --data <data>          HTTP POST data
  -F, --form <name=content>  Specify multipart MIME data
@@ -100,10 +100,10 @@ function showHelp(): never {
  -h, --help                 Show this help message
 
 Examples:
-  curlTor.ts https://httpbin.org/get
-  curlTor.ts -X POST -d "hello=world" https://httpbin.org/post
-  curlTor.ts -v --json '{"test":"data"}' https://httpbin.org/post
-  curlTor.ts -H "User-Agent: MyApp/1.0" https://httpbin.org/get
+  curlTor https://httpbin.org/get
+  curlTor -X POST -d "hello=world" https://httpbin.org/post
+  curlTor -v --json '{"test":"data"}' https://httpbin.org/post
+  curlTor -H "User-Agent: MyApp/1.0" https://httpbin.org/get
 
 This is a Tor-enabled version of curl that routes requests through the Tor network
 using Snowflake bridges. All requests are anonymized through a 3-hop circuit.
@@ -207,7 +207,7 @@ function parseArgs(argv: string[]): Opts {
 
 async function main() {
   const opts = parseArgs(process.argv.slice(2));
-  if (!opts.url) die('Usage: curl.ts [options] <url>');
+  if (!opts.url) die('Usage: curlTor [options] <url>');
 
   const headers = new Headers();
   for (const [k, v] of opts.headers) headers.append(k, v);
@@ -346,7 +346,7 @@ async function main() {
   }
 
   // Exit code like curl: non-zero on HTTP errors if --fail was used.
-  // We don’t implement --fail; always exit 0 unless fetch errored.
+  // We don't implement --fail; always exit 0 unless fetch errored.
 
   // FIXME: This shouldn't be needed, but nodejs is not exiting otherwise due
   // to things not being cleaned up in TorClient.

@@ -24,6 +24,66 @@ The underlying Tor implementation is experimental software.
 npm install tor-js
 ```
 
+## CLI Usage
+
+`curlTor` is a curl-like command-line tool that makes HTTP requests through the Tor network.
+
+### Quick Start
+
+```bash
+# Using npx (no installation needed)
+npx curlTor https://check.torproject.org/api/ip
+
+# Or install globally
+npm install -g tor-js
+curlTor https://check.torproject.org/api/ip
+```
+
+### Examples
+
+```bash
+# GET request (check your Tor IP)
+curlTor https://check.torproject.org/api/ip
+
+# POST with JSON data
+curlTor -X POST --json '{"key":"value"}' https://example.com/api
+
+# POST with form data
+curlTor -d "param1=value1&param2=value2" https://example.com/api
+
+# Custom headers
+curlTor -H "User-Agent: MyApp/1.0" https://check.torproject.org/api/ip
+
+# Save response to file
+curlTor https://example.com -o response.html
+
+# Show response headers
+curlTor -i https://check.torproject.org/api/ip
+
+# Verbose output (request and response details)
+curlTor -v https://check.torproject.org/api/ip
+```
+
+### Options
+
+```
+ -d, --data <data>          HTTP POST data
+ -F, --form <name=content>  Specify multipart MIME data
+ -H, --header <header>      Pass custom header(s) to server
+ -i, --include              Include response headers in output
+ -L, --location             Follow redirects (default)
+ -o, --output <file>        Write to file instead of stdout
+ -s, --silent               Silent mode
+ -v, --verbose              Make the operation more talkative
+ -X, --request <method>     Specify request method (GET, POST, etc.)
+     --data-binary <data>   HTTP POST binary data
+     --data-raw <data>      HTTP POST data
+     --json <JSON>          HTTP POST JSON (sets Content-Type)
+     --max-time <seconds>   Maximum time allowed for transfer
+     --snowflake-url <url>  Tor Snowflake proxy URL
+ -h, --help                 Show help message
+```
+
 ## Demo Development
 
 If you've cloned this repository and want to run the demo locally:
