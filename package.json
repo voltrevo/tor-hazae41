@@ -47,6 +47,9 @@
     "typescript"
   ],
   "author": "Andrew Morris",
+  "contributors": [
+    "hazae41"
+  ],
   "license": "MIT",
   "repository": {
     "type": "git",
