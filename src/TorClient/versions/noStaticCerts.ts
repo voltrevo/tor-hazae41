@@ -10,6 +10,7 @@ import { CircuitBuilder } from '../CircuitBuilder';
 import { CircuitManager } from '../CircuitManager';
 import { CCADB } from '../../cadenas/mods/ccadb/CCADB';
 import { fetchCerts } from '../../cadenas/mods/ccadb/fetchCerts';
+import { getStorageName } from '../../storage/getStorageName.js';
 
 export { type TorClientOptions } from '../TorClientBase';
 
@@ -67,7 +68,7 @@ export class TorClient extends TorClientBase {
     app.set('Clock', clock);
 
     app.set('Log', options.log ?? new Log({ clock }).child('Tor'));
-    app.set('Storage', options.storage ?? createAutoStorage('tor-js-cache'));
+    app.set('Storage', options.storage ?? createAutoStorage(getStorageName()));
 
     app.set(
       'CertificateManager',
