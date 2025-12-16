@@ -8,6 +8,7 @@ import { CircuitManager } from './CircuitManager';
 import { getErrorDetails } from '../utils/getErrorDetails';
 import { Log } from '../Log';
 import { App, ComponentMap } from './App';
+import { IStorage } from '../storage';
 
 /**
  * Configuration options for the TorClient.
@@ -25,6 +26,13 @@ export interface TorClientOptions {
   maxCircuitLifetime?: number;
   /** Optional logger instance for hierarchical logging */
   log?: Log;
+  /**
+   * Optional storage interface for caching (default: tmp dir in nodejs,
+   * indexeddb in browser).
+   * Use `new storage.MemoryStorage()` to avoid secondary storage and only cache
+   * during the current session.
+   */
+  storage?: IStorage;
 }
 
 export class TorClientBase {
