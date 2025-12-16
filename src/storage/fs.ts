@@ -1,6 +1,5 @@
-import * as fs from 'node:fs/promises';
-import * as path from 'node:path';
 import type { IStorage } from './types.js';
+import { getNodeDeps } from './getNodeDeps.js';
 
 /**
  * Type guard to check if an error is a Node.js filesystem error with code property
@@ -90,25 +89,34 @@ function unmangleKey(filename: string): string {
   return result;
 }
 
-export function createFsStorage(dirPath: string): IStorage {
+export function createFsStorage(dirPath: string, tmp = false): IStorage {
   let initialized = false;
 
   async function ensureDir(): Promise<void> {
     if (!initialized) {
-      await fs.mkdir(dirPath, { recursive: true });
+      const { fs } = await getNodeDeps();
+      await fs.mkdir(await getPath(), { recursive: true });
       initialized = true;
     }
   }
 
-  function getFilePath(key: string): string {
-    return path.join(dirPath, mangleKey(key));
+  async function getPath(key?: string) {
+    const { os, path } = await getNodeDeps();
+    const fullDirPath = tmp ? path.join(os.tmpdir(), dirPath) : dirPath;
+
+    if (key === undefined) {
+      return fullDirPath;
+    }
+
+    return path.join(fullDirPath, mangleKey(key));
   }
 
   return {
     async read(key: string): Promise<Uint8Array> {
+      const { fs } = await getNodeDeps();
       await ensureDir();
       try {
-        const data = await fs.readFile(getFilePath(key));
+        const data = await fs.readFile(await getPath(key));
         return new Uint8Array(data);
       } catch (error) {
         if (isNodeFsError(error) && error.code === 'ENOENT') {
@@ -119,14 +127,16 @@ export function createFsStorage(dirPath: string): IStorage {
     },
 
     async write(key: string, value: Uint8Array): Promise<void> {
+      const { fs } = await getNodeDeps();
       await ensureDir();
-      await fs.writeFile(getFilePath(key), value);
+      await fs.writeFile(await getPath(key), value);
     },
 
     async list(keyPrefix: string): Promise<string[]> {
+      const { fs } = await getNodeDeps();
       await ensureDir();
       try {
-        const files = await fs.readdir(dirPath);
+        const files = await fs.readdir(await getPath());
         const keys = files
           .map(unmangleKey)
           .filter(key => key.startsWith(keyPrefix))
@@ -141,9 +151,10 @@ export function createFsStorage(dirPath: string): IStorage {
     },
 
     async remove(key: string): Promise<void> {
+      const { fs } = await getNodeDeps();
       await ensureDir();
       try {
-        await fs.unlink(getFilePath(key));
+        await fs.unlink(await getPath(key));
       } catch (error) {
         if (isNodeFsError(error) && error.code === 'ENOENT') {
           // Key doesn't exist, silently succeed
@@ -154,16 +165,17 @@ export function createFsStorage(dirPath: string): IStorage {
     },
 
     async removeAll(keyPrefix: string = ''): Promise<void> {
+      const { fs } = await getNodeDeps();
       await ensureDir();
       try {
-        const files = await fs.readdir(dirPath);
+        const files = await fs.readdir(await getPath());
         const keysToRemove = files
           .map(unmangleKey)
           .filter(key => key.startsWith(keyPrefix));
 
         await Promise.all(
-          keysToRemove.map(key =>
-            fs.unlink(getFilePath(key)).catch(error => {
+          keysToRemove.map(async key =>
+            fs.unlink(await getPath(key)).catch(error => {
               // Ignore ENOENT errors (file already deleted)
               if (isNodeFsError(error) && error.code === 'ENOENT') {
                 return;

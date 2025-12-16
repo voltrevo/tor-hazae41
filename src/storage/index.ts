@@ -6,7 +6,6 @@ export { createFsStorage } from './fs.js';
 import type { IStorage } from './types.js';
 import { createIndexedDBStorage } from './indexeddb.js';
 import { createFsStorage } from './fs.js';
-import * as path from 'node:path';
 
 /**
  * Detects if the runtime environment is a browser.
@@ -32,7 +31,7 @@ function isNodeEnvironment(): boolean {
 /**
  * Creates an appropriate storage backend for the current environment.
  * In browser environments, uses IndexedDB for persistence.
- * In Node.js environments, uses filesystem storage in /tmp/{name}.
+ * In Node.js environments, uses filesystem storage in the system temp directory/{name}.
  * Throws an error if neither environment can be detected.
  */
 export function createAutoStorage(name: string): IStorage {
@@ -41,8 +40,7 @@ export function createAutoStorage(name: string): IStorage {
   }
 
   if (isNodeEnvironment()) {
-    const dirPath = path.join('/tmp', name);
-    return createFsStorage(dirPath);
+    return createFsStorage(name, true);
   }
 
   throw new Error(
