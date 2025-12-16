@@ -97,46 +97,4 @@ export class TorClient extends TorClientBase {
 
     return app;
   }
-
-  /**
-   * Makes a one-time fetch request through Tor with a temporary circuit.
-   * Creates a new TorClient with no auto-updates, makes the request, and
-   * disposes of the circuit. This is ideal for single requests where you
-   * don't need persistent circuit management.
-   *
-   * The circuit is created specifically for this request and disposed
-   * immediately after completion, providing maximum isolation but less
-   * efficiency for multiple requests.
-   *
-   * @param snowflakeUrl The Snowflake bridge WebSocket URL
-   * @param url The URL to fetch
-   * @param options Optional fetch options and TorClient configuration
-   * @returns Promise resolving to the fetch Response
-   */
-  static async fetch(
-    snowflakeUrl: string,
-    url: string,
-    options?: RequestInit & {
-      connectionTimeout?: number;
-      circuitTimeout?: number;
-      log?: Log;
-    }
-  ) {
-    const { connectionTimeout, circuitTimeout, log, ...fetchOptions } =
-      options || {};
-
-    const client = new TorClient({
-      snowflakeUrl,
-      connectionTimeout,
-      circuitTimeout,
-      log,
-      circuitBuffer: 0, // No pre-creation for one-time use
-    });
-
-    try {
-      return await client.fetch(url, fetchOptions);
-    } finally {
-      client.close();
-    }
-  }
 }

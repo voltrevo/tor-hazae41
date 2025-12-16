@@ -252,7 +252,7 @@ async function main() {
     method = 'POST';
   }
 
-  const reqInit: RequestInit = {
+  const fetchOptions: RequestInit = {
     method,
     headers,
     body,
@@ -281,25 +281,20 @@ async function main() {
   const snowflakeUrl = opts.snowflakeUrl || 'wss://snowflake.pse.dev/';
 
   let res: Response;
+  let tor: TorClient | undefined;
   try {
-    const fetchOptions: RequestInit & {
-      connectionTimeout?: number;
-      circuitTimeout?: number;
-      log?: Log;
-    } = { ...reqInit };
-
-    // Create a logger that writes to stderr in verbose mode
-    if (opts.verbose && !opts.silent) {
-      fetchOptions.log = new Log({
+    tor = new TorClient({
+      snowflakeUrl,
+      log: new Log({
         rawLog: (level, ...args) => {
-          stderr.write(`[${level.toUpperCase()}] ${args.join(' ')}\n`);
+          if (opts.verbose && !opts.silent) {
+            stderr.write(`[${level.toUpperCase()}] ${args.join(' ')}\n`);
+          }
         },
-      });
-    } else {
-      fetchOptions.log = new Log({ rawLog: () => {} });
-    }
+      }),
+    });
 
-    res = await TorClient.fetch(snowflakeUrl, opts.url, fetchOptions);
+    res = await tor.fetch(opts.url, fetchOptions);
   } catch (e: unknown) {
     const message = getErrorDetails(e);
 
@@ -309,6 +304,8 @@ async function main() {
     }
 
     die(`Request failed: ${message}`, 7);
+  } finally {
+    tor?.close();
   }
 
   const headerBlock = (() => {
