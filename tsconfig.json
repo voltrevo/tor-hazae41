@@ -18,10 +18,7 @@
     "sourceMap": true,
     "outDir": "./dist",
     "rootDir": ".",
-    "types": ["node", "vite/client"],
-    "paths": {
-      "tor-js/storage": ["./src/storage/index-node.ts"]
-    }
+    "types": ["node", "vite/client"]
   },
   "exclude": ["node_modules", "dist", "index.html", "public"]
 }
