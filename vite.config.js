@@ -5,6 +5,7 @@ export default defineConfig(({ command }) => ({
   base: command === 'build' ? '/tor-js/' : '/',
 
   server: {
+    port: process.env.VITE_PORT ? parseInt(process.env.VITE_PORT) : 5173,
     open: !process.env.TEST_BROWSER,
   },
 

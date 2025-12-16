@@ -5,7 +5,12 @@ interface WindowWithTests extends Window {
   __tests_failed?: boolean;
 }
 
-const baseURL = 'http://localhost:3000';
+const port = process.env.TEST_BROWSER_PORT;
+if (!port) {
+  console.error('TEST_BROWSER_PORT environment variable is required');
+  process.exit(1);
+}
+const baseURL = `http://localhost:${port}`;
 
 async function runBrowserTests() {
   let browser: Browser | undefined;
@@ -29,7 +34,7 @@ async function runBrowserTests() {
     console.log('Waiting for tests to complete...');
     await page.waitForFunction(
       () => !!(window as WindowWithTests).__tests_completed,
-      { timeout: 6 * 60 * 1000 } // 6 minutes timeout
+      { timeout: 20 * 1000 } // 20 seconds timeout
     );
 
     const completed = await page.evaluate(() => ({
