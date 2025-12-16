@@ -295,6 +295,8 @@ async function main() {
           stderr.write(`[${level.toUpperCase()}] ${args.join(' ')}\n`);
         },
       });
+    } else {
+      fetchOptions.log = new Log({ rawLog: () => {} });
     }
 
     res = await TorClient.fetch(snowflakeUrl, opts.url, fetchOptions);
@@ -338,7 +340,7 @@ async function main() {
 
     // Force flush of stdout buffer to ensure all data is written
     // This is especially important for binary data or when piping output
-    stdout.write('');
+    stdout.write('\n');
   }
 
   if (opts.verbose) {
@@ -350,7 +352,9 @@ async function main() {
 
   // FIXME: This shouldn't be needed, but nodejs is not exiting otherwise due
   // to things not being cleaned up in TorClient.
-  process.exit(0);
+  setTimeout(() => {
+    process.exit(0);
+  });
 }
 
 main().catch(e => {
