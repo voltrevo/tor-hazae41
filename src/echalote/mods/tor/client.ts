@@ -1,4 +1,4 @@
-import { AesJsAes128Ctr } from '../../../TorClient/AesJsAes128Ctr';
+import { WebCryptoAes128Ctr } from '../../../TorClient/WebCryptoAes128Ctr';
 import { Opaque, Readable, Writable } from '@hazae41/binary';
 import { Bitset } from '@hazae41/bitset';
 import { Bytes, type Uint8Array } from '@hazae41/bytes';
@@ -653,8 +653,14 @@ export class SecretTorClientDuplex {
     await forwardDigest.updateOrThrow(result.forwardDigest);
     await backwardDigest.updateOrThrow(result.backwardDigest);
 
-    const forwardKey = new AesJsAes128Ctr(result.forwardKey);
-    const backwardKey = new AesJsAes128Ctr(result.backwardKey);
+    const forwardKey = new WebCryptoAes128Ctr(
+      result.forwardKey,
+      new Uint8Array(16)
+    );
+    const backwardKey = new WebCryptoAes128Ctr(
+      result.backwardKey,
+      new Uint8Array(16)
+    );
 
     const target = new Target(
       this.#state.guard.identity,

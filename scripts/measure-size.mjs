@@ -79,7 +79,7 @@ export default {
         cwd: projectRoot,
         stdio: 'pipe',
       });
-    } catch (error) {
+    } catch {
       // Rollup may exit with non-zero even on success due to warnings
       // Check if file was created
       if (!existsSync(join(projectRoot, bundleOutput))) {

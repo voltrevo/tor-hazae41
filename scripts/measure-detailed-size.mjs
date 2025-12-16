@@ -108,7 +108,7 @@ export default {
       cwd: projectRoot,
       stdio: 'pipe',
     });
-  } catch (error) {
+  } catch {
     // Ignore - this is expected to fail for excluded deps
   }
 
