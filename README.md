@@ -49,7 +49,7 @@ npm run dev
 import { TorClient, Log } from 'tor-js';
 
 const tor = new TorClient({
-  snowflakeUrl: 'wss://snowflake.torproject.net/',
+  snowflakeUrl: 'wss://snowflake.pse.dev/',
   log: new Log().child('Tor'),
 });
 
