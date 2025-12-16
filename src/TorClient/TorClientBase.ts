@@ -9,6 +9,7 @@ import { getErrorDetails } from '../utils/getErrorDetails';
 import { Log } from '../Log';
 import { App, ComponentMap } from './App';
 import { IStorage } from '../storage';
+import { experimentalWarning } from './experimentalWarning';
 
 /**
  * Configuration options for the TorClient.
@@ -43,6 +44,7 @@ export class TorClientBase {
   private circuitManager: CircuitManager;
 
   constructor(options: TorClientOptions & { app: App }) {
+    experimentalWarning();
     this.app = options.app;
     this.log = this.app.get('Log').child('TorClient');
     this.circuitManager = this.app.get('CircuitManager');
