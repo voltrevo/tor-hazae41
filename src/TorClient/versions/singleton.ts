@@ -1,6 +1,7 @@
 import { Log } from '../../Log';
 import { assert } from '../../utils/assert';
 import { TorClient, TorClientOptions } from './noStaticCerts';
+import * as storage from '../../storage';
 
 let client: TorClient | undefined;
 
@@ -12,7 +13,11 @@ let config: TorClientOptions = {
   log: new Log({ rawLog: () => {} }),
 };
 
-export const tor = {
+const tor = {
+  /**
+   * Same as standard fetch, but powered by tor.
+   * https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API/Using_Fetch
+   */
   async fetch(url: string, options?: RequestInit) {
     if (!client) {
       this.start();
@@ -23,6 +28,11 @@ export const tor = {
 
     return res;
   },
+
+  /**
+   * Configures the TorClient singleton.
+   * Closes and restarts if already started.
+   */
   configure(customConfig: TorClientOptions) {
     config = customConfig;
 
@@ -32,6 +42,13 @@ export const tor = {
       this.start();
     }
   },
+
+  /**
+   * Actively start the TorClient singleton.
+   * This is optional - it's automatic if you just call fetch.
+   * This library doesn't do anything until it is used, but it's beneficial to
+   * call this early if you know you're going to use it.
+   */
   start() {
     if (client) {
       return;
@@ -40,3 +57,5 @@ export const tor = {
     client = new TorClient(config);
   },
 };
+
+export { tor, Log, storage };
