@@ -1,7 +1,7 @@
 import { test } from '@hazae41/phobos';
 import { assert } from '../utils/assert';
 import { CertificateManager } from './CertificateManager';
-import { createMemoryStorage } from '../storage';
+import { MemoryStorage } from '../storage';
 import { Log } from '../Log';
 import { Circuit } from '../echalote';
 import { Echalote } from '../echalote';
@@ -41,7 +41,7 @@ function createApp() {
   const clock = new SystemClock(); // FIXME: should use virtual clock
   app.set('Clock', clock);
   app.set('Log', new Log({ clock, rawLog: () => {} }));
-  app.set('Storage', createMemoryStorage());
+  app.set('Storage', new MemoryStorage());
 
   return app;
 }

@@ -1,7 +1,7 @@
 import { test } from '@hazae41/phobos';
 import { assert } from '../../../utils/assert.js';
 import { CCADB } from './CCADB.js';
-import { createMemoryStorage } from '../../../storage/index.js';
+import { MemoryStorage } from '../../../storage/index.js';
 import { Log } from '../../../Log/index.js';
 import { App } from '../../../TorClient/App.js';
 import { VirtualClock } from '../../../clock/index.js';
@@ -14,7 +14,7 @@ function createApp(fetchCertsOverride?: () => Promise<string[]>) {
   const clock = new VirtualClock();
   app.set('Clock', clock);
   app.set('Log', new Log({ clock, rawLog: () => {} }));
-  app.set('Storage', createMemoryStorage());
+  app.set('Storage', new MemoryStorage());
   // Mock fetchCerts - returns empty array by default
   app.set('fetchCerts', fetchCertsOverride || (async () => []));
   return app;

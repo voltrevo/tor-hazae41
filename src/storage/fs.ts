@@ -89,20 +89,37 @@ function unmangleKey(filename: string): string {
   return result;
 }
 
-export function createFsStorage(dirPath: string, tmp = false): IStorage {
-  let initialized = false;
+export class FsStorage implements IStorage {
+  private dirPath: string;
+  private useTmp: boolean;
+  private initialized = false;
 
-  async function ensureDir(): Promise<void> {
-    if (!initialized) {
+  constructor(dirPath: string, useTmp: boolean = false) {
+    this.dirPath = dirPath;
+    this.useTmp = useTmp;
+  }
+
+  /**
+   * Create FsStorage in system temp directory.
+   * The path will be /tmp/{name}
+   */
+  static tmp(name: string): FsStorage {
+    return new FsStorage(name, true);
+  }
+
+  private async ensureDir(): Promise<void> {
+    if (!this.initialized) {
       const { fs } = await getNodeDeps();
-      await fs.mkdir(await getPath(), { recursive: true });
-      initialized = true;
+      await fs.mkdir(await this.getPath(), { recursive: true });
+      this.initialized = true;
     }
   }
 
-  async function getPath(key?: string) {
+  private async getPath(key?: string) {
     const { os, path } = await getNodeDeps();
-    const fullDirPath = tmp ? path.join(os.tmpdir(), dirPath) : dirPath;
+    const fullDirPath = this.useTmp
+      ? path.join(os.tmpdir(), this.dirPath)
+      : this.dirPath;
 
     if (key === undefined) {
       return fullDirPath;
@@ -111,86 +128,84 @@ export function createFsStorage(dirPath: string, tmp = false): IStorage {
     return path.join(fullDirPath, mangleKey(key));
   }
 
-  return {
-    async read(key: string): Promise<Uint8Array> {
-      const { fs } = await getNodeDeps();
-      await ensureDir();
-      try {
-        const data = await fs.readFile(await getPath(key));
-        return new Uint8Array(data);
-      } catch (error) {
-        if (isNodeFsError(error) && error.code === 'ENOENT') {
-          throw new Error(`Key not found: ${key}`);
-        }
-        throw error;
+  async read(key: string): Promise<Uint8Array> {
+    const { fs } = await getNodeDeps();
+    await this.ensureDir();
+    try {
+      const data = await fs.readFile(await this.getPath(key));
+      return new Uint8Array(data);
+    } catch (error) {
+      if (isNodeFsError(error) && error.code === 'ENOENT') {
+        throw new Error(`Key not found: ${key}`);
       }
-    },
+      throw error;
+    }
+  }
 
-    async write(key: string, value: Uint8Array): Promise<void> {
-      const { fs } = await getNodeDeps();
-      await ensureDir();
-      await fs.writeFile(await getPath(key), value);
-    },
+  async write(key: string, value: Uint8Array): Promise<void> {
+    const { fs } = await getNodeDeps();
+    await this.ensureDir();
+    await fs.writeFile(await this.getPath(key), value);
+  }
 
-    async list(keyPrefix: string): Promise<string[]> {
-      const { fs } = await getNodeDeps();
-      await ensureDir();
-      try {
-        const files = await fs.readdir(await getPath());
-        const keys = files
-          .map(unmangleKey)
-          .filter(key => key.startsWith(keyPrefix))
-          .sort();
-        return keys;
-      } catch (error) {
-        if (isNodeFsError(error) && error.code === 'ENOENT') {
-          return [];
-        }
-        throw error;
+  async list(keyPrefix: string): Promise<string[]> {
+    const { fs } = await getNodeDeps();
+    await this.ensureDir();
+    try {
+      const files = await fs.readdir(await this.getPath());
+      const keys = files
+        .map(unmangleKey)
+        .filter(key => key.startsWith(keyPrefix))
+        .sort();
+      return keys;
+    } catch (error) {
+      if (isNodeFsError(error) && error.code === 'ENOENT') {
+        return [];
       }
-    },
+      throw error;
+    }
+  }
 
-    async remove(key: string): Promise<void> {
-      const { fs } = await getNodeDeps();
-      await ensureDir();
-      try {
-        await fs.unlink(await getPath(key));
-      } catch (error) {
-        if (isNodeFsError(error) && error.code === 'ENOENT') {
-          // Key doesn't exist, silently succeed
-          return;
-        }
-        throw error;
+  async remove(key: string): Promise<void> {
+    const { fs } = await getNodeDeps();
+    await this.ensureDir();
+    try {
+      await fs.unlink(await this.getPath(key));
+    } catch (error) {
+      if (isNodeFsError(error) && error.code === 'ENOENT') {
+        // Key doesn't exist, silently succeed
+        return;
       }
-    },
+      throw error;
+    }
+  }
 
-    async removeAll(keyPrefix: string = ''): Promise<void> {
-      const { fs } = await getNodeDeps();
-      await ensureDir();
-      try {
-        const files = await fs.readdir(await getPath());
-        const keysToRemove = files
-          .map(unmangleKey)
-          .filter(key => key.startsWith(keyPrefix));
+  async removeAll(keyPrefix: string = ''): Promise<void> {
+    const { fs } = await getNodeDeps();
+    await this.ensureDir();
+    try {
+      const files = await fs.readdir(await this.getPath());
+      const keysToRemove = files
+        .map(unmangleKey)
+        .filter(key => key.startsWith(keyPrefix));
 
-        await Promise.all(
-          keysToRemove.map(async key =>
-            fs.unlink(await getPath(key)).catch(error => {
-              // Ignore ENOENT errors (file already deleted)
-              if (isNodeFsError(error) && error.code === 'ENOENT') {
-                return;
-              }
-              throw error;
-            })
-          )
-        );
-      } catch (error) {
-        if (isNodeFsError(error) && error.code === 'ENOENT') {
-          // Directory doesn't exist, nothing to remove
-          return;
-        }
-        throw error;
+      await Promise.all(
+        keysToRemove.map(async key =>
+          fs.unlink(await this.getPath(key)).catch(error => {
+            // Ignore ENOENT errors (file already deleted)
+            if (isNodeFsError(error) && error.code === 'ENOENT') {
+              return;
+            }
+            throw error;
+          })
+        )
+      );
+    } catch (error) {
+      if (isNodeFsError(error) && error.code === 'ENOENT') {
+        // Directory doesn't exist, nothing to remove
+        return;
       }
-    },
-  };
+      throw error;
+    }
+  }
 }

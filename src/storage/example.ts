@@ -1,10 +1,10 @@
 // Example usage of the storage API
-import { createMemoryStorage } from './memory.js';
+import { MemoryStorage } from './memory.js';
 import { createAutoStorage } from './index.js';
 
 async function testMemoryStorage() {
   console.log('Testing memory storage...');
-  const storage = createMemoryStorage();
+  const storage = new MemoryStorage();
 
   // Write some data
   await storage.write('user/123', new Uint8Array([1, 2, 3, 4, 5]));

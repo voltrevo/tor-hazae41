@@ -7,7 +7,7 @@ import { ConsensusManager } from './ConsensusManager';
 import { Log } from '../Log';
 import { SystemClock } from '../clock';
 import { App } from './App';
-import { createMemoryStorage } from '../storage';
+import { MemoryStorage } from '../storage';
 import { CertificateManager } from './CertificateManager';
 import { staticCerts } from '../cadenas/mods/ccadb/staticCerts';
 import { CCADB } from '../cadenas/mods/ccadb/CCADB';
@@ -17,7 +17,7 @@ function createApp() {
   const app = new App();
   app.set('Log', new Log());
   app.set('Clock', new SystemClock());
-  app.set('Storage', createMemoryStorage());
+  app.set('Storage', new MemoryStorage());
   app.set('CertificateManager', new CertificateManager({ app, maxCached: 20 }));
   app.set(
     'CircuitManager',

@@ -1,11 +1,11 @@
 export type { IStorage } from './types.js';
-export { createMemoryStorage } from './memory.js';
-export { createIndexedDBStorage } from './indexeddb.js';
-export { createFsStorage } from './fs.js';
+export { MemoryStorage } from './memory.js';
+export { IndexedDBStorage } from './indexeddb.js';
+export { FsStorage } from './fs.js';
 
 import type { IStorage } from './types.js';
-import { createIndexedDBStorage } from './indexeddb.js';
-import { createFsStorage } from './fs.js';
+import { IndexedDBStorage } from './indexeddb.js';
+import { FsStorage } from './fs.js';
 
 /**
  * Detects if the runtime environment is a browser.
@@ -36,11 +36,11 @@ function isNodeEnvironment(): boolean {
  */
 export function createAutoStorage(name: string): IStorage {
   if (isBrowserEnvironment()) {
-    return createIndexedDBStorage(name);
+    return new IndexedDBStorage(name);
   }
 
   if (isNodeEnvironment()) {
-    return createFsStorage(name, true);
+    return FsStorage.tmp(name);
   }
 
   throw new Error(

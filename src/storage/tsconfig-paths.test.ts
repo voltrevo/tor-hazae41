@@ -1,14 +1,10 @@
 import { test } from '@hazae41/phobos';
 import { assert } from '../utils/assert';
 import { rmSync } from 'fs';
-import {
-  createAutoStorage,
-  createMemoryStorage,
-  type IStorage,
-} from './index.js';
+import { createAutoStorage, MemoryStorage, type IStorage } from './index.js';
 
 test('tsconfig path mapping: memory storage', async () => {
-  const memory: IStorage = createMemoryStorage();
+  const memory: IStorage = new MemoryStorage();
 
   await memory.write('test', new Uint8Array([1, 2, 3]));
   const data = await memory.read('test');

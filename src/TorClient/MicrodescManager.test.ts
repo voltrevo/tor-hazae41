@@ -1,7 +1,7 @@
 import { test } from '@hazae41/phobos';
 import { assert } from '../utils/assert';
 import { MicrodescManager } from './MicrodescManager';
-import { createMemoryStorage } from '../storage';
+import { MemoryStorage } from '../storage';
 import { Log } from '../Log';
 import { Echalote } from '../echalote';
 import { App } from './App';
@@ -40,7 +40,7 @@ function createApp() {
   const clock = new VirtualClock();
   app.set('Clock', clock);
   app.set('Log', new Log({ clock, rawLog: () => {} }));
-  app.set('Storage', createMemoryStorage());
+  app.set('Storage', new MemoryStorage());
 
   return app;
 }

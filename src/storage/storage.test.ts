@@ -1,11 +1,7 @@
 import { test } from '@hazae41/phobos';
 import { assert } from '../utils/assert';
 import { rmSync } from 'fs';
-import {
-  createAutoStorage,
-  createFsStorage,
-  createMemoryStorage,
-} from './index.js';
+import { createAutoStorage, FsStorage, MemoryStorage } from './index.js';
 
 // Mangle/Unmangle Tests (for FS storage internal functions)
 test('FS Storage: list with colon prefix (consensus:)', async () => {
@@ -17,7 +13,7 @@ test('FS Storage: list with colon prefix (consensus:)', async () => {
     //
   }
 
-  const storage = createFsStorage(testDir);
+  const storage = new FsStorage(testDir);
 
   // Write keys with colons (like consensus:TIMESTAMP)
   await storage.write(
@@ -68,7 +64,7 @@ test('FS Storage: mangle/unmangle round-trip with special chars', async () => {
     //
   }
 
-  const storage = createFsStorage(testDir);
+  const storage = new FsStorage(testDir);
 
   const testKeys = [
     'simple',
@@ -120,7 +116,7 @@ test('FS Storage: unmangle handles consecutive hex-like sequences', async () => 
     //
   }
 
-  const storage = createFsStorage(testDir);
+  const storage = new FsStorage(testDir);
 
   // These keys have special chars that when mangled, create consecutive _XX patterns
   // E.g., "a:-" becomes "a_3a_2d"
@@ -155,7 +151,7 @@ test('FS Storage: unmangle handles consecutive hex-like sequences', async () => 
 
 // Memory Storage Tests
 test('Memory Storage: write and read', async () => {
-  const storage = createMemoryStorage();
+  const storage = new MemoryStorage();
 
   await storage.write('test1', new Uint8Array([1, 2, 3]));
   const data = await storage.read('test1');
@@ -165,7 +161,7 @@ test('Memory Storage: write and read', async () => {
 });
 
 test('Memory Storage: list with prefix', async () => {
-  const storage = createMemoryStorage();
+  const storage = new MemoryStorage();
 
   await storage.write('user/123', new Uint8Array([4, 5]));
   await storage.write('user/456', new Uint8Array([6, 7]));
@@ -181,7 +177,7 @@ test('Memory Storage: list with prefix', async () => {
 });
 
 test('Memory Storage: error on missing key', async () => {
-  const storage = createMemoryStorage();
+  const storage = new MemoryStorage();
 
   try {
     await storage.read('nonexistent');
@@ -195,7 +191,7 @@ test('Memory Storage: error on missing key', async () => {
 });
 
 test('Memory Storage: remove() deletes key', async () => {
-  const storage = createMemoryStorage();
+  const storage = new MemoryStorage();
 
   await storage.write('a', new Uint8Array([1]));
   await storage.write('b', new Uint8Array([2]));
@@ -209,7 +205,7 @@ test('Memory Storage: remove() deletes key', async () => {
 });
 
 test('Memory Storage: removeAll(prefix) removes matching keys', async () => {
-  const storage = createMemoryStorage();
+  const storage = new MemoryStorage();
 
   await storage.write('user/1', new Uint8Array([4]));
   await storage.write('user/2', new Uint8Array([5]));
@@ -226,7 +222,7 @@ test('Memory Storage: removeAll(prefix) removes matching keys', async () => {
 });
 
 test('Memory Storage: removeAll() removes all keys', async () => {
-  const storage = createMemoryStorage();
+  const storage = new MemoryStorage();
 
   await storage.write('a', new Uint8Array([1]));
   await storage.write('b', new Uint8Array([2]));
@@ -247,7 +243,7 @@ test('FS Storage: write and read', async () => {
     //
   }
 
-  const storage = createFsStorage(testDir);
+  const storage = new FsStorage(testDir);
 
   await storage.write('simple', new Uint8Array([1]));
   const data = await storage.read('simple');
@@ -266,7 +262,7 @@ test('FS Storage: special characters in keys', async () => {
     //
   }
 
-  const storage = createFsStorage(testDir);
+  const storage = new FsStorage(testDir);
 
   await storage.write('with/slash', new Uint8Array([2]));
   await storage.write('with:colon', new Uint8Array([3]));
@@ -292,7 +288,7 @@ test('FS Storage: list with prefix', async () => {
     //
   }
 
-  const storage = createFsStorage(testDir);
+  const storage = new FsStorage(testDir);
 
   await storage.write('user/a', new Uint8Array([6]));
   await storage.write('user/b', new Uint8Array([7]));
@@ -315,7 +311,7 @@ test('FS Storage: error on missing key', async () => {
     //
   }
 
-  const storage = createFsStorage(testDir);
+  const storage = new FsStorage(testDir);
 
   try {
     await storage.read('nonexistent');
@@ -339,7 +335,7 @@ test('FS Storage: remove() deletes file', async () => {
     //
   }
 
-  const storage = createFsStorage(testDir);
+  const storage = new FsStorage(testDir);
 
   await storage.write('x', new Uint8Array([1]));
   await storage.write('y', new Uint8Array([2]));
@@ -363,7 +359,7 @@ test('FS Storage: removeAll(prefix) removes matching files', async () => {
     //
   }
 
-  const storage = createFsStorage(testDir);
+  const storage = new FsStorage(testDir);
 
   await storage.write('file/1', new Uint8Array([4]));
   await storage.write('file/2', new Uint8Array([5]));
@@ -390,7 +386,7 @@ test('FS Storage: removeAll() removes all files', async () => {
     //
   }
 
-  const storage = createFsStorage(testDir);
+  const storage = new FsStorage(testDir);
 
   await storage.write('a', new Uint8Array([1]));
   await storage.write('b', new Uint8Array([2]));
@@ -412,7 +408,7 @@ test('FS Storage: remove() on non-existent key succeeds silently', async () => {
     //
   }
 
-  const storage = createFsStorage(testDir);
+  const storage = new FsStorage(testDir);
 
   await storage.remove('nonexistent');
 
@@ -428,7 +424,7 @@ test('FS Storage: removeAll() on empty directory succeeds', async () => {
     //
   }
 
-  const storage = createFsStorage(testDir);
+  const storage = new FsStorage(testDir);
 
   await storage.removeAll();
 
@@ -468,7 +464,7 @@ test('Key Mangling: alphanumeric keys unchanged', async () => {
     //
   }
 
-  const storage = createFsStorage(testDir);
+  const storage = new FsStorage(testDir);
 
   const alphanumericKeys = ['abc', 'ABC', '123', 'aBc123', 'testKey'];
 
@@ -494,7 +490,7 @@ test('Key Mangling: special keys preserved', async () => {
     //
   }
 
-  const storage = createFsStorage(testDir);
+  const storage = new FsStorage(testDir);
 
   const specialKeys = [
     'with/slash',

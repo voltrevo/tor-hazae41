@@ -24,7 +24,7 @@ interface IStorage {
 
 ```typescript
 import {
-  createMemoryStorage,
+  MemoryStorage,
   createAutoStorage,
   type IStorage,
 } from 'tor-hazae41/storage';
@@ -37,7 +37,7 @@ import {
 Available in all environments:
 
 ```typescript
-const storage = createMemoryStorage();
+const storage = new MemoryStorage();
 
 await storage.write('key1', new Uint8Array([1, 2, 3]));
 const data = await storage.read('key1');
@@ -73,9 +73,9 @@ const userKeys = await storage.list('user/'); // List all keys starting with 'us
 Only available in browser environments:
 
 ```typescript
-import { createIndexedDBStorage } from 'tor-hazae41/storage';
+import { IndexedDBStorage } from 'tor-hazae41/storage';
 
-const storage = createIndexedDBStorage('my-database');
+const storage = new IndexedDBStorage('my-database');
 ```
 
 ### Node.js-Specific (File System)
@@ -83,9 +83,13 @@ const storage = createIndexedDBStorage('my-database');
 Only available in Node.js environments:
 
 ```typescript
-import { createFsStorage } from 'tor-hazae41/storage';
+import { FsStorage } from 'tor-hazae41/storage';
 
-const storage = createFsStorage('/path/to/storage');
+// Direct path
+const storage = new FsStorage('/path/to/storage');
+
+// Or use temp directory
+const storage = FsStorage.tmp('app-name');
 ```
 
 ## File System Implementation Details
