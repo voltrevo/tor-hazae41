@@ -27,10 +27,10 @@ import {
   MemoryStorage,
   createAutoStorage,
   type IStorage,
-} from 'tor-hazae41/storage';
+} from 'tor-js/storage';
 ```
 
-**Development Note**: When developing within this repository, the `tsconfig.json` has a path mapping that resolves `tor-hazae41/storage` to `./src/storage/index-node.ts` for Node.js environments. This allows you to use the same import path during development that consumers will use. The build process uses the conditional exports in `package.json` instead.
+**Development Note**: When developing within this repository, the `tsconfig.json` has a path mapping that resolves `tor-js/storage` to `./src/storage/index-node.ts` for Node.js environments. This allows you to use the same import path during development that consumers will use. The build process uses the conditional exports in `package.json` instead.
 
 ### Memory Storage
 
@@ -73,7 +73,7 @@ const userKeys = await storage.list('user/'); // List all keys starting with 'us
 Only available in browser environments:
 
 ```typescript
-import { IndexedDBStorage } from 'tor-hazae41/storage';
+import { IndexedDBStorage } from 'tor-js/storage';
 
 const storage = new IndexedDBStorage('my-database');
 ```
@@ -83,7 +83,7 @@ const storage = new IndexedDBStorage('my-database');
 Only available in Node.js environments:
 
 ```typescript
-import { FsStorage } from 'tor-hazae41/storage';
+import { FsStorage } from 'tor-js/storage';
 
 // Direct path
 const storage = new FsStorage('/path/to/storage');

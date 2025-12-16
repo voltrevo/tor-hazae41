@@ -18,7 +18,7 @@ Once you push your code to the `main` branch, the GitHub Action will automatical
 
 - Build your Vite project
 - Deploy it to GitHub Pages
-- Make it available at `https://yourusername.github.io/tor-hazae41/`
+- Make it available at `https://yourusername.github.io/tor-js/`
 
 ## 🔧 What Was Configured
 
@@ -32,7 +32,7 @@ Once you push your code to the `main` branch, the GitHub Action will automatical
 
 ### Vite Configuration (`vite.config.js`)
 
-- Added proper base path for GitHub Pages (`/tor-hazae41/`)
+- Added proper base path for GitHub Pages (`/tor-js/`)
 - Configured build output to `dist` directory
 - Disabled sourcemaps for smaller build size
 - Maintained all existing polyfills and optimizations
@@ -77,8 +77,9 @@ This will serve the built files locally, simulating the GitHub Pages environment
    - Check for any errors in the logs
 
 3. **Access your site**
-   - Once deployed, visit: `https://yourusername.github.io/tor-hazae41/`
-   - Replace `yourusername` with your actual GitHub username
+   - Once deployed, visit: `https://yourusername.github.io/tor-js/`
+
+- Replace `yourusername` with your actual GitHub username
 
 ## 🔍 Troubleshooting
 

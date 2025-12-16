@@ -1,8 +1,8 @@
-# tor-hazae41
+# tor-js
 
 Embedded Tor in the Browser based on [@hazae41/echalote](https://github.com/hazae41/echalote).
 
-**🎯 Try the Live Demo:** https://voltrevo.github.io/tor-hazae41/
+**🎯 Try the Live Demo:** https://voltrevo.github.io/tor-js/
 
 ## ⚠️ Use at Your Own Risk
 
@@ -21,7 +21,7 @@ The underlying Tor implementation is experimental software.
 ## Installation
 
 ```bash
-npm install tor-hazae41
+npm install tor-js
 ```
 
 ## Demo Development
@@ -46,7 +46,7 @@ Open `http://localhost:3000` to access the interactive demo with:
 ### Basic Example
 
 ```typescript
-import { TorClient } from 'tor-hazae41';
+import { TorClient } from 'tor-js';
 
 const tor = new TorClient({
   snowflakeUrl: 'wss://snowflake.torproject.net/',
@@ -63,7 +63,7 @@ tor.close();
 ### One-time Requests (Maximum Privacy)
 
 ```typescript
-import { TorClient } from 'tor-hazae41';
+import { TorClient } from 'tor-js';
 
 const response = await TorClient.fetch(
   'wss://snowflake.torproject.net/',
@@ -131,7 +131,7 @@ Makes a one-time request with maximum isolation.
 ### Persistent Client (Recommended for Multiple Requests)
 
 ```typescript
-import { TorClient } from 'tor-hazae41';
+import { TorClient } from 'tor-js';
 
 const tor = new TorClient({
   snowflakeUrl: 'wss://snowflake.torproject.net/',
@@ -149,7 +149,7 @@ tor.close();
 ### Isolated Requests (Maximum Privacy)
 
 ```typescript
-import { TorClient } from 'tor-hazae41';
+import { TorClient } from 'tor-js';
 
 // Each request uses a completely separate circuit
 const response1 = await TorClient.fetch(

@@ -7,7 +7,7 @@ A hierarchical logging system with timestamps relative to root logger creation.
 ### Basic Logging
 
 ```typescript
-import { Log } from '@hazae41/tor-hazae41/Log';
+import { Log } from 'tor-js';
 
 const log = new Log();
 log.debug('Starting application'); // [00.000] Starting application
@@ -49,8 +49,8 @@ Timestamps are relative to root logger creation and automatically format based o
 For testing, pass a custom clock implementation:
 
 ```typescript
-import { Log } from '@hazae41/tor-hazae41/Log';
-import { VirtualClock } from '@hazae41/tor-hazae41/clock';
+import { Log } from 'tor-js';
+import { VirtualClock } from 'tor-js/clock';
 
 const clock = new VirtualClock();
 const log = new Log({ clock });

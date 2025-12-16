@@ -1,5 +1,5 @@
 {
-  "name": "tor-hazae41",
+  "name": "tor-js",
   "version": "0.2.6",
   "description": "A TypeScript Tor client library for making anonymous HTTP requests through the Tor network via Snowflake bridges",
   "main": "dist/index.js",
@@ -50,7 +50,7 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/voltrevo/tor-hazae41.git"
+    "url": "https://github.com/voltrevo/tor-js.git"
   },
   "scripts": {
     "build": "tsup && tsc --emitDeclarationOnly --declarationMap --outDir dist",

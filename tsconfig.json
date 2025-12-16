@@ -20,7 +20,7 @@
     "rootDir": ".",
     "types": ["node", "vite/client"],
     "paths": {
-      "tor-hazae41/storage": ["./src/storage/index-node.ts"]
+      "tor-js/storage": ["./src/storage/index-node.ts"]
     }
   },
   "exclude": ["node_modules", "dist", "index.html", "public"]

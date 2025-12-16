@@ -2,7 +2,7 @@ import { defineConfig } from 'vite';
 
 export default defineConfig(({ command }) => ({
   // Base path for GitHub Pages deployment
-  base: command === 'build' ? '/tor-hazae41/' : '/',
+  base: command === 'build' ? '/tor-js/' : '/',
 
   server: {
     open: !process.env.TEST_BROWSER,
@@ -32,7 +32,7 @@ export default defineConfig(({ command }) => ({
     alias: {
       buffer: 'buffer',
       events: 'events',
-      'tor-hazae41/storage': '/src/storage/index-browser.ts',
+      'tor-js/storage': '/src/storage/index-browser.ts',
     },
   },
 }));
