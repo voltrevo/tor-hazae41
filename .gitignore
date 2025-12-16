@@ -52,4 +52,4 @@ torspec
 screenshots
 .swp
 
-bundled-builds
+dist-singleton

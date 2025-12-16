@@ -2,9 +2,9 @@ import { nodeResolve } from '@rollup/plugin-node-resolve';
 import commonjs from '@rollup/plugin-commonjs';
 
 export default {
-  input: 'dist/TorClient/versions/noStaticCerts.mjs',
+  input: 'dist/TorClient/versions/singleton.mjs',
   output: {
-    file: 'bundled-builds/noStaticCerts/TorClient.mjs',
+    file: 'dist-singleton/tor.mjs',
     format: 'es',
     sourcemap: false,
   },
@@ -13,9 +13,11 @@ export default {
     'fs/promises',
     'path',
     'fs',
+    'os',
     'node:fs',
     'node:fs/promises',
     'node:path',
+    'node:os',
   ],
   plugins: [
     nodeResolve({

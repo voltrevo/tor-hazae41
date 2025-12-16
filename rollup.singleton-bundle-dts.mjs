@@ -1,9 +1,9 @@
 import dts from 'rollup-plugin-dts';
 
 export default {
-  input: 'dist/TorClient/versions/noStaticCerts.d.ts',
+  input: 'dist/TorClient/versions/singleton.d.ts',
   output: {
-    file: 'bundled-builds/noStaticCerts/TorClient.d.ts',
+    file: 'dist-singleton/tor.d.ts',
     format: 'es',
   },
   plugins: [dts()],

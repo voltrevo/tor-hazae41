@@ -365,7 +365,7 @@ async function openTorClient(): Promise<void> {
       connectionTimeout: 15000,
       circuitTimeout: 90000,
       circuitBuffer: 2, // Maintain 2 circuits in buffer
-      log: log.child('tor'),
+      log: log.child('Tor'),
     });
 
     // Start status updates

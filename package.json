@@ -44,7 +44,7 @@
   },
   "scripts": {
     "build": "tsup && tsc --emitDeclarationOnly --declarationMap --outDir dist",
-    "build:bundled": "rm -rf bundled-builds && rollup -c rollup.noStaticCerts-bundle.mjs && rollup -c rollup.noStaticCerts-bundle-dts.mjs",
+    "build:singleton": "rm -rf dist-singleton && rollup -c rollup.singleton-bundle.mjs && rollup -c rollup.singleton-bundle-dts.mjs",
     "build:demo": "vite build",
     "dev": "vite",
     "dev:lib": "tsup --watch",

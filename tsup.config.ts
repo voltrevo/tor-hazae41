@@ -18,6 +18,7 @@ export default defineConfig([
     entry: [
       'src/TorClient/versions/standard.ts',
       'src/TorClient/versions/noStaticCerts.ts',
+      'src/TorClient/versions/singleton.ts',
     ],
     format: ['esm', 'cjs'],
     dts: true,

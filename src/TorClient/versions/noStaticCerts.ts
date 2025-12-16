@@ -66,7 +66,7 @@ export class TorClient extends TorClientBase {
     const clock = new SystemClock();
     app.set('Clock', clock);
 
-    app.set('Log', options.log ?? new Log({ clock }));
+    app.set('Log', options.log ?? new Log({ clock }).child('Tor'));
     app.set('Storage', createAutoStorage('tor-hazae41-cache'));
 
     app.set(
