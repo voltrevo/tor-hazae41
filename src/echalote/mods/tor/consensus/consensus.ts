@@ -15,6 +15,7 @@ import {
   parseDiffOrThrow,
   applyDiffOrThrow,
 } from './diff.js';
+import { Log } from '../../../../Log';
 
 export interface Consensus {
   readonly type: string;
@@ -100,6 +101,7 @@ export namespace Consensus {
    * const consensus2 = await Consensus.fetchOrThrow(circuit, [consensus1]);
    */
   export async function fetchOrThrow(
+    log: Log,
     circuit: Circuit,
     known: Consensus[] = [],
     signal = new AbortController().signal,
@@ -121,7 +123,7 @@ export namespace Consensus {
     if (knownHashes.length > 0) {
       // Send X-Or-Diff-From-Consensus header with hex-encoded hashes
       headers['X-Or-Diff-From-Consensus'] = knownHashes.join(', ');
-      console.log(
+      log.info(
         `[CONSENSUS DIFF] Requesting diff from ${knownHashes.length} known consensus(es): ${knownHashes.join(', ')}`
       );
     }
@@ -135,7 +137,7 @@ export namespace Consensus {
 
     // Handle 304 Not Modified - the known consensus is still current
     if (response.status === 304) {
-      console.warn(
+      log.info(
         'Received 304 Not Modified - the known consensus is still current'
       );
       assert(
@@ -169,7 +171,7 @@ export namespace Consensus {
       // Parse and apply the diff
       const diff = parseDiffOrThrow(consensusTxt);
 
-      console.log(
+      log.info(
         `[CONSENSUS DIFF] Received diff with ${diff.commands.length} commands`
       );
 
@@ -191,7 +193,7 @@ export namespace Consensus {
         `No matching base consensus found for diff (hash: ${diff.fromHash})`
       );
 
-      console.log(
+      log.info(
         `[CONSENSUS DIFF] Applying diff from ${diff.fromHash.substring(0, 8)}... to ${diff.toHash.substring(0, 8)}...`
       );
 
@@ -206,18 +208,19 @@ export namespace Consensus {
         `Diff result hash mismatch: expected ${diff.toHash}, got ${resultHash}`
       );
 
-      console.log(
+      log.info(
         `[CONSENSUS DIFF] ✓ Successfully applied diff (${fullConsensusTxt.length} bytes)`
       );
 
-      consensus = await Consensus.parseOrThrow(fullConsensusTxt);
+      consensus = await Consensus.parseOrThrow(log, fullConsensusTxt);
     } else {
       // Regular full consensus
-      consensus = await Consensus.parseOrThrow(consensusTxt);
+      consensus = await Consensus.parseOrThrow(log, consensusTxt);
     }
 
     assert(
       (await Consensus.verifyOrThrow(
+        log,
         circuit,
         consensus,
         signal,
@@ -235,7 +238,7 @@ export namespace Consensus {
     return consensus;
   }
 
-  export async function parseOrThrow(text: string) {
+  export async function parseOrThrow(log: Log, text: string) {
     const lines = text.split('\n');
 
     const consensus: Partial<Mutable<Consensus>> = {};
@@ -605,23 +608,23 @@ export namespace Consensus {
 
     // Log invalid microdescs if any were found
     if (invalidMicrodescs.length > 0) {
-      console.error(
+      log.error(
         `Consensus parsing completed: ${microdescs.length} valid microdescs, ${invalidMicrodescs.length} invalid entries`
       );
 
       // Log up to 2 examples
       const examples = invalidMicrodescs.slice(0, 2);
       examples.forEach((invalid, idx) => {
-        console.error(
+        log.error(
           `Example ${idx + 1}: Entry ${invalid.index} - ${invalid.reason}`
         );
         if (invalid.data) {
-          console.error(`  Data: ${invalid.data}`);
+          log.error(`  Data: ${invalid.data}`);
         }
       });
 
       if (invalidMicrodescs.length > 2) {
-        console.error(
+        log.error(
           `  ... and ${invalidMicrodescs.length - 2} more invalid entries`
         );
       }
@@ -638,6 +641,7 @@ export namespace Consensus {
   }
 
   export async function verifyOrThrow(
+    log: Log,
     circuit: Circuit,
     consensus: Consensus,
     signal = new AbortController().signal,
@@ -668,7 +672,7 @@ export namespace Consensus {
         circuit,
         fingerprints
       );
-      console.log(
+      log.info(
         `Retrieved ${certificates.length} certs (cached/fetched) in ${Date.now() - startTime}ms`
       );
     } else {
@@ -677,7 +681,7 @@ export namespace Consensus {
         limit(() => Certificate.fetchOrThrow(circuit, sig.identity, signal))
       );
       certificates = await Promise.all(certificatePromises);
-      console.log(
+      log.info(
         `Fetched ${certificates.length} certs in ${Date.now() - startTime}ms`
       );
     }

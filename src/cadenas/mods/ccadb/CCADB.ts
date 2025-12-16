@@ -68,7 +68,10 @@ export class CCADB {
   async validateAndParseCerts(
     source?: CertificateSource
   ): Promise<ValidationResult> {
-    const base64Certs = await this.fetchCerts(source);
+    const base64Certs = await this.fetchCerts(
+      this.log.child('fetchCerts'),
+      source
+    );
     return this.validateAndParseBase64Certs(base64Certs);
   }
 
@@ -248,7 +251,7 @@ export class CCADB {
     }
 
     this.log.info('Fetching fresh certificates');
-    const base64Certs = await this.fetchCerts();
+    const base64Certs = await this.fetchCerts(this.log.child('fetchCerts'));
     const { certificates } =
       await this.validateAndParseBase64Certs(base64Certs);
     this.cached = certificates;

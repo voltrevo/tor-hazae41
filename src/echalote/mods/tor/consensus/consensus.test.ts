@@ -1,6 +1,7 @@
 import { test } from '@hazae41/phobos';
 import { assert } from '../../../../utils/assert';
 import { Consensus } from './consensus.js';
+import { Log } from '../../../../Log';
 
 const microdesc = `onion-key
 -----BEGIN RSA PUBLIC KEY-----
@@ -132,7 +133,8 @@ test('microdesc', async () => {
 });
 
 test('microdescs', async () => {
-  const result = await Consensus.parseOrThrow(microdescs);
+  const log = new Log({ rawLog: () => {} });
+  const result = await Consensus.parseOrThrow(log, microdescs);
 
   assert(result.authorities !== undefined, 'Should have authorities array');
   assert(result.microdescs !== undefined, 'Should have microdescs array');

@@ -7,6 +7,7 @@ import { makeCircuit } from '../../../../TorClient/makeCircuit.js';
 import { App } from '../../../../TorClient/App.js';
 import { staticCerts } from '../../../../cadenas/mods/ccadb/staticCerts.js';
 import { CCADB } from '../../../../cadenas/mods/ccadb/CCADB.js';
+import { Log } from '../../../../Log/index.js';
 
 /**
  * Integration test for consensus diff mechanism.
@@ -19,6 +20,8 @@ import { CCADB } from '../../../../cadenas/mods/ccadb/CCADB.js';
 test('Consensus diff mechanism with live fetch', async () => {
   const app = new App();
 
+  const log = new Log();
+  app.set('Log', log);
   app.set('fetchCerts', () => Promise.resolve(staticCerts));
   app.set('ccadb', new CCADB(app));
 
@@ -61,8 +64,8 @@ test('Consensus diff mechanism with live fetch', async () => {
   );
 
   console.log('Parsing consensuses...');
-  const consensus1 = await Echalote.Consensus.parseOrThrow(consensus1Text);
-  const consensus2 = await Echalote.Consensus.parseOrThrow(consensus2Text);
+  const consensus1 = await Echalote.Consensus.parseOrThrow(log, consensus1Text);
+  const consensus2 = await Echalote.Consensus.parseOrThrow(log, consensus2Text);
 
   console.log(
     `Consensus 1 valid-after: ${consensus1.validAfter.toISOString()}`
@@ -92,7 +95,7 @@ test('Consensus diff mechanism with live fetch', async () => {
   console.log(
     `\n${relTimestamp()} | Test 1: Fetching consensus without known consensuses...`
   );
-  const newConsensus1 = await Echalote.Consensus.fetchOrThrow(circuit);
+  const newConsensus1 = await Echalote.Consensus.fetchOrThrow(log, circuit);
   console.log(
     `${relTimestamp()} | ✓ Received consensus (valid-after: ${newConsensus1.validAfter.toISOString()})`
   );
@@ -106,8 +109,10 @@ test('Consensus diff mechanism with live fetch', async () => {
     'ignore/consensus/2025_12_02T23_04_37_883Z',
     'utf-8'
   );
-  const savedConsensus =
-    await Echalote.Consensus.parseOrThrow(savedConsensusText);
+  const savedConsensus = await Echalote.Consensus.parseOrThrow(
+    log,
+    savedConsensusText
+  );
   console.log(
     `${relTimestamp()} | Loaded saved consensus (valid-after: ${savedConsensus.validAfter.toISOString()})`
   );
@@ -147,6 +152,7 @@ test('Consensus diff mechanism with live fetch', async () => {
 
   try {
     const newConsensus2 = await Echalote.Consensus.fetchOrThrow(
+      log,
       circuit,
       [savedConsensus],
       AbortSignal.timeout(30000)

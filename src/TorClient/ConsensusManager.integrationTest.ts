@@ -38,6 +38,7 @@ function createApp() {
 
 test('ConsensusManager: fetch and reconstruct consensus', async () => {
   const app = createApp();
+  const log = new Log({ rawLog: () => {} });
 
   // Create a Tor connection
   const snowflakeUrl = 'wss://snowflake.pse.dev/';
@@ -69,7 +70,7 @@ test('ConsensusManager: fetch and reconstruct consensus', async () => {
 
   // Fetch a consensus directly
   console.log('Fetching consensus...');
-  const consensus = await Echalote.Consensus.fetchOrThrow(circuit);
+  const consensus = await Echalote.Consensus.fetchOrThrow(log, circuit);
   console.log(
     `Consensus fetched with ${consensus.microdescs.length} microdescs`
   );
@@ -110,8 +111,10 @@ test('ConsensusManager: fetch and reconstruct consensus', async () => {
 
   // Also verify we can re-parse the reconstructed text
   console.log('Re-parsing reconstructed consensus...');
-  const reparsedConsensus =
-    await Echalote.Consensus.parseOrThrow(reconstructedText);
+  const reparsedConsensus = await Echalote.Consensus.parseOrThrow(
+    log,
+    reconstructedText
+  );
   console.log('✓ Reconstructed text re-parses correctly');
 
   // Verify key properties match

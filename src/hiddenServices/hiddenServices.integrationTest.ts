@@ -4,8 +4,11 @@ import { Echalote } from '../echalote/index.js';
 import { decodeOnionPubKey } from './decodeOnionPubkey.js';
 import { HiddenServicesDir } from './HiddenServicesDir.js';
 import { getBlindedPubkey } from './getBlindedPubkey.js';
+import { Log } from '../Log/index.js';
 
 test('Hidden services directory lookup', async () => {
+  const log = new Log();
+
   const onionAddr =
     'https://duckduckgogg42xjoc72x3sjasowoarfbgcmvfimaftt6twagswzczad.onion/';
 
@@ -17,6 +20,7 @@ test('Hidden services directory lookup', async () => {
   console.log(`${relTimestamp()} | Pubkey:`, pubkey);
 
   const consensus = await Echalote.Consensus.parseOrThrow(
+    log.child('Consensus'),
     await readFile('ignore/consensus.txt', 'utf-8')
   );
 

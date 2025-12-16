@@ -100,6 +100,7 @@ export class ConsensusManager {
     const circuit = await this.circuitManager.getBaseCircuit();
 
     const consensus = await Echalote.Consensus.fetchOrThrow(
+      this.log.child('Consensus'),
       circuit,
       cache,
       undefined,
@@ -150,7 +151,10 @@ export class ConsensusManager {
         try {
           const data = await this.storage.read(key);
           const text = new TextDecoder().decode(data);
-          const consensus = await Echalote.Consensus.parseOrThrow(text);
+          const consensus = await Echalote.Consensus.parseOrThrow(
+            this.log.child('Consensus'),
+            text
+          );
           consensuses.push(consensus);
           this.log.info(
             `Loaded cached consensus from ${consensus.validAfter.toISOString()}`

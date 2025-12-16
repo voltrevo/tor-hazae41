@@ -1,3 +1,5 @@
+import { Log } from '../../../Log';
+
 export type CertificateSource = 'curl' | 'ccadb' | 'certifi';
 
 const sourceUrls: Record<CertificateSource, string> = {
@@ -56,6 +58,7 @@ function pemToBase64(pem: string): string {
  * Throws if no source succeeds.
  */
 export async function fetchCerts(
+  log: Log,
   source?: CertificateSource
 ): Promise<string[]> {
   const sources: CertificateSource[] = source
@@ -66,13 +69,11 @@ export async function fetchCerts(
     try {
       const certs = await getRawCerts(source);
       if (certs.length > 0) {
-        console.debug(
-          `Successfully fetched ${certs.length} certs from ${source}`
-        );
+        log.info(`Successfully fetched ${certs.length} certs from ${source}`);
         return certs;
       }
     } catch (error) {
-      console.debug(`Failed to fetch from ${source}:`, error);
+      log.info(`Failed to fetch from ${source}:`, error);
     }
   }
 
