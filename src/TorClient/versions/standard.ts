@@ -30,7 +30,7 @@ export { Log, type LogLevel } from '../../Log';
  * @example
  * ```typescript
  * const client = new TorClient({
- *   snowflakeUrl: 'wss://snowflake.torproject.net/',
+ *   snowflakeUrl: 'wss://snowflake.pse.dev/',
  *   onLog: (msg, type) => console.log(`[${type}] ${msg}`)
  * });
  *
@@ -48,7 +48,7 @@ export class TorClient extends TorClientBase {
    * @example
    * ```typescript
    * const client = new TorClient({
-   *   snowflakeUrl: 'wss://snowflake.torproject.net/',
+   *   snowflakeUrl: 'wss://snowflake.pse.dev/',
    *   log: new Log()
    * });
    *
