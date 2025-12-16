@@ -14,10 +14,20 @@
       "import": "./dist/index.mjs",
       "require": "./dist/index.js"
     },
-    "./storage": {
-      "types": "./dist/storage/index.d.ts",
-      "import": "./dist/storage/index.mjs",
-      "require": "./dist/storage/index.js"
+    "./standard": {
+      "types": "./dist/TorClient/versions/standard.d.ts",
+      "import": "./dist/TorClient/versions/standard.mjs",
+      "require": "./dist/TorClient/versions/standard.js"
+    },
+    "./noStaticCerts": {
+      "types": "./dist/TorClient/versions/noStaticCerts.d.ts",
+      "import": "./dist/TorClient/versions/noStaticCerts.mjs",
+      "require": "./dist/TorClient/versions/noStaticCerts.js"
+    },
+    "./singleton": {
+      "types": "./dist/TorClient/versions/singleton.d.ts",
+      "import": "./dist/TorClient/versions/singleton.mjs",
+      "require": "./dist/TorClient/versions/singleton.js"
     }
   },
   "files": [
