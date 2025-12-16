@@ -20,7 +20,7 @@ const tor = {
    */
   async fetch(url: string, options?: RequestInit) {
     if (!client) {
-      this.start();
+      this.open();
       assert(client);
     }
 
@@ -39,22 +39,32 @@ const tor = {
     if (client) {
       client.close();
       client = undefined;
-      this.start();
+      this.open();
     }
   },
 
   /**
-   * Actively start the TorClient singleton.
+   * Actively open the TorClient singleton.
    * This is optional - it's automatic if you just call fetch.
    * This library doesn't do anything until it is used, but it's beneficial to
    * call this early if you know you're going to use it.
    */
-  start() {
+  open() {
     if (client) {
       return;
     }
 
     client = new TorClient(config);
+  },
+
+  /**
+   * Close the singleton.
+   */
+  close() {
+    if (client) {
+      client.close();
+      client = undefined;
+    }
   },
 };
 
