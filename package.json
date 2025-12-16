@@ -1,6 +1,6 @@
 {
   "name": "tor-js",
-  "version": "0.2.1",
+  "version": "0.2.2",
   "description": "A TypeScript Tor client library for making anonymous HTTP requests through the Tor network via Snowflake bridges",
   "main": "dist/index.js",
   "module": "dist/index.mjs",
