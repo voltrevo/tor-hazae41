@@ -2,6 +2,7 @@ import { Opaque, Writable } from '@hazae41/binary';
 import { FullDuplex } from '@hazae41/cascade';
 import { Cursor } from '@hazae41/cursor';
 import { Resizer } from '../resizer/resizer';
+import { Bytes } from '@hazae41/bytes';
 
 export class BatchedFetchStream {
   readonly duplex: FullDuplex<Opaque, Writable>;
@@ -25,7 +26,7 @@ export class BatchedFetchStream {
         this.#buffer.inner.offset = 0;
 
         const res = await fetch(this.request, { method: 'POST', body });
-        const data = new Uint8Array(await res.arrayBuffer());
+        const data = Bytes.from(await res.arrayBuffer());
 
         const chunker = new Cursor(data);
 

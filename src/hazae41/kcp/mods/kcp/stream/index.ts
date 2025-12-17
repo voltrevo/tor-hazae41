@@ -1,4 +1,5 @@
-import { Empty, Writable } from '../../../../binary/mod';
+import { Writable } from '../../../../binary/mod';
+import { Bytes } from '../../../../bytes';
 import { FullDuplex } from '../../../../cascade/index';
 import { Cursor } from '../../../../cursor/mod';
 import { Future } from '../../../../future/index';
@@ -78,7 +79,7 @@ export class SecretKcpDuplex {
   constructor(readonly params: KcpDuplexParams = {}) {
     const {
       conversation = new Cursor(
-        crypto.getRandomValues(new Uint8Array(4))
+        crypto.getRandomValues(Bytes.alloc(4))
       ).readUint32OrThrow(true),
     } = this.params;
 

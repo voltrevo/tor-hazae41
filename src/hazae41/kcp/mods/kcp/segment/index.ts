@@ -1,4 +1,5 @@
 import { Empty, Writable } from '../../../../binary/mod';
+import { Bytes } from '../../../../bytes';
 import { Cursor } from '../../../../cursor/mod';
 
 export interface KcpSegmentParams<Fragment extends Writable> {
@@ -113,7 +114,7 @@ export class KcpSegment<Fragment extends Writable> {
     return 0 + 4 + 1 + 1 + 2 + 4 + 4 + 4 + 4 + this.fragmentSize;
   }
 
-  writeOrThrow(cursor: Cursor<ArrayBuffer>) {
+  writeOrThrow(cursor: Cursor) {
     cursor.writeUint32OrThrow(this.conversation, true);
     cursor.writeUint8OrThrow(this.command);
     cursor.writeUint8OrThrow(this.count);
@@ -126,7 +127,7 @@ export class KcpSegment<Fragment extends Writable> {
     this.fragment.writeOrThrow(cursor);
   }
 
-  static readOrThrow(cursor: Cursor<ArrayBuffer>) {
+  static readOrThrow(cursor: Cursor) {
     const conversation = cursor.readUint32OrThrow(true);
     const command = cursor.readUint8OrThrow();
     const count = cursor.readUint8OrThrow();
@@ -135,7 +136,7 @@ export class KcpSegment<Fragment extends Writable> {
     const serial = cursor.readUint32OrThrow(true);
     const unackSerial = cursor.readUint32OrThrow(true);
     const length = cursor.readUint32OrThrow(true);
-    const bytes = new Uint8Array(cursor.readOrThrow(length));
+    const bytes = Bytes.from(cursor.readOrThrow(length));
     const fragment = new any(bytes);
 
     return KcpSegment.newOrThrow({

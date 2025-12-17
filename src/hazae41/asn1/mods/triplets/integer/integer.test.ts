@@ -1,5 +1,6 @@
 import { Base16 } from '../../../../base16/index';
 import { Readable, Writable } from '../../../../binary/mod';
+import { Bytes } from '../../../../bytes';
 import { assert, test } from '../../../../phobos/mod';
 import { Integer } from './integer';
 import { relative, resolve } from 'node:path';
@@ -13,7 +14,7 @@ function hexToBytes(hex: string) {
   return Base16.padStartAndDecodeOrThrow(hex2);
 }
 
-function bytesToTriplet(bytes: Uint8Array<ArrayBuffer>) {
+function bytesToTriplet(bytes: Bytes) {
   return Readable.readFromBytesOrThrow(Integer.DER, bytes);
 }
 

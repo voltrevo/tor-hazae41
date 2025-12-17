@@ -1,4 +1,5 @@
 import { Cursor } from '@hazae41/cursor';
+import { Bytes } from '../../../../hazae41/bytes';
 
 export class TypedAddress {
   static readonly types = {
@@ -8,7 +9,7 @@ export class TypedAddress {
 
   constructor(
     readonly type: number,
-    readonly value: Uint8Array
+    readonly value: Bytes
   ) {}
 
   sizeOrThrow() {

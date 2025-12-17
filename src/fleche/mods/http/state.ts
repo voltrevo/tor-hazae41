@@ -1,6 +1,7 @@
 import { SuperReadableStream } from '@hazae41/cascade';
 import { Nullable } from '../../libs/nullable/index';
 import { Resizer } from '../../libs/resizer/resizer';
+import { Bytes } from '../../../hazae41/bytes';
 
 export type HttpState =
   | HttpNoneState
@@ -62,6 +63,6 @@ export interface HttpLengthedTransfer {
 }
 
 export interface HttpCompression {
-  readonly sourcer: SuperReadableStream<Uint8Array>;
+  readonly sourcer: SuperReadableStream<Bytes>;
   readonly pipeline: Promise<void>;
 }

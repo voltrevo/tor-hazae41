@@ -1,3 +1,4 @@
+import { Bytes } from '../../../../hazae41/bytes/index.js';
 import { Secrets } from '../../../mods/ciphers/secrets.js';
 
 export interface Hash {
@@ -20,5 +21,5 @@ export interface Macher {
   readonly mac_length: number;
   readonly mac_key_length: number;
 
-  writeOrThrow(seed: Uint8Array): Promise<Uint8Array>;
+  writeOrThrow(seed: Bytes): Promise<Bytes>;
 }

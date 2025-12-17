@@ -1,5 +1,6 @@
 import { Opaque, Writable } from '@hazae41/binary';
 import { HalfDuplex } from '@hazae41/cascade';
+import { Bytes } from '../hazae41/bytes';
 
 export interface WebSocketDuplexParams {
   /**
@@ -59,7 +60,7 @@ export class WebSocketDuplex {
       async (e: MessageEvent<string | ArrayBuffer>) => {
         if (typeof e.data === 'string') return;
 
-        const bytes = new Uint8Array(e.data);
+        const bytes = Bytes.from(e.data);
         const opaque = new Opaque(bytes);
 
         this.duplex.input.enqueue(opaque);

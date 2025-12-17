@@ -2,7 +2,7 @@ import { assert, test } from '../../../phobos/mod';
 import { Bytes } from './bytes';
 
 await test('padStart', async ({ name }) => {
-  const bytes = new Uint8Array([1, 2, 3, 4]);
+  const bytes = Bytes.from([1, 2, 3, 4]);
 
   const identity = Bytes.padStart(bytes, 2);
   const padded = Bytes.padStart(bytes, 6);

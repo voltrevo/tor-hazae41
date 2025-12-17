@@ -1,5 +1,6 @@
 import { Cursor } from '@hazae41/cursor';
 import { ECPoint } from '../server_key_exchange/ec_point.js';
+import { Bytes } from '../../../../../../hazae41/bytes/index.js';
 
 export class ClientECDiffieHellmanPublic {
   constructor(readonly ecdh_Yc: ECPoint) {}
@@ -8,7 +9,7 @@ export class ClientECDiffieHellmanPublic {
     return new ClientECDiffieHellmanPublic(ecdh_Yc);
   }
 
-  static from(bytes: Uint8Array) {
+  static from(bytes: Bytes) {
     return new ClientECDiffieHellmanPublic(ECPoint.from(bytes));
   }
 

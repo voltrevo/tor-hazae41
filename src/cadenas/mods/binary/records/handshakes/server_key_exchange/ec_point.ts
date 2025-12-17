@@ -3,6 +3,7 @@ import { Cursor } from '@hazae41/cursor';
 import { Number8 } from '../../../../../mods/binary/numbers/number8.js';
 import { ReadableVector } from '../../../../../mods/binary/vectors/readable.js';
 import { Vector } from '../../../../../mods/binary/vectors/writable.js';
+import { Bytes } from '../../../../../../hazae41/bytes/index.js';
 
 export class ECPoint {
   constructor(readonly point: Vector<Number8, Opaque>) {}
@@ -11,7 +12,7 @@ export class ECPoint {
     return new ECPoint(point);
   }
 
-  static from(bytes: Uint8Array) {
+  static from(bytes: Bytes) {
     const point = Vector(Number8).from(new Opaque(bytes));
 
     return new this(point);

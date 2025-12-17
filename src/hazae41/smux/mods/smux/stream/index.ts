@@ -1,4 +1,5 @@
-import { Readable } from '../../../../binary/mod';
+import { Writable } from '../../../../binary/mod';
+import { Bytes } from '../../../../bytes';
 import { FullDuplex } from '../../../../cascade/index';
 import { Cursor } from '../../../../cursor/mod';
 import { Future } from '../../../../future/index';
@@ -58,7 +59,7 @@ export class SecretSmuxDuplex {
   readonly reader: SecretSmuxReader;
   readonly writer: SecretSmuxWriter;
 
-  readonly buffer = new Cursor(new Uint8Array(65_535));
+  readonly buffer = new Cursor(Bytes.alloc(65_535));
 
   readonly stream: number;
 

@@ -8,6 +8,7 @@ import type { FetchCerts, CertificateSource } from './fetchCerts.js';
 import type { IStorage } from '../../../storage/index.js';
 import type { IClock } from '../../../clock/IClock.js';
 import { Log } from '../../../Log/index.js';
+import { Bytes } from '@hazae41/bytes';
 
 export interface Trusted {
   readonly hashBase16: string;
@@ -105,9 +106,7 @@ export class CCADB {
         const spki = Writable.writeToBytesOrThrow(
           x509.tbsCertificate.subjectPublicKeyInfo.toDER()
         );
-        const hash = new Uint8Array(
-          await crypto.subtle.digest('SHA-256', spki)
-        );
+        const hash = Bytes.from(await crypto.subtle.digest('SHA-256', spki));
         const hashBase16 = Base16.encodeOrThrow(hash);
 
         // Check if certificate is in whitelist

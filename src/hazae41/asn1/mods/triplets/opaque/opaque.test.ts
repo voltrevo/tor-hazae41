@@ -5,6 +5,7 @@ import { Integer } from '../integer/integer';
 import { DER } from '../../resolvers/der/index';
 import { relative, resolve } from 'node:path';
 import { Opaque } from './opaque';
+import { Bytes } from '../../../../bytes';
 
 const directory = resolve('./dist/test/');
 const { pathname } = new URL(import.meta.url);
@@ -15,7 +16,7 @@ function hexToBytes(hex: string) {
   return Base16.padStartAndDecodeOrThrow(hex2);
 }
 
-function bytesToTriplet(bytes: Uint8Array<ArrayBuffer>) {
+function bytesToTriplet(bytes: Bytes) {
   const opaque = Readable.readFromBytesOrThrow(DER, bytes);
 
   if (!(opaque instanceof Opaque)) throw new Error(`Not an opaque`);

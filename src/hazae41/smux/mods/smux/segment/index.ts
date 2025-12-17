@@ -1,3 +1,4 @@
+import { Bytes } from '@hazae41/bytes';
 import { Empty, Writable } from '../../../../binary/mod';
 import { Cursor } from '../../../../cursor/mod';
 
@@ -11,12 +12,12 @@ export class SmuxUpdate {
     return 4 + 4;
   }
 
-  writeOrThrow(cursor: Cursor<ArrayBuffer>) {
+  writeOrThrow(cursor: Cursor) {
     cursor.writeUint32OrThrow(this.consumed, true);
     cursor.writeUint32OrThrow(this.window, true);
   }
 
-  static readOrThrow(cursor: Cursor<ArrayBuffer>) {
+  static readOrThrow(cursor: Cursor) {
     const consumed = cursor.readUint32OrThrow(true);
     const window = cursor.readUint32OrThrow(true);
 
@@ -75,7 +76,7 @@ export class SmuxSegment<Fragment extends Writable> {
     return 0 + 1 + 1 + 2 + 4 + this.fragmentSize;
   }
 
-  writeOrThrow(cursor: Cursor<ArrayBuffer>) {
+  writeOrThrow(cursor: Cursor) {
     cursor.writeUint8OrThrow(this.version);
     cursor.writeUint8OrThrow(this.command);
     cursor.writeUint16OrThrow(this.fragmentSize, true);
@@ -84,12 +85,12 @@ export class SmuxSegment<Fragment extends Writable> {
     this.fragment.writeOrThrow(cursor);
   }
 
-  static readOrThrow(cursor: Cursor<ArrayBuffer>) {
+  static readOrThrow(cursor: Cursor) {
     const version = cursor.readUint8OrThrow();
     const command = cursor.readUint8OrThrow();
     const length = cursor.readUint16OrThrow(true);
     const stream = cursor.readUint32OrThrow(true);
-    const bytes = new Uint8Array(cursor.readOrThrow(length));
+    const bytes = Bytes.from(cursor.readOrThrow(length));
     const fragment = new any(bytes);
 
     return SmuxSegment.newOrThrow({ version, command, stream, fragment });

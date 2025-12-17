@@ -1,4 +1,5 @@
 import { Cursor } from '@hazae41/cursor';
+import { Bytes } from '../../../../../../../hazae41/bytes';
 
 export class VariablePaddingCell {
   readonly #class = VariablePaddingCell;
@@ -6,7 +7,7 @@ export class VariablePaddingCell {
   static readonly circuit = false;
   static readonly command = 128;
 
-  constructor(readonly data: Uint8Array) {}
+  constructor(readonly data: Bytes) {}
 
   get command() {
     return this.#class.command;

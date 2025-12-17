@@ -3,6 +3,7 @@ import { Cursor } from '@hazae41/cursor';
 import { Number16 } from '../../../../../mods/binary/numbers/number16.js';
 import { ReadableVector } from '../../../../../mods/binary/vectors/readable.js';
 import { Vector } from '../../../../../mods/binary/vectors/writable.js';
+import { Bytes } from '../../../../../../hazae41/bytes/index.js';
 
 export class ClientDiffieHellmanPublic {
   constructor(readonly dh_Yc: Vector<Number16, Opaque>) {}
@@ -11,7 +12,7 @@ export class ClientDiffieHellmanPublic {
     return new ClientDiffieHellmanPublic(dh_Yc);
   }
 
-  static from(bytes: Uint8Array) {
+  static from(bytes: Bytes) {
     const dh_Yc = Vector(Number16).from(Opaque.new(bytes));
 
     return new ClientDiffieHellmanPublic(dh_Yc);

@@ -1,4 +1,5 @@
 import { Cursor } from '@hazae41/cursor';
+import { Bytes } from '../../../../../../../hazae41/bytes';
 
 export class Create2Cell {
   readonly #class = Create2Cell;
@@ -20,7 +21,7 @@ export class Create2Cell {
 
   constructor(
     readonly type: number,
-    readonly data: Uint8Array
+    readonly data: Bytes
   ) {}
 
   get command() {

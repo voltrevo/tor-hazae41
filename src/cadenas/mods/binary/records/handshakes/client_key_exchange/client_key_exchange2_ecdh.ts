@@ -1,6 +1,7 @@
 import { Cursor } from '@hazae41/cursor';
 import { Handshake } from '../../../../../mods/binary/records/handshakes/handshake.js';
 import { ClientECDiffieHellmanPublic } from './client_ec_diffie_hellman_public.js';
+import { Bytes } from '../../../../../../hazae41/bytes/index.js';
 
 export class ClientKeyExchange2ECDH {
   readonly #class = ClientKeyExchange2ECDH;
@@ -13,7 +14,7 @@ export class ClientKeyExchange2ECDH {
     return new ClientKeyExchange2ECDH(exchange_keys);
   }
 
-  static from(bytes: Uint8Array) {
+  static from(bytes: Bytes) {
     return new ClientKeyExchange2ECDH(ClientECDiffieHellmanPublic.from(bytes));
   }
 
