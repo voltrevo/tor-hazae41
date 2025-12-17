@@ -6,15 +6,13 @@ export default {
   input: 'dist/index.mjs',
   output: {
     file: 'dist/bundle-size-check.js',
-    format: 'iife',
-    name: 'TorClient',
+    format: 'es',
   },
   external: ['fs/promises', 'path'],
   plugins: [
     nodeResolve({
-      browser: true,
       preferBuiltins: false,
-      exportConditions: ['browser', 'default'],
+      exportConditions: ['import', 'browser', 'default'],
     }),
     commonjs(),
     terser({

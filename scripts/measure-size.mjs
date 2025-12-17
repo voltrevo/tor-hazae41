@@ -124,7 +124,7 @@ export default {
   for (const result of results) {
     const ratio = ((result.gzippedSize / result.plainSize) * 100).toFixed(1);
     console.log(`\n${result.variation}:`);
-    console.log(`  Bundle: ${result.bundleOutput} (browser IIFE)`);
+    console.log(`  Bundle: ${result.bundleOutput} (ESM)`);
     console.log(
       `  Plain:  ${formatSize(result.plainSize)} (${result.plainSize.toLocaleString()} bytes)`
     );
