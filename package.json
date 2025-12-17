@@ -97,7 +97,6 @@
   },
   "dependencies": {
     "@hazae41/bitset": "1.0.1",
-    "@hazae41/box": "2.0.1",
     "@hazae41/cascade": "2.2.2",
     "@hazae41/disposer": "2.0.20",
     "@hazae41/future": "1.0.3",
