@@ -57,8 +57,8 @@
     "url": "https://github.com/voltrevo/tor-js.git"
   },
   "scripts": {
-    "build": "tsup && tsc --emitDeclarationOnly --declarationMap --outDir dist",
-    "build:singleton": "rm -rf dist-singleton && rollup -c rollup.singleton-bundle.mjs && rollup -c rollup.singleton-bundle-dts.mjs",
+    "build": "rm -rf dist && tsup && tsc --emitDeclarationOnly --declarationMap --outDir dist",
+    "build:singleton": "rm -rf dist-singleton && npm run build && rollup -c rollup.singleton-bundle.mjs && rollup -c rollup.singleton-bundle-dts.mjs",
     "build:demo": "vite build",
     "dev": "vite",
     "dev:lib": "tsup --watch",
