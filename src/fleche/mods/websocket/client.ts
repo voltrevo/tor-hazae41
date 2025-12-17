@@ -1,5 +1,5 @@
 import { bitwise_pack_right, bitwise_unpack } from '../../../utils/bitwise';
-import { Signals } from '@hazae41/signals';
+import { rejectOnAbort } from '../../../hazae41/signals/mods/signals';
 import { Iterators } from '../../libs/iterables/iterators';
 import { Resizer } from '../../libs/resizer/resizer';
 import { Strings } from '../../libs/strings/strings';
@@ -359,13 +359,13 @@ export class WebSocketClientDuplex extends EventTarget implements WebSocket {
       throw new Error('Errored', { cause });
     });
 
-    using rejectOnAbort = Signals.rejectOnAbort(AbortSignal.timeout(10_000));
+    const abortPromise = rejectOnAbort(AbortSignal.timeout(10_000));
 
     await Promise.race([
       this.#resolveOnPong.promise,
       rejectOnError,
       rejectOnClose,
-      rejectOnAbort.get(),
+      abortPromise,
     ]);
   }
 

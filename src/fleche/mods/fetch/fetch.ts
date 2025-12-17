@@ -1,4 +1,4 @@
-import { Signals } from '@hazae41/signals';
+import { rejectOnAbort } from '../../../hazae41/signals/mods/signals';
 import { Nullable } from '../../libs/nullable/index';
 import { HttpClientDuplex } from '../http/client';
 import { Bytes } from '../../../hazae41/bytes';
@@ -125,14 +125,14 @@ export async function fetch(
     .pipeTo(stream.writable, { signal, preventClose, preventAbort })
     .catch(() => {});
 
-  using rejectOnAbort = Signals.rejectOnAbort(signal);
+  const rejectPromise = rejectOnAbort(signal);
   using rejectOnPipe = Pipe.rejectOnError(http, body);
 
   return await Promise.race([
     resolveOnHead.promise,
     rejectOnClose.promise,
     rejectOnError.promise,
-    rejectOnAbort.get(),
+    rejectPromise,
     rejectOnPipe.get(),
   ]);
 }
