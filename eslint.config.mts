@@ -3,6 +3,7 @@ import globals from 'globals';
 import tseslint from 'typescript-eslint';
 import prettier from 'eslint-plugin-prettier';
 import prettierConfig from 'eslint-config-prettier';
+import importPlugin from 'eslint-plugin-import';
 import { defineConfig } from 'eslint/config';
 import { includeIgnoreFile } from '@eslint/compat';
 import { fileURLToPath } from 'node:url';
@@ -21,6 +22,7 @@ export default defineConfig([
     files: ['**/*.{js,mjs,cjs,ts,mts,cts}'],
     plugins: {
       prettier,
+      import: importPlugin,
     },
     languageOptions: {
       globals: {
@@ -48,6 +50,9 @@ export default defineConfig([
 
       // Allow #class pattern for nominal typing
       'no-unused-private-class-members': 'off',
+
+      // Import rules - detect imports from packages not declared in package.json
+      'import/no-extraneous-dependencies': 'error',
     },
   },
   prettierConfig, // This must be last to override other formatting rules
