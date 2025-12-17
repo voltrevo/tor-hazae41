@@ -77,7 +77,7 @@ export namespace NtorResult {
     secret_input.writeOrThrow(public_b);
     secret_input.writeOrThrow(public_x);
     secret_input.writeOrThrow(public_y);
-    secret_input.writeUtf8OrThrow(protoid);
+    secret_input.writeOrThrow(Bytes.fromUtf8(protoid));
 
     const t_mac = Bytes.fromUtf8(`${protoid}:mac`);
     const t_key = Bytes.fromUtf8(`${protoid}:key_extract`);
@@ -104,8 +104,8 @@ export namespace NtorResult {
     auth_input.writeOrThrow(public_b);
     auth_input.writeOrThrow(public_y);
     auth_input.writeOrThrow(public_x);
-    auth_input.writeUtf8OrThrow(protoid);
-    auth_input.writeUtf8OrThrow(server);
+    auth_input.writeOrThrow(Bytes.fromUtf8(protoid));
+    auth_input.writeOrThrow(Bytes.fromUtf8(server));
 
     const t_mac_key = await crypto.subtle.importKey(
       'raw',

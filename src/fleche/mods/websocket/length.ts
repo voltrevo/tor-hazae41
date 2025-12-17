@@ -31,7 +31,7 @@ export class Length {
   #writeOrThrow64(cursor: Cursor) {
     const subcursor = new Cursor(Bytes.alloc(1 + 8));
     subcursor.writeUint8OrThrow(127);
-    subcursor.writeUint64OrThrow(BigInt(this.value));
+    subcursor.writeBigUint64OrThrow(BigInt(this.value));
 
     const lengthBitsMemory = bitwise_unpack(subcursor.bytes);
 

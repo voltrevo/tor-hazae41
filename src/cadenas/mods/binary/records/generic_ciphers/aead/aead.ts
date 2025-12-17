@@ -36,7 +36,7 @@ export class GenericAEADCipher {
   ) {
     const nonce = new Cursor(Bytes.alloc(encrypter.fixed_iv_length + 8));
     nonce.writeOrThrow(encrypter.secrets.client_write_IV);
-    nonce.writeUint64OrThrow(sequence);
+    nonce.writeBigUint64OrThrow(sequence);
 
     nonce.offset = 0;
     const _nonce_implicit = Bytes.from(nonce.readOrThrow(4));
@@ -45,7 +45,7 @@ export class GenericAEADCipher {
     const content = Writable.writeToBytesOrThrow(record.fragment);
 
     const additional_data = new Cursor(Bytes.alloc(8 + 1 + 2 + 2));
-    additional_data.writeUint64OrThrow(sequence);
+    additional_data.writeBigUint64OrThrow(sequence);
     additional_data.writeUint8OrThrow(record.type);
     additional_data.writeUint16OrThrow(record.version);
     additional_data.writeUint16OrThrow(record.fragment.sizeOrThrow());
@@ -75,7 +75,7 @@ export class GenericAEADCipher {
     nonce.writeOrThrow(this.nonce_explicit);
 
     const additional_data = new Cursor(Bytes.alloc(8 + 1 + 2 + 2));
-    additional_data.writeUint64OrThrow(sequence);
+    additional_data.writeBigUint64OrThrow(sequence);
     additional_data.writeUint8OrThrow(record.type);
     additional_data.writeUint16OrThrow(record.version);
     additional_data.writeUint16OrThrow(record.fragment.sizeOrThrow() - 24);

@@ -46,7 +46,7 @@ export class RelayBeginCell {
   }
 
   static readOrThrow(cursor: Cursor) {
-    const bytes = cursor.readNulledAndCopyOrThrow();
+    const bytes = Bytes.from(cursor.readNulledOrThrow());
     const address = Bytes.toUtf8(bytes);
     const flags = cursor.readUint32OrThrow();
 

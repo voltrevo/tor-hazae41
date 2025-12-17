@@ -184,6 +184,38 @@ export class Cursor<N extends number = number> {
   }
 
   /**
+   * Fill length bytes with value after offset
+   * @param value value to fill
+   * @param length length to fill
+   */
+  fillOrThrow(value: number, length: number): void {
+    if (this.remaining < length)
+      throw CursorWriteLengthOverflowError.from(this, length);
+    this.bytes.fill(value, this.offset, this.offset + length);
+    this.offset += length;
+  }
+
+  getNullOrThrow(): number {
+    let i = this.offset;
+    while (i < this.bytes.length && this.bytes[i] > 0) i++;
+    if (i === this.bytes.length) throw CursorReadNullOverflowError.from(this);
+    return i;
+  }
+
+  getNulledOrThrow(): Bytes {
+    return this.getOrThrow(this.getNullOrThrow());
+  }
+
+  readNulledOrThrow(): Bytes {
+    return this.readOrThrow(this.getNullOrThrow());
+  }
+
+  writeNulledOrThrow(array: Bytes): void {
+    this.writeOrThrow(array);
+    this.writeUint8OrThrow(0);
+  }
+
+  /**
    * Write an array to the bytes
    * @param array array
    */

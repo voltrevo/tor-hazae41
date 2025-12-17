@@ -50,7 +50,7 @@ export class GenericBlockCipher {
     const content = Writable.writeToBytesOrThrow(record.fragment);
 
     const premac = new Cursor(Bytes.alloc(8 + record.sizeOrThrow()));
-    premac.writeUint64OrThrow(sequence);
+    premac.writeBigUint64OrThrow(sequence);
     record.writeOrThrow(premac);
 
     const mac = await encrypter.macher.writeOrThrow(premac.bytes);
