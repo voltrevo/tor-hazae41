@@ -1,5 +1,5 @@
 import { Writable } from '@hazae41/binary';
-import { Cursor } from '@hazae41/cursor';
+import { Cursor } from '../../../../../../../hazae41/cursor/mod';
 import { RelayExtend2Link } from './link';
 
 export class RelayExtend2Cell<T extends Writable> {

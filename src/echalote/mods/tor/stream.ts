@@ -1,6 +1,5 @@
 import { Opaque, Writable } from '@hazae41/binary';
 import { FullDuplex } from '@hazae41/cascade';
-import { Cursor } from '@hazae41/cursor';
 import { CloseEvents, ErrorEvents, SuperEventTarget } from '@hazae41/plume';
 import { Console } from '../console/index';
 import { RelayCell } from './binary/cells/direct/relay/cell';
@@ -13,6 +12,7 @@ import {
   RelayEndReasonOther,
 } from './binary/cells/relayed/relay_end/reason.js';
 import { RelaySendmeStreamCell } from './binary/cells/relayed/relay_sendme/cell.js';
+import { Cursor } from '../../../hazae41/cursor/mod';
 
 export class TorStreamDuplex {
   readonly #secret: SecretTorStreamDuplex;

@@ -1,5 +1,4 @@
 import { Opaque, SafeOpaque } from '@hazae41/binary';
-import { Cursor } from '@hazae41/cursor';
 import { None, Option, Some } from '@hazae41/option';
 import { ReadableList } from '../../../../../mods/binary/lists/readable.js';
 import { List } from '../../../../../mods/binary/lists/writable.js';
@@ -18,6 +17,7 @@ import { Cipher } from '../../../../../mods/ciphers/cipher.js';
 import { ServerName } from '../extensions/server_name/server_name.js';
 import { ServerNameList } from '../extensions/server_name/server_name_list.js';
 import { Bytes } from '../../../../../../hazae41/bytes/index.js';
+import { Cursor } from '../../../../../../hazae41/cursor/mod.js';
 
 export class ClientHello2 {
   readonly #class = ClientHello2;

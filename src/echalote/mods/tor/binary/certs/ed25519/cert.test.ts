@@ -1,8 +1,8 @@
 import { test } from '@hazae41/phobos';
 import { assert } from '../../../../../../utils/assert';
 import { Ed25519Cert } from './cert.js';
-import { Cursor } from '@hazae41/cursor';
 import { Bytes } from '../../../../../../hazae41/bytes';
+import { Cursor } from '../../../../../../hazae41/cursor/mod';
 
 // Test data captured from real Tor network communication
 const edToSignCertHex =

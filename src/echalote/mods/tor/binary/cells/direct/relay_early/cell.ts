@@ -1,5 +1,5 @@
 import { Opaque, Readable, Writable } from '@hazae41/binary';
-import { Cursor } from '@hazae41/cursor';
+import { Cursor } from '../../../../../../../hazae41/cursor/mod';
 import { Cell } from '../../cell';
 import { SecretCircuit } from '../../../../circuit';
 import { SecretTorStreamDuplex } from '../../../../stream';

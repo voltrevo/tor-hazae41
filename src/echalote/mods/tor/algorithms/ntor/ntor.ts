@@ -1,6 +1,6 @@
-import { Cursor } from '@hazae41/cursor';
 import { HASH_LEN, KEY_LEN } from '../../constants';
 import { Bytes } from '../../../../../hazae41/bytes';
+import { Cursor } from '../../../../../hazae41/cursor/mod';
 
 export class InvalidNtorAuthError extends Error {
   readonly #class = InvalidNtorAuthError;

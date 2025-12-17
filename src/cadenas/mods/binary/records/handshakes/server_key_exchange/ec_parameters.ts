@@ -1,4 +1,4 @@
-import { Cursor } from '@hazae41/cursor';
+import { Cursor } from '../../../../../../hazae41/cursor/mod.js';
 import { NamedCurve } from '../../../../../mods/binary/records/handshakes/extensions/elliptic_curves/named_curve.js';
 import { ECCurveType } from './ec_curve_type.js';
 

@@ -1,4 +1,4 @@
-import { Cursor } from '@hazae41/cursor';
+import { Cursor } from '../../../../../../../hazae41/cursor/mod';
 import { Dates } from '../../../../../../libs/dates/dates';
 import { Address4, Address6 } from '../../../address';
 

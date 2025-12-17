@@ -1,7 +1,7 @@
 import { Writable } from '@hazae41/binary';
-import { Cursor } from '@hazae41/cursor';
 import { Number16 } from '../../../../../mods/binary/numbers/number16.js';
 import { Vector } from '../../../../../mods/binary/vectors/writable.js';
+import { Cursor } from '../../../../../../hazae41/cursor/mod.js';
 
 export interface Extensionable extends Writable {
   readonly extension_type: number;

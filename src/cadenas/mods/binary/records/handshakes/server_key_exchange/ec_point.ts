@@ -1,9 +1,9 @@
 import { Opaque, SafeOpaque } from '@hazae41/binary';
-import { Cursor } from '@hazae41/cursor';
 import { Number8 } from '../../../../../mods/binary/numbers/number8.js';
 import { ReadableVector } from '../../../../../mods/binary/vectors/readable.js';
 import { Vector } from '../../../../../mods/binary/vectors/writable.js';
 import { Bytes } from '../../../../../../hazae41/bytes/index.js';
+import { Cursor } from '../../../../../../hazae41/cursor/mod.js';
 
 export class ECPoint {
   constructor(readonly point: Vector<Number8, Opaque>) {}

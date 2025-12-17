@@ -1,6 +1,6 @@
 import { Opaque, Writable } from '@hazae41/binary';
 import { Bitset } from '@hazae41/bitset';
-import { Cursor } from '@hazae41/cursor';
+import { Cursor } from '../../../../hazae41/cursor/mod';
 
 export type TurboFrameError =
   | UnexpectedContinuationError

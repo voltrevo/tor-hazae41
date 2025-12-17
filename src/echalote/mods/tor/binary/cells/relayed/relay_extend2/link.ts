@@ -1,4 +1,4 @@
-import { Cursor } from '@hazae41/cursor';
+import { Cursor } from '../../../../../../../hazae41/cursor/mod';
 import { Bytes } from '../../../../../../../hazae41/bytes';
 
 export type RelayExtend2Link =

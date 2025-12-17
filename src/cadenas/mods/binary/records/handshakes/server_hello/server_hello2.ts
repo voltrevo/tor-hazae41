@@ -1,5 +1,4 @@
 import { Opaque, SafeOpaque } from '@hazae41/binary';
-import { Cursor } from '@hazae41/cursor';
 import { None, Option, Some } from '@hazae41/option';
 import { ReadableList } from '../../../../../mods/binary/lists/readable.js';
 import { List } from '../../../../../mods/binary/lists/writable.js';
@@ -11,6 +10,7 @@ import { Handshake } from '../../../../../mods/binary/records/handshakes/handsha
 import { ReadableVector } from '../../../../../mods/binary/vectors/readable.js';
 import { Vector } from '../../../../../mods/binary/vectors/writable.js';
 import { ResolvedExtension } from '../extensions/resolved.js';
+import { Cursor } from '../../../../../../hazae41/cursor/mod.js';
 
 export class ServerHello2 {
   static readonly type = Handshake.types.server_hello;

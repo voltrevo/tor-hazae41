@@ -1,5 +1,4 @@
 import { Opaque, SafeOpaque } from '@hazae41/binary';
-import { Cursor } from '@hazae41/cursor';
 import { Vector } from '../../../../../index.js';
 import { Number16 } from '../../../../../mods/binary/numbers/number16.js';
 import { Extension } from '../../../../../mods/binary/records/handshakes/extensions/extension.js';
@@ -8,6 +7,7 @@ import { ECPointFormats } from './ec_point_formats/ec_point_formats.js';
 import { EllipticCurves } from './elliptic_curves/elliptic_curves.js';
 import { ServerNameList } from './server_name/server_name_list.js';
 import { SignatureAlgorithms } from './signature_algorithms/signature_algorithms.js';
+import { Cursor } from '../../../../../../hazae41/cursor/mod.js';
 
 export type ResolvedExtension =
   | ServerNameList

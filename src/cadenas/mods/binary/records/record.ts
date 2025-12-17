@@ -1,5 +1,4 @@
 import { Opaque, Writable } from '@hazae41/binary';
-import { Cursor } from '@hazae41/cursor';
 import { GenericAEADCipher } from '../../../mods/binary/records/generic_ciphers/aead/aead.js';
 import { GenericBlockCipher } from '../../../mods/binary/records/generic_ciphers/block/block.js';
 import {
@@ -7,6 +6,7 @@ import {
   BlockEncrypter,
   Encrypter,
 } from '../../../mods/ciphers/encryptions/encryption.js';
+import { Cursor } from '../../../../hazae41/cursor/mod.js';
 
 export namespace Record {
   export const types = {

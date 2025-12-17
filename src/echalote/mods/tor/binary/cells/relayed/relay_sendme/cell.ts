@@ -1,5 +1,5 @@
 import { Opaque, Writable } from '@hazae41/binary';
-import { Cursor } from '@hazae41/cursor';
+import { Cursor } from '../../../../../../../hazae41/cursor/mod';
 import { Bytes } from '../../../../../../../hazae41/bytes';
 
 export class RelaySendmeCircuitCell<T extends Writable> {

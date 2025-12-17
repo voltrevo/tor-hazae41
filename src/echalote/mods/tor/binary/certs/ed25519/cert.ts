@@ -1,8 +1,8 @@
-import { Cursor } from '@hazae41/cursor';
 import { Ed25519 } from '../../../../../../TorClient/WebCryptoEd25519.js';
 import { SignedWithEd25519Key } from './extensions/signer';
 import { ExpiredCertError, InvalidSignatureError } from '../../../certs/certs';
 import { Bytes } from '../../../../../../hazae41/bytes/index.js';
+import { Cursor } from '../../../../../../hazae41/cursor/mod.js';
 
 export interface Extensions {
   signer?: SignedWithEd25519Key;

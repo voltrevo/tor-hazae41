@@ -1,4 +1,4 @@
-import { Cursor } from '@hazae41/cursor';
+import { Cursor } from '../../../../../../hazae41/cursor/mod.js';
 import { ECParameters } from './ec_parameters.js';
 import { ECPoint } from './ec_point.js';
 

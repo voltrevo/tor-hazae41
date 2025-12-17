@@ -1,6 +1,6 @@
 import { Opaque, Writable } from '@hazae41/binary';
-import { Cursor } from '@hazae41/cursor';
 import { Record } from '../../../../mods/binary/records/record.js';
+import { Cursor } from '../../../../../hazae41/cursor/mod.js';
 
 export interface Handshakeable extends Writable {
   readonly handshake_type: number;

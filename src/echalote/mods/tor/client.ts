@@ -3,7 +3,6 @@ import { Opaque, Readable, Writable } from '@hazae41/binary';
 import { Bitset } from '@hazae41/bitset';
 import { Ciphers, TlsClientDuplex } from '../../../cadenas';
 import { HalfDuplex } from '@hazae41/cascade';
-import { Cursor } from '@hazae41/cursor';
 import { Future } from '@hazae41/future';
 import { Mutex } from '@hazae41/mutex';
 import {
@@ -61,6 +60,7 @@ import {
 import { invariant } from '../../../utils/debug';
 import { App } from '../../../TorClient/App';
 import { Bytes } from '../../../hazae41/bytes';
+import { Cursor } from '../../../hazae41/cursor/mod';
 
 export interface Guard {
   readonly identity: Bytes<20>;

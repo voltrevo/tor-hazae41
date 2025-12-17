@@ -1,8 +1,8 @@
 import { Opaque, SafeOpaque } from '@hazae41/binary';
-import { Cursor } from '@hazae41/cursor';
 import { Number16 } from '../../../../../mods/binary/numbers/number16.js';
 import { ReadableVector } from '../../../../../mods/binary/vectors/readable.js';
 import { Extension } from './extension.js';
+import { Cursor } from '../../../../../../hazae41/cursor/mod.js';
 
 export namespace OpaqueExtension {
   export function readOrThrow(cursor: Cursor): Extension<Opaque> {

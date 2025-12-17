@@ -1,5 +1,5 @@
 import { Writable } from '@hazae41/binary';
-import { Cursor } from '@hazae41/cursor';
+import { Cursor } from '../../../../hazae41/cursor/mod';
 
 export interface List<T extends Writable> extends Writable {
   readonly array: T[];

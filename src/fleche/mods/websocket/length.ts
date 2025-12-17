@@ -1,6 +1,6 @@
 import { Bytes } from '../../../hazae41/bytes';
+import { Cursor } from '../../../hazae41/cursor/mod';
 import { bitwise_unpack } from '../../../utils/bitwise';
-import { Cursor } from '@hazae41/cursor';
 
 export class Length {
   constructor(readonly value: number) {}

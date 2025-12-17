@@ -1,5 +1,5 @@
 import { Opaque, Writable } from '@hazae41/binary';
-import { Cursor } from '@hazae41/cursor';
+import { Cursor } from '../../../../../../../hazae41/cursor/mod';
 
 export class RelayDataCell<T extends Writable> {
   readonly #class = RelayDataCell;

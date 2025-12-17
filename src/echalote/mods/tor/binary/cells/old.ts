@@ -1,5 +1,4 @@
 import { Opaque, Readable, Writable } from '@hazae41/binary';
-import { Cursor } from '@hazae41/cursor';
 import { SecretCircuit } from '../../circuit';
 import { SecretTorClientDuplex } from '../../client';
 import {
@@ -7,6 +6,7 @@ import {
   InvalidCommandError,
   UnexpectedCircuitError,
 } from './errors.js';
+import { Cursor } from '../../../../../hazae41/cursor/mod';
 
 export interface OldCellable {
   readonly old: true;

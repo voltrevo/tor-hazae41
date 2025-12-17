@@ -1,4 +1,4 @@
-import { Cursor } from '@hazae41/cursor';
+import { Cursor } from '../../../../hazae41/cursor/mod.js';
 import { HashAlgorithm } from '../../../mods/binary/signatures/hash_algorithm.js';
 import { SignatureAlgorithm } from '../../../mods/binary/signatures/signature_algorithm.js';
 

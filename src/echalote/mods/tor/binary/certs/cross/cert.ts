@@ -1,7 +1,7 @@
-import { Cursor } from '@hazae41/cursor';
 import { ExpiredCertError } from '../../../certs/certs';
 import { Unimplemented } from '../../../errors';
 import { Bytes } from '../../../../../../hazae41/bytes';
+import { Cursor } from '../../../../../../hazae41/cursor/mod';
 
 export class CrossCert {
   readonly #class = CrossCert;

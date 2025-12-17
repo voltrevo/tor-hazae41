@@ -1,6 +1,6 @@
 import { Writable } from '@hazae41/binary';
-import { Cursor } from '@hazae41/cursor';
 import { NumberClass, NumberX } from '../../../mods/binary/numbers/number.js';
+import { Cursor } from '../../../../hazae41/cursor/mod.js';
 
 export interface Vector<
   L extends NumberX,

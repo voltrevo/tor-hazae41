@@ -1,11 +1,11 @@
 import { Opaque, Writable } from '@hazae41/binary';
-import { Cursor } from '@hazae41/cursor';
 import {
   BlockCiphertextRecord,
   PlaintextRecord,
 } from '../../../../../mods/binary/records/record.js';
 import { BlockEncrypter } from '../../../../../mods/ciphers/encryptions/encryption.js';
 import { Bytes } from '../../../../../../hazae41/bytes/index.js';
+import { Cursor } from '../../../../../../hazae41/cursor/mod.js';
 
 /**
  * (y % m) where (x + y) % m == 0

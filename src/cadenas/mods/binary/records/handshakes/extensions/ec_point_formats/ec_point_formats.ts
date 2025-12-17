@@ -1,4 +1,4 @@
-import { Cursor } from '@hazae41/cursor';
+import { Cursor } from '../../../../../../../hazae41/cursor/mod.js';
 import { ECPointFormatList } from '../../../../../../mods/binary/records/handshakes/extensions/ec_point_formats/ec_point_format_list.js';
 import { Extension } from '../../../../../../mods/binary/records/handshakes/extensions/extension.js';
 

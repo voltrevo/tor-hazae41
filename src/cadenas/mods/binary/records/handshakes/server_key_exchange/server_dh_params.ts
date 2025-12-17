@@ -1,8 +1,8 @@
 import { Opaque, SafeOpaque } from '@hazae41/binary';
-import { Cursor } from '@hazae41/cursor';
 import { Number16 } from '../../../../../mods/binary/numbers/number16.js';
 import { ReadableVector } from '../../../../../mods/binary/vectors/readable.js';
 import { Vector } from '../../../../../mods/binary/vectors/writable.js';
+import { Cursor } from '../../../../../../hazae41/cursor/mod.js';
 
 export class ServerDHParams {
   constructor(

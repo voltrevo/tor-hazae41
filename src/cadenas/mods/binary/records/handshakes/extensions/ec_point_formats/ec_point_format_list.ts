@@ -1,4 +1,4 @@
-import { Cursor } from '@hazae41/cursor';
+import { Cursor } from '../../../../../../../hazae41/cursor/mod.js';
 import { ReadableList } from '../../../../../../mods/binary/lists/readable.js';
 import { List } from '../../../../../../mods/binary/lists/writable.js';
 import { Number8 } from '../../../../../../mods/binary/numbers/number8.js';

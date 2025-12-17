@@ -1,9 +1,9 @@
 import { test } from '@hazae41/phobos';
 import { assert } from '../../../utils/assert';
 import { Resizer } from './resizer.js';
-import { Cursor } from '@hazae41/cursor';
 import { Writable } from '@hazae41/binary';
 import { Bytes } from '../../../hazae41/bytes';
+import { Cursor } from '../../../hazae41/cursor/mod';
 
 test('Resizer - constructor with defaults', async () => {
   const resizer = new Resizer();
@@ -113,7 +113,7 @@ test('Resizer - writeFromOrThrow with Writable', async () => {
   // Create a simple writable that writes 20 bytes
   const writable: Writable = {
     sizeOrThrow: () => 20,
-    writeOrThrow: (cursor: Cursor<Bytes>) => {
+    writeOrThrow: (cursor: Cursor) => {
       const data = Bytes.alloc(20);
       for (let i = 0; i < 20; i++) data[i] = i;
       cursor.writeOrThrow(data);
@@ -129,7 +129,7 @@ test('Resizer - writeFromOrThrow triggers resize', async () => {
 
   const writable: Writable = {
     sizeOrThrow: () => 150,
-    writeOrThrow: (cursor: Cursor<Bytes>) => {
+    writeOrThrow: (cursor: Cursor) => {
       const data = Bytes.alloc(150);
       cursor.writeOrThrow(data);
     },
@@ -162,7 +162,7 @@ test('Resizer - writeFromOrThrow preserves data from previous writes', async () 
 
   const writable1: Writable = {
     sizeOrThrow: () => 10,
-    writeOrThrow: (cursor: Cursor<Bytes>) => {
+    writeOrThrow: (cursor: Cursor) => {
       const data = Bytes.from([5, 6, 7, 8, 9, 10, 11, 12, 13, 14]);
       cursor.writeOrThrow(data);
     },
@@ -170,7 +170,7 @@ test('Resizer - writeFromOrThrow preserves data from previous writes', async () 
 
   const writable2: Writable = {
     sizeOrThrow: () => 5,
-    writeOrThrow: (cursor: Cursor<Bytes>) => {
+    writeOrThrow: (cursor: Cursor) => {
       const data = Bytes.from([15, 16, 17, 18, 19]);
       cursor.writeOrThrow(data);
     },
@@ -319,7 +319,7 @@ test('Resizer - writeFromOrThrow with Writable', async () => {
   // Create a simple writable that writes 20 bytes
   const writable: Writable = {
     sizeOrThrow: () => 20,
-    writeOrThrow: (cursor: Cursor<Bytes>) => {
+    writeOrThrow: (cursor: Cursor) => {
       const data = Bytes.alloc(20);
       for (let i = 0; i < 20; i++) data[i] = i;
       cursor.writeOrThrow(data);
@@ -335,7 +335,7 @@ test('Resizer - writeFromOrThrow triggers resize', async () => {
 
   const writable: Writable = {
     sizeOrThrow: () => 150,
-    writeOrThrow: (cursor: Cursor<Bytes>) => {
+    writeOrThrow: (cursor: Cursor) => {
       const data = Bytes.alloc(150);
       cursor.writeOrThrow(data);
     },
@@ -368,7 +368,7 @@ test('Resizer - writeFromOrThrow preserves data from previous writes', async () 
 
   const writable1: Writable = {
     sizeOrThrow: () => 10,
-    writeOrThrow: (cursor: Cursor<Bytes>) => {
+    writeOrThrow: (cursor: Cursor) => {
       const data = Bytes.from([5, 6, 7, 8, 9, 10, 11, 12, 13, 14]);
       cursor.writeOrThrow(data);
     },
@@ -376,7 +376,7 @@ test('Resizer - writeFromOrThrow preserves data from previous writes', async () 
 
   const writable2: Writable = {
     sizeOrThrow: () => 5,
-    writeOrThrow: (cursor: Cursor<Bytes>) => {
+    writeOrThrow: (cursor: Cursor) => {
       const data = Bytes.from([15, 16, 17, 18, 19]);
       cursor.writeOrThrow(data);
     },

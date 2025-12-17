@@ -1,8 +1,8 @@
 import { Opaque, Writable } from '@hazae41/binary';
 import { FullDuplex } from '@hazae41/cascade';
-import { Cursor } from '@hazae41/cursor';
 import { Resizer } from '../resizer/resizer';
 import { Bytes } from '../../../hazae41/bytes';
+import { Cursor } from '../../../hazae41/cursor/mod';
 
 export class BatchedFetchStream {
   readonly duplex: FullDuplex<Opaque, Writable>;

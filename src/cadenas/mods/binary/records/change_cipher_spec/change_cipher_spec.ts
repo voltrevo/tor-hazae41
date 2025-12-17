@@ -1,4 +1,4 @@
-import { Cursor } from '@hazae41/cursor';
+import { Cursor } from '../../../../../hazae41/cursor/mod.js';
 import { Record } from '../../../../mods/binary/records/record.js';
 
 export class ChangeCipherSpec {

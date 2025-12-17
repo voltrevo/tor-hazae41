@@ -1,9 +1,9 @@
 import { Writable } from '@hazae41/binary';
-import { Cursor } from '@hazae41/cursor';
 import { Bytes } from '../../../hazae41/bytes';
+import { Cursor } from '../../../hazae41/cursor/mod';
 
 export class Resizer {
-  inner: Cursor<Bytes>;
+  inner: Cursor;
 
   constructor(
     readonly minimum = 2 ** 10,

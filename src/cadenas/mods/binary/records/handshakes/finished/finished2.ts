@@ -1,6 +1,6 @@
-import { Cursor } from '@hazae41/cursor';
 import { Handshake } from '../../../../../mods/binary/records/handshakes/handshake.js';
 import { Bytes } from '../../../../../../hazae41/bytes/index.js';
+import { Cursor } from '../../../../../../hazae41/cursor/mod.js';
 
 export class Finished2 {
   readonly #class = Finished2;

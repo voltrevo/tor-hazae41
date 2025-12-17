@@ -1,4 +1,4 @@
-import { Cursor } from '@hazae41/cursor';
+import { Cursor } from '../../../../../../../hazae41/cursor/mod';
 import { DestroyCell } from '../../direct/destroy/cell';
 
 export class RelayTruncatedCell {

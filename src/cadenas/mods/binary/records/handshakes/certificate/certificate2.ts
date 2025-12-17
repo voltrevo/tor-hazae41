@@ -1,11 +1,11 @@
 import { Opaque, SafeOpaque } from '@hazae41/binary';
-import { Cursor } from '@hazae41/cursor';
 import { ReadableList } from '../../../../../mods/binary/lists/readable.js';
 import { List } from '../../../../../mods/binary/lists/writable.js';
 import { Number24 } from '../../../../../mods/binary/numbers/number24.js';
 import { Handshake } from '../../../../../mods/binary/records/handshakes/handshake.js';
 import { ReadableVector } from '../../../../../mods/binary/vectors/readable.js';
 import { Vector } from '../../../../../mods/binary/vectors/writable.js';
+import { Cursor } from '../../../../../../hazae41/cursor/mod.js';
 
 export class Certificate2 {
   readonly #class = Certificate2;

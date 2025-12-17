@@ -1,6 +1,5 @@
 import { Opaque, Readable, Writable } from '@hazae41/binary';
 import { FullDuplex } from '@hazae41/cascade';
-import { Cursor } from '@hazae41/cursor';
 import { Future } from '@hazae41/future';
 import { X509 } from '@hazae41/x509';
 import { Awaitable } from '../libs/promises/index.js';
@@ -10,6 +9,7 @@ import { Cipher } from '../mods/ciphers/cipher.js';
 import { TlsClientNoneState, TlsClientState } from './state.js';
 import { App } from '../../TorClient/App.js';
 import { Bytes } from '../../hazae41/bytes/index.js';
+import { Cursor } from '../../hazae41/cursor/mod.js';
 
 export interface TlsClientDuplexParams {
   /**

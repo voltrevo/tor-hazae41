@@ -1,5 +1,4 @@
 import { Opaque, SafeOpaque } from '@hazae41/binary';
-import { Cursor } from '@hazae41/cursor';
 import { ReadableList } from '../../../../../mods/binary/lists/readable.js';
 import { List } from '../../../../../mods/binary/lists/writable.js';
 import { Number16 } from '../../../../../mods/binary/numbers/number16.js';
@@ -8,6 +7,7 @@ import { Handshake } from '../../../../../mods/binary/records/handshakes/handsha
 import { SignatureAndHashAlgorithm } from '../../../../../mods/binary/signatures/signature_and_hash_algorithm.js';
 import { ReadableVector } from '../../../../../mods/binary/vectors/readable.js';
 import { Vector } from '../../../../../mods/binary/vectors/writable.js';
+import { Cursor } from '../../../../../../hazae41/cursor/mod.js';
 
 export class ClientCertificateType {
   static readonly types = {

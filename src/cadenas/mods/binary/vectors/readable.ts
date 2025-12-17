@@ -1,7 +1,7 @@
 import { Readable, Writable } from '@hazae41/binary';
-import { Cursor } from '@hazae41/cursor';
 import { NumberClass, NumberX } from '../../../mods/binary/numbers/number.js';
 import { Vector } from '../../../mods/binary/vectors/writable.js';
+import { Cursor } from '../../../../hazae41/cursor/mod.js';
 
 export const ReadableVector = <L extends NumberX, W extends Writable>(
   $length: NumberClass<L>,

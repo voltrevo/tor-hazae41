@@ -1,8 +1,8 @@
-import { Cursor } from '@hazae41/cursor';
 import { Handshake } from '../../../../../mods/binary/records/handshakes/handshake.js';
 import { DigitallySigned } from '../../../../../mods/binary/signatures/digitally_signed.js';
 import { ServerECDHParams } from './server_ecdh_params.js';
 import { Bytes } from '../../../../../../hazae41/bytes/index.js';
+import { Cursor } from '../../../../../../hazae41/cursor/mod.js';
 
 export class ServerKeyExchange2ECDHSigned {
   static readonly type = Handshake.types.server_key_exchange;

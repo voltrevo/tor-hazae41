@@ -1,5 +1,5 @@
-import { Cursor } from '@hazae41/cursor';
 import { Bytes } from '../../../hazae41/bytes';
+import { Cursor } from '../../../hazae41/cursor/mod';
 
 export class WebSocketClose {
   constructor(

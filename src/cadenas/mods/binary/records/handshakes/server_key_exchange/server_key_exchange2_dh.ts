@@ -1,4 +1,4 @@
-import { Cursor } from '@hazae41/cursor';
+import { Cursor } from '../../../../../../hazae41/cursor/mod.js';
 import { Handshake } from '../../../../../mods/binary/records/handshakes/handshake.js';
 import { ServerDHParams } from '../../../../../mods/binary/records/handshakes/server_key_exchange/server_dh_params.js';
 

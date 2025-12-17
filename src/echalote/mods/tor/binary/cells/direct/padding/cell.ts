@@ -1,4 +1,4 @@
-import { Cursor } from '@hazae41/cursor';
+import { Cursor } from '../../../../../../../hazae41/cursor/mod';
 import { Unimplemented } from '../../../../errors';
 import { Bytes } from '../../../../../../../hazae41/bytes';
 

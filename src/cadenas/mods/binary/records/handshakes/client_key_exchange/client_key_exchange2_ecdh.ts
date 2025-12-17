@@ -1,7 +1,7 @@
-import { Cursor } from '@hazae41/cursor';
 import { Handshake } from '../../../../../mods/binary/records/handshakes/handshake.js';
 import { ClientECDiffieHellmanPublic } from './client_ec_diffie_hellman_public.js';
 import { Bytes } from '../../../../../../hazae41/bytes/index.js';
+import { Cursor } from '../../../../../../hazae41/cursor/mod.js';
 
 export class ClientKeyExchange2ECDH {
   readonly #class = ClientKeyExchange2ECDH;
