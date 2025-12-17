@@ -1,7 +1,7 @@
-import { X509 } from '@hazae41/x509';
 import { ExpiredCertError, PrematureCertError } from '../../../certs/certs';
 import { Bytes } from '../../../../../../hazae41/bytes';
 import { Cursor } from '../../../../../../hazae41/cursor/mod';
+import { X509 } from '../../../../../../hazae41/x509';
 
 export class RsaCert {
   static readonly types = {

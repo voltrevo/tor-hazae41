@@ -1,6 +1,6 @@
 import { ASN1 } from '@hazae41/asn1';
 import { fetch } from '../../../../fleche';
-import { OIDs, X509 } from '@hazae41/x509';
+import { OIDs, X509 } from '../../../../hazae41/x509';
 import { Mutable } from '../../../libs/typescript/typescript';
 import { assert } from '../../../../utils/assert.js';
 import { Circuit } from '../circuit.js';

@@ -1,5 +1,10 @@
 import { IA5String, Integer, ObjectIdentifier, Sequence } from '@hazae41/asn1';
-import { Certificate, OtherName, SubjectAltName, X509 } from '@hazae41/x509';
+import {
+  Certificate,
+  OtherName,
+  SubjectAltName,
+  X509,
+} from '../../hazae41/x509';
 import { BigBytes } from '../libs/bigint/bigint.js';
 import { BigMath } from '../libs/bigmath/index.js';
 import { prfOrThrow } from './algorithms/prf/prf.js';

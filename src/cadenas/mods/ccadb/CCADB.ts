@@ -1,4 +1,3 @@
-import { X509 } from '@hazae41/x509';
 import { App } from '../../../TorClient/App.js';
 import { certHashes } from './certHashes.js';
 import type { FetchCerts, CertificateSource } from './fetchCerts.js';
@@ -9,6 +8,7 @@ import { Bytes } from '../../../hazae41/bytes/index.js';
 import { Writable } from '../../../hazae41/binary/mod.js';
 import { Base16 } from '../../../hazae41/base16/index.js';
 import { Base64 } from '../../../hazae41/base64/index.js';
+import { X509 } from '../../../hazae41/x509/index.js';
 
 export interface Trusted {
   readonly hashBase16: string;

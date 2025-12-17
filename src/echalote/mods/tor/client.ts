@@ -10,7 +10,6 @@ import {
   Plume,
   SuperEventTarget,
 } from '@hazae41/plume';
-import { X509 } from '@hazae41/x509';
 import { Resizer } from '../../libs/resizer/resizer';
 import { Console } from '../console/index';
 import { Sha1Hasher } from './Sha1Hasher';
@@ -61,6 +60,7 @@ import { App } from '../../../TorClient/App';
 import { Bytes } from '../../../hazae41/bytes';
 import { Cursor } from '../../../hazae41/cursor/mod';
 import { Readable, Unknown, Writable } from '../../../hazae41/binary/mod';
+import { X509 } from '../../../hazae41/x509';
 
 export interface Guard {
   readonly identity: Bytes<20>;

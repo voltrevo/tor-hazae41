@@ -14,12 +14,12 @@
  * - ccadbHashes.ts: SPKI hashes for validation (used by ccadbDynamic.ts)
  */
 
-import { X509 } from '@hazae41/x509';
 import fs from 'fs/promises';
 import path from 'path';
 import { execSync } from 'child_process';
 import { Bytes } from '../src/hazae41/bytes';
 import { Writable } from '../src/hazae41/binary/mod';
+import { X509 } from '../src/hazae41/x509';
 
 type CertificateSource = 'certifi' | 'curl' | 'ccadb';
 
