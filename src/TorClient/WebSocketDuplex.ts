@@ -1,6 +1,6 @@
-import { HalfDuplex } from '@hazae41/cascade';
 import { Bytes } from '../hazae41/bytes';
 import { Unknown, Writable } from '../hazae41/binary/mod';
+import { HalfDuplex } from '../hazae41/cascade';
 
 export interface WebSocketDuplexParams {
   /**

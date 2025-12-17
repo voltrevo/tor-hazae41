@@ -3,7 +3,7 @@ import {
   SimplexParams,
   SuperReadableStream,
   SuperWritableStream,
-} from '@hazae41/cascade';
+} from '../../../hazae41/cascade';
 import { Future } from '@hazae41/future';
 import { Nullable } from '../../libs/nullable/index';
 import { Awaitable } from '../../libs/promises/index';

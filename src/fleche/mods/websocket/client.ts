@@ -1,5 +1,4 @@
 import { bitwise_pack_right, bitwise_unpack } from '../../../utils/bitwise';
-import { HalfDuplex } from '@hazae41/cascade';
 import { Future } from '@hazae41/future';
 import { Signals } from '@hazae41/signals';
 import { Iterators } from '../../libs/iterables/iterators';
@@ -20,6 +19,7 @@ import { Bytes } from '../../../hazae41/bytes';
 import { Cursor } from '../../../hazae41/cursor/mod';
 import { Readable, Writable } from '../../../hazae41/binary/mod';
 import { Base64 } from '../../../hazae41/base64';
+import { HalfDuplex } from '../../../hazae41/cascade';
 
 const ACCEPT_SUFFIX = Bytes.fromUtf8('258EAFA5-E914-47DA-95CA-C5AB0DC85B11');
 

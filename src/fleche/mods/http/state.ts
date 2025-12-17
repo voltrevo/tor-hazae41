@@ -1,7 +1,7 @@
-import { SuperReadableStream } from '@hazae41/cascade';
 import { Nullable } from '../../libs/nullable/index';
 import { Resizer } from '../../libs/resizer/resizer';
 import { Bytes } from '../../../hazae41/bytes';
+import { SuperReadableStream } from '../../../hazae41/cascade';
 
 export type HttpState =
   | HttpNoneState
