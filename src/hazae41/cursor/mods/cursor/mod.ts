@@ -425,25 +425,6 @@ export class Cursor<N extends number = number> {
     this.offset += 8;
   }
 
-  getFloat16OrThrow(littleEndian?: boolean): number {
-    return this.data.getFloat16(this.offset, littleEndian);
-  }
-
-  readFloat16OrThrow(littleEndian?: boolean): number {
-    const x = this.getFloat16OrThrow(littleEndian);
-    this.offset += 2;
-    return x;
-  }
-
-  setFloat16OrThrow(x: number, littleEndian?: boolean): void {
-    this.data.setFloat16(this.offset, x, littleEndian);
-  }
-
-  writeFloat16OrThrow(x: number, littleEndian?: boolean): void {
-    this.setFloat16OrThrow(x, littleEndian);
-    this.offset += 2;
-  }
-
   getFloat32OrThrow(littleEndian?: boolean): number {
     return this.data.getFloat32(this.offset, littleEndian);
   }
