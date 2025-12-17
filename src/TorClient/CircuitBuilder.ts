@@ -10,7 +10,7 @@ import { MicrodescManager } from './MicrodescManager';
 import { assert } from '../utils/assert';
 import type { App } from './App';
 import { ConsensusManager } from './ConsensusManager';
-import { Bytes } from '../cadenas/libs/bytes/index.js';
+import { Bytes } from '../hazae41/bytes';
 
 /**
  * Events emitted by CircuitBuilder.

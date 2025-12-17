@@ -5,6 +5,7 @@ import { MemoryStorage } from '../../../storage/index.js';
 import { Log } from '../../../Log/index.js';
 import { App } from '../../../TorClient/App.js';
 import { VirtualClock } from '../../../clock/index.js';
+import { Bytes } from '../../../hazae41/bytes/index.js';
 
 // Mock base64 certificates (raw form for storage)
 const mockBase64Certs = ['YWJjMTIz', 'ZGVmNDU2'];
@@ -36,7 +37,7 @@ test('CCADB: load from storage and re-validate', async () => {
     savedAt: new Date(app.get('Clock').now()).toISOString(),
     base64Certs: mockBase64Certs,
   };
-  const data = new TextEncoder().encode(JSON.stringify(payload));
+  const data = Bytes.fromUtf8(JSON.stringify(payload));
   await storage.write('ccadb:cached', data);
 
   // Call get() - it should load from storage and re-validate
@@ -71,7 +72,7 @@ test('CCADB: does not fetch when cache is available', async () => {
     savedAt: new Date(app.get('Clock').now()).toISOString(),
     base64Certs: mockBase64Certs,
   };
-  const data = new TextEncoder().encode(JSON.stringify(payload));
+  const data = Bytes.fromUtf8(JSON.stringify(payload));
   await storage.write('ccadb:cached', data);
 
   // First get() - should load from storage, not fetch
@@ -100,7 +101,7 @@ test('CCADB: 30-day expiry enforcement', async () => {
     savedAt: new Date(clock.now()).toISOString(),
     base64Certs: mockBase64Certs,
   };
-  const data = new TextEncoder().encode(JSON.stringify(payload));
+  const data = Bytes.fromUtf8(JSON.stringify(payload));
   await storage.write('ccadb:cached', data);
 
   // Load them into a CCADB instance - should get from storage
@@ -161,7 +162,7 @@ test('CCADB: clearCache() removes memory and storage', async () => {
     savedAt: new Date(app.get('Clock').now()).toISOString(),
     base64Certs: mockBase64Certs,
   };
-  const data = new TextEncoder().encode(JSON.stringify(payload));
+  const data = Bytes.fromUtf8(JSON.stringify(payload));
   await storage.write('ccadb:cached', data);
 
   // Load it into memory
@@ -189,7 +190,7 @@ test('CCADB: storage parse error falls back to fresh fetch', async () => {
   const ccadb = new CCADB(app);
 
   // Store invalid JSON in cache
-  const invalidData = new TextEncoder().encode('{ invalid json }');
+  const invalidData = Bytes.fromUtf8('{ invalid json }');
   await storage.write('ccadb:cached', invalidData);
 
   // Clear in-memory cache
@@ -216,7 +217,7 @@ test('CCADB: in-memory cache on subsequent calls', async () => {
     savedAt: new Date(app.get('Clock').now()).toISOString(),
     base64Certs: mockBase64Certs,
   };
-  const data = new TextEncoder().encode(JSON.stringify(payload));
+  const data = Bytes.fromUtf8(JSON.stringify(payload));
   await storage.write('ccadb:cached', data);
 
   // First call loads from storage into memory
@@ -337,7 +338,7 @@ test('CCADB: get() validates cached base64 certs', async () => {
     savedAt: new Date(app.get('Clock').now()).toISOString(),
     base64Certs: mockBase64Certs,
   };
-  const data = new TextEncoder().encode(JSON.stringify(payload));
+  const data = Bytes.fromUtf8(JSON.stringify(payload));
   await storage.write('ccadb:cached', data);
 
   const ccadb = new CCADB(app);

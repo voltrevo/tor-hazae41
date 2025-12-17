@@ -12,7 +12,7 @@ function toHex(bytes: Bytes): string {
 
 // Helper function to convert string to Bytes
 function toBytes(str: string): Bytes {
-  return new TextEncoder().encode(str);
+  return Bytes.fromUtf8(str);
 }
 
 test('Sha1Hasher: basic single hash', async () => {

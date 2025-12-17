@@ -10,7 +10,7 @@ test('PRF (master secret)', async ({ message: _1 }) => {
 
   const _start = Date.now();
 
-  const seed = Bytes.concat([client_random, server_random]);
+  const seed = Bytes.concat(client_random, server_random);
   const result = await prfOrThrow(
     'SHA-1',
     premaster_secret,

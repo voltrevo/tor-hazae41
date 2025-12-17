@@ -59,7 +59,7 @@ export async function prfOrThrow(
     false,
     ['sign']
   );
-  const prf = await P(key, Bytes.concat(Bytes.encodeUtf8(label), seed), length);
+  const prf = await P(key, Bytes.concat(Bytes.fromUtf8(label), seed), length);
 
   return prf;
 }

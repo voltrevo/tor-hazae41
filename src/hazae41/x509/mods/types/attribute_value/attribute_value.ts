@@ -5,7 +5,7 @@ import { InvalidFormatError } from '../../errors';
 import { DirectoryString } from '../directory_string/directory_string';
 
 function escape(match: string) {
-  const bytes = new TextEncoder().encode(match);
+  const bytes = Bytes.fromUtf8(match);
   const hex = Base16.encodeOrThrow(bytes);
   return hex.replaceAll(/../g, m => '\\' + m);
 }

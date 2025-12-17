@@ -69,7 +69,7 @@ function readFromSourceSpec(spec: string): Bytes {
     if (!existsSync(path)) die(`No such file: ${path}`);
     return Bytes.from(readFileSync(path));
   }
-  return new TextEncoder().encode(spec);
+  return Bytes.fromUtf8(spec);
 }
 
 function readStdinSync(): Bytes {
@@ -77,7 +77,7 @@ function readStdinSync(): Bytes {
   const buf = readFileSync(0); // fd 0 (stdin) in Node allows sync read
   chunks.push(Bytes.from(buf));
   const length = chunks.reduce((a, b) => a + b.length, 0);
-  const result = Bytes.from(length);
+  const result = Bytes.alloc(length);
   let offset = 0;
   for (const chunk of chunks) {
     result.set(chunk, offset);
@@ -273,10 +273,10 @@ async function main() {
     if (body !== undefined) {
       const size =
         typeof body === 'string'
-          ? new TextEncoder().encode(body).length
+          ? Bytes.fromUtf8(body).length
           : body instanceof Blob
             ? body.size
-            : body instanceof Bytes
+            : body instanceof Uint8Array
               ? body.byteLength
               : 'unknown';
       stderr.write(`> (body ${size} bytes)\n`);

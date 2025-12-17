@@ -9,7 +9,7 @@ export async function hash(
 
   for (const arg of args) {
     if (typeof arg === 'string') {
-      len += new TextEncoder().encode(arg).length;
+      len += Bytes.fromUtf8(arg).length;
     } else if (typeof arg === 'number') {
       len += 8;
     } else if (arg instanceof Uint8Array) {
@@ -26,7 +26,7 @@ export async function hash(
 
   for (const arg of args) {
     if (typeof arg === 'string') {
-      const bytes = new TextEncoder().encode(arg);
+      const bytes = Bytes.fromUtf8(arg);
       uint8View.set(bytes, offset);
       offset += bytes.length;
     } else if (typeof arg === 'number') {

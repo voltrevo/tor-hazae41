@@ -8,6 +8,7 @@ import { CertificateManager } from './CertificateManager';
 import { Log } from '../Log';
 import { App } from './App';
 import { CircuitManager } from './CircuitManager';
+import { Bytes } from '../hazae41/bytes';
 
 export interface ConsensusManagerOptions {
   app: App;
@@ -235,7 +236,7 @@ export class ConsensusManager {
 
       // Reconstruct the full consensus text from preimage + signatureText
       const textToSave = await this.serializeConsensus(consensus);
-      const data = new TextEncoder().encode(textToSave);
+      const data = Bytes.fromUtf8(textToSave);
       await this.storage.write(key, data);
 
       this.log.info(`Saved consensus to cache: ${key}`);

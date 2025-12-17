@@ -3,6 +3,7 @@ import { IStorage } from '../storage';
 import { Log } from '../Log';
 import { invariant } from '../utils/debug';
 import { App } from './App';
+import { Bytes } from '../hazae41/bytes';
 
 export interface MicrodescManagerOptions {
   app: App;
@@ -248,7 +249,7 @@ export class MicrodescManager {
 
       // Serialize microdesc to JSON format
       const textToSave = await this.serializeMicrodesc(microdesc);
-      const data = new TextEncoder().encode(textToSave);
+      const data = Bytes.fromUtf8(textToSave);
       await this.storage.write(key, data);
 
       // Update in-memory cache
