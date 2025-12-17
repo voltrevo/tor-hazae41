@@ -1,4 +1,4 @@
-import { Bytes } from '@hazae41/bytes';
+import { Bytes } from '../../../bytes';
 import { assert, test } from '../../../phobos/mod';
 import { getCryptoRandomOrNull } from './index';
 

@@ -1,5 +1,5 @@
-import { Bytes } from '@hazae41/bytes';
 import { Empty, Writable } from '../../../../binary/mod';
+import { Bytes } from '../../../../bytes';
 import { Cursor } from '../../../../cursor/mod';
 
 export class SmuxUpdate {

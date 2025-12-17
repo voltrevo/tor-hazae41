@@ -8,7 +8,7 @@ import type { FetchCerts, CertificateSource } from './fetchCerts.js';
 import type { IStorage } from '../../../storage/index.js';
 import type { IClock } from '../../../clock/IClock.js';
 import { Log } from '../../../Log/index.js';
-import { Bytes } from '@hazae41/bytes';
+import { Bytes } from '../../../hazae41/bytes/index.js';
 
 export interface Trusted {
   readonly hashBase16: string;

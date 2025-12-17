@@ -3,7 +3,7 @@ import { assert, test } from '../../../../phobos/mod';
 import { relative, resolve } from 'path';
 import { KcpSegment } from './index';
 import { Opaque } from '../../../../asn1/mods/triplets/opaque/opaque';
-import { Bytes } from '@hazae41/bytes';
+import { Bytes } from '../../../../bytes';
 
 const directory = resolve('./dist/test/');
 const { pathname } = new URL(import.meta.url);

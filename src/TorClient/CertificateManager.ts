@@ -2,6 +2,7 @@ import { Circuit, Echalote } from '../echalote';
 import { IStorage } from '../storage';
 import { Log } from '../Log';
 import { App } from './App';
+import { Bytes } from '../hazae41/bytes';
 
 export interface CertificateManagerOptions {
   app: App;
@@ -249,7 +250,7 @@ export class CertificateManager {
 
       // Serialize certificate to text format
       const textToSave = await this.serializeCertificate(certificate);
-      const data = new TextEncoder().encode(textToSave);
+      const data = Bytes.fromUtf8(textToSave);
       await this.storage.write(key, data);
 
       // Update in-memory cache
