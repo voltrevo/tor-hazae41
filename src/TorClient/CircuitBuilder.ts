@@ -1,3 +1,4 @@
+import { Buffer } from 'buffer';
 import { Circuit, Consensus, Echalote, TorClientDuplex } from '../echalote';
 import { Log } from '../Log';
 import { selectRandomElement } from '../utils/random';

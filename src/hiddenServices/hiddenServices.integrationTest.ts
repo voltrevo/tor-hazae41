@@ -1,3 +1,4 @@
+import { Buffer } from 'buffer';
 import { test } from '@hazae41/phobos';
 import { readFile } from 'fs/promises';
 import { Echalote } from '../echalote/index.js';

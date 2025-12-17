@@ -1,5 +1,4 @@
 import '@hazae41/symbol-dispose-polyfill';
-import './bufferPolyfill';
 
 import { Ciphers, TlsClientDuplex } from '../cadenas';
 import { fetch } from '../fleche';

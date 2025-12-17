@@ -1,3 +1,4 @@
+import { Buffer } from 'buffer';
 import { X509 } from '@hazae41/x509';
 import { Writable } from '@hazae41/binary';
 import { App } from '../../../TorClient/App.js';

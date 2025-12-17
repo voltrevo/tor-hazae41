@@ -1,3 +1,4 @@
+import { Buffer } from 'buffer';
 import { test } from '@hazae41/phobos';
 import { assert } from '../../../utils/assert';
 import { Buffers } from './buffers.js';
