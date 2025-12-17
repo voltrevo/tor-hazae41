@@ -1,10 +1,23 @@
 import { Bytes } from '../../../libs/bytes/index.js';
 
+/**
+ * Wraps crypto.subtle.sign() result in a safe cast to Uint8Array<ArrayBuffer>.
+ * Safe because crypto.subtle.sign always returns an ArrayBuffer (never SharedArrayBuffer),
+ * but TypeScript's lib.dom.d.ts conservatively types it as ArrayBufferLike.
+ */
+function createArrayBufferFromSubtleSign(
+  buffer: ArrayBuffer
+): Uint8Array<ArrayBuffer> {
+  return new Uint8Array(buffer) as Uint8Array<ArrayBuffer>;
+}
+
 export async function hmacOrThrow(
   key: CryptoKey,
   seed: Uint8Array<ArrayBuffer>
 ): Promise<Uint8Array<ArrayBuffer>> {
-  return new Uint8Array(await crypto.subtle.sign('HMAC', key, seed));
+  return createArrayBufferFromSubtleSign(
+    await crypto.subtle.sign('HMAC', key, seed)
+  );
 }
 
 /**
@@ -60,7 +73,7 @@ export async function prfOrThrow(
   hash: AlgorithmIdentifier,
   secret: Uint8Array<ArrayBuffer>,
   label: string,
-  seed: Uint8Array<ArrayBuffer>,
+  seed: Uint8Array,
   length: number
 ): Promise<Uint8Array<ArrayBuffer>> {
   const key = await crypto.subtle.importKey(
@@ -70,11 +83,7 @@ export async function prfOrThrow(
     false,
     ['sign']
   );
-  const prf = await P(
-    key,
-    Bytes.concat(new TextEncoder().encode(label), seed),
-    length
-  );
+  const prf = await P(key, Bytes.concat(Bytes.encodeUtf8(label), seed), length);
 
   return prf;
 }

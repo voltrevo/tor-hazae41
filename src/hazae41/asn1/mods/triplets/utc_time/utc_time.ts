@@ -3,6 +3,7 @@ import { InvalidValueError } from '../../errors/errors';
 import { Length } from '../../length/length';
 import { DERTriplet } from '../../resolvers/der/triplet';
 import { Type } from '../../type/type';
+import { Bytes } from '../../../../../cadenas/libs/bytes/index.js';
 
 function pad2(value: number) {
   return value.toString().padStart(2, '0');
@@ -57,7 +58,7 @@ export namespace UTCTime {
       const mm = pad2(asn1.value.getUTCMinutes());
       const ss = pad2(asn1.value.getUTCSeconds());
 
-      const bytes = new TextEncoder().encode(`${YY}${MM}${DD}${hh}${mm}${ss}Z`);
+      const bytes = Bytes.encodeUtf8(`${YY}${MM}${DD}${hh}${mm}${ss}Z`);
       const length = new Length(bytes.length).toDER();
 
       return new DER(asn1.type.toDER(), length, asn1.value, bytes);

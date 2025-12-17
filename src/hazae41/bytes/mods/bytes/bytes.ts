@@ -3,64 +3,61 @@ import { Ascii } from '../../libs/ascii/ascii';
 import { Buffers } from '../../libs/buffers/index';
 import { Utf8 } from '../../libs/utf8/utf8';
 
-export type Uint8Array<N extends number = number> = number extends N
-  ? globalThis.Uint8Array
-  : globalThis.Uint8Array & { readonly length: N };
+export type Bytes<N extends number = number> =
+  globalThis.Uint8Array<ArrayBuffer> & { length: N };
 
 export namespace Bytes {
   /**
    * Alloc 0-lengthed bytes using standard constructor
    * @returns `Uint8Array<[]>`
    */
-  export function empty(): Uint8Array<0> {
+  export function empty(): Bytes<0> {
     return alloc(0);
   }
 
   /**
    * Alloc bytes with typed length using standard constructor
    * @param length
-   * @returns `Uint8Array[0;N]`
+   * @returns `Bytes[0;N]`
    */
-  export function alloc<N extends number>(length: N): Uint8Array<N> {
-    return new Uint8Array(length) as Uint8Array<N>;
+  export function alloc<N extends number>(length: N): Bytes<N> {
+    return new Uint8Array(length) as Bytes<N>;
   }
 
   /**
    * Create bytes from array
    * @param array
-   * @returns `Uint8Array[number;N]`
+   * @returns `Bytes[number;N]`
    */
-  export function from<N extends number>(
-    sized: ArrayLike<number, N>
-  ): Uint8Array<N>;
+  export function from<N extends number>(sized: ArrayLike<number, N>): Bytes<N>;
 
-  export function from(array: ArrayBuffer | ArrayLike<number>): Uint8Array;
+  export function from(array: ArrayBuffer | ArrayLike<number>): Bytes;
 
-  export function from(array: ArrayBuffer | ArrayLike<number>): Uint8Array {
+  export function from(array: ArrayBuffer | ArrayLike<number>): Bytes {
     return new Uint8Array(array);
   }
 
   /**
-   * Alloc Uint8Array with typed length and fill it with WebCrypto's CSPRNG
+   * Alloc Bytes with typed length and fill it with WebCrypto's CSPRNG
    * @param length
-   * @returns `Uint8Array[number;N]`
+   * @returns `Bytes[number;N]`
    */
-  export function random<N extends number>(length: N): Uint8Array<N> {
+  export function random<N extends number>(length: N): Bytes<N> {
     const bytes = alloc(length);
     crypto.getRandomValues(bytes);
     return bytes;
   }
 
   /**
-   * Type guard bytes of N length into Uint8Array<N>
+   * Type guard bytes of N length into Bytes<N>
    * @param bytes
    * @param length
    * @returns
    */
   export function is<N extends number>(
-    bytes: Uint8Array,
+    bytes: Bytes,
     length: N
-  ): bytes is Uint8Array<N> {
+  ): bytes is Bytes<N> {
     return bytes.length.valueOf() === length.valueOf();
   }
 
@@ -71,9 +68,9 @@ export namespace Bytes {
    * @returns
    */
   export function equals<N extends number>(
-    a: Uint8Array,
-    b: Uint8Array<N>
-  ): a is Uint8Array<N> {
+    a: Bytes,
+    b: Bytes<N>
+  ): a is Bytes<N> {
     if ('indexedDB' in globalThis) return indexedDB.cmp(a, b) === 0;
     if ('process' in globalThis) return Buffers.fromView(a).equals(b);
     throw new Error(`Could not compare bytes`);
@@ -86,32 +83,32 @@ export namespace Bytes {
    * @returns
    */
   export function equals2<N extends number>(
-    a: Uint8Array<N>,
-    b: Uint8Array
-  ): b is Uint8Array<N> {
+    a: Bytes<N>,
+    b: Bytes
+  ): b is Bytes<N> {
     return equals(b, a);
   }
 
   /**
-   * Try to cast bytes of N length into Uint8Array<N>
+   * Try to cast bytes of N length into Bytes<N>
    * @param view
    * @param length
    * @returns
    */
   export function asOrThrow<N extends number>(
-    bytes: Uint8Array,
+    bytes: Bytes,
     length: N
-  ): Uint8Array<N> {
+  ): Bytes<N> {
     if (!is(bytes, length)) throw new Error();
     return bytes;
   }
 
   /**
-   * Zero-copy conversion from ArrayBufferView into Uint8Array
+   * Zero-copy conversion from ArrayBufferView into Bytes
    * @param view
    * @returns
    */
-  export function fromView(view: ArrayBufferView): Uint8Array {
+  export function fromView(view: ArrayBufferView<ArrayBuffer>): Bytes {
     return new Uint8Array(view.buffer, view.byteOffset, view.byteLength);
   }
 
@@ -120,7 +117,7 @@ export namespace Bytes {
    * @param text
    * @returns
    */
-  export function fromUtf8(text: string): Uint8Array {
+  export function fromUtf8(text: string): Bytes {
     return Utf8.encoder.encode(text);
   }
 
@@ -129,7 +126,7 @@ export namespace Bytes {
    * @param text
    * @returns
    */
-  export function toUtf8(bytes: Uint8Array): string {
+  export function toUtf8(bytes: Bytes): string {
     return Utf8.decoder.decode(bytes);
   }
 
@@ -138,7 +135,7 @@ export namespace Bytes {
    * @param bytes
    * @returns
    */
-  export function fromAscii(text: string): Uint8Array {
+  export function fromAscii(text: string): Bytes {
     if ('process' in globalThis) return fromView(Buffer.from(text, 'ascii'));
     return Ascii.encoder.encode(text);
   }
@@ -148,7 +145,7 @@ export namespace Bytes {
    * @param bytes
    * @returns
    */
-  export function toAscii(bytes: Uint8Array): string {
+  export function toAscii(bytes: Bytes): string {
     if ('process' in globalThis)
       return Buffers.fromView(bytes).toString('ascii');
     return Ascii.decoder.decode(bytes);
@@ -163,12 +160,12 @@ export namespace Bytes {
    * @returns
    */
   export function sliceOrPadStart<N extends number>(
-    bytes: Uint8Array,
+    bytes: Bytes,
     length: N
-  ): Uint8Array<N> {
+  ): Bytes<N> {
     if (bytes.length >= length) {
       const slice = bytes.slice(bytes.length - length, bytes.length);
-      return fromView(slice) as Uint8Array<N>;
+      return fromView(slice) as Bytes<N>;
     }
 
     const array = alloc(length);
@@ -185,9 +182,9 @@ export namespace Bytes {
    * @returns
    */
   export function padStart<X extends number, N extends number>(
-    bytes: Uint8Array<X>,
+    bytes: Bytes<X>,
     length: N
-  ): Uint8Array<X> | Uint8Array<N> {
+  ): Bytes<X> | Bytes<N> {
     if (bytes.length >= length) return bytes;
 
     const array = alloc(length);
@@ -200,7 +197,7 @@ export namespace Bytes {
    * @param list
    * @returns
    */
-  export function concat(list: Uint8Array[]) {
+  export function concat(list: Bytes[]) {
     if ('process' in globalThis) return fromView(Buffer.concat(list));
 
     const length = list.reduce((p, c) => p + c.length, 0);
@@ -223,11 +220,7 @@ export namespace Bytes {
    * @param start
    * @returns index or -1
    */
-  export function indexOf(
-    bytes: Uint8Array,
-    search: Uint8Array,
-    start = 0
-  ): number {
+  export function indexOf(bytes: Bytes, search: Bytes, start = 0): number {
     while (true) {
       const index = bytes.indexOf(search[0], start);
 

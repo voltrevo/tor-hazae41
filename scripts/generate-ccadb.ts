@@ -19,6 +19,7 @@ import { Writable } from '@hazae41/binary';
 import fs from 'fs/promises';
 import path from 'path';
 import { execSync } from 'child_process';
+import { Bytes } from '../src/hazae41/bytes';
 
 type CertificateSource = 'certifi' | 'curl' | 'ccadb';
 
@@ -110,7 +111,7 @@ async function extractCertMetadata(
     const spki = Writable.writeToBytesOrThrow(
       x509.tbsCertificate.subjectPublicKeyInfo.toDER()
     );
-    const hash = new Uint8Array(await crypto.subtle.digest('SHA-256', spki));
+    const hash = Bytes.from(await crypto.subtle.digest('SHA-256', spki));
     const hashBase16 = Buffer.from(hash).toString('hex');
 
     // Extract subject DN (first CN if available)

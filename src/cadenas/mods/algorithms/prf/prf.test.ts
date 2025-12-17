@@ -1,6 +1,6 @@
-import { Bytes } from '@hazae41/bytes';
 import { assert, test } from '@hazae41/phobos';
 import { prfOrThrow } from './prf.js';
+import { Bytes } from '../../../../hazae41/bytes/index.js';
 
 test('PRF (master secret)', async ({ message: _1 }) => {
   const premaster_secret = Bytes.random(128);

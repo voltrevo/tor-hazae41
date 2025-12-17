@@ -2,6 +2,7 @@ import { Cursor } from '../../../../cursor/mod';
 import { Length } from '../../length/length';
 import { DERTriplet } from '../../resolvers/der/triplet';
 import { Type } from '../../type/type';
+import { Bytes } from '../../../../../cadenas/libs/bytes/index.js';
 
 export class UTF8String {
   static readonly type = Type.create(
@@ -42,7 +43,7 @@ export namespace UTF8String {
     }
 
     static from(asn1: UTF8String) {
-      const bytes = new TextEncoder().encode(asn1.value);
+      const bytes = Bytes.encodeUtf8(asn1.value);
       const length = new Length(bytes.length).toDER();
 
       return new DER(asn1.type.toDER(), length, asn1.value, bytes);
