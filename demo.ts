@@ -1,7 +1,3 @@
-// Polyfill Buffer for browser environment
-import { Buffer } from 'buffer';
-globalThis.Buffer = Buffer;
-
 // Import the TorClient abstraction
 import { TorClient } from './src/TorClient/versions/standard';
 import { Log } from './src/Log/index.js';
