@@ -1,4 +1,4 @@
-import { None, Option, Some } from '@hazae41/option';
+import { None, Option, Some } from '../../../../../../hazae41/option';
 import { ReadableList } from '../../../../../mods/binary/lists/readable.js';
 import { List } from '../../../../../mods/binary/lists/writable.js';
 import { Number16 } from '../../../../../mods/binary/numbers/number16.js';

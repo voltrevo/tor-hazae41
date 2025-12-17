@@ -1,5 +1,5 @@
 import { WebCryptoAes128Ctr } from '../../../TorClient/WebCryptoAes128Ctr';
-import { Option } from '@hazae41/option';
+import { Option } from '../../../hazae41/option';
 import {
   CloseEvents,
   ErrorEvents,
