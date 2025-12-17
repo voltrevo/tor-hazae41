@@ -1,3 +1,4 @@
+import { assert } from '../../../../utils/assert';
 import { ArrayLike } from '../../../arrays/index';
 import { Ascii } from '../../libs/ascii/ascii';
 import { Buffers } from '../../libs/buffers/index';
@@ -233,5 +234,12 @@ export namespace Bytes {
 
       start = index + 1;
     }
+  }
+
+  export function assertLen<N extends number>(
+    bytes: Bytes,
+    len: N
+  ): asserts bytes is Bytes<N> {
+    assert(bytes.length === len);
   }
 }

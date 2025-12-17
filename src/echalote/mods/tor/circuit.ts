@@ -397,15 +397,15 @@ export class SecretCircuit {
     using relayid_rsa_x = Base64.get()
       .getOrThrow()
       .decodeUnpaddedOrThrow(microdesc.identity);
-    const relayid_rsa = Bytes.castOrThrow(
-      relayid_rsa_x.bytes.slice(),
-      HASH_LEN
-    );
+    const relayid_rsa = relayid_rsa_x.bytes.slice();
+    Bytes.assertLen(relayid_rsa, HASH_LEN);
 
     using ntor_key_x = Base64.get()
       .getOrThrow()
       .decodeUnpaddedOrThrow(microdesc.ntorOnionKey);
-    const ntor_key = Bytes.castOrThrow(ntor_key_x.bytes.slice(), 32);
+
+    const ntor_key: Bytes = ntor_key_x.bytes.slice();
+    Bytes.assertLen(ntor_key, 32);
 
     const relayid_ed = Option.wrap(microdesc.idEd25519)
       .mapSync(x => {
@@ -433,7 +433,8 @@ export class SecretCircuit {
 
     const public_x_memory = wasm_public_x.exportOrThrow();
 
-    const public_x = Bytes.castOrThrow(public_x_memory.bytes.slice(), 32);
+    const public_x = public_x_memory.bytes.slice();
+    Bytes.assertLen(public_x, 32);
     const public_b = ntor_key;
 
     const ntor_request = new Ntor.NtorRequest(public_x, relayid_rsa, public_b);
@@ -476,8 +477,10 @@ export class SecretCircuit {
     const shared_xy_memory = wasm_shared_xy.exportOrThrow();
     const shared_xb_memory = wasm_shared_xb.exportOrThrow();
 
-    const shared_xy = Bytes.castOrThrow(shared_xy_memory.bytes.slice(), 32);
-    const shared_xb = Bytes.castOrThrow(shared_xb_memory.bytes.slice(), 32);
+    const shared_xy = shared_xy_memory.bytes.slice();
+    Bytes.assertLen(shared_xy, 32);
+    const shared_xb = shared_xb_memory.bytes.slice();
+    Bytes.assertLen(shared_xb, 32);
 
     const result = await NtorResult.finalizeOrThrow(
       shared_xy,
