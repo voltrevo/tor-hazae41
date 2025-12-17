@@ -1,4 +1,4 @@
-import { Future } from '../../../future/index.ts';
+import { Future } from '../../../future/index';
 
 export class AbortError extends Error {
   constructor(readonly signal: AbortSignal) {

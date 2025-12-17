@@ -1,7 +1,7 @@
-import { Writable } from '../../../../binary/mod.ts';
-import { Length } from '../../length/length.ts';
-import { Triplet } from '../triplet.ts';
-import { Type } from '../../type/type.ts';
+import { Writable } from '../../../../binary/mod';
+import { Length } from '../../length/length';
+import { Triplet } from '../triplet';
+import { Type } from '../../type/type';
 
 export interface DERTriplet extends Triplet, Writable {
   readonly type: Type.DER;

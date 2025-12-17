@@ -1,2 +1,2 @@
-export * from './option/mod.ts';
-export * from './result/mod.ts';
+export * from './option/mod';
+export * from './result/mod';

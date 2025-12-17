@@ -1,2 +1,2 @@
-export * from './der/index.ts';
-export * from './triplet.ts';
+export * from './der/index';
+export * from './triplet';

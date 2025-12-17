@@ -1,12 +1,12 @@
-import { Cursor } from '../../../../cursor/mod.ts';
-import { DERable } from '../../resolvers/der/derable.ts';
-import { Nullable } from '../../../libs/nullable/index.ts';
-import { InvalidTypeError } from '../../errors/errors.ts';
-import { Length } from '../../length/length.ts';
-import { DERTriplet } from '../../resolvers/der/triplet.ts';
-import { Triplet } from '../../resolvers/triplet.ts';
-import { Opaque } from '../opaque/opaque.ts';
-import { Type } from '../../type/type.ts';
+import { Cursor } from '../../../../cursor/mod';
+import { DERable } from '../../resolvers/der/derable';
+import { Nullable } from '../../../libs/nullable/index';
+import { InvalidTypeError } from '../../errors/errors';
+import { Length } from '../../length/length';
+import { DERTriplet } from '../../resolvers/der/triplet';
+import { Triplet } from '../../resolvers/triplet';
+import { Opaque } from '../opaque/opaque';
+import { Type } from '../../type/type';
 
 const stringify = (parent: Constructed) => `[${parent.type.tag}] {
   ${parent.triplets

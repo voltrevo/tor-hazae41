@@ -1,1 +1,1 @@
-export * from './mods/index.ts';
+export * from './mods/index';

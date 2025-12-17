@@ -1,6 +1,6 @@
-import { Empty, /*any,*/ Readable } from '../../../../binary/mod.ts';
-import { Cursor } from '../../../../cursor/mod.ts';
-import { Console } from '../../console/index.ts';
+import { Empty, /*any,*/ Readable } from '../../../../binary/mod';
+import { Cursor } from '../../../../cursor/mod';
+import { Console } from '../../console/index';
 import { KcpSegment } from '../segment/index';
 import { SecretKcpDuplex } from '../stream/index';
 
