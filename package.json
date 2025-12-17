@@ -96,7 +96,6 @@
     "skipFull": false
   },
   "dependencies": {
-    "@hazae41/mutex": "2.1.0",
     "@hazae41/option": "1.1.4",
     "@hazae41/plume": "3.0.5",
     "@hazae41/signals": "1.0.2",

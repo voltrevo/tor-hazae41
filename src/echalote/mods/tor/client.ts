@@ -1,6 +1,5 @@
 import { WebCryptoAes128Ctr } from '../../../TorClient/WebCryptoAes128Ctr';
 import { Ciphers, TlsClientDuplex } from '../../../cadenas';
-import { Mutex } from '@hazae41/mutex';
 import {
   CloseEvents,
   ErrorEvents,
@@ -61,6 +60,7 @@ import { X509 } from '../../../hazae41/x509';
 import { Bitset } from '../../../hazae41/bitset';
 import { HalfDuplex } from '../../../hazae41/cascade';
 import { Future } from '../../../hazae41/future';
+import { Mutex } from '../../../hazae41/mutex/mod';
 
 export interface Guard {
   readonly identity: Bytes<20>;
