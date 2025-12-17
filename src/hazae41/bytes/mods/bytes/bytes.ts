@@ -242,4 +242,108 @@ export namespace Bytes {
   ): asserts bytes is Bytes<N> {
     assert(bytes.length === len);
   }
+
+  /**
+   * Hex encoding
+   * @param bytes
+   * @returns hex string
+   */
+  export function toHex(bytes: Bytes): string {
+    let hex = '';
+    for (let i = 0; i < bytes.length; i++) {
+      hex += bytes[i].toString(16).padStart(2, '0');
+    }
+    return hex;
+  }
+
+  /**
+   * Hex decoding
+   * @param hex hex string
+   * @returns bytes
+   */
+  export function fromHex(hex: string): Bytes {
+    if (hex.length % 2 !== 0) {
+      throw new Error('Hex string must have even length');
+    }
+    const bytes = alloc(hex.length / 2) as Bytes;
+    for (let i = 0; i < hex.length; i += 2) {
+      const byte = parseInt(hex.substring(i, i + 2), 16);
+      if (isNaN(byte)) {
+        throw new Error(`Invalid hex character at position ${i}`);
+      }
+      bytes[i / 2] = byte;
+    }
+    return bytes;
+  }
+
+  export interface Base64Options {
+    alphabet?: 'base64' | 'base64url';
+    omitPadding?: boolean;
+  }
+
+  /**
+   * Base64 encoding
+   * @param bytes
+   * @param options encoding options
+   * @returns base64 string
+   */
+  export function toBase64(bytes: Bytes, options?: Base64Options): string {
+    if ('process' in globalThis) {
+      let encoded = Buffers.fromView(bytes).toString('base64');
+      if (options?.alphabet === 'base64url') {
+        encoded = encoded.replace(/\+/g, '-').replace(/\//g, '_');
+      }
+      if (options?.omitPadding) {
+        encoded = encoded.replace(/=/g, '');
+      }
+      return encoded;
+    }
+
+    // Browser implementation
+    let binary = '';
+    for (let i = 0; i < bytes.length; i++) {
+      binary += String.fromCharCode(bytes[i]);
+    }
+    let encoded = btoa(binary);
+
+    if (options?.alphabet === 'base64url') {
+      encoded = encoded.replace(/\+/g, '-').replace(/\//g, '_');
+    }
+    if (options?.omitPadding) {
+      encoded = encoded.replace(/=/g, '');
+    }
+    return encoded;
+  }
+
+  /**
+   * Base64 decoding
+   * @param text base64 string
+   * @param options decoding options
+   * @returns bytes
+   */
+  export function fromBase64(text: string, options?: Base64Options): Bytes {
+    if ('process' in globalThis) {
+      return fromView(Buffer.from(text, 'base64') as any) as Bytes;
+    }
+
+    // Browser implementation
+    let normalized = text;
+    if (options?.alphabet === 'base64url') {
+      normalized = normalized.replace(/-/g, '+').replace(/_/g, '/');
+    }
+    // Add padding if needed
+    const paddingLength = (4 - (normalized.length % 4)) % 4;
+    normalized = normalized + '='.repeat(paddingLength);
+
+    try {
+      const binary = atob(normalized);
+      const bytes = alloc(binary.length) as Bytes;
+      for (let i = 0; i < binary.length; i++) {
+        bytes[i] = binary.charCodeAt(i);
+      }
+      return bytes;
+    } catch {
+      throw new Error('Invalid base64 string');
+    }
+  }
 }

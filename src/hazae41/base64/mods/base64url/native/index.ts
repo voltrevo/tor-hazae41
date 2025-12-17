@@ -4,7 +4,7 @@ import { Adapter } from '../adapter/index';
 export function fromNative() {
   return {
     encodePaddedOrThrow(bytes: Bytes) {
-      return bytes.toBase64({ alphabet: 'base64url' });
+      return Bytes.toBase64(bytes, { alphabet: 'base64url' });
     },
 
     decodePaddedOrThrow(text: string) {
@@ -12,7 +12,10 @@ export function fromNative() {
     },
 
     encodeUnpaddedOrThrow(bytes: Bytes) {
-      return bytes.toBase64({ alphabet: 'base64url', omitPadding: true });
+      return Bytes.toBase64(bytes, {
+        alphabet: 'base64url',
+        omitPadding: true,
+      });
     },
 
     decodeUnpaddedOrThrow(text: string) {

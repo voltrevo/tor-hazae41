@@ -3,7 +3,7 @@ import { Adapter } from '../adapter/index';
 
 export function fromNative() {
   function encodeOrThrow(bytes: Bytes) {
-    return bytes.toHex();
+    return Bytes.toHex(bytes);
   }
 
   function decodeOrThrow(text: string) {
