@@ -1,4 +1,4 @@
-import { ASN1 } from '@hazae41/asn1';
+import { ASN1 } from '../../../../hazae41/asn1';
 import { fetch } from '../../../../fleche';
 import { OIDs, X509 } from '../../../../hazae41/x509';
 import { Mutable } from '../../../libs/typescript/typescript';
@@ -720,11 +720,9 @@ export namespace Consensus {
 
       const publicKey = X509.writeToBytesOrThrow(subjectPublicKeyInfo);
 
-      using signature = Base64.get()
-        .getOrThrow()
-        .decodePaddedOrThrow(it.signature);
+      const signature = Base64.decodePaddedOrThrow(it.signature);
 
-      const signatureM = new RsaBigInt.Memory(signature.bytes);
+      const signatureM = new RsaBigInt.Memory(signature);
       const hashedM = new RsaBigInt.Memory(hashed);
       const publicKeyM = new RsaBigInt.Memory(publicKey);
 

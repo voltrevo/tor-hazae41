@@ -1,4 +1,9 @@
-import { IA5String, Integer, ObjectIdentifier, Sequence } from '@hazae41/asn1';
+import {
+  IA5String,
+  Integer,
+  ObjectIdentifier,
+  Sequence,
+} from '../../hazae41/asn1';
 import {
   Certificate,
   OtherName,
