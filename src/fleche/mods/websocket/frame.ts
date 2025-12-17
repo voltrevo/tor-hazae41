@@ -1,4 +1,3 @@
-import { ReadUnderflowError } from '@hazae41/binary';
 import { Length } from './length';
 import {
   bitwise_pack_left,
@@ -7,6 +6,7 @@ import {
 } from '../../../utils/bitwise';
 import { Bytes } from '../../../hazae41/bytes';
 import { Cursor } from '../../../hazae41/cursor/mod';
+import { ReadUnderflowError } from '../../../hazae41/binary/mod';
 
 export class WebSocketFrame {
   readonly #class = WebSocketFrame;

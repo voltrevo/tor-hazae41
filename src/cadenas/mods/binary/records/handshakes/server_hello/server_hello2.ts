@@ -1,4 +1,3 @@
-import { Opaque, SafeOpaque } from '@hazae41/binary';
 import { None, Option, Some } from '@hazae41/option';
 import { ReadableList } from '../../../../../mods/binary/lists/readable.js';
 import { List } from '../../../../../mods/binary/lists/writable.js';
@@ -11,6 +10,8 @@ import { ReadableVector } from '../../../../../mods/binary/vectors/readable.js';
 import { Vector } from '../../../../../mods/binary/vectors/writable.js';
 import { ResolvedExtension } from '../extensions/resolved.js';
 import { Cursor } from '../../../../../../hazae41/cursor/mod.js';
+import { SafeUnknown } from '../../../../../../hazae41/binary/mods/binary/safe-unknown/mod.js';
+import { Unknown } from '../../../../../../hazae41/binary/mod.js';
 
 export class ServerHello2 {
   static readonly type = Handshake.types.server_hello;
@@ -18,7 +19,7 @@ export class ServerHello2 {
   constructor(
     readonly server_version: number,
     readonly random: Random,
-    readonly session_id: Vector<Number8, Opaque>,
+    readonly session_id: Vector<Number8, Unknown>,
     readonly cipher_suite: number,
     readonly compression_methods: Vector<Number8, List<Number8>>,
     readonly extensions: Option<
@@ -50,7 +51,7 @@ export class ServerHello2 {
   static readOrThrow(cursor: Cursor) {
     const server_version = cursor.readUint16OrThrow();
     const random = Random.readOrThrow(cursor);
-    const session_id = ReadableVector(Number8, SafeOpaque).readOrThrow(cursor);
+    const session_id = ReadableVector(Number8, SafeUnknown).readOrThrow(cursor);
     const cipher_suite = cursor.readUint16OrThrow();
     const compression_methods = ReadableVector(
       Number8,

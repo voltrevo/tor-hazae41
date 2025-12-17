@@ -1,6 +1,6 @@
-import { Readable, Writable } from '@hazae41/binary';
 import { List } from '../../../mods/binary/lists/writable.js';
 import { Cursor } from '../../../../hazae41/cursor/mod.js';
+import { Readable, Writable } from '../../../../hazae41/binary/mod.js';
 
 export const ReadableList = <W extends Writable>($readable: Readable<W>) =>
   class {

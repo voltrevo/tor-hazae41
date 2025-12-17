@@ -1,4 +1,3 @@
-import { Opaque, Writable } from '@hazae41/binary';
 import {
   AEADCiphertextRecord,
   PlaintextRecord,
@@ -6,6 +5,7 @@ import {
 import { AEADEncrypter } from '../../../../../mods/ciphers/encryptions/encryption.js';
 import { Bytes } from '../../../../../../hazae41/bytes/index.js';
 import { Cursor } from '../../../../../../hazae41/cursor/mod.js';
+import { Unknown, Writable } from '../../../../../../hazae41/binary/mod.js';
 
 export class GenericAEADCipher {
   constructor(
@@ -92,6 +92,6 @@ export class GenericAEADCipher {
 
     // Console.debug("<- plaintext", plaintext.length, Bytes.toHex(plaintext))
 
-    return new Opaque(plaintext);
+    return new Unknown(plaintext);
   }
 }

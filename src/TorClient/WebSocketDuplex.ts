@@ -1,6 +1,6 @@
-import { Opaque, Writable } from '@hazae41/binary';
 import { HalfDuplex } from '@hazae41/cascade';
 import { Bytes } from '../hazae41/bytes';
+import { Unknown, Writable } from '../hazae41/binary/mod';
 
 export interface WebSocketDuplexParams {
   /**
@@ -18,7 +18,7 @@ export interface WebSocketDuplexParams {
 }
 
 export class WebSocketDuplex {
-  readonly duplex: HalfDuplex<Opaque, Writable>;
+  readonly duplex: HalfDuplex<Unknown, Writable>;
 
   constructor(
     readonly socket: WebSocket,
@@ -26,7 +26,7 @@ export class WebSocketDuplex {
   ) {
     const { shouldCloseOnError, shouldCloseOnClose } = params;
 
-    this.duplex = new HalfDuplex<Opaque, Writable>({
+    this.duplex = new HalfDuplex<Unknown, Writable>({
       output: {
         write(message) {
           socket.send(Writable.writeToBytesOrThrow(message));
@@ -61,9 +61,9 @@ export class WebSocketDuplex {
         if (typeof e.data === 'string') return;
 
         const bytes = Bytes.from(e.data);
-        const opaque = new Opaque(bytes);
+        const unknown = new Unknown(bytes);
 
-        this.duplex.input.enqueue(opaque);
+        this.duplex.input.enqueue(unknown);
       }
     );
   }

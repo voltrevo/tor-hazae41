@@ -1,4 +1,4 @@
-import { Writable } from '@hazae41/binary';
+import { Writable } from '../../../../hazae41/binary/mod';
 import { Cursor } from '../../../../hazae41/cursor/mod';
 
 export interface List<T extends Writable> extends Writable {

@@ -1,4 +1,3 @@
-import { Opaque, Writable } from '@hazae41/binary';
 import {
   BlockCiphertextRecord,
   PlaintextRecord,
@@ -6,6 +5,7 @@ import {
 import { BlockEncrypter } from '../../../../../mods/ciphers/encryptions/encryption.js';
 import { Bytes } from '../../../../../../hazae41/bytes/index.js';
 import { Cursor } from '../../../../../../hazae41/cursor/mod.js';
+import { Unknown, Writable } from '../../../../../../hazae41/binary/mod.js';
 
 /**
  * (y % m) where (x + y) % m == 0
@@ -86,6 +86,6 @@ export class GenericBlockCipher {
     // Console.debug("<- content", content.length, Bytes.toHex(content))
     // Console.debug("<- mac", mac.length, Bytes.toHex(mac))
 
-    return new Opaque(content);
+    return new Unknown(content);
   }
 }

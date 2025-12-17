@@ -1,11 +1,11 @@
-import { Opaque, Writable } from '@hazae41/binary';
 import { FullDuplex } from '@hazae41/cascade';
 import { Resizer } from '../resizer/resizer';
 import { Bytes } from '../../../hazae41/bytes';
 import { Cursor } from '../../../hazae41/cursor/mod';
+import { Unknown, Writable } from '../../../hazae41/binary/mod';
 
 export class BatchedFetchStream {
-  readonly duplex: FullDuplex<Opaque, Writable>;
+  readonly duplex: FullDuplex<Unknown, Writable>;
 
   readonly #buffer = new Resizer();
 
@@ -31,7 +31,7 @@ export class BatchedFetchStream {
         const chunker = new Cursor(data);
 
         for (const chunk of chunker.splitOrThrow(16384))
-          this.duplex.input.enqueue(new Opaque(chunk));
+          this.duplex.input.enqueue(new Unknown(chunk));
 
         continue;
       } catch (e: unknown) {

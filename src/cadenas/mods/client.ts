@@ -1,4 +1,3 @@
-import { Opaque, Readable, Writable } from '@hazae41/binary';
 import { FullDuplex } from '@hazae41/cascade';
 import { Future } from '@hazae41/future';
 import { X509 } from '@hazae41/x509';
@@ -10,6 +9,7 @@ import { TlsClientNoneState, TlsClientState } from './state.js';
 import { App } from '../../TorClient/App.js';
 import { Bytes } from '../../hazae41/bytes/index.js';
 import { Cursor } from '../../hazae41/cursor/mod.js';
+import { Readable, Unknown, Writable } from '../../hazae41/binary/mod.js';
 
 export interface TlsClientDuplexParams {
   /**
@@ -52,7 +52,7 @@ export interface TlsClientDuplexParams {
 }
 
 export class TlsClientDuplex {
-  readonly duplex: FullDuplex<Opaque, Writable>;
+  readonly duplex: FullDuplex<Unknown, Writable>;
 
   readonly #buffer = new Resizer();
 
@@ -67,7 +67,7 @@ export class TlsClientDuplex {
     readonly app: App,
     readonly params: TlsClientDuplexParams
   ) {
-    this.duplex = new FullDuplex<Opaque, Writable>({
+    this.duplex = new FullDuplex<Unknown, Writable>({
       input: {
         write: m => this.#onInputWrite(m),
       },
@@ -135,7 +135,7 @@ export class TlsClientDuplex {
     await this.state.onOutputStart();
   }
 
-  async #onInputWrite(chunk: Opaque) {
+  async #onInputWrite(chunk: Unknown) {
     // Console.debug(this.#class.name, "<-", chunk)
 
     if (this.#buffer.inner.offset) await this.#onReadBuffered(chunk.bytes);
@@ -164,7 +164,7 @@ export class TlsClientDuplex {
     const cursor = new Cursor(chunk);
 
     while (cursor.remaining) {
-      let record: PlaintextRecord<Opaque>;
+      let record: PlaintextRecord<Unknown>;
 
       try {
         record = Readable.readOrRollbackAndThrow(PlaintextRecord, cursor);
@@ -183,7 +183,7 @@ export class TlsClientDuplex {
     await this.state.onOutputWrite(chunk);
   }
 
-  async #onRecord(record: PlaintextRecord<Opaque>) {
+  async #onRecord(record: PlaintextRecord<Unknown>) {
     await this.state.onRecord(record);
   }
 }

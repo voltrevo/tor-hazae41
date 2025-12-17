@@ -1,4 +1,3 @@
-import { Opaque, Writable } from '@hazae41/binary';
 import {
   FullDuplex,
   SimplexParams,
@@ -26,6 +25,7 @@ import {
   HttpUpgradingState,
 } from './state.js';
 import { Bytes } from '../../../hazae41/bytes';
+import { Unknown, Writable } from '../../../hazae41/binary/mod';
 
 export namespace Lines {
   export const rn = Bytes.fromUtf8('\r\n');
@@ -39,7 +39,7 @@ export interface HttpStreamParams {
 
   readonly headers: Headers;
 
-  readonly input?: SimplexParams<Opaque, Writable>;
+  readonly input?: SimplexParams<Unknown, Writable>;
 
   close?(this: HttpClientDuplex): Awaitable<void>;
 
@@ -51,7 +51,7 @@ export interface HttpStreamParams {
 export class HttpClientDuplex {
   readonly #class = HttpClientDuplex;
 
-  readonly duplex: FullDuplex<Opaque, Writable, Bytes, Bytes>;
+  readonly duplex: FullDuplex<Unknown, Writable, Bytes, Bytes>;
 
   #resolveOnStart = new Future<void>();
 
@@ -62,7 +62,7 @@ export class HttpClientDuplex {
    * @param subduplex
    */
   constructor(readonly params: HttpStreamParams) {
-    this.duplex = new FullDuplex<Opaque, Writable, Bytes, Bytes>({
+    this.duplex = new FullDuplex<Unknown, Writable, Bytes, Bytes>({
       input: {
         write: m => this.#onInputWrite(m),
         close: () => this.#onInputClose(),
@@ -115,7 +115,7 @@ export class HttpClientDuplex {
     this.duplex.close();
   }
 
-  async #onInputWrite(chunk: Opaque) {
+  async #onInputWrite(chunk: Unknown) {
     Console.debug(
       this.constructor.name,
       '<-',
@@ -208,7 +208,7 @@ export class HttpClientDuplex {
     const sourcer = new SuperReadableStream<Bytes>({});
 
     const sinker = new SuperWritableStream<Bytes>({
-      write: c => this.duplex.output.enqueue(new Opaque(c)),
+      write: c => this.duplex.output.enqueue(new Unknown(c)),
       abort: e => this.duplex.output.error(e),
       close: () => this.duplex.output.close(),
     });
@@ -446,7 +446,7 @@ export class HttpClientDuplex {
     head += `\r\n`;
 
     Console.debug(this.constructor.name, '->', head.length, head);
-    this.duplex.output.enqueue(new Opaque(Bytes.fromUtf8(head)));
+    this.duplex.output.enqueue(new Unknown(Bytes.fromUtf8(head)));
 
     const buffer = new Resizer();
 
@@ -469,7 +469,7 @@ export class HttpClientDuplex {
     Console.debug(this.constructor.name, '->', Bytes.toUtf8(chunk));
 
     if (this.#state.type === 'upgrading' || this.#state.type === 'upgraded') {
-      this.duplex.output.enqueue(new Opaque(chunk));
+      this.duplex.output.enqueue(new Unknown(chunk));
       return;
     }
 
@@ -489,7 +489,7 @@ export class HttpClientDuplex {
     const { client_compression } = state;
 
     if (client_compression == null) {
-      this.duplex.output.enqueue(new Opaque(chunk));
+      this.duplex.output.enqueue(new Unknown(chunk));
     } else {
       client_compression.sourcer.enqueue(chunk);
     }
@@ -513,7 +513,7 @@ export class HttpClientDuplex {
       );
 
     if (client_compression == null) {
-      this.duplex.output.enqueue(new Opaque(chunk));
+      this.duplex.output.enqueue(new Unknown(chunk));
     } else {
       client_compression.sourcer.enqueue(chunk);
     }
@@ -532,7 +532,7 @@ export class HttpClientDuplex {
     const { client_compression } = state;
 
     if (client_compression == null) {
-      this.duplex.output.enqueue(new Opaque(Bytes.fromUtf8(line)));
+      this.duplex.output.enqueue(new Unknown(Bytes.fromUtf8(line)));
     } else {
       client_compression.sourcer.enqueue(Bytes.fromUtf8(line));
     }
@@ -541,12 +541,12 @@ export class HttpClientDuplex {
   async #onOutputClose() {
     if (this.#state.type === 'heading') {
       if (this.#state.client_transfer.type === 'none') {
-        this.duplex.output.enqueue(new Opaque(Bytes.fromUtf8(`\r\n`)));
+        this.duplex.output.enqueue(new Unknown(Bytes.fromUtf8(`\r\n`)));
         return;
       }
 
       if (this.#state.client_transfer.type === 'chunked') {
-        this.duplex.output.enqueue(new Opaque(Bytes.fromUtf8(`0\r\n\r\n`)));
+        this.duplex.output.enqueue(new Unknown(Bytes.fromUtf8(`0\r\n\r\n`)));
         return;
       }
     }

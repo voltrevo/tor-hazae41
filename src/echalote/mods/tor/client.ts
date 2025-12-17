@@ -1,5 +1,4 @@
 import { WebCryptoAes128Ctr } from '../../../TorClient/WebCryptoAes128Ctr';
-import { Opaque, Readable, Writable } from '@hazae41/binary';
 import { Bitset } from '@hazae41/bitset';
 import { Ciphers, TlsClientDuplex } from '../../../cadenas';
 import { HalfDuplex } from '@hazae41/cascade';
@@ -61,6 +60,7 @@ import { invariant } from '../../../utils/debug';
 import { App } from '../../../TorClient/App';
 import { Bytes } from '../../../hazae41/bytes';
 import { Cursor } from '../../../hazae41/cursor/mod';
+import { Readable, Unknown, Writable } from '../../../hazae41/binary/mod';
 
 export interface Guard {
   readonly identity: Bytes<20>;
@@ -122,10 +122,10 @@ export type SecretTorEvents = CloseEvents &
   ErrorEvents & { handshaked: () => void } & {
     CREATED_FAST: (cell: Cell.Circuitful<CreatedFastCell>) => void;
     DESTROY: (cell: Cell.Circuitful<DestroyCell>) => void;
-    RELAY_CONNECTED: (cell: RelayCell.Streamful<Opaque>) => void;
-    RELAY_DATA: (cell: RelayCell.Streamful<RelayDataCell<Opaque>>) => void;
+    RELAY_CONNECTED: (cell: RelayCell.Streamful<Unknown>) => void;
+    RELAY_DATA: (cell: RelayCell.Streamful<RelayDataCell<Unknown>>) => void;
     RELAY_EXTENDED2: (
-      cell: RelayCell.Streamless<RelayExtended2Cell<Opaque>>
+      cell: RelayCell.Streamless<RelayExtended2Cell<Unknown>>
     ) => void;
     RELAY_TRUNCATED: (cell: RelayCell.Streamless<RelayTruncatedCell>) => void;
     RELAY_END: (cell: RelayCell.Streamful<RelayEndCell>) => void;
@@ -136,7 +136,7 @@ export class SecretTorClientDuplex {
 
   readonly tls: TlsClientDuplex;
 
-  readonly duplex: HalfDuplex<Opaque, Writable>;
+  readonly duplex: HalfDuplex<Unknown, Writable>;
 
   readonly events = new SuperEventTarget<SecretTorEvents>();
 
@@ -159,7 +159,7 @@ export class SecretTorClientDuplex {
       certificates: c => this.#resolveOnTlsCertificates.resolve(c),
     });
 
-    this.duplex = new HalfDuplex<Opaque, Writable>({
+    this.duplex = new HalfDuplex<Unknown, Writable>({
       output: {
         start: () => this.#onOutputStart(),
       },
@@ -233,7 +233,7 @@ export class SecretTorClientDuplex {
     );
   }
 
-  async #onInputWrite(chunk: Opaque) {
+  async #onInputWrite(chunk: Unknown) {
     // Console.debug(this.constructor.name, "<-", chunk)
 
     if (this.#buffer.inner.offset) await this.#onReadBuffered(chunk.bytes);
@@ -262,7 +262,7 @@ export class SecretTorClientDuplex {
     const cursor = new Cursor(chunk);
 
     while (cursor.remaining) {
-      let raw: OldCell.Raw<Opaque> | Cell.Raw<Opaque>;
+      let raw: OldCell.Raw<Unknown> | Cell.Raw<Unknown>;
 
       try {
         raw =
@@ -282,7 +282,7 @@ export class SecretTorClientDuplex {
     }
   }
 
-  async #onCell(cell: Cell<Opaque> | OldCell<Opaque>, state: TorState) {
+  async #onCell(cell: Cell<Unknown> | OldCell<Unknown>, state: TorState) {
     if (cell.command === PaddingCell.command) {
       Console.debug(cell);
       return;
@@ -309,7 +309,7 @@ export class SecretTorClientDuplex {
   }
 
   async #onNoneStateCell(
-    cell: Cell<Opaque> | OldCell<Opaque>,
+    cell: Cell<Unknown> | OldCell<Unknown>,
     state: TorNoneState
   ) {
     if (cell instanceof Cell.Circuitful) throw new InvalidCellError();
@@ -321,7 +321,7 @@ export class SecretTorClientDuplex {
     console.warn(`Unknown pre-version cell ${cell.command}`);
   }
 
-  async #onVersionedStateCell(cell: Cell<Opaque>, state: TorVersionedState) {
+  async #onVersionedStateCell(cell: Cell<Unknown>, state: TorVersionedState) {
     if (cell.command === CertsCell.command)
       return await this.#onCertsCell(cell, state);
 
@@ -329,7 +329,7 @@ export class SecretTorClientDuplex {
   }
 
   async #onHandshakingStateCell(
-    cell: Cell<Opaque>,
+    cell: Cell<Unknown>,
     state: TorHandshakingState
   ) {
     if (cell.command === AuthChallengeCell.command)
@@ -340,7 +340,7 @@ export class SecretTorClientDuplex {
     console.warn(`Unknown handshaking-state cell ${cell.command}`);
   }
 
-  async #onHandshakedStateCell(cell: Cell<Opaque>) {
+  async #onHandshakedStateCell(cell: Cell<Unknown>) {
     if (cell.command === CreatedFastCell.command)
       return await this.#onCreatedFastCell(cell);
     if (cell.command === DestroyCell.command)
@@ -351,7 +351,7 @@ export class SecretTorClientDuplex {
     console.warn(`Unknown handshaked-state cell ${cell.command}`);
   }
 
-  async #onVersionsCell(cell: OldCell<Opaque>, state: TorNoneState) {
+  async #onVersionsCell(cell: OldCell<Unknown>, state: TorNoneState) {
     const cell2 = OldCell.Circuitless.intoOrThrow(cell, VersionsCell);
 
     Console.debug(cell2);
@@ -367,7 +367,7 @@ export class SecretTorClientDuplex {
     this.#state = { ...state, type: 'versioned', version: 5 };
   }
 
-  async #onCertsCell(cell: Cell<Opaque>, state: TorVersionedState) {
+  async #onCertsCell(cell: Cell<Unknown>, state: TorVersionedState) {
     const cell2 = Cell.Circuitless.intoOrThrow(cell, CertsCell);
 
     Console.debug(cell2);
@@ -386,11 +386,11 @@ export class SecretTorClientDuplex {
     this.#state = { ...state, type: 'handshaking', guard };
   }
 
-  async #onAuthChallengeCell(cell: Cell<Opaque>, _state: TorHandshakingState) {
+  async #onAuthChallengeCell(cell: Cell<Unknown>, _state: TorHandshakingState) {
     Console.debug(Cell.Circuitless.intoOrThrow(cell, AuthChallengeCell));
   }
 
-  async #onNetinfoCell(cell: Cell<Opaque>, state: TorHandshakingState) {
+  async #onNetinfoCell(cell: Cell<Unknown>, state: TorHandshakingState) {
     const cell2 = Cell.Circuitless.intoOrThrow(cell, NetinfoCell);
 
     Console.debug(cell2);
@@ -423,7 +423,7 @@ export class SecretTorClientDuplex {
     await this.events.emit('handshaked');
   }
 
-  async #onCreatedFastCell(cell: Cell<Opaque>) {
+  async #onCreatedFastCell(cell: Cell<Unknown>) {
     const cell2 = Cell.Circuitful.intoOrThrow(cell, CreatedFastCell);
 
     Console.debug(cell2);
@@ -431,7 +431,7 @@ export class SecretTorClientDuplex {
     await this.events.emit('CREATED_FAST', cell2);
   }
 
-  async #onDestroyCell(cell: Cell<Opaque>) {
+  async #onDestroyCell(cell: Cell<Unknown>) {
     const cell2 = Cell.Circuitful.intoOrThrow(cell, DestroyCell);
 
     Console.debug(cell2);
@@ -441,7 +441,7 @@ export class SecretTorClientDuplex {
     await this.events.emit('DESTROY', cell2);
   }
 
-  async #onRelayCell(parent: Cell<Opaque>) {
+  async #onRelayCell(parent: Cell<Unknown>) {
     const raw = await RelayCell.Raw.uncellOrThrow(parent);
     const cell = raw.unpackOrNull();
 
@@ -470,7 +470,7 @@ export class SecretTorClientDuplex {
     console.warn(`Unknown relay cell ${cell.rcommand}`);
   }
 
-  async #onRelayExtended2Cell(cell: RelayCell<Opaque>) {
+  async #onRelayExtended2Cell(cell: RelayCell<Unknown>) {
     const cell2 = RelayCell.Streamless.intoOrThrow(cell, RelayExtended2Cell);
 
     Console.debug(cell2);
@@ -478,13 +478,13 @@ export class SecretTorClientDuplex {
     await this.events.emit('RELAY_EXTENDED2', cell2);
   }
 
-  async #onRelayConnectedCell(cell: RelayCell<Opaque>) {
+  async #onRelayConnectedCell(cell: RelayCell<Unknown>) {
     if (cell.stream == null) throw new ExpectedStreamError();
 
     await this.events.emit('RELAY_CONNECTED', cell);
   }
 
-  async #onRelayDataCell(cell: RelayCell<Opaque>) {
+  async #onRelayDataCell(cell: RelayCell<Unknown>) {
     const cell2 = RelayCell.Streamful.intoOrThrow(cell, RelayDataCell);
 
     Console.debug(cell2);
@@ -513,7 +513,7 @@ export class SecretTorClientDuplex {
     await this.events.emit('RELAY_DATA', cell2);
   }
 
-  async #onRelayEndCell(cell: RelayCell<Opaque>) {
+  async #onRelayEndCell(cell: RelayCell<Unknown>) {
     const cell2 = RelayCell.Streamful.intoOrThrow(cell, RelayEndCell);
 
     Console.debug(cell2);
@@ -521,11 +521,11 @@ export class SecretTorClientDuplex {
     await this.events.emit('RELAY_END', cell2);
   }
 
-  async #onRelayDropCell(cell: RelayCell<Opaque>) {
+  async #onRelayDropCell(cell: RelayCell<Unknown>) {
     Console.debug(RelayCell.Streamful.intoOrThrow(cell, RelayDropCell));
   }
 
-  async #onRelayTruncatedCell(cell: RelayCell<Opaque>) {
+  async #onRelayTruncatedCell(cell: RelayCell<Unknown>) {
     const cell2 = RelayCell.Streamless.intoOrThrow(cell, RelayTruncatedCell);
 
     Console.debug(cell2);
@@ -535,7 +535,7 @@ export class SecretTorClientDuplex {
     await this.events.emit('RELAY_TRUNCATED', cell2);
   }
 
-  async #onRelaySendmeCircuitCell(cell: RelayCell<Opaque>) {
+  async #onRelaySendmeCircuitCell(cell: RelayCell<Unknown>) {
     const cell2 = RelayCell.Streamless.intoOrThrow(
       cell,
       RelaySendmeCircuitCell
@@ -573,7 +573,7 @@ export class SecretTorClientDuplex {
     );
   }
 
-  async #onRelaySendmeStreamCell(cell: RelayCell<Opaque>) {
+  async #onRelaySendmeStreamCell(cell: RelayCell<Unknown>) {
     const cell2 = RelayCell.Streamful.intoOrThrow(cell, RelaySendmeStreamCell);
 
     Console.debug(cell2);

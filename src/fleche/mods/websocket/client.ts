@@ -1,5 +1,4 @@
 import { Base64 } from '@hazae41/base64';
-import { Readable, Writable } from '@hazae41/binary';
 import { bitwise_pack_right, bitwise_unpack } from '../../../utils/bitwise';
 import { HalfDuplex } from '@hazae41/cascade';
 import { Future } from '@hazae41/future';
@@ -20,6 +19,7 @@ import { WebSocketFrame } from './frame.js';
 import { IClock } from '../../../clock';
 import { Bytes } from '../../../hazae41/bytes';
 import { Cursor } from '../../../hazae41/cursor/mod';
+import { Readable, Writable } from '../../../hazae41/binary/mod';
 
 const ACCEPT_SUFFIX = Bytes.fromUtf8('258EAFA5-E914-47DA-95CA-C5AB0DC85B11');
 

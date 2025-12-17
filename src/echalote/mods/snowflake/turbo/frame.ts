@@ -1,6 +1,6 @@
-import { Opaque, Writable } from '@hazae41/binary';
 import { Bitset } from '@hazae41/bitset';
 import { Cursor } from '../../../../hazae41/cursor/mod';
+import { Unknown, Writable } from '../../../../hazae41/binary/mod';
 
 export type TurboFrameError =
   | UnexpectedContinuationError
@@ -144,7 +144,7 @@ export class TurboFrame<T extends Writable> {
 
     const length = parseInt(lengthBits, 2);
     const bytes = cursor.readAndCopyOrThrow(length);
-    const fragment = new Opaque(bytes);
+    const fragment = new Unknown(bytes);
 
     return TurboFrame.createOrThrow({ padding, fragment });
   }

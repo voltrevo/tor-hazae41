@@ -1,4 +1,3 @@
-import { Opaque, Readable, Writable } from '@hazae41/binary';
 import { Cursor } from '../../../../../../../hazae41/cursor/mod';
 import { Cell } from '../../cell';
 import { SecretCircuit } from '../../../../circuit';
@@ -12,6 +11,11 @@ import {
   UnrecognisedRelayCellError,
 } from '../../errors.js';
 import { Bytes } from '../../../../../../../hazae41/bytes';
+import {
+  Readable,
+  Unknown,
+  Writable,
+} from '../../../../../../../hazae41/binary/mod';
 
 export interface RelayEarlyCellable {
   readonly rcommand: number;
@@ -99,7 +103,7 @@ export namespace RelayEarlyCell {
       for (let i = this.circuit.targets.length - 1; i >= 0; i--)
         await this.circuit.targets[i].forward_key.apply_keystream(bytes);
 
-      const fragment = new Opaque(bytes);
+      const fragment = new Unknown(bytes);
 
       return new Cell.Circuitful(
         this.circuit,
@@ -108,7 +112,7 @@ export namespace RelayEarlyCell {
       );
     }
 
-    static async uncellOrThrow(cell: Cell<Opaque>) {
+    static async uncellOrThrow(cell: Cell<Unknown>) {
       if (cell instanceof Cell.Circuitless) throw new ExpectedCircuitError();
 
       const bytes = Bytes.from(cell.fragment.bytes);
@@ -144,9 +148,9 @@ export namespace RelayEarlyCell {
 
         const length = cursor.readUint16OrThrow();
         const bytes_data = cursor.readAndCopyOrThrow(length);
-        const data = new Opaque(bytes_data);
+        const data = new Unknown(bytes_data);
 
-        return new Raw<Opaque>(cell.circuit, stream, rcommand, data);
+        return new Raw<Unknown>(cell.circuit, stream, rcommand, data);
       }
 
       throw new UnrecognisedRelayCellError();
@@ -178,7 +182,7 @@ export namespace RelayEarlyCell {
     }
 
     static intoOrThrow<T extends Writable>(
-      cell: RelayEarlyCell<Opaque>,
+      cell: RelayEarlyCell<Unknown>,
       readable: RelayEarlyCellable.Streamful & Readable<T>
     ) {
       if (cell.rcommand !== readable.rcommand)
@@ -221,7 +225,7 @@ export namespace RelayEarlyCell {
     }
 
     static intoOrThrow<T extends Writable>(
-      cell: RelayEarlyCell<Opaque>,
+      cell: RelayEarlyCell<Unknown>,
       readable: RelayEarlyCellable.Streamless & Readable<T>
     ) {
       if (cell.rcommand !== readable.rcommand)

@@ -1,4 +1,3 @@
-import { Opaque, SafeOpaque } from '@hazae41/binary';
 import { ReadableList } from '../../../../../mods/binary/lists/readable.js';
 import { List } from '../../../../../mods/binary/lists/writable.js';
 import { Number16 } from '../../../../../mods/binary/numbers/number16.js';
@@ -8,6 +7,8 @@ import { SignatureAndHashAlgorithm } from '../../../../../mods/binary/signatures
 import { ReadableVector } from '../../../../../mods/binary/vectors/readable.js';
 import { Vector } from '../../../../../mods/binary/vectors/writable.js';
 import { Cursor } from '../../../../../../hazae41/cursor/mod.js';
+import { Unknown } from '../../../../../../hazae41/binary/mod.js';
+import { SafeUnknown } from '../../../../../../hazae41/binary/mods/binary/safe-unknown/mod.js';
 
 export class ClientCertificateType {
   static readonly types = {
@@ -48,7 +49,7 @@ export class CertificateRequest2 {
       Number16,
       List<SignatureAndHashAlgorithm>
     >,
-    readonly certificate_authorities: Vector<Number16, Opaque>
+    readonly certificate_authorities: Vector<Number16, Unknown>
   ) {}
 
   sizeOrThrow() {
@@ -77,7 +78,7 @@ export class CertificateRequest2 {
     ).readOrThrow(cursor);
     const certificate_authorities = ReadableVector(
       Number16,
-      SafeOpaque
+      SafeUnknown
     ).readOrThrow(cursor);
 
     return new CertificateRequest2(

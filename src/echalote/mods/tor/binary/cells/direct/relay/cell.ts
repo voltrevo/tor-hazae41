@@ -1,4 +1,3 @@
-import { Opaque, Readable, Writable } from '@hazae41/binary';
 import { Cursor } from '../../../../../../../hazae41/cursor/mod';
 import { Cell } from '../../cell';
 import { SecretCircuit } from '../../../../circuit';
@@ -12,6 +11,11 @@ import {
 } from '../../errors.js';
 import { RelayDataCell } from '../../relayed/relay_data/cell.js';
 import { Bytes } from '../../../../../../../hazae41/bytes';
+import {
+  Readable,
+  Unknown,
+  Writable,
+} from '../../../../../../../hazae41/binary/mod';
 
 export interface RelayCellable {
   readonly rcommand: number;
@@ -112,12 +116,12 @@ export namespace RelayCell {
       for (let i = this.circuit.targets.length - 1; i >= 0; i--)
         await this.circuit.targets[i].forward_key.apply_keystream(bytes);
 
-      const fragment = new Opaque(bytes);
+      const fragment = new Unknown(bytes);
 
       return new Cell.Circuitful(this.circuit, RelayCell.command, fragment);
     }
 
-    static async uncellOrThrow(cell: Cell<Opaque>) {
+    static async uncellOrThrow(cell: Cell<Unknown>) {
       if (cell instanceof Cell.Circuitless) throw new ExpectedCircuitError();
 
       const bytes = Bytes.from(cell.fragment.bytes);
@@ -153,9 +157,9 @@ export namespace RelayCell {
 
         const length = cursor.readUint16OrThrow();
         const bytes_data = cursor.readAndCopyOrThrow(length);
-        const data = new Opaque(bytes_data);
+        const data = new Unknown(bytes_data);
 
-        return new Raw<Opaque>(cell.circuit, stream, rcommand, data, digest20);
+        return new Raw<Unknown>(cell.circuit, stream, rcommand, data, digest20);
       }
 
       throw new UnrecognisedRelayCellError();
@@ -188,7 +192,7 @@ export namespace RelayCell {
     }
 
     static intoOrThrow<T extends Writable>(
-      cell: RelayCell<Opaque>,
+      cell: RelayCell<Unknown>,
       readable: RelayCellable.Streamful & Readable<T>
     ) {
       if (cell.rcommand !== readable.rcommand)
@@ -228,12 +232,12 @@ export namespace RelayCell {
       return new Streamless(circuit, stream, fragment.rcommand, fragment);
     }
 
-    async cellOrThrow(): Promise<Cell.Circuitful<Opaque>> {
+    async cellOrThrow(): Promise<Cell.Circuitful<Unknown>> {
       return await this.#raw.cellOrThrow();
     }
 
     static intoOrThrow<T extends Writable>(
-      cell: RelayCell<Opaque>,
+      cell: RelayCell<Unknown>,
       readable: RelayCellable.Streamless & Readable<T>
     ) {
       if (cell.rcommand !== readable.rcommand)

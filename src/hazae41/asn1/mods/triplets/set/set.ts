@@ -4,7 +4,7 @@ import { Nullable } from '../../../libs/nullable/index';
 import { Length } from '../../length/length';
 import { DERTriplet } from '../../resolvers/der/triplet';
 import { Triplet } from '../../resolvers/triplet';
-import { Opaque } from '../opaque/opaque';
+import { OpaqueTriplet } from '../opaque/opaque';
 import { Type } from '../../type/type';
 
 const stringify = (set: Set) => `SET {
@@ -79,7 +79,7 @@ export namespace Set {
       return new DER(asn1.type.toDER(), length, triplets);
     }
 
-    resolveOrThrow(this: DER<Opaque.DER[]>) {
+    resolveOrThrow(this: DER<OpaqueTriplet.DER[]>) {
       const resolved = this.triplets.map(it => it.resolveOrThrow());
 
       return new DER(this.type, this.length, resolved);
@@ -104,10 +104,10 @@ export namespace Set {
 
       const subcursor = new Cursor(cursor.readOrThrow(length.value));
 
-      const triplets = new Array<Opaque.DER>();
+      const triplets = new Array<OpaqueTriplet.DER>();
 
       while (subcursor.remaining)
-        triplets.push(Opaque.DER.readOrThrow(subcursor));
+        triplets.push(OpaqueTriplet.DER.readOrThrow(subcursor));
 
       return new DER(type, length, triplets);
     }

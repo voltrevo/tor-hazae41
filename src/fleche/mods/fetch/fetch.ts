@@ -1,13 +1,13 @@
-import { Opaque, Writable } from '@hazae41/binary';
 import { Disposer } from '@hazae41/disposer';
 import { Future } from '@hazae41/future';
 import { Signals } from '@hazae41/signals';
 import { Nullable } from '../../libs/nullable/index';
 import { HttpClientDuplex } from '../http/client';
 import { Bytes } from '../../../hazae41/bytes';
+import { Unknown, Writable } from '../../../hazae41/binary/mod';
 
 export interface FetchParams {
-  readonly stream: ReadableWritablePair<Opaque, Writable>;
+  readonly stream: ReadableWritablePair<Unknown, Writable>;
   readonly preventAbort?: boolean;
   readonly preventCancel?: boolean;
   readonly preventClose?: boolean;

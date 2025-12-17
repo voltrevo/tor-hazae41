@@ -1,6 +1,5 @@
 import { WebCryptoAes128Ctr } from '../../../TorClient/WebCryptoAes128Ctr';
 import { Base64 } from '@hazae41/base64';
-import { Opaque } from '@hazae41/binary';
 import { Bitset } from '@hazae41/bitset';
 import { Future } from '@hazae41/future';
 import { Option } from '@hazae41/option';
@@ -42,6 +41,7 @@ import { HASH_LEN } from './constants.js';
 import { invariant } from '../../../utils/debug';
 import { getErrorDetails } from '../../../utils/getErrorDetails';
 import { Bytes } from '../../../hazae41/bytes';
+import { Unknown } from '../../../hazae41/binary/mod';
 
 export const IPv6 = {
   always: 3,
@@ -192,15 +192,15 @@ export type SecretCircuitEvents = CloseEvents &
      * Streamless
      */
     RELAY_EXTENDED2: (
-      cell: RelayCell.Streamless<RelayExtended2Cell<Opaque>>
+      cell: RelayCell.Streamless<RelayExtended2Cell<Unknown>>
     ) => void;
     RELAY_TRUNCATED: (cell: RelayCell.Streamless<RelayTruncatedCell>) => void;
 
     /**
      * Streamful
      */
-    RELAY_CONNECTED: (cell: RelayCell.Streamful<Opaque>) => void;
-    RELAY_DATA: (cell: RelayCell.Streamful<RelayDataCell<Opaque>>) => void;
+    RELAY_CONNECTED: (cell: RelayCell.Streamful<Unknown>) => void;
+    RELAY_DATA: (cell: RelayCell.Streamful<RelayDataCell<Unknown>>) => void;
     RELAY_END: (cell: RelayCell.Streamful<RelayEndCell>) => void;
   };
 
@@ -337,7 +337,7 @@ export class SecretCircuit {
   }
 
   async #onRelayExtended2Cell(
-    cell: RelayCell.Streamless<RelayExtended2Cell<Opaque>>
+    cell: RelayCell.Streamless<RelayExtended2Cell<Unknown>>
   ) {
     if (cell.circuit !== this) return;
 
@@ -362,7 +362,7 @@ export class SecretCircuit {
     await this.events.emit('RELAY_TRUNCATED', cell);
   }
 
-  async #onRelayConnectedCell(cell: RelayCell.Streamful<Opaque>) {
+  async #onRelayConnectedCell(cell: RelayCell.Streamful<Unknown>) {
     if (cell.circuit !== this) return;
 
     Console.debug(`${this.constructor.name}.onRelayConnectedCell`, cell);
@@ -370,7 +370,7 @@ export class SecretCircuit {
     await this.events.emit('RELAY_CONNECTED', cell);
   }
 
-  async #onRelayDataCell(cell: RelayCell.Streamful<RelayDataCell<Opaque>>) {
+  async #onRelayDataCell(cell: RelayCell.Streamful<RelayDataCell<Unknown>>) {
     if (cell.circuit !== this) return;
 
     Console.debug(`${this.constructor.name}.onRelayDataCell`, cell);
@@ -452,7 +452,10 @@ export class SecretCircuit {
     const msg_extended2 = await Plume.waitWithCloseAndErrorOrThrow(
       this.events,
       'RELAY_EXTENDED2',
-      (future: Future<RelayCell.Streamless<RelayExtended2Cell<Opaque>>>, e) => {
+      (
+        future: Future<RelayCell.Streamless<RelayExtended2Cell<Unknown>>>,
+        e
+      ) => {
         future.resolve(e);
       },
       signal

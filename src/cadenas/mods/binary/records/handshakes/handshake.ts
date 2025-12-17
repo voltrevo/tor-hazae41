@@ -1,6 +1,6 @@
-import { Opaque, Writable } from '@hazae41/binary';
 import { Record } from '../../../../mods/binary/records/record.js';
 import { Cursor } from '../../../../../hazae41/cursor/mod.js';
+import { Unknown, Writable } from '../../../../../hazae41/binary/mod.js';
 
 export interface Handshakeable extends Writable {
   readonly handshake_type: number;
@@ -54,8 +54,8 @@ export class Handshake<T extends Writable> {
     const type = cursor.readUint8OrThrow();
     const size = cursor.readUint24OrThrow();
     const bytes = cursor.readAndCopyOrThrow(size);
-    const fragment = new Opaque(bytes);
+    const fragment = new Unknown(bytes);
 
-    return new Handshake<Opaque>(type, fragment);
+    return new Handshake<Unknown>(type, fragment);
   }
 }

@@ -1,4 +1,4 @@
-import { Readable } from '@hazae41/binary';
+import { Readable } from '../../../../hazae41/binary/mod.js';
 import { Number16 } from '../../../mods/binary/numbers/number16.js';
 import { Number24 } from '../../../mods/binary/numbers/number24.js';
 import { Number8 } from '../../../mods/binary/numbers/number8.js';

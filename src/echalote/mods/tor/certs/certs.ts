@@ -1,4 +1,3 @@
-import { Writable } from '@hazae41/binary';
 import { X509 } from '@hazae41/x509';
 import { Ed25519 } from '../../../../TorClient/WebCryptoEd25519.js';
 import { assert } from '../../../../utils/assert.js';
@@ -10,6 +9,7 @@ import {
   UnknownCertExtensionError,
 } from '../index.js';
 import { Bytes } from '../../../../hazae41/bytes/index.js';
+import { Writable } from '../../../../hazae41/binary/mod.js';
 
 export type CertError =
   | DuplicatedCertError

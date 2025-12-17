@@ -1,4 +1,4 @@
-import { Opaque, Writable } from '@hazae41/binary';
+import { Unknown, Writable } from '../../../../../../../hazae41/binary/mod';
 import { Cursor } from '../../../../../../../hazae41/cursor/mod';
 
 export class RelayDataCell<T extends Writable> {
@@ -32,7 +32,7 @@ export class RelayDataCell<T extends Writable> {
 
   static readOrThrow(cursor: Cursor) {
     return new RelayDataCell(
-      new Opaque(cursor.readAndCopyOrThrow(cursor.remaining))
+      new Unknown(cursor.readAndCopyOrThrow(cursor.remaining))
     );
   }
 }

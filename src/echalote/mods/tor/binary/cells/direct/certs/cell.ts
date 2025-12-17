@@ -1,4 +1,3 @@
-import { Readable } from '@hazae41/binary';
 import { Mutable } from '../../../../../../libs/typescript/typescript';
 import { CrossCert } from '../../../certs/cross/cert';
 import { Ed25519Cert } from '../../../certs/ed25519/cert';
@@ -10,6 +9,7 @@ import {
 } from '../../../../certs/certs';
 import { Unimplemented } from '../../../../errors';
 import { Cursor } from '../../../../../../../hazae41/cursor/mod';
+import { Readable } from '../../../../../../../hazae41/binary/mod';
 
 export class CertsCell {
   readonly #class = CertsCell;

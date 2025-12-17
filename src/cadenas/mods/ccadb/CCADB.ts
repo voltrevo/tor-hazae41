@@ -1,7 +1,6 @@
 import { Base64 } from '@hazae41/base64';
 import { Base16 } from '@hazae41/base16';
 import { X509 } from '@hazae41/x509';
-import { Writable } from '@hazae41/binary';
 import { App } from '../../../TorClient/App.js';
 import { certHashes } from './certHashes.js';
 import type { FetchCerts, CertificateSource } from './fetchCerts.js';
@@ -9,6 +8,7 @@ import type { IStorage } from '../../../storage/index.js';
 import type { IClock } from '../../../clock/IClock.js';
 import { Log } from '../../../Log/index.js';
 import { Bytes } from '../../../hazae41/bytes/index.js';
+import { Writable } from '../../../hazae41/binary/mod.js';
 
 export interface Trusted {
   readonly hashBase16: string;

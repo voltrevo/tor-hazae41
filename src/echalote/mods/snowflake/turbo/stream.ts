@@ -1,10 +1,10 @@
-import { Opaque, Writable } from '@hazae41/binary';
 import { FullDuplex } from '@hazae41/cascade';
 import { Future } from '@hazae41/future';
 import { Awaitable } from '../../../libs/promises/index';
 import { SecretTurboReader } from './reader.js';
 import { SecretTurboWriter } from './writer.js';
 import { Bytes } from '../../../../hazae41/bytes';
+import { Unknown, Writable } from '../../../../hazae41/binary/mod';
 
 export interface TurboDuplexParams {
   readonly client?: Bytes;
@@ -60,7 +60,7 @@ export class SecretTurboDuplex {
     0x12, 0x93, 0x60, 0x5d, 0x27, 0x81, 0x75, 0xf5,
   ]);
 
-  readonly duplex: FullDuplex<Opaque, Writable>;
+  readonly duplex: FullDuplex<Unknown, Writable>;
 
   readonly reader: SecretTurboReader;
   readonly writer: SecretTurboWriter;
@@ -77,7 +77,7 @@ export class SecretTurboDuplex {
     this.reader = new SecretTurboReader(this);
     this.writer = new SecretTurboWriter(this);
 
-    this.duplex = new FullDuplex<Opaque, Writable>({
+    this.duplex = new FullDuplex<Unknown, Writable>({
       input: {
         write: c => this.reader.onWrite(c),
       },

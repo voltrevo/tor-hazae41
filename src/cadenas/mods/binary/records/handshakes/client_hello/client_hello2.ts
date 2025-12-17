@@ -1,4 +1,3 @@
-import { Opaque, SafeOpaque } from '@hazae41/binary';
 import { None, Option, Some } from '@hazae41/option';
 import { ReadableList } from '../../../../../mods/binary/lists/readable.js';
 import { List } from '../../../../../mods/binary/lists/writable.js';
@@ -18,6 +17,8 @@ import { ServerName } from '../extensions/server_name/server_name.js';
 import { ServerNameList } from '../extensions/server_name/server_name_list.js';
 import { Bytes } from '../../../../../../hazae41/bytes/index.js';
 import { Cursor } from '../../../../../../hazae41/cursor/mod.js';
+import { Unknown } from '../../../../../../hazae41/binary/mod.js';
+import { SafeUnknown } from '../../../../../../hazae41/binary/mods/binary/safe-unknown/mod.js';
 
 export class ClientHello2 {
   readonly #class = ClientHello2;
@@ -27,7 +28,7 @@ export class ClientHello2 {
   constructor(
     readonly version: number,
     readonly random: Random,
-    readonly session_id: Vector<Number8, Opaque>,
+    readonly session_id: Vector<Number8, Unknown>,
     readonly cipher_suites: Vector<Number16, List<Number16>>,
     readonly compression_methods: Vector<Number8, List<Number8>>,
     readonly extensions: Option<
@@ -43,7 +44,7 @@ export class ClientHello2 {
     const version = 0x0303;
     const random = Random.default();
 
-    const session_id = Vector(Number8).from(new Opaque(Bytes.empty()));
+    const session_id = Vector(Number8).from(new Unknown(Bytes.empty()));
     const cipher_suites = Vector(Number16).from(
       List.from(ciphers.map(it => new Number16(it.id)))
     );
@@ -105,7 +106,7 @@ export class ClientHello2 {
   static readOrThrow(cursor: Cursor) {
     const version = cursor.readUint16OrThrow();
     const random = Random.readOrThrow(cursor);
-    const session_id = ReadableVector(Number8, SafeOpaque).readOrThrow(cursor);
+    const session_id = ReadableVector(Number8, SafeUnknown).readOrThrow(cursor);
     const cipher_suites = ReadableVector(
       Number16,
       ReadableList(Number16)

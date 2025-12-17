@@ -2,7 +2,7 @@ import { Readable } from '../../../../binary/mod';
 import { Nullable } from '../../../libs/nullable/index';
 import { Class } from '../../../libs/reflection/index';
 import { DERTriplet } from './triplet';
-import { Opaque } from '../../triplets/opaque/opaque';
+import { OpaqueTriplet } from '../../triplets/opaque/opaque';
 import { Type } from '../../type/type';
 
 export interface DERHolder extends DERTriplet {
@@ -52,7 +52,7 @@ export class DERCursor {
 
     if (triplet instanceof clazz) return triplet as T;
 
-    if (triplet instanceof Opaque) {
+    if (triplet instanceof OpaqueTriplet) {
       const resolved = triplet.readIntoOrNull(clazz);
 
       if (resolved != null) return resolved;
@@ -74,7 +74,7 @@ export class DERCursor {
 
     if (triplet instanceof clazz) return triplet as T;
 
-    if (triplet instanceof Opaque) {
+    if (triplet instanceof OpaqueTriplet) {
       const resolved = triplet.readIntoOrNull(clazz);
 
       if (resolved != null) return resolved;

@@ -1,6 +1,5 @@
 import { IA5String, Integer, ObjectIdentifier, Sequence } from '@hazae41/asn1';
 import { Base16 } from '@hazae41/base16';
-import { Opaque, Readable, Writable } from '@hazae41/binary';
 import { Certificate, OtherName, SubjectAltName, X509 } from '@hazae41/x509';
 import { BigBytes } from '../libs/bigint/bigint.js';
 import { BigMath } from '../libs/bigmath/index.js';
@@ -54,6 +53,7 @@ import { App } from '../../TorClient/App.js';
 import { CCADB } from './ccadb/CCADB.js';
 import { Bytes } from '../../hazae41/bytes/index.js';
 import { Cursor } from '../../hazae41/cursor/mod.js';
+import { Readable, Unknown, Writable } from '../../hazae41/binary/mod.js';
 
 export type TlsClientState =
   | TlsClientNoneState
@@ -63,7 +63,10 @@ export type TlsClientState =
   | TlsClientHandshakeServerCipheredState
   | TlsClientHandshakedState;
 
-async function onAlert(state: TlsClientState, record: PlaintextRecord<Opaque>) {
+async function onAlert(
+  state: TlsClientState,
+  record: PlaintextRecord<Unknown>
+) {
   const alert = record.fragment.readIntoOrThrow(Alert);
 
   Console.debug(alert);
@@ -143,7 +146,7 @@ export class TlsClientNoneState {
     throw new InvalidTlsStateError();
   }
 
-  async onRecord(_record: PlaintextRecord<Opaque>) {
+  async onRecord(_record: PlaintextRecord<Unknown>) {
     throw new InvalidTlsStateError();
   }
 }
@@ -187,18 +190,18 @@ export class TlsClientHandshakeClientHelloState implements TlsClientHandshakeCli
     throw new InvalidTlsStateError();
   }
 
-  async onRecord(record: PlaintextRecord<Opaque>) {
+  async onRecord(record: PlaintextRecord<Unknown>) {
     await this.onPlaintextRecord(record);
   }
 
-  async onPlaintextRecord(record: PlaintextRecord<Opaque>) {
+  async onPlaintextRecord(record: PlaintextRecord<Unknown>) {
     if (record.type === Alert.record_type) return await onAlert(this, record);
     if (record.type === Record.types.handshake)
       return await this.onHandshake(record);
     throw new InvalidTlsStateError();
   }
 
-  async onHandshake(record: PlaintextRecord<Opaque>) {
+  async onHandshake(record: PlaintextRecord<Unknown>) {
     const handshake = record.fragment.readIntoOrThrow(Handshake);
 
     if (handshake.type !== Handshake.types.hello_request)
@@ -210,7 +213,7 @@ export class TlsClientHandshakeClientHelloState implements TlsClientHandshakeCli
     console.warn(handshake);
   }
 
-  async onServerHello(handshake: Handshake<Opaque>) {
+  async onServerHello(handshake: Handshake<Unknown>) {
     const server_hello = handshake.fragment.readIntoOrThrow(ServerHello2);
 
     Console.debug(server_hello);
@@ -320,18 +323,18 @@ export class TlsClientHandshakeServerHelloState implements TlsClientHandshakeSer
     throw new InvalidTlsStateError();
   }
 
-  async onRecord(record: PlaintextRecord<Opaque>) {
+  async onRecord(record: PlaintextRecord<Unknown>) {
     await this.onPlaintextRecord(record);
   }
 
-  async onPlaintextRecord(record: PlaintextRecord<Opaque>) {
+  async onPlaintextRecord(record: PlaintextRecord<Unknown>) {
     if (record.type === Alert.record_type) return await onAlert(this, record);
     if (record.type === Record.types.handshake)
       return await this.onHandshake(record);
     throw new InvalidTlsStateError();
   }
 
-  async onHandshake(record: PlaintextRecord<Opaque>) {
+  async onHandshake(record: PlaintextRecord<Unknown>) {
     const handshake = record.fragment.readIntoOrThrow(Handshake);
 
     if (handshake.type !== Handshake.types.hello_request)
@@ -398,7 +401,7 @@ export class TlsClientHandshakeServerHelloState implements TlsClientHandshakeSer
     throw new Error('Could not verify domain name');
   }
 
-  async onCertificate(handshake: Handshake<Opaque>) {
+  async onCertificate(handshake: Handshake<Unknown>) {
     const certificate = handshake.fragment.readIntoOrThrow(Certificate2);
 
     Console.debug(certificate);
@@ -643,7 +646,7 @@ export class TlsClientHandshakeServerHelloState implements TlsClientHandshakeSer
     this.server_certificates = server_certificates;
   }
 
-  async onServerKeyExchange(handshake: Handshake<Opaque>) {
+  async onServerKeyExchange(handshake: Handshake<Unknown>) {
     const clazz = ReadableServerKeyExchange2.getOrThrow(this.cipher);
 
     const server_key_exchange = handshake.fragment.readIntoOrThrow(clazz);
@@ -778,7 +781,7 @@ export class TlsClientHandshakeServerHelloState implements TlsClientHandshakeSer
     console.warn(server_key_exchange);
   }
 
-  async onCertificateRequest(handshake: Handshake<Opaque>) {
+  async onCertificateRequest(handshake: Handshake<Unknown>) {
     const certificate_request =
       handshake.fragment.readIntoOrThrow(CertificateRequest2);
 
@@ -896,7 +899,7 @@ export class TlsClientHandshakeServerHelloState implements TlsClientHandshakeSer
     };
   }
 
-  async onServerHelloDone(handshake: Handshake<Opaque>) {
+  async onServerHelloDone(handshake: Handshake<Unknown>) {
     const server_hello_done =
       handshake.fragment.readIntoOrThrow(ServerHelloDone2);
 
@@ -904,7 +907,7 @@ export class TlsClientHandshakeServerHelloState implements TlsClientHandshakeSer
 
     if (this.certificate_request != null) {
       const certificate_list = Vector(Number24).from(
-        List.from<Vector<Number24, Opaque>>([])
+        List.from<Vector<Number24, Unknown>>([])
       );
 
       const certificate = new Certificate2(certificate_list);
@@ -1093,18 +1096,18 @@ export class TlsClientHandshakeClientFinishedState implements TlsClientHandshake
     throw new InvalidTlsStateError();
   }
 
-  async onRecord(record: PlaintextRecord<Opaque>) {
+  async onRecord(record: PlaintextRecord<Unknown>) {
     await this.onPlaintextRecord(record);
   }
 
-  async onPlaintextRecord(record: PlaintextRecord<Opaque>) {
+  async onPlaintextRecord(record: PlaintextRecord<Unknown>) {
     if (record.type === Alert.record_type) return await onAlert(this, record);
     if (record.type === ChangeCipherSpec.record_type)
       return await this.onChangeCipherSpec(record);
     throw new InvalidTlsStateError();
   }
 
-  async onChangeCipherSpec(record: PlaintextRecord<Opaque>) {
+  async onChangeCipherSpec(record: PlaintextRecord<Unknown>) {
     const change_cipher_spec =
       record.fragment.readIntoOrThrow(ChangeCipherSpec);
 
@@ -1143,7 +1146,7 @@ export type TlsClientServerEncryptedState =
 
 async function onCiphertextRecord(
   state: TlsClientServerEncryptedState,
-  record: PlaintextRecord<Opaque>
+  record: PlaintextRecord<Unknown>
 ) {
   if (state.encrypter.cipher_type === 'block') {
     const cipher = BlockCiphertextRecord.fromOrThrow(record);
@@ -1238,18 +1241,18 @@ export class TlsClientHandshakeServerCipheredState implements TlsClientHandshake
     throw new InvalidTlsStateError();
   }
 
-  async onRecord(record: PlaintextRecord<Opaque>) {
+  async onRecord(record: PlaintextRecord<Unknown>) {
     await onCiphertextRecord(this, record);
   }
 
-  async onPlaintextRecord(record: PlaintextRecord<Opaque>) {
+  async onPlaintextRecord(record: PlaintextRecord<Unknown>) {
     if (record.type === Alert.record_type) return await onAlert(this, record);
     if (record.type === Record.types.handshake)
       return await this.onHandshake(record);
     throw new InvalidTlsStateError();
   }
 
-  async onHandshake(record: PlaintextRecord<Opaque>) {
+  async onHandshake(record: PlaintextRecord<Unknown>) {
     const handshake = record.fragment.readIntoOrThrow(Handshake);
 
     if (handshake.type !== Handshake.types.hello_request)
@@ -1261,7 +1264,7 @@ export class TlsClientHandshakeServerCipheredState implements TlsClientHandshake
     console.warn(handshake);
   }
 
-  async onFinished(handshake: Handshake<Opaque>) {
+  async onFinished(handshake: Handshake<Unknown>) {
     const finished = handshake.fragment.readIntoOrThrow(Finished2);
 
     Console.debug(finished);
@@ -1366,18 +1369,18 @@ export class TlsClientHandshakedState implements TlsClientHandshakedStateParams 
     this.client.output.enqueue(ciphertext);
   }
 
-  async onRecord(record: PlaintextRecord<Opaque>) {
+  async onRecord(record: PlaintextRecord<Unknown>) {
     await onCiphertextRecord(this, record);
   }
 
-  async onPlaintextRecord(record: PlaintextRecord<Opaque>) {
+  async onPlaintextRecord(record: PlaintextRecord<Unknown>) {
     if (record.type === Alert.record_type) return await onAlert(this, record);
     if (record.type === Record.types.application_data)
       return await this.onApplicationData(record);
     throw new InvalidTlsStateError();
   }
 
-  async onApplicationData(record: PlaintextRecord<Opaque>) {
+  async onApplicationData(record: PlaintextRecord<Unknown>) {
     this.client.input.enqueue(record.fragment);
   }
 }

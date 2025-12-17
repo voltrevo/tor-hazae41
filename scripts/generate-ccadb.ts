@@ -15,11 +15,11 @@
  */
 
 import { X509 } from '@hazae41/x509';
-import { Writable } from '@hazae41/binary';
 import fs from 'fs/promises';
 import path from 'path';
 import { execSync } from 'child_process';
 import { Bytes } from '../src/hazae41/bytes';
+import { Writable } from '../src/hazae41/binary/mod';
 
 type CertificateSource = 'certifi' | 'curl' | 'ccadb';
 

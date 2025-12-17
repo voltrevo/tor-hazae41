@@ -1,9 +1,9 @@
 import { test } from '@hazae41/phobos';
 import { assert } from '../../../utils/assert';
 import { Resizer } from './resizer.js';
-import { Writable } from '@hazae41/binary';
 import { Bytes } from '../../../hazae41/bytes';
 import { Cursor } from '../../../hazae41/cursor/mod';
+import { Writable } from '../../../hazae41/binary/mod';
 
 test('Resizer - constructor with defaults', async () => {
   const resizer = new Resizer();

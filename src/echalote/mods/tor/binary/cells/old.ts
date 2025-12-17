@@ -1,4 +1,3 @@
-import { Opaque, Readable, Writable } from '@hazae41/binary';
 import { SecretCircuit } from '../../circuit';
 import { SecretTorClientDuplex } from '../../client';
 import {
@@ -7,6 +6,7 @@ import {
   UnexpectedCircuitError,
 } from './errors.js';
 import { Cursor } from '../../../../../hazae41/cursor/mod';
+import { Readable, Unknown, Writable } from '../../../../../hazae41/binary/mod';
 
 export interface OldCellable {
   readonly old: true;
@@ -91,13 +91,13 @@ export namespace OldCell {
       if (command === 7) {
         const length = cursor.readUint16OrThrow();
         const bytes = cursor.readAndCopyOrThrow(length);
-        const payload = new Opaque(bytes);
+        const payload = new Unknown(bytes);
 
         return new Raw(circuit, command, payload);
       }
 
       const bytes = cursor.readAndCopyOrThrow(PAYLOAD_LEN);
-      const payload = new Opaque(bytes);
+      const payload = new Unknown(bytes);
 
       return new Raw(circuit, command, payload);
     }
@@ -130,7 +130,7 @@ export namespace OldCell {
     }
 
     static intoOrThrow<T extends Writable>(
-      cell: OldCell<Opaque>,
+      cell: OldCell<Unknown>,
       readable: OldCellable.Circuitful & Readable<T>
     ) {
       if (cell.command !== readable.command) throw new InvalidCommandError();
@@ -169,7 +169,7 @@ export namespace OldCell {
     }
 
     static intoOrThrow<T extends Writable>(
-      cell: OldCell<Opaque>,
+      cell: OldCell<Unknown>,
       readable: OldCellable.Circuitless & Readable<T>
     ) {
       if (cell.command !== readable.command) throw new InvalidCommandError();

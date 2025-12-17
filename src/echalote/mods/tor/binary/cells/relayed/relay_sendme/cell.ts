@@ -1,6 +1,6 @@
-import { Opaque, Writable } from '@hazae41/binary';
 import { Cursor } from '../../../../../../../hazae41/cursor/mod';
 import { Bytes } from '../../../../../../../hazae41/bytes';
+import { Unknown, Writable } from '../../../../../../../hazae41/binary/mod';
 
 export class RelaySendmeCircuitCell<T extends Writable> {
   readonly #class = RelaySendmeCircuitCell;
@@ -48,7 +48,7 @@ export class RelaySendmeCircuitCell<T extends Writable> {
     const version = cursor.readUint8OrThrow();
     const length = cursor.readUint16OrThrow();
     const bytes = cursor.readAndCopyOrThrow(length);
-    const data = new Opaque(bytes);
+    const data = new Unknown(bytes);
 
     return new RelaySendmeCircuitCell(version, data);
   }

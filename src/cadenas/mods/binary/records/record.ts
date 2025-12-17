@@ -1,4 +1,3 @@
-import { Opaque, Writable } from '@hazae41/binary';
 import { GenericAEADCipher } from '../../../mods/binary/records/generic_ciphers/aead/aead.js';
 import { GenericBlockCipher } from '../../../mods/binary/records/generic_ciphers/block/block.js';
 import {
@@ -7,6 +6,7 @@ import {
   Encrypter,
 } from '../../../mods/ciphers/encryptions/encryption.js';
 import { Cursor } from '../../../../hazae41/cursor/mod.js';
+import { Unknown, Writable } from '../../../../hazae41/binary/mod.js';
 
 export namespace Record {
   export const types = {
@@ -45,15 +45,15 @@ export class PlaintextRecord<T extends Writable> {
     this.fragment.writeOrThrow(cursor);
   }
 
-  static readOrThrow(cursor: Cursor): PlaintextRecord<Opaque> {
+  static readOrThrow(cursor: Cursor): PlaintextRecord<Unknown> {
     const type = cursor.readUint8OrThrow();
     const version = cursor.readUint16OrThrow();
     const size = cursor.readUint16OrThrow();
 
     const bytes = cursor.readAndCopyOrThrow(size);
-    const fragment = new Opaque(bytes);
+    const fragment = new Unknown(bytes);
 
-    return new PlaintextRecord<Opaque>(type, version, fragment);
+    return new PlaintextRecord<Unknown>(type, version, fragment);
   }
 
   async #encryptBlockOrThrow(encrypter: BlockEncrypter, sequence: bigint) {
@@ -91,7 +91,7 @@ export class BlockCiphertextRecord {
     readonly fragment: GenericBlockCipher
   ) {}
 
-  static fromOrThrow(record: PlaintextRecord<Opaque>) {
+  static fromOrThrow(record: PlaintextRecord<Unknown>) {
     const fragment = record.fragment.readIntoOrThrow(GenericBlockCipher);
     return new BlockCiphertextRecord(record.type, record.version, fragment);
   }
@@ -127,7 +127,7 @@ export class AEADCiphertextRecord {
     readonly fragment: GenericAEADCipher
   ) {}
 
-  static fromOrThrow(record: PlaintextRecord<Opaque>) {
+  static fromOrThrow(record: PlaintextRecord<Unknown>) {
     const fragment = record.fragment.readIntoOrThrow(GenericAEADCipher);
     return new AEADCiphertextRecord(record.type, record.version, fragment);
   }

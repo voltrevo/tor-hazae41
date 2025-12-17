@@ -4,7 +4,7 @@ import { assert, test } from '../../../../phobos/mod';
 import { Integer } from '../integer/integer';
 import { DER } from '../../resolvers/der/index';
 import { relative, resolve } from 'node:path';
-import { Opaque } from './opaque';
+import { OpaqueTriplet } from './opaque';
 import { Bytes } from '../../../../bytes';
 
 const directory = resolve('./dist/test/');
@@ -19,7 +19,7 @@ function hexToBytes(hex: string) {
 function bytesToTriplet(bytes: Bytes) {
   const opaque = Readable.readFromBytesOrThrow(DER, bytes);
 
-  if (!(opaque instanceof Opaque)) throw new Error(`Not an opaque`);
+  if (!(opaque instanceof OpaqueTriplet)) throw new Error(`Not an opaque`);
   if (opaque.type.tag !== 1) throw new Error(`Not a custom integer`);
   return opaque.readIntoOrThrow(Integer.DER);
 }

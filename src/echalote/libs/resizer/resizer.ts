@@ -1,7 +1,7 @@
-import { Writable } from '@hazae41/binary';
 import { assert } from '../../../utils/assert.js';
 import { Bytes } from '../../../hazae41/bytes/index.js';
 import { Cursor } from '../../../hazae41/cursor/mod.js';
+import { Writable } from '../../../hazae41/binary/mod.js';
 
 export class Resizer {
   inner: Cursor;

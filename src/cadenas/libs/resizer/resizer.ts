@@ -1,4 +1,4 @@
-import { Writable } from '@hazae41/binary';
+import { Writable } from '../../../hazae41/binary/mod';
 import { Bytes } from '../../../hazae41/bytes';
 import { Cursor } from '../../../hazae41/cursor/mod';
 

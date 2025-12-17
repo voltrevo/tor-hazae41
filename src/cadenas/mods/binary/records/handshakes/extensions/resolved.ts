@@ -1,4 +1,3 @@
-import { Opaque, SafeOpaque } from '@hazae41/binary';
 import { Vector } from '../../../../../index.js';
 import { Number16 } from '../../../../../mods/binary/numbers/number16.js';
 import { Extension } from '../../../../../mods/binary/records/handshakes/extensions/extension.js';
@@ -8,13 +7,15 @@ import { EllipticCurves } from './elliptic_curves/elliptic_curves.js';
 import { ServerNameList } from './server_name/server_name_list.js';
 import { SignatureAlgorithms } from './signature_algorithms/signature_algorithms.js';
 import { Cursor } from '../../../../../../hazae41/cursor/mod.js';
+import { Unknown } from '../../../../../../hazae41/binary/mod.js';
+import { SafeUnknown } from '../../../../../../hazae41/binary/mods/binary/safe-unknown/mod.js';
 
 export type ResolvedExtension =
   | ServerNameList
   | SignatureAlgorithms
   | EllipticCurves
   | ECPointFormats
-  | Opaque;
+  | Unknown;
 
 export namespace ResolvedExtension {
   function resolveOrThrow(
@@ -30,7 +31,7 @@ export namespace ResolvedExtension {
     if (type === Extension.types.ec_point_formats)
       return ReadableVector(Number16, ECPointFormats).readOrThrow(cursor);
 
-    return ReadableVector(Number16, SafeOpaque).readOrThrow(cursor);
+    return ReadableVector(Number16, SafeUnknown).readOrThrow(cursor);
   }
 
   export function readOrThrow(cursor: Cursor): Extension<ResolvedExtension> {

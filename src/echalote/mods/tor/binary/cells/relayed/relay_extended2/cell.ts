@@ -1,4 +1,4 @@
-import { Opaque, Writable } from '@hazae41/binary';
+import { Unknown, Writable } from '../../../../../../../hazae41/binary/mod';
 import { Cursor } from '../../../../../../../hazae41/cursor/mod';
 import { Unimplemented } from '../../../../errors';
 
@@ -34,7 +34,7 @@ export class RelayExtended2Cell<T extends Writable> {
   static readOrThrow(cursor: Cursor) {
     const length = cursor.readUint16OrThrow();
     const bytes = cursor.readAndCopyOrThrow(length);
-    const data = new Opaque(bytes);
+    const data = new Unknown(bytes);
 
     return new RelayExtended2Cell(data);
   }

@@ -20,7 +20,7 @@ import { UTCTime } from '../utc_time/utc_time';
 import { UTF8String } from '../utf8_string/utf8_string';
 import { Bytes } from '../../../../bytes';
 
-export class Opaque {
+export class OpaqueTriplet {
   /**
    * An opaque triplet
    * @param bytes
@@ -37,7 +37,7 @@ export class Opaque {
   ) {}
 
   toDER() {
-    return Opaque.DER.from(this);
+    return OpaqueTriplet.DER.from(this);
   }
 
   toString() {
@@ -57,8 +57,8 @@ export class Opaque {
   }
 }
 
-export namespace Opaque {
-  export class DER extends Opaque {
+export namespace OpaqueTriplet {
+  export class DER extends OpaqueTriplet {
     constructor(
       readonly type: Type.DER,
       readonly bytes: Bytes
@@ -66,7 +66,7 @@ export namespace Opaque {
       super(type, bytes);
     }
 
-    static from(asn1: Opaque) {
+    static from(asn1: OpaqueTriplet) {
       return new DER(asn1.type.toDER(), asn1.bytes);
     }
 

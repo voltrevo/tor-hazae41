@@ -1,4 +1,3 @@
-import { Opaque, Writable } from '@hazae41/binary';
 import { FullDuplex } from '@hazae41/cascade';
 import { CloseEvents, ErrorEvents, SuperEventTarget } from '@hazae41/plume';
 import { Console } from '../console/index';
@@ -13,6 +12,7 @@ import {
 } from './binary/cells/relayed/relay_end/reason.js';
 import { RelaySendmeStreamCell } from './binary/cells/relayed/relay_sendme/cell.js';
 import { Cursor } from '../../../hazae41/cursor/mod';
+import { Unknown, Writable } from '../../../hazae41/binary/mod';
 
 export class TorStreamDuplex {
   readonly #secret: SecretTorStreamDuplex;
@@ -67,7 +67,7 @@ export type SecretTorStreamDuplexType = 'external' | 'directory';
 export class SecretTorStreamDuplex {
   readonly #class = SecretTorStreamDuplex;
 
-  readonly duplex: FullDuplex<Opaque, Writable>;
+  readonly duplex: FullDuplex<Unknown, Writable>;
 
   readonly events = new SuperEventTarget<TorStreamEvents>();
 
@@ -81,7 +81,7 @@ export class SecretTorStreamDuplex {
     readonly id: number,
     readonly circuit: SecretCircuit
   ) {
-    this.duplex = new FullDuplex<Opaque, Writable>({
+    this.duplex = new FullDuplex<Unknown, Writable>({
       output: {
         write: c => this.#onOutputWrite(c),
       },
@@ -208,7 +208,7 @@ export class SecretTorStreamDuplex {
     this.duplex.error(reason);
   }
 
-  async #onRelayConnectedCell(cell: RelayCell.Streamful<Opaque>) {
+  async #onRelayConnectedCell(cell: RelayCell.Streamful<Unknown>) {
     if (cell.stream !== this) return;
 
     if (this.type === 'directory') {
@@ -226,7 +226,7 @@ export class SecretTorStreamDuplex {
     }
   }
 
-  async #onRelayDataCell(cell: RelayCell.Streamful<RelayDataCell<Opaque>>) {
+  async #onRelayDataCell(cell: RelayCell.Streamful<RelayDataCell<Unknown>>) {
     if (cell.stream !== this) return;
 
     Console.debug(`${this.constructor.name}.onRelayDataCell`, cell);
@@ -283,7 +283,7 @@ export class SecretTorStreamDuplex {
     const cursor = new Cursor(bytes);
 
     for (const chunk of cursor.splitOrThrow(RelayCell.DATA_LEN))
-      await this.#onWriteDirect(new Opaque(chunk));
+      await this.#onWriteDirect(new Unknown(chunk));
 
     return;
   }

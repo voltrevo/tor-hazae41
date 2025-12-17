@@ -1,4 +1,4 @@
-import { Writable } from '@hazae41/binary';
+import { Writable } from '../../../../../../../hazae41/binary/mod';
 import { Cursor } from '../../../../../../../hazae41/cursor/mod';
 import { RelayExtend2Link } from './link';
 
