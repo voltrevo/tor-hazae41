@@ -1,16 +1,17 @@
 import { test } from '@hazae41/phobos';
 import { assert } from '../../../utils/assert';
 import { Sha1Hasher } from './Sha1Hasher';
+import { Bytes } from '../../../hazae41/bytes';
 
-// Helper function to convert Uint8Array to hex string
-function toHex(bytes: Uint8Array): string {
+// Helper function to convert Bytes to hex string
+function toHex(bytes: Bytes): string {
   return Array.from(bytes)
     .map(b => b.toString(16).padStart(2, '0'))
     .join('');
 }
 
-// Helper function to convert string to Uint8Array
-function toBytes(str: string): Uint8Array {
+// Helper function to convert string to Bytes
+function toBytes(str: string): Bytes {
   return new TextEncoder().encode(str);
 }
 
@@ -142,7 +143,7 @@ test('Sha1Hasher: binary data handling', async () => {
   const hasher = await Sha1Hasher.createOrThrow();
 
   // Create binary data with all byte values
-  const binaryData = new Uint8Array([0, 1, 2, 3, 255, 254, 253]);
+  const binaryData = Bytes.from([0, 1, 2, 3, 255, 254, 253]);
 
   hasher.updateOrThrow(binaryData);
   const hash = hasher.finalizeOrThrow();

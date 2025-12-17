@@ -2,7 +2,6 @@ import { WebCryptoAes128Ctr } from '../../../TorClient/WebCryptoAes128Ctr';
 import { Base64 } from '@hazae41/base64';
 import { Opaque } from '@hazae41/binary';
 import { Bitset } from '@hazae41/bitset';
-import { Bytes } from '@hazae41/bytes';
 import { Future } from '@hazae41/future';
 import { Option } from '@hazae41/option';
 import {
@@ -42,6 +41,7 @@ import { Consensus } from './consensus/consensus.js';
 import { HASH_LEN } from './constants.js';
 import { invariant } from '../../../utils/debug';
 import { getErrorDetails } from '../../../utils/getErrorDetails';
+import { Bytes } from '../../../hazae41/bytes';
 
 export const IPv6 = {
   always: 3,
@@ -496,11 +496,11 @@ export class SecretCircuit {
 
     const forwardKey = new WebCryptoAes128Ctr(
       result.forwardKey,
-      new Uint8Array(16)
+      Bytes.alloc(16)
     );
     const backwardKey = new WebCryptoAes128Ctr(
       result.backwardKey,
-      new Uint8Array(16)
+      Bytes.alloc(16)
     );
 
     const target = new Target(

@@ -29,14 +29,15 @@ import { stdout, stderr } from 'node:process';
 import { TorClient } from '../TorClient/versions/standard';
 import { getErrorDetails } from '../utils/getErrorDetails';
 import { Log } from '../Log';
+import { Bytes } from '../hazae41/bytes/mods';
 
 type Opts = {
   method?: string;
   headers: [string, string][];
-  data?: { kind: 'raw' | 'binary' | 'json'; value: string | Uint8Array };
+  data?: { kind: 'raw' | 'binary' | 'json'; value: string | Bytes };
   form: Array<{
     name: string;
-    value: string | { filePath: string; data: Uint8Array; filename: string };
+    value: string | { filePath: string; data: Bytes; filename: string };
   }>;
   output?: string;
   include: boolean;
@@ -59,24 +60,24 @@ function parseHeader(h: string): [string, string] {
   return [h.slice(0, idx).trim(), h.slice(idx + 1).trim()];
 }
 
-function readFromSourceSpec(spec: string): Uint8Array {
+function readFromSourceSpec(spec: string): Bytes {
   if (spec === '@-') {
     return readStdinSync();
   }
   if (spec[0] === '@') {
     const path = spec.slice(1);
     if (!existsSync(path)) die(`No such file: ${path}`);
-    return new Uint8Array(readFileSync(path));
+    return Bytes.from(readFileSync(path));
   }
   return new TextEncoder().encode(spec);
 }
 
-function readStdinSync(): Uint8Array {
-  const chunks: Uint8Array[] = [];
+function readStdinSync(): Bytes {
+  const chunks: Bytes[] = [];
   const buf = readFileSync(0); // fd 0 (stdin) in Node allows sync read
-  chunks.push(new Uint8Array(buf));
+  chunks.push(Bytes.from(buf));
   const length = chunks.reduce((a, b) => a + b.length, 0);
-  const result = new Uint8Array(length);
+  const result = Bytes.from(length);
   let offset = 0;
   for (const chunk of chunks) {
     result.set(chunk, offset);
@@ -226,7 +227,7 @@ async function main() {
       if (typeof part.value === 'string') {
         form.append(part.name, part.value);
       } else {
-        const b = new Blob([new Uint8Array(part.value.data)]);
+        const b = new Blob([Bytes.from(part.value.data)]);
         form.append(part.name, b, part.value.filename);
       }
     }
@@ -245,7 +246,7 @@ async function main() {
       body = opts.data.value as string;
     } else {
       // binary
-      body = new Uint8Array(opts.data.value as Buffer);
+      body = Bytes.from(opts.data.value as Buffer);
       if (!headers.has('Content-Type')) {
         headers.set('Content-Type', 'application/octet-stream');
       }
@@ -275,7 +276,7 @@ async function main() {
           ? new TextEncoder().encode(body).length
           : body instanceof Blob
             ? body.size
-            : body instanceof Uint8Array
+            : body instanceof Bytes
               ? body.byteLength
               : 'unknown';
       stderr.write(`> (body ${size} bytes)\n`);
@@ -327,7 +328,7 @@ async function main() {
 
   // Body
   const arrayBuf = await res.arrayBuffer();
-  const buf = new Uint8Array(arrayBuf);
+  const buf = Bytes.from(arrayBuf);
 
   if (opts.output) {
     writeFileSync(opts.output, buf);

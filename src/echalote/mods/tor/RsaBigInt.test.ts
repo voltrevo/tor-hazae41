@@ -7,11 +7,12 @@ import { test } from '@hazae41/phobos';
 import { RsaBigInt } from './RsaBigInt.js';
 import { assert } from '../../../utils/assert.js';
 import testVectors from './rsa-test-vectors.json' assert { type: 'json' };
+import { Bytes } from '../../../hazae41/bytes/index.js';
 
 // No WASM initialization needed
 
 test('RSA BigInt: Memory wrapper interface is compatible', async () => {
-  const testBytes = new Uint8Array([0x01, 0x02, 0x03, 0x04]);
+  const testBytes = Bytes.from([0x01, 0x02, 0x03, 0x04]);
 
   const bigIntMem = new RsaBigInt.Memory(testBytes);
 
@@ -22,14 +23,14 @@ test('RSA BigInt: Memory wrapper interface is compatible', async () => {
   );
 
   assert(
-    bigIntMem.bytes.every((b, i) => b === testBytes[i]),
+    [...bigIntMem.bytes].every((b, i) => b === testBytes[i]),
     'BigInt Memory.bytes should match input'
   );
 });
 
 test('RSA BigInt: Memory initializes from ArrayBuffer', async () => {
   const buffer = new ArrayBuffer(8);
-  const view = new Uint8Array(buffer);
+  const view = Bytes.from(buffer);
   view[0] = 42;
 
   const memory = new RsaBigInt.Memory(buffer);
@@ -50,7 +51,7 @@ test('RSA BigInt: RsaPublicKey interface exists', async () => {
 });
 
 test('RSA BigInt: handles invalid DER gracefully', async () => {
-  const invalidDER = new Uint8Array([0xff, 0xff, 0xff]); // Invalid DER
+  const invalidDER = Bytes.from([0xff, 0xff, 0xff]); // Invalid DER
   const memory = new RsaBigInt.Memory(invalidDER);
 
   try {
@@ -79,16 +80,16 @@ test('RSA BigInt: Test vector from real Tor certificate (captured from integrati
   for (let vectorIdx = 0; vectorIdx < testVectors.length; vectorIdx++) {
     const { publicKeyDerHex, hashHex, signatureHex } = testVectors[vectorIdx];
 
-    // Convert hex strings to Uint8Array
-    const publicKeyDer = new Uint8Array(
+    // Convert hex strings to Bytes
+    const publicKeyDer = Bytes.from(
       publicKeyDerHex
         .match(/.{1,2}/g)!
         .map((byte: string) => parseInt(byte, 16))
     );
-    const testHash = new Uint8Array(
+    const testHash = Bytes.from(
       hashHex.match(/.{1,2}/g)!.map((byte: string) => parseInt(byte, 16))
     );
-    const testSignature = new Uint8Array(
+    const testSignature = Bytes.from(
       signatureHex.match(/.{1,2}/g)!.map((byte: string) => parseInt(byte, 16))
     );
 
@@ -136,7 +137,7 @@ test('RSA BigInt: Test vector from real Tor certificate (captured from integrati
     const hashLen = testHash.length;
     const hashCorruptionPositions = [0, Math.floor(hashLen / 2), hashLen - 1];
     for (const pos of hashCorruptionPositions) {
-      const corruptedHash = new Uint8Array(testHash);
+      const corruptedHash = Bytes.from(testHash);
       corruptedHash[pos] ^= 0xff; // Flip all bits
 
       const corruptedHashMemory = new RsaBigInt.Memory(corruptedHash);
@@ -156,7 +157,7 @@ test('RSA BigInt: Test vector from real Tor certificate (captured from integrati
     const sigLen = testSignature.length;
     const sigCorruptionPositions = [0, Math.floor(sigLen / 2), sigLen - 1];
     for (const pos of sigCorruptionPositions) {
-      const corruptedSignature = new Uint8Array(testSignature);
+      const corruptedSignature = Bytes.from(testSignature);
       corruptedSignature[pos] ^= 0xff; // Flip all bits
 
       const corruptedSignatureMemory = new RsaBigInt.Memory(corruptedSignature);
@@ -174,7 +175,7 @@ test('RSA BigInt: Test vector from real Tor certificate (captured from integrati
     // Test corruption: flip single bit at various positions
     const singleBitPositions = [0, Math.floor(sigLen / 2), sigLen - 1];
     for (const pos of singleBitPositions) {
-      const corruptedSignature = new Uint8Array(testSignature);
+      const corruptedSignature = Bytes.from(testSignature);
       corruptedSignature[pos] ^= 0x01; // Flip single bit
 
       const corruptedSignatureMemory = new RsaBigInt.Memory(corruptedSignature);

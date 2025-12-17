@@ -1,8 +1,8 @@
-import { Uint8Array } from '@hazae41/bytes';
 import { Cursor } from '@hazae41/cursor';
 import { Ed25519 } from '../../../../../../TorClient/WebCryptoEd25519.js';
 import { SignedWithEd25519Key } from './extensions/signer';
 import { ExpiredCertError, InvalidSignatureError } from '../../../certs/certs';
+import { Bytes } from '../../../../../../hazae41/bytes/index.js';
 
 export interface Extensions {
   signer?: SignedWithEd25519Key;
@@ -34,10 +34,10 @@ export class Ed25519Cert {
     readonly certType: number,
     readonly expiration: Date,
     readonly certKeyType: number,
-    readonly certKey: Uint8Array<32>,
+    readonly certKey: Bytes<32>,
     readonly extensions: Extensions,
-    readonly payload: Uint8Array,
-    readonly signature: Uint8Array<64>
+    readonly payload: Bytes,
+    readonly signature: Bytes<64>
   ) {}
 
   async verifyOrThrow() {

@@ -1,5 +1,5 @@
-import { Uint8Array } from '@hazae41/bytes';
 import { Cursor } from '@hazae41/cursor';
+import { Bytes } from '../../../../../../hazae41/bytes';
 
 export class PreMasterSecret {
   /**
@@ -9,7 +9,7 @@ export class PreMasterSecret {
    */
   constructor(
     readonly client_version: number,
-    readonly random: Uint8Array<46>
+    readonly random: Bytes<46>
   ) {}
 
   sizeOrThrow() {

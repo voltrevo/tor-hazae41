@@ -4,13 +4,15 @@
  * Compatible API with @hazae41/bitwise.wasm but without WebAssembly overhead
  */
 
+import { Bytes } from '../hazae41/bytes';
+
 /**
  * Unpack bytes into individual bits
  * Each byte is expanded to 8 bytes, where each byte contains a single bit (0 or 1)
  * Example: 0b10110010 -> [1, 0, 1, 1, 0, 0, 1, 0]
  */
-export function bitwise_unpack(bytes: Uint8Array): Uint8Array {
-  const bits = new Uint8Array(bytes.length * 8);
+export function bitwise_unpack(bytes: Bytes): Bytes {
+  const bits = Bytes.alloc(bytes.length * 8);
 
   for (let i = 0; i < bytes.length; i++) {
     const byte = bytes[i];
@@ -30,8 +32,8 @@ export function bitwise_unpack(bytes: Uint8Array): Uint8Array {
  * For partial bytes (< 8 bits), bits are right-aligned with zero padding on the left
  * Example: [1, 0, 1, 1] → 0b00001011 (padded with 4 zeros on the left)
  */
-export function bitwise_pack_left(bits: Uint8Array): Uint8Array {
-  const bytes = new Uint8Array(Math.ceil(bits.length / 8));
+export function bitwise_pack_left(bits: Bytes): Bytes {
+  const bytes = Bytes.alloc(Math.ceil(bits.length / 8));
 
   let bitIndex = 0;
   const bitsLen = bits.length;
@@ -65,8 +67,8 @@ export function bitwise_pack_left(bits: Uint8Array): Uint8Array {
  * Bits are placed from MSB, with padding on the right for partial bytes
  * Example: [1, 0, 1, 1] → 0b10110000 (padded with 4 zeros on the right)
  */
-export function bitwise_pack_right(bits: Uint8Array): Uint8Array {
-  const bytes = new Uint8Array(Math.ceil(bits.length / 8));
+export function bitwise_pack_right(bits: Bytes): Bytes {
+  const bytes = Bytes.alloc(Math.ceil(bits.length / 8));
 
   let bitIndex = 0;
   const bitsLen = bits.length;
@@ -100,7 +102,7 @@ export function bitwise_pack_right(bits: Uint8Array): Uint8Array {
  * Modifies the first argument. Mask repeats if shorter than target.
  * Example: xor_mod([0xFF, 0xFF], [0x0F]) -> [0xF0, 0xF0]
  */
-export function bitwise_xor_mod(target: Uint8Array, mask: Uint8Array): void {
+export function bitwise_xor_mod(target: Bytes, mask: Bytes): void {
   for (let i = 0; i < target.length; i++) {
     target[i] ^= mask[i % mask.length];
   }

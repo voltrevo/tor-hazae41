@@ -1,9 +1,10 @@
 import { sha3 } from 'hash-wasm';
 import { never } from './never.js';
+import { Bytes } from '../hazae41/bytes/index.js';
 
 export async function hash(
-  ...args: (string | number | Uint8Array)[]
-): Promise<Uint8Array> {
+  ...args: (string | number | Bytes)[]
+): Promise<Bytes> {
   let len = 0;
 
   for (const arg of args) {
@@ -19,7 +20,7 @@ export async function hash(
   }
 
   const buf = new ArrayBuffer(len);
-  const uint8View = new Uint8Array(buf);
+  const uint8View = Bytes.from(buf);
   const dataView = new DataView(buf);
   let offset = 0;
 
@@ -40,8 +41,8 @@ export async function hash(
   }
 
   const digestHex = await sha3(uint8View, 256);
-  // Convert hex string to Uint8Array
-  const digest = new Uint8Array(
+  // Convert hex string to Bytes
+  const digest = Bytes.from(
     digestHex.match(/.{1,2}/g)?.map(byte => parseInt(byte, 16)) ?? []
   );
   return digest;

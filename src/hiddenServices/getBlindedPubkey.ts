@@ -1,3 +1,4 @@
+import { Bytes } from '../hazae41/bytes/index.js';
 import { hash } from './hash.js';
 import { ed25519 } from '@noble/curves/ed25519.js';
 
@@ -7,14 +8,14 @@ const basePointStr = [
 ].join('');
 
 export async function getBlindedPubkey(
-  pubkey: Uint8Array, // aka 'A'
+  pubkey: Bytes, // aka 'A'
   periodNumber: number,
   periodLength: number,
-  secret: string | Uint8Array = Uint8Array.from([])
+  secret: string | Bytes = Bytes.from([])
 ) {
   const h = await hash(
     'Derive temporary signing key',
-    Uint8Array.from([0]),
+    Bytes.from([0]),
     pubkey,
     secret,
     basePointStr,
@@ -32,7 +33,7 @@ export async function getBlindedPubkey(
   // This implements the key blinding as defined in the tor spec
   const point = ed25519.Point.fromBytes(pubkey);
 
-  // Convert h (Uint8Array) to BigInt in little-endian format
+  // Convert h (Bytes) to BigInt in little-endian format
   let scalarRaw = 0n;
   for (let i = h.length - 1; i >= 0; i--) {
     scalarRaw = (scalarRaw << 8n) | BigInt(h[i]);

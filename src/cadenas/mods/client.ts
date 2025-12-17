@@ -1,5 +1,4 @@
 import { Opaque, Readable, Writable } from '@hazae41/binary';
-import { type Uint8Array } from '@hazae41/bytes';
 import { FullDuplex } from '@hazae41/cascade';
 import { Cursor } from '@hazae41/cursor';
 import { Future } from '@hazae41/future';
@@ -10,6 +9,7 @@ import { PlaintextRecord } from '../mods/binary/records/record.js';
 import { Cipher } from '../mods/ciphers/cipher.js';
 import { TlsClientNoneState, TlsClientState } from './state.js';
 import { App } from '../../TorClient/App.js';
+import { Bytes } from '../../hazae41/bytes/index.js';
 
 export interface TlsClientDuplexParams {
   /**
@@ -147,9 +147,9 @@ export class TlsClientDuplex {
    * @param chunk
    * @returns
    */
-  async #onReadBuffered(chunk: Uint8Array) {
+  async #onReadBuffered(chunk: Bytes) {
     this.#buffer.writeOrThrow(chunk);
-    const full = new Uint8Array(this.#buffer.inner.before);
+    const full = Bytes.from(this.#buffer.inner.before);
 
     this.#buffer.inner.offset = 0;
     await this.#onReadDirect(full);
@@ -160,7 +160,7 @@ export class TlsClientDuplex {
    * @param chunk
    * @returns
    */
-  async #onReadDirect(chunk: Uint8Array) {
+  async #onReadDirect(chunk: Bytes) {
     const cursor = new Cursor(chunk);
 
     while (cursor.remaining) {

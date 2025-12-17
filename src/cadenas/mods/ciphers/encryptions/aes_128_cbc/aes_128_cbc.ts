@@ -1,3 +1,4 @@
+import { Bytes } from '../../../../../hazae41/bytes/index.js';
 import { Macher, Maching } from '../../../../mods/ciphers/hashes/hash.js';
 import { Secrets } from '../../../../mods/ciphers/secrets.js';
 
@@ -57,13 +58,13 @@ export class AES_128_CBC {
     return this.#class.record_iv_length;
   }
 
-  async encryptOrThrow(iv: Uint8Array, plaintext: Uint8Array) {
+  async encryptOrThrow(iv: Bytes, plaintext: Bytes) {
     /**
      * The plaintext already has our own padding, but this will append a 16-bytes PKCS7 padding at the end...
      *
      * [...plaintext, ...6 times 6, 6] => [...plaintext, ...6 times 6, 6, ...16*(16)]
      */
-    const pkcs7 = new Uint8Array(
+    const pkcs7 = Bytes.from(
       await crypto.subtle.encrypt(
         { name: 'AES-CBC', iv },
         this.encryption_key,
@@ -77,13 +78,13 @@ export class AES_128_CBC {
     return pkcs7.subarray(0, -16);
   }
 
-  async decryptOrThrow(iv: Uint8Array, ciphertext: Uint8Array) {
+  async decryptOrThrow(iv: Bytes, ciphertext: Bytes) {
     /**
      * The plaintext has our own padding, but this will strip the padding as PKCS7, so it will leave one byte at the end...
      *
      * [...plaintext, ...6 times 6, 6] => [...plaintext, 06]
      */
-    const unpkcs7 = new Uint8Array(
+    const unpkcs7 = Bytes.from(
       await crypto.subtle.decrypt(
         { name: 'AES-CBC', iv },
         this.decryption_key,

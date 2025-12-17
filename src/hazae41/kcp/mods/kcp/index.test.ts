@@ -73,6 +73,6 @@ test('kcp', async () => {
   const dummyA = pipeToDummy('a', kcpA);
   const dummyB = pipeToDummy('b', kcpB);
 
-  dummyA.send(new Opaque(new Uint8Array([1, 2, 3])));
-  dummyB.send(new Opaque(new Uint8Array([4, 5, 6])));
+  dummyA.send(new Opaque(Bytes.from([1, 2, 3])));
+  dummyB.send(new Opaque(Bytes.from([4, 5, 6])));
 });

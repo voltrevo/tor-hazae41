@@ -1,7 +1,7 @@
-import { Uint8Array } from '@hazae41/bytes';
 import { Cursor } from '@hazae41/cursor';
 import { ExpiredCertError } from '../../../certs/certs';
 import { Unimplemented } from '../../../errors';
+import { Bytes } from '../../../../../../hazae41/bytes';
 
 export class CrossCert {
   readonly #class = CrossCert;
@@ -12,10 +12,10 @@ export class CrossCert {
 
   constructor(
     readonly type: number,
-    readonly key: Uint8Array<32>,
+    readonly key: Bytes<32>,
     readonly expiration: Date,
-    readonly payload: Uint8Array,
-    readonly signature: Uint8Array
+    readonly payload: Bytes,
+    readonly signature: Bytes
   ) {}
 
   verifyOrThrow() {

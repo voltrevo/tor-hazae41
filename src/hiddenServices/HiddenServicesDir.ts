@@ -2,6 +2,7 @@ import { Base64 } from '@hazae41/base64';
 import { Consensus } from '../echalote/index.js';
 import { hash } from './hash.js';
 import { assert } from '../utils/assert.js';
+import { Bytes } from '../hazae41/bytes/index.js';
 
 export class HiddenServicesDir {
   constructor(public consensus: Consensus) {}
@@ -54,14 +55,14 @@ export class HiddenServicesDir {
     return Math.floor(adjustedMinutes / periodLength);
   }
 
-  sharedRandomValue(): Uint8Array {
+  sharedRandomValue(): Bytes {
     return Base64.get()
       .getOrThrow()
       .decodePaddedOrThrow(this.consensus.sharedRandCurrentValue.random)
       .bytes.slice();
   }
 
-  async serviceIndex(replicaNum: number, blindedPublicKey: Uint8Array) {
+  async serviceIndex(replicaNum: number, blindedPublicKey: Bytes) {
     return await hash(
       'store-at-idx',
       blindedPublicKey,
@@ -71,7 +72,7 @@ export class HiddenServicesDir {
     );
   }
 
-  async relayIndex(nodeIdentity: Uint8Array) {
+  async relayIndex(nodeIdentity: Bytes) {
     return await hash(
       'node-idx',
       nodeIdentity,

@@ -4,6 +4,7 @@ import { Future } from '@hazae41/future';
 import { Signals } from '@hazae41/signals';
 import { Nullable } from '../../libs/nullable/index';
 import { HttpClientDuplex } from '../http/client';
+import { Bytes } from '../../../hazae41/bytes';
 
 export interface FetchParams {
   readonly stream: ReadableWritablePair<Opaque, Writable>;
@@ -19,7 +20,7 @@ namespace Requests {
      */
     if (request.body == null && init.body != null) {
       if (init.body instanceof ReadableStream) {
-        return init.body as ReadableStream<Uint8Array>;
+        return init.body as ReadableStream<Bytes>;
       } else {
         const blob = await request.blob();
         return blob.stream();
@@ -33,7 +34,7 @@ namespace Requests {
 namespace Pipe {
   export function rejectOnError(
     http: HttpClientDuplex,
-    body: Nullable<ReadableStream<Uint8Array>>
+    body: Nullable<ReadableStream<Bytes>>
   ) {
     const rejectOnError = new Future<never>();
 

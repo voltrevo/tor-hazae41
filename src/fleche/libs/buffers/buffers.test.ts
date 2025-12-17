@@ -1,9 +1,10 @@
 import { test } from '@hazae41/phobos';
 import { assert } from '../../../utils/assert';
 import { Buffers } from './buffers.js';
+import { Bytes } from '../../../hazae41/bytes';
 
-test('Buffers.fromView with Uint8Array', async () => {
-  const array = new Uint8Array([1, 2, 3, 4, 5]);
+test('Buffers.fromView with Bytes', async () => {
+  const array = Bytes.from([1, 2, 3, 4, 5]);
   const buffer = Buffers.fromView(array);
 
   assert(buffer instanceof Uint8Array);
@@ -46,7 +47,7 @@ test('Buffers.fromView with Int8Array', async () => {
 
 test('Buffers.fromView with offset ArrayBuffer', async () => {
   const ab = new ArrayBuffer(10);
-  const view = new Uint8Array(ab, 2, 5); // offset 2, length 5
+  const view = Bytes.from(ab, 2, 5); // offset 2, length 5
   view[0] = 100;
   view[1] = 101;
 
@@ -58,7 +59,7 @@ test('Buffers.fromView with offset ArrayBuffer', async () => {
 });
 
 test('Buffers.fromView preserves data after modification', async () => {
-  const array = new Uint8Array([10, 20, 30]);
+  const array = Bytes.from([10, 20, 30]);
   const buffer = Buffers.fromView(array);
 
   // Modify original array
@@ -69,7 +70,7 @@ test('Buffers.fromView preserves data after modification', async () => {
 });
 
 test('Buffers.fromView with empty view', async () => {
-  const array = new Uint8Array(0);
+  const array = Bytes.alloc(0);
   const buffer = Buffers.fromView(array);
 
   assert(buffer instanceof Uint8Array);
@@ -96,7 +97,7 @@ test('Buffers.fromView with BigInt64Array', async () => {
 });
 
 test('Buffers.fromView with large array', async () => {
-  const array = new Uint8Array(1000);
+  const array = Bytes.alloc(1000);
   for (let i = 0; i < array.length; i++) {
     array[i] = i % 256;
   }

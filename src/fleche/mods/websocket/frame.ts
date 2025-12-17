@@ -1,5 +1,4 @@
 import { ReadUnderflowError } from '@hazae41/binary';
-import { Bytes, Uint8Array } from '@hazae41/bytes';
 import { Cursor } from '@hazae41/cursor';
 import { Length } from './length';
 import {
@@ -7,6 +6,7 @@ import {
   bitwise_unpack,
   bitwise_xor_mod,
 } from '../../../utils/bitwise';
+import { Bytes } from '../../../hazae41/bytes';
 
 export class WebSocketFrame {
   readonly #class = WebSocketFrame;
@@ -29,8 +29,8 @@ export class WebSocketFrame {
   private constructor(
     readonly final: boolean,
     readonly opcode: number,
-    readonly payload: Uint8Array,
-    readonly mask?: Uint8Array<4>
+    readonly payload: Bytes,
+    readonly mask?: Bytes<4>
   ) {
     this.length = new Length(this.payload.length);
   }
@@ -38,8 +38,8 @@ export class WebSocketFrame {
   static from(params: {
     final: boolean;
     opcode: number;
-    payload: Uint8Array;
-    mask?: Uint8Array<4>;
+    payload: Bytes;
+    mask?: Bytes<4>;
   }) {
     return new WebSocketFrame(
       params.final,
@@ -125,7 +125,7 @@ export class WebSocketFrame {
 
       bitwise_xor_mod(xoredBytesMemory, maskBytesMemory);
 
-      const mask = maskBytesMemory.slice() as Uint8Array<4>;
+      const mask = maskBytesMemory.slice() as Bytes<4>;
       const payload = xoredBytesMemory.slice();
 
       return WebSocketFrame.from({ final, opcode, payload, mask });

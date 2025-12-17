@@ -1,3 +1,4 @@
+import { Bytes } from '../../../../bytes';
 import { Cursor } from '../../../../cursor/mod';
 
 export type WriteError =
@@ -72,12 +73,10 @@ export namespace Writable {
    * @param writable
    * @returns
    */
-  export function writeToBytesOrThrow(
-    writable: Writable
-  ): Uint8Array<ArrayBuffer> {
+  export function writeToBytesOrThrow(writable: Writable): Bytes {
     const size = writable.sizeOrThrow();
 
-    const bytes = new Uint8Array(size);
+    const bytes = Bytes.alloc(size);
     const cursor = new Cursor(bytes);
 
     writable.writeOrThrow(cursor);

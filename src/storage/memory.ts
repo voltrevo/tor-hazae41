@@ -1,16 +1,17 @@
 import type { IStorage } from './types.js';
 import { assert } from '../utils/assert.js';
+import { Bytes } from '../hazae41/bytes/index.js';
 
 export class MemoryStorage implements IStorage {
-  private data = new Map<string, Uint8Array>();
+  private data = new Map<string, Bytes>();
 
-  async read(key: string): Promise<Uint8Array> {
+  async read(key: string): Promise<Bytes> {
     const value = this.data.get(key);
     assert(value !== undefined, `Key not found: ${key}`);
     return value;
   }
 
-  async write(key: string, value: Uint8Array): Promise<void> {
+  async write(key: string, value: Bytes): Promise<void> {
     this.data.set(key, value);
   }
 

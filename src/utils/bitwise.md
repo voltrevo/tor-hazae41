@@ -6,14 +6,14 @@ This module provides freestanding functions compatible with `@hazae41/bitwise.wa
 
 ## Functions
 
-### `bitwise_unpack(bytes: Uint8Array): Uint8Array`
+### `bitwise_unpack(bytes: Bytes): Bytes`
 
 Unpacks bytes into individual bits. Each byte is expanded to 8 bytes, where each byte contains a single bit (0 or 1).
 
 - Reads bits from MSB to LSB (most significant bit first)
 - Example: `0b10110010` → `[1, 0, 1, 1, 0, 0, 1, 0]`
 
-### `bitwise_pack_left(bits: Uint8Array): Uint8Array`
+### `bitwise_pack_left(bits: Bytes): Bytes`
 
 Packs bits into bytes, with partial bytes right-aligned (zero padding on the left/MSB side). Each 8 bits are combined into 1 byte, with the first bit becoming the MSB.
 
@@ -21,14 +21,14 @@ Packs bits into bytes, with partial bytes right-aligned (zero padding on the lef
 - Full bytes: `[1, 0, 1, 1, 0, 0, 1, 0]` → `0b10110010`
 - Partial bytes: `[1, 0, 1, 1]` (4 bits) → `0b00001011` (zeros padded on left)
 
-### `bitwise_pack_right(bits: Uint8Array): Uint8Array`
+### `bitwise_pack_right(bits: Bytes): Bytes`
 
 Packs bits into bytes with partial bytes left-aligned (zero padding on the right/LSB side). Each 8 bits are combined into 1 byte, with the first bit becoming the MSB.
 
 - Full bytes: `[1, 0, 1, 1, 0, 0, 1, 0]` → `0b10110010`
 - Partial bytes: `[1, 0, 1, 1]` (4 bits) → `0b10110000` (zeros padded on right)
 
-### `bitwise_xor_mod(target: Uint8Array, mask: Uint8Array): void`
+### `bitwise_xor_mod(target: Bytes, mask: Bytes): void`
 
 Applies XOR mask to target bytes in-place. Modifies the first argument.
 
@@ -45,7 +45,7 @@ import {
 } from './utils/bitwise';
 
 // Convert bytes to bits
-const bytes = new Uint8Array([0b10110010]);
+const bytes = Bytes.from([0b10110010]);
 const bits = bitwise_unpack(bytes);
 // bits = [1, 0, 1, 1, 0, 0, 1, 0]
 
@@ -57,8 +57,8 @@ const repacked = bitwise_pack_left(bits);
 // repacked[0] = 0b10110010
 
 // XOR operation
-const masked = new Uint8Array([0xff, 0xaa]);
-const mask = new Uint8Array([0x0f, 0xff]);
+const masked = Bytes.from([0xff, 0xaa]);
+const mask = Bytes.from([0x0f, 0xff]);
 bitwise_xor_mod(masked, mask);
 // masked = [0xF0, 0x55]
 ```
@@ -81,8 +81,8 @@ const opcodeBits = bitwise_unpack(opcodeBytesCursor.bytes);
 const opcode = opcodeBits.subarray(4); // Extract last 4 bits
 
 // Writing a WebSocket frame with mask
-const maskBytes = new Uint8Array([0xaa, 0xbb, 0xcc, 0xdd]);
-const payloadBytes = new Uint8Array([0xff, 0x00, 0xff]);
+const maskBytes = Bytes.from([0xaa, 0xbb, 0xcc, 0xdd]);
+const payloadBytes = Bytes.from([0xff, 0x00, 0xff]);
 
 const maskBits = bitwise_unpack(maskBytes);
 const payloadBits = bitwise_unpack(payloadBytes);

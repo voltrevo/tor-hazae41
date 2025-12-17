@@ -1,3 +1,4 @@
+import { Bytes } from '../../../../../hazae41/bytes/index.js';
 import { Secrets } from '../../../../mods/ciphers/secrets.js';
 
 export class AES_128_GCM {
@@ -54,12 +55,8 @@ export class AES_128_GCM {
     return this.#class.record_iv_length;
   }
 
-  async encryptOrThrow(
-    nonce: Uint8Array,
-    block: Uint8Array,
-    additionalData: Uint8Array
-  ) {
-    return new Uint8Array(
+  async encryptOrThrow(nonce: Bytes, block: Bytes, additionalData: Bytes) {
+    return Bytes.from(
       await crypto.subtle.encrypt(
         { name: 'AES-GCM', length: 128, iv: nonce, additionalData },
         this.encryption_key,
@@ -68,12 +65,8 @@ export class AES_128_GCM {
     );
   }
 
-  async decryptOrThrow(
-    nonce: Uint8Array,
-    block: Uint8Array,
-    additionalData: Uint8Array
-  ) {
-    return new Uint8Array(
+  async decryptOrThrow(nonce: Bytes, block: Bytes, additionalData: Bytes) {
+    return Bytes.from(
       await crypto.subtle.decrypt(
         { name: 'AES-GCM', length: 128, iv: nonce, additionalData },
         this.decryption_key,

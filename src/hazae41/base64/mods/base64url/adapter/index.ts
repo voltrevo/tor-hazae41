@@ -1,29 +1,30 @@
+import { Bytes } from '../../../../bytes';
 import { fromNativeOrBuffer } from '../buffer/index';
 
 const adapter: Adapter = fromNativeOrBuffer();
 
 export interface Adapter {
-  encodePaddedOrThrow(bytes: Uint8Array): string;
+  encodePaddedOrThrow(bytes: Bytes): string;
 
-  decodePaddedOrThrow(text: string): Uint8Array<ArrayBuffer>;
+  decodePaddedOrThrow(text: string): Bytes;
 
-  encodeUnpaddedOrThrow(bytes: Uint8Array): string;
+  encodeUnpaddedOrThrow(bytes: Bytes): string;
 
-  decodeUnpaddedOrThrow(text: string): Uint8Array<ArrayBuffer>;
+  decodeUnpaddedOrThrow(text: string): Bytes;
 }
 
-export function encodePaddedOrThrow(bytes: Uint8Array): string {
+export function encodePaddedOrThrow(bytes: Bytes): string {
   return adapter.encodePaddedOrThrow(bytes);
 }
 
-export function decodePaddedOrThrow(text: string): Uint8Array<ArrayBuffer> {
+export function decodePaddedOrThrow(text: string): Bytes {
   return adapter.decodePaddedOrThrow(text);
 }
 
-export function encodeUnpaddedOrThrow(bytes: Uint8Array): string {
+export function encodeUnpaddedOrThrow(bytes: Bytes): string {
   return adapter.encodeUnpaddedOrThrow(bytes);
 }
 
-export function decodeUnpaddedOrThrow(text: string): Uint8Array<ArrayBuffer> {
+export function decodeUnpaddedOrThrow(text: string): Bytes {
   return adapter.decodeUnpaddedOrThrow(text);
 }

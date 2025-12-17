@@ -1,11 +1,11 @@
 import { Opaque, Writable } from '@hazae41/binary';
-import { Bytes, type Uint8Array } from '@hazae41/bytes';
 import { Cursor } from '@hazae41/cursor';
 import {
   BlockCiphertextRecord,
   PlaintextRecord,
 } from '../../../../../mods/binary/records/record.js';
 import { BlockEncrypter } from '../../../../../mods/ciphers/encryptions/encryption.js';
+import { Bytes } from '../../../../../../hazae41/bytes/index.js';
 
 /**
  * (y % m) where (x + y) % m == 0
@@ -20,8 +20,8 @@ function modulup(x: number, m: number) {
 
 export class GenericBlockCipher {
   constructor(
-    readonly iv: Uint8Array<16>,
-    readonly block: Uint8Array
+    readonly iv: Bytes<16>,
+    readonly block: Bytes
   ) {}
 
   sizeOrThrow() {
@@ -49,7 +49,7 @@ export class GenericBlockCipher {
 
     const content = Writable.writeToBytesOrThrow(record.fragment);
 
-    const premac = new Cursor(new Uint8Array(8 + record.sizeOrThrow()));
+    const premac = new Cursor(Bytes.alloc(8 + record.sizeOrThrow()));
     premac.writeUint64OrThrow(sequence);
     record.writeOrThrow(premac);
 
@@ -57,11 +57,11 @@ export class GenericBlockCipher {
 
     const length = content.length + mac.length;
     const padding_length = modulup(length + 1, 16);
-    const padding = new Uint8Array(padding_length + 1);
+    const padding = Bytes.alloc(padding_length + 1);
 
     padding.fill(padding_length);
 
-    const plaintext = Bytes.concat([content, mac, padding]);
+    const plaintext = Bytes.concat(content, mac, padding);
     const ciphertext = await encrypter.encryptOrThrow(iv, plaintext);
 
     // Console.debug("-> iv", iv.length, Bytes.toHex(iv))

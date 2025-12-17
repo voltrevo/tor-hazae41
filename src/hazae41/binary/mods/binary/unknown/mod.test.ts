@@ -4,8 +4,9 @@ import { Buffer } from 'node:buffer';
 import { relative, resolve } from 'node:path';
 import { Readable } from '../readable/mod';
 import { Unknown } from './mod';
+import { Bytes } from '../../../../bytes';
 
-function equals(a: Uint8Array, b: Uint8Array) {
+function equals(a: Bytes, b: Bytes) {
   return Buffer.from(a).equals(Buffer.from(b));
 }
 
@@ -13,8 +14,8 @@ const directory = resolve('./dist/test/');
 const { pathname } = new URL(import.meta.url);
 console.log(relative(directory, pathname.replace('.mjs', '.ts')));
 
-test('Opaque', async ({ test }) => {
-  const bytes = new Uint8Array([1, 2, 3, 4, 5]);
+test('Opaque', async () => {
+  const bytes = Bytes.from([1, 2, 3, 4, 5]);
 
   const opaque = Readable.readFromBytesOrThrow(Unknown, bytes);
   const opaque2 = opaque.readIntoOrThrow(Unknown).cloneOrThrow();

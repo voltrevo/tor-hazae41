@@ -1,9 +1,11 @@
+import { Bytes } from '../../../hazae41/bytes';
+
 export interface Secrets {
-  master_secret: Uint8Array;
-  client_write_MAC_key: Uint8Array;
-  server_write_MAC_key: Uint8Array;
-  client_write_key: Uint8Array;
-  server_write_key: Uint8Array;
-  client_write_IV: Uint8Array;
-  server_write_IV: Uint8Array;
+  master_secret: Bytes;
+  client_write_MAC_key: Bytes;
+  server_write_MAC_key: Bytes;
+  client_write_key: Bytes;
+  server_write_key: Bytes;
+  client_write_IV: Bytes;
+  server_write_IV: Bytes;
 }

@@ -1,5 +1,5 @@
-import { Uint8Array } from '@hazae41/bytes';
 import { Cursor } from '@hazae41/cursor';
+import { Bytes } from '../../../../../../../hazae41/bytes';
 
 export class CreatedFastCell {
   readonly #class = CreatedFastCell;
@@ -9,8 +9,8 @@ export class CreatedFastCell {
   static readonly command = 6;
 
   constructor(
-    readonly material: Uint8Array<20>,
-    readonly derivative: Uint8Array<20>
+    readonly material: Bytes<20>,
+    readonly derivative: Bytes<20>
   ) {}
 
   get command() {

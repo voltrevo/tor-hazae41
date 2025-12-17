@@ -1,7 +1,6 @@
 import { WebCryptoAes128Ctr } from '../../../TorClient/WebCryptoAes128Ctr';
 import { Opaque, Readable, Writable } from '@hazae41/binary';
 import { Bitset } from '@hazae41/bitset';
-import { Bytes, type Uint8Array } from '@hazae41/bytes';
 import { Ciphers, TlsClientDuplex } from '../../../cadenas';
 import { HalfDuplex } from '@hazae41/cascade';
 import { Cursor } from '@hazae41/cursor';
@@ -61,9 +60,10 @@ import {
 } from './state.js';
 import { invariant } from '../../../utils/debug';
 import { App } from '../../../TorClient/App';
+import { Bytes } from '../../../hazae41/bytes';
 
 export interface Guard {
-  readonly identity: Uint8Array<20>;
+  readonly identity: Bytes<20>;
   readonly certs: Certs;
 }
 
@@ -245,9 +245,9 @@ export class SecretTorClientDuplex {
    * @param chunk
    * @returns
    */
-  async #onReadBuffered(chunk: Uint8Array) {
+  async #onReadBuffered(chunk: Bytes) {
     this.#buffer.writeOrThrow(chunk);
-    const full = new Uint8Array(this.#buffer.inner.before);
+    const full = Bytes.from(this.#buffer.inner.before);
 
     this.#buffer.inner.offset = 0;
     await this.#onReadDirect(full);
@@ -258,7 +258,7 @@ export class SecretTorClientDuplex {
    * @param chunk
    * @returns
    */
-  async #onReadDirect(chunk: Uint8Array) {
+  async #onReadDirect(chunk: Bytes) {
     const cursor = new Cursor(chunk);
 
     while (cursor.remaining) {
@@ -404,7 +404,7 @@ export class SecretTorClientDuplex {
       `Handshaking state must have guard information`
     );
 
-    const address = new TypedAddress(4, new Uint8Array([127, 0, 0, 1]));
+    const address = new TypedAddress(4, Bytes.from([127, 0, 0, 1]));
     const netinfo = new NetinfoCell(0, address, []);
     this.output.enqueue(Cell.Circuitless.from(undefined, netinfo));
 
@@ -641,7 +641,7 @@ export class SecretTorClientDuplex {
 
     const created_fast = await this.#waitCreatedFast(circuit, signal);
 
-    const k0 = Bytes.concat([material, created_fast.fragment.material]);
+    const k0 = Bytes.concat(material, created_fast.fragment.material);
     const result = await KDFTorResult.computeOrThrow(k0);
 
     if (!Bytes.equals(result.keyHash, created_fast.fragment.derivative))
@@ -655,11 +655,11 @@ export class SecretTorClientDuplex {
 
     const forwardKey = new WebCryptoAes128Ctr(
       result.forwardKey,
-      new Uint8Array(16)
+      Bytes.alloc(16)
     );
     const backwardKey = new WebCryptoAes128Ctr(
       result.backwardKey,
-      new Uint8Array(16)
+      Bytes.alloc(16)
     );
 
     const target = new Target(

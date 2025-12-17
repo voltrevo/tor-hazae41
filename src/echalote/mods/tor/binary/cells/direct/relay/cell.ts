@@ -1,5 +1,4 @@
 import { Opaque, Readable, Writable } from '@hazae41/binary';
-import { Bytes, type Uint8Array } from '@hazae41/bytes';
 import { Cursor } from '@hazae41/cursor';
 import { Cell } from '../../cell';
 import { SecretCircuit } from '../../../../circuit';
@@ -12,6 +11,7 @@ import {
   UnrecognisedRelayCellError,
 } from '../../errors.js';
 import { RelayDataCell } from '../../relayed/relay_data/cell.js';
+import { Bytes } from '../../../../../../../hazae41/bytes';
 
 export interface RelayCellable {
   readonly rcommand: number;
@@ -49,7 +49,7 @@ export namespace RelayCell {
       readonly stream: number,
       readonly rcommand: number,
       readonly fragment: T,
-      readonly digest?: Uint8Array<20>
+      readonly digest?: Bytes<20>
     ) {}
 
     unpackOrNull() {
@@ -76,7 +76,7 @@ export namespace RelayCell {
     }
 
     async cellOrThrow() {
-      const cursor = new Cursor(new Uint8Array(Cell.PAYLOAD_LEN));
+      const cursor = new Cursor(Bytes.alloc(Cell.PAYLOAD_LEN));
 
       cursor.writeUint8OrThrow(this.rcommand);
       cursor.writeUint16OrThrow(0);
@@ -107,7 +107,7 @@ export namespace RelayCell {
       cursor.offset = digestOffset;
       cursor.writeOrThrow(digest20.subarray(0, 4));
 
-      const bytes = new Uint8Array(cursor.bytes);
+      const bytes = Bytes.from(cursor.bytes);
 
       for (let i = this.circuit.targets.length - 1; i >= 0; i--)
         await this.circuit.targets[i].forward_key.apply_keystream(bytes);
@@ -120,7 +120,7 @@ export namespace RelayCell {
     static async uncellOrThrow(cell: Cell<Opaque>) {
       if (cell instanceof Cell.Circuitless) throw new ExpectedCircuitError();
 
-      const bytes = new Uint8Array(cell.fragment.bytes);
+      const bytes = Bytes.from(cell.fragment.bytes);
 
       for (const target of cell.circuit.targets) {
         await target.backward_key.apply_keystream(bytes);
@@ -170,7 +170,7 @@ export namespace RelayCell {
       readonly stream: SecretTorStreamDuplex,
       readonly rcommand: number,
       readonly fragment: T,
-      readonly digest?: Uint8Array<20>
+      readonly digest?: Bytes<20>
     ) {
       this.#raw = new Raw(circuit, stream.id, rcommand, fragment);
     }
@@ -215,7 +215,7 @@ export namespace RelayCell {
       readonly stream: undefined,
       readonly rcommand: number,
       readonly fragment: T,
-      readonly digest?: Uint8Array<20>
+      readonly digest?: Bytes<20>
     ) {
       this.#raw = new Raw(circuit, 0, rcommand, fragment);
     }

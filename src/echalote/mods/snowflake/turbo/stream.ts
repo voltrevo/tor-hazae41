@@ -1,13 +1,13 @@
 import { Opaque, Writable } from '@hazae41/binary';
-import { Bytes } from '@hazae41/bytes';
 import { FullDuplex } from '@hazae41/cascade';
 import { Future } from '@hazae41/future';
 import { Awaitable } from '../../../libs/promises/index';
 import { SecretTurboReader } from './reader.js';
 import { SecretTurboWriter } from './writer.js';
+import { Bytes } from '../../../../hazae41/bytes';
 
 export interface TurboDuplexParams {
-  readonly client?: Uint8Array;
+  readonly client?: Bytes;
 
   close?(this: undefined): Awaitable<void>;
   error?(this: undefined, reason?: unknown): Awaitable<void>;
@@ -56,7 +56,7 @@ export class TurboDuplex {
 export class SecretTurboDuplex {
   readonly #class = SecretTurboDuplex;
 
-  static readonly token = new Uint8Array([
+  static readonly token = Bytes.from([
     0x12, 0x93, 0x60, 0x5d, 0x27, 0x81, 0x75, 0xf5,
   ]);
 
@@ -65,7 +65,7 @@ export class SecretTurboDuplex {
   readonly reader: SecretTurboReader;
   readonly writer: SecretTurboWriter;
 
-  readonly client: Uint8Array;
+  readonly client: Bytes;
 
   readonly resolveOnStart = new Future<void>();
 

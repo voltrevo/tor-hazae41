@@ -5,6 +5,7 @@ import { hash } from './hash.js';
 import { decodeOnionPubKey } from './decodeOnionPubkey.js';
 import { decodeOnionStylePubKey } from './decodeOnionStylePubkey.js';
 import { Base32 } from './Base32.js';
+import { Bytes } from '../hazae41/bytes';
 
 test('never() throws with message', async () => {
   try {
@@ -30,15 +31,15 @@ test('hash() with number input', async () => {
   assert(result.length === 32);
 });
 
-test('hash() with Uint8Array input', async () => {
-  const input = new Uint8Array([1, 2, 3, 4, 5]);
+test('hash() with Bytes input', async () => {
+  const input = Bytes.from([1, 2, 3, 4, 5]);
   const result = await hash(input);
   assert(result instanceof Uint8Array);
   assert(result.length === 32);
 });
 
 test('hash() with mixed inputs', async () => {
-  const result = await hash('hello', 12345, new Uint8Array([1, 2, 3]));
+  const result = await hash('hello', 12345, Bytes.from([1, 2, 3]));
   assert(result instanceof Uint8Array);
   assert(result.length === 32);
 });
@@ -68,13 +69,13 @@ test('hash() deterministic', async () => {
 test('decodeOnionPubkey() with valid .onion address', async () => {
   // Create a valid v3 .onion address
   // A v3 address is: 56 base32 chars (32 pubkey + 2 checksum + 1 version) + ".onion"
-  const pubkey = new Uint8Array(32); // all zeros
+  const pubkey = Bytes.alloc(32); // all zeros
   pubkey[0] = 1; // Make it non-zero to avoid trivial case
 
   // Calculate checksum
   const version = 0x03;
   const prefix = new TextEncoder().encode('.onion checksum');
-  const toHash = new Uint8Array(prefix.length + 32 + 1);
+  const toHash = Bytes.alloc(prefix.length + 32 + 1);
   toHash.set(prefix, 0);
   toHash.set(pubkey, prefix.length);
   toHash[prefix.length + 32] = version;
@@ -84,8 +85,8 @@ test('decodeOnionPubkey() with valid .onion address', async () => {
   const digest0 = parseInt(digestHex.substring(0, 2), 16);
   const digest1 = parseInt(digestHex.substring(2, 4), 16);
 
-  const checksumAndVersion = new Uint8Array([digest0, digest1, version]);
-  const fullData = new Uint8Array(pubkey.length + checksumAndVersion.length);
+  const checksumAndVersion = Bytes.from([digest0, digest1, version]);
+  const fullData = Bytes.alloc(pubkey.length + checksumAndVersion.length);
   fullData.set(pubkey, 0);
   fullData.set(checksumAndVersion, pubkey.length);
 
@@ -141,14 +142,14 @@ test('decodeOnionStylePubkey() with invalid format - invalid characters', async 
 
 test('decodeOnionStylePubkey() with invalid version', async () => {
   // Create valid 56 char base32 string with version != 0x03
-  const pubkey = new Uint8Array(32);
+  const pubkey = Bytes.alloc(32);
   pubkey[0] = 1;
 
   const wrongVersion = 0x02; // Not 0x03
-  const checksum = new Uint8Array([0, 0]); // Dummy checksum (will fail but version check is first)
-  const versionByte = new Uint8Array([wrongVersion]);
+  const checksum = Bytes.from([0, 0]); // Dummy checksum (will fail but version check is first)
+  const versionByte = Bytes.from([wrongVersion]);
 
-  const fullData = new Uint8Array(pubkey.length + checksum.length + 1);
+  const fullData = Bytes.alloc(pubkey.length + checksum.length + 1);
   fullData.set(pubkey, 0);
   fullData.set(checksum, pubkey.length);
   fullData.set(versionByte, pubkey.length + checksum.length);
@@ -170,13 +171,13 @@ test('decodeOnionStylePubkey() with invalid version', async () => {
 
 test('decodeOnionStylePubkey() with correct checksum', async () => {
   // Create a completely valid v3 address
-  const pubkey = new Uint8Array(32);
+  const pubkey = Bytes.alloc(32);
   pubkey[0] = 42;
   pubkey[1] = 99;
 
   const version = 0x03;
   const prefix = new TextEncoder().encode('.onion checksum');
-  const toHash = new Uint8Array(prefix.length + 32 + 1);
+  const toHash = Bytes.alloc(prefix.length + 32 + 1);
   toHash.set(prefix, 0);
   toHash.set(pubkey, prefix.length);
   toHash[prefix.length + 32] = version;
@@ -186,8 +187,8 @@ test('decodeOnionStylePubkey() with correct checksum', async () => {
   const digest0 = parseInt(digestHex.substring(0, 2), 16);
   const digest1 = parseInt(digestHex.substring(2, 4), 16);
 
-  const checksumAndVersion = new Uint8Array([digest0, digest1, version]);
-  const fullData = new Uint8Array(pubkey.length + checksumAndVersion.length);
+  const checksumAndVersion = Bytes.from([digest0, digest1, version]);
+  const fullData = Bytes.alloc(pubkey.length + checksumAndVersion.length);
   fullData.set(pubkey, 0);
   fullData.set(checksumAndVersion, pubkey.length);
 

@@ -1,5 +1,4 @@
 import { Opaque, Readable, Writable } from '@hazae41/binary';
-import { Bytes } from '@hazae41/bytes';
 import { Cursor } from '@hazae41/cursor';
 import { Cell } from '../../cell';
 import { SecretCircuit } from '../../../../circuit';
@@ -12,6 +11,7 @@ import {
   UnknownStreamError,
   UnrecognisedRelayCellError,
 } from '../../errors.js';
+import { Bytes } from '../../../../../../../hazae41/bytes';
 
 export interface RelayEarlyCellable {
   readonly rcommand: number;
@@ -68,7 +68,7 @@ export namespace RelayEarlyCell {
     }
 
     async cellOrThrow() {
-      const cursor = new Cursor(new Uint8Array(Cell.PAYLOAD_LEN));
+      const cursor = new Cursor(Bytes.alloc(Cell.PAYLOAD_LEN));
 
       cursor.writeUint8OrThrow(this.rcommand);
       cursor.writeUint16OrThrow(0);
@@ -94,7 +94,7 @@ export namespace RelayEarlyCell {
       cursor.offset = digestOffset;
       cursor.writeOrThrow(digestSlice.subarray(0, 4));
 
-      const bytes = new Uint8Array(cursor.bytes);
+      const bytes = Bytes.from(cursor.bytes);
 
       for (let i = this.circuit.targets.length - 1; i >= 0; i--)
         await this.circuit.targets[i].forward_key.apply_keystream(bytes);
@@ -111,7 +111,7 @@ export namespace RelayEarlyCell {
     static async uncellOrThrow(cell: Cell<Opaque>) {
       if (cell instanceof Cell.Circuitless) throw new ExpectedCircuitError();
 
-      const bytes = new Uint8Array(cell.fragment.bytes);
+      const bytes = Bytes.from(cell.fragment.bytes);
 
       for (const target of cell.circuit.targets) {
         await target.backward_key.apply_keystream(bytes);

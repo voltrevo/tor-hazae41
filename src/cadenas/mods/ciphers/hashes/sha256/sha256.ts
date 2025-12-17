@@ -1,3 +1,4 @@
+import { Bytes } from '../../../../../hazae41/bytes/index.js';
 import { Secrets } from '../../../../mods/ciphers/secrets.js';
 
 export class HMAC_SHA256 {
@@ -28,8 +29,8 @@ export class HMAC_SHA256 {
     return new HMAC_SHA256(mac_key);
   }
 
-  async writeOrThrow(seed: Uint8Array) {
-    return new Uint8Array(await crypto.subtle.sign('HMAC', this.mac_key, seed));
+  async writeOrThrow(seed: Bytes) {
+    return Bytes.from(await crypto.subtle.sign('HMAC', this.mac_key, seed));
   }
 }
 

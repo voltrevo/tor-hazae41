@@ -1,7 +1,7 @@
-import { type Uint8Array } from '@hazae41/bytes';
 import { Cursor } from '@hazae41/cursor';
 import { X509 } from '@hazae41/x509';
 import { ExpiredCertError, PrematureCertError } from '../../../certs/certs';
+import { Bytes } from '../../../../../../hazae41/bytes';
 
 export class RsaCert {
   static readonly types = {
@@ -12,7 +12,7 @@ export class RsaCert {
 
   constructor(
     readonly type: number,
-    readonly data: Uint8Array,
+    readonly data: Bytes,
     readonly x509: X509.Certificate
   ) {}
 
@@ -21,9 +21,9 @@ export class RsaCert {
       this.x509.tbsCertificate.subjectPublicKeyInfo
     );
 
-    return new Uint8Array(
+    return Bytes.from(
       await crypto.subtle.digest('SHA-1', publicKey)
-    ) as Uint8Array<20>;
+    ) as Bytes<20>;
   }
 
   verifyOrThrow() {

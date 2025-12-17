@@ -1,23 +1,7 @@
-import { Bytes } from '../../../libs/bytes/index.js';
+import { Bytes } from '../../../../hazae41/bytes';
 
-/**
- * Wraps crypto.subtle.sign() result in a safe cast to Uint8Array<ArrayBuffer>.
- * Safe because crypto.subtle.sign always returns an ArrayBuffer (never SharedArrayBuffer),
- * but TypeScript's lib.dom.d.ts conservatively types it as ArrayBufferLike.
- */
-function createArrayBufferFromSubtleSign(
-  buffer: ArrayBuffer
-): Uint8Array<ArrayBuffer> {
-  return new Uint8Array(buffer) as Uint8Array<ArrayBuffer>;
-}
-
-export async function hmacOrThrow(
-  key: CryptoKey,
-  seed: Uint8Array<ArrayBuffer>
-): Promise<Uint8Array<ArrayBuffer>> {
-  return createArrayBufferFromSubtleSign(
-    await crypto.subtle.sign('HMAC', key, seed)
-  );
+export async function hmacOrThrow(key: CryptoKey, seed: Bytes): Promise<Bytes> {
+  return Bytes.from(await crypto.subtle.sign('HMAC', key, seed));
 }
 
 /**
@@ -30,11 +14,7 @@ export async function hmacOrThrow(
  * @param index
  * @returns
  */
-async function A(
-  key: CryptoKey,
-  seed: Uint8Array<ArrayBuffer>,
-  index: number
-): Promise<Uint8Array<ArrayBuffer>> {
+async function A(key: CryptoKey, seed: Bytes, index: number): Promise<Bytes> {
   if (index === 0) return seed;
 
   const prev = await A(key, seed, index - 1);
@@ -53,12 +33,8 @@ async function A(
  * @param length
  * @returns
  */
-async function P(
-  key: CryptoKey,
-  seed: Uint8Array<ArrayBuffer>,
-  length: number
-): Promise<Uint8Array<ArrayBuffer>> {
-  let result = new Uint8Array();
+async function P(key: CryptoKey, seed: Bytes, length: number): Promise<Bytes> {
+  let result: Bytes = Bytes.empty();
 
   for (let i = 1; result.length < length; i++)
     result = Bytes.concat(
@@ -71,11 +47,11 @@ async function P(
 
 export async function prfOrThrow(
   hash: AlgorithmIdentifier,
-  secret: Uint8Array<ArrayBuffer>,
+  secret: Bytes,
   label: string,
-  seed: Uint8Array,
+  seed: Bytes,
   length: number
-): Promise<Uint8Array<ArrayBuffer>> {
+): Promise<Bytes> {
   const key = await crypto.subtle.importKey(
     'raw',
     secret,

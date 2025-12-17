@@ -1,3 +1,4 @@
+import { Bytes } from '../../../../hazae41/bytes/index.js';
 import { Macher, Maching } from '../../../mods/ciphers/hashes/hash.js';
 import { Secrets } from '../../../mods/ciphers/secrets.js';
 
@@ -31,8 +32,8 @@ export interface BlockEncrypter {
 
   readonly macher: Macher;
 
-  encryptOrThrow(iv: Uint8Array, block: Uint8Array): Promise<Uint8Array>;
-  decryptOrThrow(iv: Uint8Array, block: Uint8Array): Promise<Uint8Array>;
+  encryptOrThrow(iv: Bytes, block: Bytes): Promise<Bytes>;
+  decryptOrThrow(iv: Bytes, block: Bytes): Promise<Bytes>;
 }
 
 export interface AEADEncrypter {
@@ -44,13 +45,13 @@ export interface AEADEncrypter {
   readonly secrets: Secrets;
 
   encryptOrThrow(
-    nonce: Uint8Array,
-    block: Uint8Array,
-    additionalData: Uint8Array
-  ): Promise<Uint8Array<ArrayBuffer>>;
+    nonce: Bytes,
+    block: Bytes,
+    additionalData: Bytes
+  ): Promise<Bytes>;
   decryptOrThrow(
-    nonce: Uint8Array,
-    block: Uint8Array,
-    additionalData: Uint8Array
-  ): Promise<Uint8Array<ArrayBuffer>>;
+    nonce: Bytes,
+    block: Bytes,
+    additionalData: Bytes
+  ): Promise<Bytes>;
 }

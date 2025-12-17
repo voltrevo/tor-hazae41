@@ -1,8 +1,8 @@
 import { Opaque, Readable, Writable } from '@hazae41/binary';
-import { Bytes } from '@hazae41/bytes';
 import { test } from '@hazae41/phobos';
 import { assert } from '../../../../utils/assert';
 import { TurboFrame } from './frame.js';
+import { Bytes } from '../../../../hazae41/bytes';
 
 test('turbo frame', async () => {
   const frame = TurboFrame.createOrThrow({

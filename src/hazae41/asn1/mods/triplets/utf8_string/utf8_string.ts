@@ -1,8 +1,8 @@
+import { Bytes } from '../../../../bytes';
 import { Cursor } from '../../../../cursor/mod';
 import { Length } from '../../length/length';
 import { DERTriplet } from '../../resolvers/der/triplet';
 import { Type } from '../../type/type';
-import { Bytes } from '../../../../../cadenas/libs/bytes/index.js';
 
 export class UTF8String {
   static readonly type = Type.create(
@@ -37,13 +37,13 @@ export namespace UTF8String {
       readonly type: Type.DER,
       readonly length: Length.DER,
       readonly value: string,
-      readonly bytes: Uint8Array<ArrayBuffer>
+      readonly bytes: Bytes
     ) {
       super(type, value);
     }
 
     static from(asn1: UTF8String) {
-      const bytes = Bytes.encodeUtf8(asn1.value);
+      const bytes = Bytes.fromUtf8(asn1.value);
       const length = new Length(bytes.length).toDER();
 
       return new DER(asn1.type.toDER(), length, asn1.value, bytes);
@@ -64,7 +64,7 @@ export namespace UTF8String {
       const type = Type.DER.readOrThrow(cursor);
       const length = Length.DER.readOrThrow(cursor);
 
-      const bytes = new Uint8Array(cursor.readOrThrow(length.value));
+      const bytes = Bytes.from(cursor.readOrThrow(length.value));
       const value = new TextDecoder().decode(bytes);
 
       return new DER(type, length, value, bytes);

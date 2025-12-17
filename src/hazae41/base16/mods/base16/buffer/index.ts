@@ -1,15 +1,15 @@
+import { Bytes } from '../../../../bytes';
 import { Buffers } from '../../../libs/buffers/buffers';
-import { Bytes } from '../../../libs/bytes/bytes';
 import { Adapter } from '../adapter/index';
 import { fromNative } from '../native/index';
 
 export function fromNativeOrBuffer() {
-  if ('fromHex' in Uint8Array) return fromNative();
+  if ('fromHex' in Bytes) return fromNative();
   return fromBuffer();
 }
 
 export function fromBuffer() {
-  function encodeOrThrow(bytes: Uint8Array) {
+  function encodeOrThrow(bytes: Bytes) {
     return Buffers.fromView(bytes).toString('hex');
   }
 

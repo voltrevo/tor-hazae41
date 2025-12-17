@@ -1,6 +1,6 @@
-import { type Uint8Array } from '@hazae41/bytes';
 import { Cursor } from '@hazae41/cursor';
 import { HASH_LEN, KEY_LEN } from '../constants';
+import { Bytes } from '../../../../hazae41/bytes';
 
 export class InvalidKdfKeyHashError extends Error {
   readonly #class = InvalidKdfKeyHashError;
@@ -12,24 +12,24 @@ export class InvalidKdfKeyHashError extends Error {
 }
 
 export interface KDFTorResult {
-  readonly keyHash: Uint8Array<HASH_LEN>;
-  readonly forwardDigest: Uint8Array<HASH_LEN>;
-  readonly backwardDigest: Uint8Array<HASH_LEN>;
-  readonly forwardKey: Uint8Array<KEY_LEN>;
-  readonly backwardKey: Uint8Array<KEY_LEN>;
+  readonly keyHash: Bytes<HASH_LEN>;
+  readonly forwardDigest: Bytes<HASH_LEN>;
+  readonly backwardDigest: Bytes<HASH_LEN>;
+  readonly forwardKey: Bytes<KEY_LEN>;
+  readonly backwardKey: Bytes<KEY_LEN>;
 }
 
 export namespace KDFTorResult {
-  export async function computeOrThrow(k0: Uint8Array): Promise<KDFTorResult> {
-    const ki = new Cursor(new Uint8Array(k0.length + 1));
+  export async function computeOrThrow(k0: Bytes): Promise<KDFTorResult> {
+    const ki = new Cursor(Bytes.alloc(k0.length + 1));
     ki.writeOrThrow(k0);
 
-    const k = new Cursor(new Uint8Array(HASH_LEN * 5));
+    const k = new Cursor(Bytes.alloc(HASH_LEN * 5));
 
     for (let i = 0; k.remaining > 0; i++) {
       ki.setUint8OrThrow(i);
 
-      const h = new Uint8Array(await crypto.subtle.digest('SHA-1', ki.bytes));
+      const h = Bytes.from(await crypto.subtle.digest('SHA-1', ki.bytes));
 
       k.writeOrThrow(h);
     }

@@ -1,12 +1,10 @@
 import { IA5String, Integer, ObjectIdentifier, Sequence } from '@hazae41/asn1';
 import { Base16 } from '@hazae41/base16';
 import { Opaque, Readable, Writable } from '@hazae41/binary';
-import { type Uint8Array } from '@hazae41/bytes';
 import { Cursor } from '@hazae41/cursor';
 import { Certificate, OtherName, SubjectAltName, X509 } from '@hazae41/x509';
 import { BigBytes } from '../libs/bigint/bigint.js';
 import { BigMath } from '../libs/bigmath/index.js';
-import { Bytes } from '../libs/bytes/index.js';
 import { prfOrThrow } from './algorithms/prf/prf.js';
 import { List } from './binary/lists/writable.js';
 import { Number24 } from './binary/numbers/number24.js';
@@ -55,6 +53,7 @@ import {
 import { Extensions } from './extensions.js';
 import { App } from '../../TorClient/App.js';
 import { CCADB } from './ccadb/CCADB.js';
+import { Bytes } from '../../hazae41/bytes/index.js';
 
 export type TlsClientState =
   | TlsClientNoneState
@@ -101,7 +100,7 @@ export class TlsClientNoneState {
 
     const client_random = Writable.writeToBytesOrThrow(
       client_hello.random
-    ) as Uint8Array<32>;
+    ) as Bytes<32>;
     const client_extensions = Extensions.getClientExtensions(client_hello);
 
     const client_hello_handshake = Handshake.from(client_hello);
@@ -155,7 +154,7 @@ export type TlsClientHandshakeState =
   | TlsClientHandshakeClientFinishedState;
 
 export interface TlsClientHandshakeClientHelloStateParams {
-  readonly client_random: Uint8Array<32>;
+  readonly client_random: Bytes<32>;
   readonly client_extensions: Extensions;
 }
 
@@ -166,10 +165,10 @@ export class TlsClientHandshakeClientHelloState implements TlsClientHandshakeCli
   readonly client_encrypted = false;
   readonly server_encrypted = false;
 
-  readonly client_random: Uint8Array<32>;
+  readonly client_random: Bytes<32>;
   readonly client_extensions: Extensions;
 
-  readonly messages = new Array<Uint8Array>();
+  readonly messages = new Array<Bytes>();
 
   constructor(
     readonly app: App,
@@ -203,7 +202,7 @@ export class TlsClientHandshakeClientHelloState implements TlsClientHandshakeCli
     const handshake = record.fragment.readIntoOrThrow(Handshake);
 
     if (handshake.type !== Handshake.types.hello_request)
-      this.messages.push(new Uint8Array(record.fragment.bytes));
+      this.messages.push(Bytes.from(record.fragment.bytes));
 
     if (handshake.type === ServerHello2.type)
       return this.onServerHello(handshake);
@@ -229,7 +228,7 @@ export class TlsClientHandshakeClientHelloState implements TlsClientHandshakeCli
 
     const server_random = Writable.writeToBytesOrThrow(
       server_hello.random
-    ) as Uint8Array<32>;
+    ) as Bytes<32>;
     const server_extensions = Extensions.getServerExtensions(
       server_hello,
       this.client_extensions
@@ -258,13 +257,13 @@ export interface TlsClientHandshakeServerHelloStateParams {
   readonly version: number;
   readonly cipher: Cipher;
 
-  readonly client_random: Uint8Array<32>;
+  readonly client_random: Bytes<32>;
   readonly client_extensions: Extensions;
 
-  readonly server_random: Uint8Array<32>;
+  readonly server_random: Bytes<32>;
   readonly server_extensions: Extensions;
 
-  readonly messages: Uint8Array[];
+  readonly messages: Bytes[];
 }
 
 export class TlsClientHandshakeServerHelloState implements TlsClientHandshakeServerHelloStateParams {
@@ -277,13 +276,13 @@ export class TlsClientHandshakeServerHelloState implements TlsClientHandshakeSer
   readonly version: number;
   readonly cipher: Cipher;
 
-  readonly client_random: Uint8Array<32>;
+  readonly client_random: Bytes<32>;
   readonly client_extensions: Extensions;
 
-  readonly server_random: Uint8Array<32>;
+  readonly server_random: Bytes<32>;
   readonly server_extensions: Extensions;
 
-  readonly messages: Uint8Array[];
+  readonly messages: Bytes[];
 
   readonly ccadb: CCADB;
 
@@ -336,7 +335,7 @@ export class TlsClientHandshakeServerHelloState implements TlsClientHandshakeSer
     const handshake = record.fragment.readIntoOrThrow(Handshake);
 
     if (handshake.type !== Handshake.types.hello_request)
-      this.messages.push(new Uint8Array(record.fragment.bytes));
+      this.messages.push(Bytes.from(record.fragment.bytes));
 
     if (handshake.type === Certificate2.handshake_type)
       return await this.onCertificate(handshake);
@@ -458,7 +457,7 @@ export class TlsClientHandshakeServerHelloState implements TlsClientHandshakeSer
 
       const identitySpki = next.tbsCertificate.subjectPublicKeyInfo;
       const identityBytes = Writable.writeToBytesOrThrow(identitySpki.toDER());
-      const identityHash = new Uint8Array(
+      const identityHash = Bytes.from(
         await crypto.subtle.digest('SHA-256', identityBytes)
       );
 
@@ -539,7 +538,7 @@ export class TlsClientHandshakeServerHelloState implements TlsClientHandshakeSer
           const rAsn1 = signatureAsn1.triplets[0].readIntoOrThrow(Integer.DER);
           const sAsn1 = signatureAsn1.triplets[1].readIntoOrThrow(Integer.DER);
 
-          const rAndS = new Cursor(new Uint8Array(32 * 2));
+          const rAndS = new Cursor(Bytes.alloc(32 * 2));
           rAndS.writeOrThrow(BigBytes.exportOrThrow(rAsn1.value));
           rAndS.writeOrThrow(BigBytes.exportOrThrow(sAsn1.value));
 
@@ -596,7 +595,7 @@ export class TlsClientHandshakeServerHelloState implements TlsClientHandshakeSer
           const rAsn1 = signatureAsn1.triplets[0].readIntoOrThrow(Integer.DER);
           const sAsn1 = signatureAsn1.triplets[1].readIntoOrThrow(Integer.DER);
 
-          const rAndS = new Cursor(new Uint8Array(48 * 2));
+          const rAndS = new Cursor(Bytes.alloc(48 * 2));
           rAndS.writeOrThrow(BigBytes.exportOrThrow(rAsn1.value));
           rAndS.writeOrThrow(BigBytes.exportOrThrow(sAsn1.value));
 
@@ -753,7 +752,7 @@ export class TlsClientHandshakeServerHelloState implements TlsClientHandshakeSer
         const rAsn1 = signatureAsn1.triplets[0].readIntoOrThrow(Integer.DER);
         const sAsn1 = signatureAsn1.triplets[1].readIntoOrThrow(Integer.DER);
 
-        const rAndS = new Cursor(new Uint8Array(32 * 2));
+        const rAndS = new Cursor(Bytes.alloc(32 * 2));
         rAndS.writeOrThrow(BigBytes.exportOrThrow(rAsn1.value));
         rAndS.writeOrThrow(BigBytes.exportOrThrow(sAsn1.value));
 
@@ -789,8 +788,8 @@ export class TlsClientHandshakeServerHelloState implements TlsClientHandshakeSer
   }
 
   #computeDhOrThrow(params: ServerDHParams): {
-    dh_Yc: Uint8Array;
-    dh_Z: Uint8Array;
+    dh_Yc: Bytes;
+    dh_Z: Bytes;
   } {
     const { dh_g, dh_p, dh_Ys } = params;
 
@@ -798,9 +797,7 @@ export class TlsClientHandshakeServerHelloState implements TlsClientHandshakeSer
     const p = BigBytes.importOrThrow(dh_p.value.bytes);
     const Ys = BigBytes.importOrThrow(dh_Ys.value.bytes);
 
-    const dh_yc = crypto.getRandomValues(
-      new Uint8Array(dh_p.value.bytes.length)
-    );
+    const dh_yc = crypto.getRandomValues(Bytes.alloc(dh_p.value.bytes.length));
 
     const yc = BigBytes.importOrThrow(dh_yc);
 
@@ -820,7 +817,7 @@ export class TlsClientHandshakeServerHelloState implements TlsClientHandshakeSer
     throw new InvalidTlsStateError();
   }
 
-  async #computeSecretsOrThrow(premaster_secret: Uint8Array): Promise<Secrets> {
+  async #computeSecretsOrThrow(premaster_secret: Bytes): Promise<Secrets> {
     const { cipher, client_random, server_random } = this;
     const { prf_md } = cipher.hash;
 
@@ -980,7 +977,7 @@ export class TlsClientHandshakeServerHelloState implements TlsClientHandshakeSer
     const { handshake_md, prf_md } = this.cipher.hash;
 
     const handshake_messages = Bytes.concat(...this.messages);
-    const handshake_messages_hash = new Uint8Array(
+    const handshake_messages_hash = Bytes.from(
       await crypto.subtle.digest(handshake_md, handshake_messages)
     );
 
@@ -1030,10 +1027,10 @@ export interface TlsClientHandshakeClientFinishedStateParams {
   readonly version: number;
   readonly cipher: Cipher;
 
-  readonly client_random: Uint8Array<32>;
+  readonly client_random: Bytes<32>;
   readonly client_extensions: Extensions;
 
-  readonly server_random: Uint8Array<32>;
+  readonly server_random: Bytes<32>;
   readonly server_extensions: Extensions;
 
   readonly client_sequence: bigint;
@@ -1041,7 +1038,7 @@ export interface TlsClientHandshakeClientFinishedStateParams {
 
   readonly encrypter: Encrypter;
 
-  readonly messages: Uint8Array[];
+  readonly messages: Bytes[];
 }
 
 export class TlsClientHandshakeClientFinishedState implements TlsClientHandshakeClientFinishedStateParams {
@@ -1054,10 +1051,10 @@ export class TlsClientHandshakeClientFinishedState implements TlsClientHandshake
   readonly version: number;
   readonly cipher: Cipher;
 
-  readonly client_random: Uint8Array<32>;
+  readonly client_random: Bytes<32>;
   readonly client_extensions: Extensions;
 
-  readonly server_random: Uint8Array<32>;
+  readonly server_random: Bytes<32>;
   readonly server_extensions: Extensions;
 
   client_sequence: bigint;
@@ -1065,7 +1062,7 @@ export class TlsClientHandshakeClientFinishedState implements TlsClientHandshake
 
   readonly encrypter: Encrypter;
 
-  readonly messages: Uint8Array[];
+  readonly messages: Bytes[];
 
   constructor(
     readonly client: TlsClientDuplex,
@@ -1175,10 +1172,10 @@ export interface TlsClientHandshakeServerCipheredStateParams {
   readonly version: number;
   readonly cipher: Cipher;
 
-  readonly client_random: Uint8Array<32>;
+  readonly client_random: Bytes<32>;
   readonly client_extensions: Extensions;
 
-  readonly server_random: Uint8Array<32>;
+  readonly server_random: Bytes<32>;
   readonly server_extensions: Extensions;
 
   readonly client_sequence: bigint;
@@ -1186,7 +1183,7 @@ export interface TlsClientHandshakeServerCipheredStateParams {
 
   readonly encrypter: Encrypter;
 
-  readonly messages: Uint8Array[];
+  readonly messages: Bytes[];
 }
 
 export class TlsClientHandshakeServerCipheredState implements TlsClientHandshakeServerCipheredStateParams {
@@ -1199,10 +1196,10 @@ export class TlsClientHandshakeServerCipheredState implements TlsClientHandshake
   readonly version: number;
   readonly cipher: Cipher;
 
-  readonly client_random: Uint8Array<32>;
+  readonly client_random: Bytes<32>;
   readonly client_extensions: Extensions;
 
-  readonly server_random: Uint8Array<32>;
+  readonly server_random: Bytes<32>;
   readonly server_extensions: Extensions;
 
   readonly encrypter: Encrypter;
@@ -1210,7 +1207,7 @@ export class TlsClientHandshakeServerCipheredState implements TlsClientHandshake
   client_sequence: bigint;
   server_sequence: bigint;
 
-  readonly messages: Uint8Array[];
+  readonly messages: Bytes[];
 
   constructor(
     readonly client: TlsClientDuplex,
@@ -1256,7 +1253,7 @@ export class TlsClientHandshakeServerCipheredState implements TlsClientHandshake
     const handshake = record.fragment.readIntoOrThrow(Handshake);
 
     if (handshake.type !== Handshake.types.hello_request)
-      this.messages.push(new Uint8Array(record.fragment.bytes));
+      this.messages.push(Bytes.from(record.fragment.bytes));
 
     if (handshake.type === Finished2.handshake_type)
       return this.onFinished(handshake);
@@ -1301,10 +1298,10 @@ export interface TlsClientHandshakedStateParams {
   readonly version: number;
   readonly cipher: Cipher;
 
-  readonly client_random: Uint8Array<32>;
+  readonly client_random: Bytes<32>;
   readonly client_extensions: Extensions;
 
-  readonly server_random: Uint8Array<32>;
+  readonly server_random: Bytes<32>;
   readonly server_extensions: Extensions;
 
   readonly client_sequence: bigint;
@@ -1322,10 +1319,10 @@ export class TlsClientHandshakedState implements TlsClientHandshakedStateParams 
   readonly version: number;
   readonly cipher: Cipher;
 
-  readonly client_random: Uint8Array<32>;
+  readonly client_random: Bytes<32>;
   readonly client_extensions: Extensions;
 
-  readonly server_random: Uint8Array<32>;
+  readonly server_random: Bytes<32>;
   readonly server_extensions: Extensions;
 
   client_sequence: bigint;

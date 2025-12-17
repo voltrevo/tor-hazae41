@@ -4,6 +4,8 @@
  * Includes detailed intermediate validation for verifying equivalence
  */
 
+import { Bytes } from '../../../hazae41/bytes';
+
 // Store last verification details for inspection by dual implementation
 let lastVerificationDetails: VerificationDetails | undefined;
 
@@ -20,7 +22,7 @@ export function getLastVerificationDetails(): VerificationDetails | undefined {
 /**
  * Convert bytes to BigInt (big-endian)
  */
-function bytesToBigInt(bytes: Uint8Array): bigint {
+function bytesToBigInt(bytes: Bytes): bigint {
   let result = 0n;
   for (const byte of bytes) {
     result = (result << 8n) | BigInt(byte);
@@ -31,8 +33,8 @@ function bytesToBigInt(bytes: Uint8Array): bigint {
 /**
  * Convert BigInt to bytes (big-endian) with padding to specified length
  */
-function bigIntToBytes(value: bigint, length: number): Uint8Array {
-  const bytes = new Uint8Array(length);
+function bigIntToBytes(value: bigint, length: number): Bytes {
+  const bytes = Bytes.alloc(length);
   for (let i = length - 1; i >= 0; i--) {
     bytes[i] = Number(value & 0xffn);
     value >>= 8n;
@@ -65,7 +67,7 @@ function modPow(base: bigint, exp: bigint, modulus: bigint): bigint {
  * Parse DER-encoded RSA public key (SPKI format)
  * Extracts modulus (n) and exponent (e) from the key
  */
-function parseRSAPublicKeyDER(spkiDer: Uint8Array): {
+function parseRSAPublicKeyDER(spkiDer: Bytes): {
   modulus: bigint;
   exponent: bigint;
   keySize: number;
@@ -196,13 +198,13 @@ function parseRSAPublicKeyDER(spkiDer: Uint8Array): {
  */
 export namespace RsaBigInt {
   export class Memory {
-    readonly bytes: Uint8Array;
+    readonly bytes: Bytes;
 
-    constructor(bytes: Uint8Array | ArrayBuffer) {
+    constructor(bytes: Bytes | ArrayBuffer) {
       if (bytes instanceof ArrayBuffer) {
-        this.bytes = new Uint8Array(bytes);
+        this.bytes = Bytes.from(bytes);
       } else {
-        this.bytes = new Uint8Array(bytes);
+        this.bytes = Bytes.from(bytes);
       }
     }
 

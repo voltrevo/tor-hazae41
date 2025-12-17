@@ -9,16 +9,17 @@
 import { test } from '@hazae41/phobos';
 import { assert } from '../../../utils/assert';
 import { X25519 } from './x25519';
+import { Bytes } from '../../../hazae41/bytes';
 
-function hexToUint8Array(hex: string): Uint8Array {
-  const bytes = new Uint8Array(hex.length / 2);
+function hexToUint8Array(hex: string): Bytes {
+  const bytes = Bytes.alloc(hex.length / 2);
   for (let i = 0; i < hex.length; i += 2) {
     bytes[i / 2] = parseInt(hex.slice(i, i + 2), 16);
   }
   return bytes;
 }
 
-function uint8ArrayToHex(bytes: Uint8Array): string {
+function uint8ArrayToHex(bytes: Bytes): string {
   return Array.from(bytes)
     .map(b => b.toString(16).padStart(2, '0'))
     .join('');
@@ -42,7 +43,7 @@ test('X25519: PublicKey.import consistency', async () => {
 
     // Export it to verify it matches
     const exported = importedKey.exportOrThrow();
-    const exportedHex = uint8ArrayToHex(exported.bytes as Uint8Array);
+    const exportedHex = uint8ArrayToHex(exported.bytes as Bytes);
 
     assert(
       exportedHex === inputKeyHex,
@@ -105,7 +106,7 @@ test('X25519: PrivateKey.compute with known test vectors', async () => {
     // Compute shared secret with the recorded keys
     const sharedSecret = await privateKey.computeOrThrow(publicKey);
     const secretExported = sharedSecret.exportOrThrow();
-    const secretHex = uint8ArrayToHex(secretExported.bytes as Uint8Array);
+    const secretHex = uint8ArrayToHex(secretExported.bytes as Bytes);
 
     // Verify the computed secret matches what was recorded
     assert(
@@ -125,7 +126,7 @@ test('X25519: PrivateKey.random generates valid keys', async () => {
 
     // Export the public key
     const exported = await publicKey.exportOrThrow();
-    const publicKeyHex = uint8ArrayToHex(exported.bytes as Uint8Array);
+    const publicKeyHex = uint8ArrayToHex(exported.bytes as Bytes);
 
     // Verify it's 32 bytes
     assert(
@@ -135,11 +136,11 @@ test('X25519: PrivateKey.random generates valid keys', async () => {
 
     // Verify we can import it back
     const importedKey = await X25519.PublicKey.importOrThrow(
-      exported.bytes as Uint8Array
+      exported.bytes as Bytes
     );
 
     const reimported = await importedKey.exportOrThrow();
-    const reimportedHex = uint8ArrayToHex(reimported.bytes as Uint8Array);
+    const reimportedHex = uint8ArrayToHex(reimported.bytes as Bytes);
 
     assert(
       reimportedHex === publicKeyHex,
@@ -158,7 +159,7 @@ test('X25519: circuit extension sequence', async () => {
 
   // Verify we got a valid public key
   const ephemeralKeyHex = uint8ArrayToHex(
-    ephemeralPublicKeyExported.bytes as Uint8Array
+    ephemeralPublicKeyExported.bytes as Bytes
   );
 
   assert(
@@ -182,7 +183,7 @@ test('X25519: circuit extension sequence', async () => {
       await ephemeralPrivateKey.computeOrThrow(relayPublicKey);
 
     const secretExported = sharedSecret.exportOrThrow();
-    const secretHex = uint8ArrayToHex(secretExported.bytes as Uint8Array);
+    const secretHex = uint8ArrayToHex(secretExported.bytes as Bytes);
 
     // Verify we got a valid secret
     assert(secretHex.length === 64, 'Shared secret should be 32 bytes');

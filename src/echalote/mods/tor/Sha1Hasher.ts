@@ -1,12 +1,12 @@
 import { createSHA1 } from 'hash-wasm';
-import type { Uint8Array } from '@hazae41/bytes';
+import { Bytes } from '../../../hazae41/bytes';
 
 interface SHA1Hasher {
   init(): void;
-  update(data: Uint8Array | string): void;
-  digest(encoding: 'hex' | 'binary'): string | Uint8Array;
-  save(): Uint8Array;
-  load(state: Uint8Array): void;
+  update(data: Bytes | string): void;
+  digest(encoding: 'hex' | 'binary'): string | Bytes;
+  save(): Bytes;
+  load(state: Bytes): void;
 }
 
 /**
@@ -21,16 +21,16 @@ export class Sha1Hasher {
     return new Sha1Hasher(hasher);
   }
 
-  updateOrThrow(data: Uint8Array): void {
+  updateOrThrow(data: Bytes): void {
     this.hasher.update(data);
   }
 
-  finalizeOrThrow(): Uint8Array<20> {
+  finalizeOrThrow(): Bytes<20> {
     // hash-wasm's digest() is destructive, so we save state before and restore after
     // to maintain compatibility with @hazae41/sha1's non-destructive behavior.
     // This allows Tor's circuit digest pattern where update() can be called after finalize().
     const state = this.hasher.save();
-    const result = this.hasher.digest('binary') as Uint8Array<20>;
+    const result = this.hasher.digest('binary') as Bytes<20>;
     this.hasher.load(state);
     return result;
   }

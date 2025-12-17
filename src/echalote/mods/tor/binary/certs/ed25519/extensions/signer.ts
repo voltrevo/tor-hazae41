@@ -1,12 +1,12 @@
-import { Uint8Array } from '@hazae41/bytes';
 import { Cursor } from '@hazae41/cursor';
+import { Bytes } from '../../../../../../../hazae41/bytes';
 
 export class SignedWithEd25519Key {
   readonly #class = SignedWithEd25519Key;
 
   static readonly type = 4;
 
-  constructor(readonly key: Uint8Array<32>) {}
+  constructor(readonly key: Bytes<32>) {}
 
   get type(): 4 {
     return this.#class.type;

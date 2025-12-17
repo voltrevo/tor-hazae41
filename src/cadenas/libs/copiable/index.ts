@@ -1,21 +1,19 @@
-export type BytesOrCopiable<T extends Uint8Array = Uint8Array> =
-  | T
-  | Copiable<T>;
+import { Bytes } from '../../../hazae41/bytes';
 
-export interface Copiable<
-  T extends Uint8Array = Uint8Array,
-> extends Disposable {
+export type BytesOrCopiable<T extends Bytes = Bytes> = T | Copiable<T>;
+
+export interface Copiable<T extends Bytes = Bytes> extends Disposable {
   readonly bytes: T;
 }
 
-export class Copied<T extends Uint8Array = Uint8Array> implements Copiable<T> {
+export class Copied<T extends Bytes = Bytes> implements Copiable<T> {
   constructor(readonly bytes: T) {}
 
   [Symbol.dispose]() {}
 }
 
 export namespace Copiable {
-  export function copyAndDispose(copiable: Copiable): Uint8Array {
+  export function copyAndDispose(copiable: Copiable): Bytes {
     using _ = copiable;
 
     return copiable.bytes.slice();

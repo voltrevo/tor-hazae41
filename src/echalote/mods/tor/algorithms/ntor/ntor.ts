@@ -1,6 +1,6 @@
-import { Bytes, type Uint8Array } from '@hazae41/bytes';
 import { Cursor } from '@hazae41/cursor';
 import { HASH_LEN, KEY_LEN } from '../../constants';
+import { Bytes } from '../../../../../hazae41/bytes';
 
 export class InvalidNtorAuthError extends Error {
   readonly #class = InvalidNtorAuthError;
@@ -13,8 +13,8 @@ export class InvalidNtorAuthError extends Error {
 
 export class NtorResponse {
   constructor(
-    readonly public_y: Uint8Array<32>,
-    readonly auth: Uint8Array<32>
+    readonly public_y: Bytes<32>,
+    readonly auth: Bytes<32>
   ) {}
 
   static readOrThrow(cursor: Cursor) {
@@ -27,9 +27,9 @@ export class NtorResponse {
 
 export class NtorRequest {
   constructor(
-    readonly public_x: Uint8Array<32>,
-    readonly relayid_rsa: Uint8Array<20>,
-    readonly ntor_onion_key: Uint8Array<32>
+    readonly public_x: Bytes<32>,
+    readonly relayid_rsa: Bytes<20>,
+    readonly ntor_onion_key: Bytes<32>
   ) {}
 
   sizeOrThrow() {
@@ -49,27 +49,27 @@ export class NtorRequest {
 }
 
 export interface NtorResult {
-  readonly auth: Uint8Array<32>;
-  readonly nonce: Uint8Array<HASH_LEN>;
-  readonly forwardDigest: Uint8Array<HASH_LEN>;
-  readonly backwardDigest: Uint8Array<HASH_LEN>;
-  readonly forwardKey: Uint8Array<KEY_LEN>;
-  readonly backwardKey: Uint8Array<KEY_LEN>;
+  readonly auth: Bytes<32>;
+  readonly nonce: Bytes<HASH_LEN>;
+  readonly forwardDigest: Bytes<HASH_LEN>;
+  readonly backwardDigest: Bytes<HASH_LEN>;
+  readonly forwardKey: Bytes<KEY_LEN>;
+  readonly backwardKey: Bytes<KEY_LEN>;
 }
 
 export namespace NtorResult {
   export async function finalizeOrThrow(
-    shared_xy: Uint8Array<32>,
-    shared_xb: Uint8Array<32>,
-    relayid_rsa: Uint8Array<20>,
-    public_b: Uint8Array<32>,
-    public_x: Uint8Array<32>,
-    public_y: Uint8Array<32>
+    shared_xy: Bytes<32>,
+    shared_xb: Bytes<32>,
+    relayid_rsa: Bytes<20>,
+    public_b: Bytes<32>,
+    public_x: Bytes<32>,
+    public_y: Bytes<32>
   ): Promise<NtorResult> {
     const protoid = 'ntor-curve25519-sha256-1';
 
     const secret_input = new Cursor(
-      new Uint8Array(32 + 32 + 20 + 32 + 32 + 32 + protoid.length)
+      Bytes.alloc(32 + 32 + 20 + 32 + 32 + 32 + protoid.length)
     );
     secret_input.writeOrThrow(shared_xy);
     secret_input.writeOrThrow(shared_xb);
@@ -90,14 +90,14 @@ export namespace NtorResult {
       false,
       ['sign']
     );
-    const verify = new Uint8Array(
+    const verify = Bytes.from(
       await crypto.subtle.sign('HMAC', kt_verify, secret_input.bytes)
     );
 
     const server = 'Server';
 
     const auth_input = new Cursor(
-      new Uint8Array(32 + 20 + 32 + 32 + 32 + protoid.length + server.length)
+      Bytes.alloc(32 + 20 + 32 + 32 + 32 + protoid.length + server.length)
     );
     auth_input.writeOrThrow(verify);
     auth_input.writeOrThrow(relayid_rsa);
@@ -114,9 +114,9 @@ export namespace NtorResult {
       false,
       ['sign']
     );
-    const auth = new Uint8Array(
+    const auth = Bytes.from(
       await crypto.subtle.sign('HMAC', t_mac_key, auth_input.bytes)
-    ) as Uint8Array<32>;
+    ) as Bytes<32>;
 
     const m_expand = Bytes.fromUtf8(`${protoid}:key_expand`);
 
@@ -133,7 +133,7 @@ export namespace NtorResult {
       info: m_expand,
       salt: t_key,
     };
-    const key_bytes = new Uint8Array(
+    const key_bytes = Bytes.from(
       await crypto.subtle.deriveBits(
         key_params,
         secret_input_key,

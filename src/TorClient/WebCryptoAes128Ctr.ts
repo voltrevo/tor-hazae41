@@ -3,12 +3,14 @@
  * Uses the native SubtleCrypto API available in Node.js 15+ and modern browsers.
  */
 
+import { Bytes } from '../hazae41/bytes';
+
 /**
  * AES-128-CTR key using WebCrypto with lazy key initialization
  */
 export class WebCryptoAes128Ctr {
   private keyPromise: Promise<CryptoKey>;
-  private initialCounter: Uint8Array;
+  private initialCounter: Bytes;
   private bytePosition: bigint = 0n;
 
   /**
@@ -16,7 +18,7 @@ export class WebCryptoAes128Ctr {
    * @param keyBytes 16-byte AES key
    * @param counterBytes 16-byte initial counter value (typically zeros)
    */
-  constructor(keyBytes: Uint8Array, counterBytes: Uint8Array) {
+  constructor(keyBytes: Bytes, counterBytes: Bytes) {
     if (keyBytes.length !== 16) {
       throw new Error('Key must be 16 bytes for AES-128');
     }
@@ -25,7 +27,7 @@ export class WebCryptoAes128Ctr {
     }
 
     // Store the initial counter (never modified)
-    this.initialCounter = new Uint8Array(counterBytes);
+    this.initialCounter = Bytes.from(counterBytes);
 
     // Store the key import promise for lazy initialization
     this.keyPromise = crypto.subtle.importKey(
@@ -43,7 +45,7 @@ export class WebCryptoAes128Ctr {
    * @param end Ending byte position (exclusive)
    * @returns Keystream bytes for the range
    */
-  async getKeystream(start: bigint, end: bigint): Promise<Uint8Array> {
+  async getKeystream(start: bigint, end: bigint): Promise<Bytes> {
     const cryptoKey = await this.keyPromise;
     const length = Number(end - start);
 
@@ -59,11 +61,11 @@ export class WebCryptoAes128Ctr {
     const counter = this.deriveCounter(startBlock);
 
     // Generate keystream for all needed blocks
-    const keystream = new Uint8Array(
+    const keystream = Bytes.from(
       await crypto.subtle.encrypt(
         { name: 'AES-CTR', counter, length: 128 },
         cryptoKey,
-        new Uint8Array(blocksNeeded * 16)
+        Bytes.alloc(blocksNeeded * 16)
       )
     );
 
@@ -74,8 +76,8 @@ export class WebCryptoAes128Ctr {
   /**
    * Derive counter value for a given block number
    */
-  private deriveCounter(blockNumber: bigint): Uint8Array {
-    const counter = new Uint8Array(this.initialCounter);
+  private deriveCounter(blockNumber: bigint): Bytes {
+    const counter = Bytes.from(this.initialCounter);
     let carry = Number(blockNumber & 0xffffffffn);
 
     // Increment from the end of the array (big-endian)
@@ -92,7 +94,7 @@ export class WebCryptoAes128Ctr {
    * Apply AES-CTR keystream to data in-place (XOR operation)
    * @param data Data to XOR with keystream
    */
-  async apply_keystream(data: Uint8Array): Promise<void> {
+  async apply_keystream(data: Bytes): Promise<void> {
     const start = this.bytePosition;
     const end = start + BigInt(data.length);
 

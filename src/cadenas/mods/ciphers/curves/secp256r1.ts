@@ -1,8 +1,9 @@
+import { Bytes } from '../../../../hazae41/bytes/index.js';
 import { ServerECDHParams } from '../../../index.js';
 
 export interface ECDH {
-  readonly ecdh_Yc: Uint8Array;
-  readonly ecdh_Z: Uint8Array;
+  readonly ecdh_Yc: Bytes;
+  readonly ecdh_Z: Bytes;
 }
 
 export class Secp256r1 {
@@ -13,7 +14,7 @@ export class Secp256r1 {
       ['deriveBits']
     );
 
-    const ecdh_Yc = new Uint8Array(
+    const ecdh_Yc = Bytes.from(
       await crypto.subtle.exportKey('raw', yc.publicKey)
     );
     const ecdh_Ys = server_ecdh_params.public_point.point.value.bytes;
@@ -26,7 +27,7 @@ export class Secp256r1 {
       []
     );
 
-    const ecdh_Z = new Uint8Array(
+    const ecdh_Z = Bytes.from(
       await crypto.subtle.deriveBits(
         { name: 'ECDH', public: Ys },
         yc.privateKey,

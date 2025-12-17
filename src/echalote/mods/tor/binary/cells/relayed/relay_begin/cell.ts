@@ -1,5 +1,5 @@
-import { Bytes } from '@hazae41/bytes';
 import { Cursor } from '@hazae41/cursor';
+import { Bytes } from '../../../../../../../hazae41/bytes';
 
 export class RelayBeginCell {
   readonly #class = RelayBeginCell;
@@ -16,7 +16,7 @@ export class RelayBeginCell {
 
   private constructor(
     readonly address: string,
-    readonly bytes: Uint8Array,
+    readonly bytes: Bytes,
     readonly flags: number
   ) {}
 

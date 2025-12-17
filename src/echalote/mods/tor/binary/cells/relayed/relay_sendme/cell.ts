@@ -1,6 +1,6 @@
 import { Opaque, Writable } from '@hazae41/binary';
-import { Uint8Array } from '@hazae41/bytes';
 import { Cursor } from '@hazae41/cursor';
+import { Bytes } from '../../../../../../../hazae41/bytes';
 
 export class RelaySendmeCircuitCell<T extends Writable> {
   readonly #class = RelaySendmeCircuitCell;
@@ -94,7 +94,7 @@ export class RelaySendmeStreamCell {
 }
 
 export class RelaySendmeDigest {
-  constructor(readonly digest: Uint8Array<20>) {}
+  constructor(readonly digest: Bytes<20>) {}
 
   sizeOrThrow() {
     return this.digest.length;

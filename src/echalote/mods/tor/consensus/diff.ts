@@ -1,6 +1,6 @@
-import { Bytes } from '@hazae41/bytes';
 import { sha3 } from 'hash-wasm';
 import { assert } from '../../../../utils/assert.js';
+import { Bytes } from '../../../../hazae41/bytes/index.js';
 
 export interface ConsensusDiff {
   readonly version: number;

@@ -18,6 +18,7 @@ import { Sequence } from '../sequence/sequence';
 import { TeletexString } from '../teletex_string/teletex_string';
 import { UTCTime } from '../utc_time/utc_time';
 import { UTF8String } from '../utf8_string/utf8_string';
+import { Bytes } from '../../../../bytes';
 
 export class Opaque {
   /**
@@ -32,7 +33,7 @@ export class Opaque {
     /**
      * The whole triplet (type + length + value)
      */
-    readonly bytes: Uint8Array<ArrayBuffer>
+    readonly bytes: Bytes
   ) {}
 
   toDER() {
@@ -60,7 +61,7 @@ export namespace Opaque {
   export class DER extends Opaque {
     constructor(
       readonly type: Type.DER,
-      readonly bytes: Uint8Array<ArrayBuffer>
+      readonly bytes: Bytes
     ) {
       super(type, bytes);
     }
@@ -120,9 +121,7 @@ export namespace Opaque {
 
       cursor.offset = start;
 
-      const bytes = new Uint8Array(
-        cursor.readOrThrow(end - start + length.value)
-      );
+      const bytes = Bytes.from(cursor.readOrThrow(end - start + length.value));
 
       return new DER(type, bytes);
     }

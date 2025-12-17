@@ -1,10 +1,10 @@
-import { Bytes } from '@hazae41/bytes';
 import { Cursor } from '@hazae41/cursor';
+import { Bytes } from '../../../hazae41/bytes';
 
 export class WebSocketClose {
   constructor(
     readonly code: number,
-    readonly reason?: Uint8Array
+    readonly reason?: Bytes
   ) {}
 
   static from(code: number, reason?: string) {

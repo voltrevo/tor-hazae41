@@ -1,5 +1,5 @@
+import { Bytes } from '../../../bytes';
 import { Data } from '../../libs/dataviews/mod';
-import type { Uint8Array } from '../../libs/lengthed/mod';
 
 export type CursorError = CursorReadError | CursorWriteError;
 
@@ -93,11 +93,8 @@ export class CursorWriteUnknownError extends Error {
   readonly name: string = this.#class.name;
 }
 
-export class Cursor<
-  T extends ArrayBufferLike = ArrayBufferLike,
-  N extends number = number,
-> {
-  readonly data: DataView<T>;
+export class Cursor<N extends number = number> {
+  readonly data: DataView<ArrayBuffer>;
 
   offset = 0;
 
@@ -106,7 +103,7 @@ export class Cursor<
    * @param inner
    * @param offset
    */
-  constructor(readonly bytes: Uint8Array<T, N>) {
+  constructor(readonly bytes: Bytes<N>) {
     this.data = Data.fromView(bytes);
   }
 
@@ -128,7 +125,7 @@ export class Cursor<
    * Get a subarray of the bytes before the current offset
    * @returns subarray of the bytes before the current offset
    */
-  get before(): Uint8Array<T> {
+  get before(): Bytes {
     return this.bytes.subarray(0, this.offset);
   }
 
@@ -136,7 +133,7 @@ export class Cursor<
    * Get a subarray of the bytes after the current offset
    * @returns subarray of the bytes after the current offset
    */
-  get after(): Uint8Array<T> {
+  get after(): Bytes {
     return this.bytes.subarray(this.offset);
   }
 
@@ -145,13 +142,13 @@ export class Cursor<
    * @param length
    * @returns subarray of the bytes
    */
-  getOrThrow<N extends number>(length: N): Uint8Array<T, N> {
+  getOrThrow<N extends number>(length: N): Bytes<N> {
     if (this.remaining < length)
       throw CursorReadLengthOverflowError.from(this, length);
 
     const subarray = this.bytes.subarray(this.offset, this.offset + length);
 
-    return subarray as Uint8Array<T, N>;
+    return subarray as Bytes<N>;
   }
 
   /**
@@ -159,7 +156,7 @@ export class Cursor<
    * @param length
    * @returns subarray of the bytes
    */
-  readOrThrow<N extends number>(length: N): Uint8Array<T, N> {
+  readOrThrow<N extends number>(length: N): Bytes<N> {
     const subarray = this.getOrThrow(length);
     this.offset += length;
     return subarray;
@@ -169,7 +166,7 @@ export class Cursor<
    * Set an array to the bytes
    * @param array array
    */
-  setOrThrow(array: Uint8Array): void {
+  setOrThrow(array: Bytes): void {
     if (this.remaining < array.length)
       throw CursorWriteLengthOverflowError.from(this, array.length);
 
@@ -180,7 +177,7 @@ export class Cursor<
    * Write an array to the bytes
    * @param array array
    */
-  writeOrThrow(array: Uint8Array): void {
+  writeOrThrow(array: Bytes): void {
     this.setOrThrow(array);
     this.offset += array.length;
   }

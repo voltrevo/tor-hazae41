@@ -1,22 +1,13 @@
+import { Bytes } from '../../../../bytes';
 import { Adapter } from '../adapter/index';
 
-declare global {
-  interface Uint8Array {
-    toHex(): string;
-  }
-
-  interface Uint8ArrayConstructor {
-    fromHex(hex: string): Uint8Array<ArrayBuffer>;
-  }
-}
-
 export function fromNative() {
-  function encodeOrThrow(bytes: Uint8Array) {
+  function encodeOrThrow(bytes: Bytes) {
     return bytes.toHex();
   }
 
   function decodeOrThrow(text: string) {
-    return Uint8Array.fromHex(text);
+    return Bytes.fromHex(text);
   }
 
   function padStartAndDecodeOrThrow(text: string) {

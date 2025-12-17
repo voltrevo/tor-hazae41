@@ -1,5 +1,6 @@
 import type { IStorage } from './types.js';
 import { getNodeDeps } from './getNodeDeps.js';
+import { Bytes } from '../hazae41/bytes/index.js';
 
 /**
  * Type guard to check if an error is a Node.js filesystem error with code property
@@ -128,12 +129,12 @@ export class FsStorage implements IStorage {
     return path.join(fullDirPath, mangleKey(key));
   }
 
-  async read(key: string): Promise<Uint8Array> {
+  async read(key: string): Promise<Bytes> {
     const { fs } = await getNodeDeps();
     await this.ensureDir();
     try {
       const data = await fs.readFile(await this.getPath(key));
-      return new Uint8Array(data);
+      return Bytes.from(data);
     } catch (error) {
       if (isNodeFsError(error) && error.code === 'ENOENT') {
         throw new Error(`Key not found: ${key}`);
@@ -142,7 +143,7 @@ export class FsStorage implements IStorage {
     }
   }
 
-  async write(key: string, value: Uint8Array): Promise<void> {
+  async write(key: string, value: Bytes): Promise<void> {
     const { fs } = await getNodeDeps();
     await this.ensureDir();
     await fs.writeFile(await this.getPath(key), value);

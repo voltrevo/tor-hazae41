@@ -1,11 +1,13 @@
+import { Bytes } from '../hazae41/bytes';
+
 export class Base32 {
   private static readonly ALPHABET = 'abcdefghijklmnopqrstuvwxyz234567';
 
-  static fromString(str: string): Uint8Array {
+  static fromString(str: string): Bytes {
     const input = str.toLowerCase().replace(/=+$/, '');
     const bits = input.length * 5;
     const bytes = Math.floor(bits / 8);
-    const data = new Uint8Array(bytes);
+    const data = Bytes.alloc(bytes);
 
     let bitString = '';
     for (const char of input) {
@@ -24,7 +26,7 @@ export class Base32 {
     return data;
   }
 
-  static toString(data: Uint8Array): string {
+  static toString(data: Bytes): string {
     let bitString = '';
     for (const byte of data) {
       bitString += byte.toString(2).padStart(8, '0');

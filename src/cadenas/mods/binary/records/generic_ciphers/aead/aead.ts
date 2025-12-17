@@ -1,16 +1,16 @@
 import { Opaque, Writable } from '@hazae41/binary';
 import { Cursor } from '@hazae41/cursor';
-import { Lengthed } from '@hazae41/lengthed';
 import {
   AEADCiphertextRecord,
   PlaintextRecord,
 } from '../../../../../mods/binary/records/record.js';
 import { AEADEncrypter } from '../../../../../mods/ciphers/encryptions/encryption.js';
+import { Bytes } from '../../../../../../hazae41/bytes/index.js';
 
 export class GenericAEADCipher {
   constructor(
-    readonly nonce_explicit: Uint8Array<ArrayBuffer> & Lengthed<8>,
-    readonly block: Uint8Array<ArrayBuffer>
+    readonly nonce_explicit: Bytes<8>,
+    readonly block: Bytes
   ) {}
 
   sizeOrThrow() {
@@ -23,10 +23,8 @@ export class GenericAEADCipher {
   }
 
   static readOrThrow(cursor: Cursor) {
-    const nonce_explicit = new Uint8Array(
-      cursor.readOrThrow(8)
-    ) as Uint8Array<ArrayBuffer> & Lengthed<8>;
-    const block = new Uint8Array(cursor.readOrThrow(cursor.remaining));
+    const nonce_explicit = Bytes.from(cursor.readOrThrow(8));
+    const block = Bytes.from(cursor.readOrThrow(cursor.remaining));
 
     return new GenericAEADCipher(nonce_explicit, block);
   }
@@ -36,19 +34,17 @@ export class GenericAEADCipher {
     encrypter: AEADEncrypter,
     sequence: bigint
   ) {
-    const nonce = new Cursor(new Uint8Array(encrypter.fixed_iv_length + 8));
+    const nonce = new Cursor(Bytes.alloc(encrypter.fixed_iv_length + 8));
     nonce.writeOrThrow(encrypter.secrets.client_write_IV);
     nonce.writeUint64OrThrow(sequence);
 
     nonce.offset = 0;
-    const _nonce_implicit = new Uint8Array(nonce.readOrThrow(4));
-    const nonce_explicit = new Uint8Array(
-      nonce.readOrThrow(8)
-    ) as Uint8Array<ArrayBuffer> & Lengthed<8>;
+    const _nonce_implicit = Bytes.from(nonce.readOrThrow(4));
+    const nonce_explicit = Bytes.from(nonce.readOrThrow(8));
 
     const content = Writable.writeToBytesOrThrow(record.fragment);
 
-    const additional_data = new Cursor(new Uint8Array(8 + 1 + 2 + 2));
+    const additional_data = new Cursor(Bytes.alloc(8 + 1 + 2 + 2));
     additional_data.writeUint64OrThrow(sequence);
     additional_data.writeUint8OrThrow(record.type);
     additional_data.writeUint16OrThrow(record.version);
@@ -74,11 +70,11 @@ export class GenericAEADCipher {
     encrypter: AEADEncrypter,
     sequence: bigint
   ) {
-    const nonce = new Cursor(new Uint8Array(encrypter.fixed_iv_length + 8));
+    const nonce = new Cursor(Bytes.alloc(encrypter.fixed_iv_length + 8));
     nonce.writeOrThrow(encrypter.secrets.server_write_IV);
     nonce.writeOrThrow(this.nonce_explicit);
 
-    const additional_data = new Cursor(new Uint8Array(8 + 1 + 2 + 2));
+    const additional_data = new Cursor(Bytes.alloc(8 + 1 + 2 + 2));
     additional_data.writeUint64OrThrow(sequence);
     additional_data.writeUint8OrThrow(record.type);
     additional_data.writeUint16OrThrow(record.version);

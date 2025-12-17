@@ -1,9 +1,9 @@
+import { Bytes } from '../../../../bytes';
 import { Cursor } from '../../../../cursor/mod';
 import { InvalidValueError } from '../../errors/errors';
 import { Length } from '../../length/length';
 import { DERTriplet } from '../../resolvers/der/triplet';
 import { Type } from '../../type/type';
-import { Bytes } from '../../../../../cadenas/libs/bytes/index.js';
 
 function pad2(value: number) {
   return value.toString().padStart(2, '0');
@@ -42,7 +42,7 @@ export namespace UTCTime {
       readonly type: Type.DER,
       readonly length: Length.DER,
       readonly value: Date,
-      readonly bytes: Uint8Array<ArrayBuffer>
+      readonly bytes: Bytes
     ) {
       super(type, value);
     }
@@ -58,7 +58,7 @@ export namespace UTCTime {
       const mm = pad2(asn1.value.getUTCMinutes());
       const ss = pad2(asn1.value.getUTCSeconds());
 
-      const bytes = Bytes.encodeUtf8(`${YY}${MM}${DD}${hh}${mm}${ss}Z`);
+      const bytes = Bytes.fromUtf8(`${YY}${MM}${DD}${hh}${mm}${ss}Z`);
       const length = new Length(bytes.length).toDER();
 
       return new DER(asn1.type.toDER(), length, asn1.value, bytes);
@@ -79,7 +79,7 @@ export namespace UTCTime {
       const type = Type.DER.readOrThrow(cursor);
       const length = Length.DER.readOrThrow(cursor);
 
-      const bytes = new Uint8Array(cursor.readOrThrow(length.value));
+      const bytes = Bytes.from(cursor.readOrThrow(length.value));
       const text = new TextDecoder().decode(bytes);
 
       if (text.length !== 13) throw new InvalidValueError(`UTCTime`, text);

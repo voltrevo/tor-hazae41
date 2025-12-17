@@ -1,6 +1,5 @@
 import { assert, test } from '../../phobos/mod';
 import { readFile } from 'fs/promises';
-import { Bytes } from '../libs/bytes/index';
 import { PEM } from './pem/pem';
 import { Certificate } from './types/certificate/certificate';
 import { relative, resolve } from 'path';
@@ -8,6 +7,7 @@ import {
   readAndResolveFromBytesOrThrow,
   writeToBytesOrThrow,
 } from './types/index';
+import { Bytes } from '../../bytes';
 
 const directory = resolve('./dist/test/');
 const { pathname } = new URL(import.meta.url);
@@ -32,14 +32,14 @@ await test("Cert Let's Encrypt", async () => {
 });
 
 await test('Cert frank4dd-rsa', async () => {
-  const bytes = new Uint8Array(await readFile('./certs/frank4dd-rsa.der'));
+  const bytes = Bytes.from(await readFile('./certs/frank4dd-rsa.der'));
   const cert = readAndResolveFromBytesOrThrow(Certificate, bytes);
 
   assert(Bytes.equals(bytes, writeToBytesOrThrow(cert)));
 });
 
 await test('Cert frank4dd-dsa', async () => {
-  const bytes = new Uint8Array(await readFile('./certs/frank4dd-dsa.der'));
+  const bytes = Bytes.from(await readFile('./certs/frank4dd-dsa.der'));
   const cert = readAndResolveFromBytesOrThrow(Certificate, bytes);
 
   assert(Bytes.equals(bytes, writeToBytesOrThrow(cert)));

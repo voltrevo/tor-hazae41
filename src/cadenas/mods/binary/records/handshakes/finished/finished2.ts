@@ -1,14 +1,15 @@
 import { Cursor } from '@hazae41/cursor';
 import { Handshake } from '../../../../../mods/binary/records/handshakes/handshake.js';
+import { Bytes } from '../../../../../../hazae41/bytes/index.js';
 
 export class Finished2 {
   readonly #class = Finished2;
 
   static readonly handshake_type = Handshake.types.finished;
 
-  constructor(readonly verify_data: Uint8Array) {}
+  constructor(readonly verify_data: Bytes) {}
 
-  static new(verify_data: Uint8Array) {
+  static new(verify_data: Bytes) {
     return new Finished2(verify_data);
   }
 

@@ -4,6 +4,7 @@ import { assert, test } from '../../phobos/mod';
 import { readFile } from 'fs/promises';
 import { relative, resolve } from 'node:path';
 import { DER } from './resolvers/der/index';
+import { Bytes } from '../../bytes';
 
 export namespace PEM {
   export const header = `-----BEGIN CERTIFICATE-----`;
@@ -41,7 +42,7 @@ const directory = resolve('./dist/test/');
 const { pathname } = new URL(import.meta.url);
 console.log(relative(directory, pathname.replace('.mjs', '.ts')));
 
-function compare(a: Uint8Array, b: Uint8Array) {
+function compare(a: Bytes, b: Bytes) {
   return Buffer.from(a).equals(Buffer.from(b));
 }
 
@@ -67,14 +68,14 @@ test('Cert PKCS7', async () => {
 });
 
 test('Cert frank4dd-rsa', async () => {
-  const buffer = new Uint8Array(await readFile('./certs/frank4dd-rsa.der'));
+  const buffer = Bytes.from(await readFile('./certs/frank4dd-rsa.der'));
   const triplet = Readable.readFromBytesOrThrow(DER, buffer);
 
   assert(compare(buffer, Writable.writeToBytesOrThrow(triplet)));
 });
 
 test('Cert frank4dd-dsa', async () => {
-  const buffer = new Uint8Array(await readFile('./certs/frank4dd-dsa.der'));
+  const buffer = Bytes.from(await readFile('./certs/frank4dd-dsa.der'));
   const triplet = Readable.readFromBytesOrThrow(DER, buffer);
 
   assert(compare(buffer, Writable.writeToBytesOrThrow(triplet)));

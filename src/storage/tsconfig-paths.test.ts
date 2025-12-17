@@ -2,11 +2,12 @@ import { test } from '@hazae41/phobos';
 import { assert } from '../utils/assert';
 import { rmSync } from 'fs';
 import { createAutoStorage, MemoryStorage, type IStorage } from './index.js';
+import { Bytes } from '../hazae41/bytes';
 
 test('tsconfig path mapping: memory storage', async () => {
   const memory: IStorage = new MemoryStorage();
 
-  await memory.write('test', new Uint8Array([1, 2, 3]));
+  await memory.write('test', Bytes.from([1, 2, 3]));
   const data = await memory.read('test');
 
   assert(data.length === 3, 'Should read 3 bytes');
@@ -24,7 +25,7 @@ test('tsconfig path mapping: auto storage', async () => {
 
   const auto = createAutoStorage('test-tsx');
 
-  await auto.write('key', new Uint8Array([4, 5, 6]));
+  await auto.write('key', Bytes.from([4, 5, 6]));
   const autoData = await auto.read('key');
 
   assert(autoData.length === 3, 'Should read 3 bytes');

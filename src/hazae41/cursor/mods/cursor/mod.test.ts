@@ -3,18 +3,19 @@ import { assert, test, throws } from '../../../phobos/mod';
 import { Buffer } from 'node:buffer';
 import { relative, resolve } from 'node:path';
 import { Cursor } from './mod';
+import { Bytes } from '../../../bytes';
 
 const directory = resolve('./dist/test/');
 const { pathname } = new URL(import.meta.url);
 console.log(relative(directory, pathname.replace('.mjs', '.ts')));
 
-function equals(a: Uint8Array, b: Uint8Array) {
+function equals(a: Bytes, b: Bytes) {
   return Buffer.from(a).equals(Buffer.from(b));
 }
 
 test('write then read', async () => {
-  const bytes = new Uint8Array([1, 2, 3, 4]);
-  const cursor = new Cursor(new Uint8Array(bytes.length));
+  const bytes = Bytes.from([1, 2, 3, 4]);
+  const cursor = new Cursor(Bytes.alloc(bytes.length));
 
   cursor.writeOrThrow(bytes);
   assert(cursor.offset === bytes.length);
@@ -36,21 +37,21 @@ test('write then read', async () => {
 });
 
 test('writeUint8 then readUint8', async () => {
-  const cursor = new Cursor(new Uint8Array(1));
+  const cursor = new Cursor(Bytes.alloc(1));
 
   const n = 42;
 
   cursor.writeUint8OrThrow(n);
   assert(cursor.offset === 1);
   assert(cursor.length === 1);
-  assert(equals(cursor.bytes, new Uint8Array([n])));
+  assert(equals(cursor.bytes, Bytes.from([n])));
 
   cursor.offset = 0;
 
   const n2 = cursor.readUint8OrThrow();
   assert(cursor.offset === 1);
   assert(cursor.length === 1);
-  assert(equals(cursor.bytes, new Uint8Array([n])));
+  assert(equals(cursor.bytes, Bytes.from([n])));
 
   assert(n === n2);
 
@@ -61,7 +62,7 @@ test('writeUint8 then readUint8', async () => {
 });
 
 test('writeUint16 then readUint16', async () => {
-  const cursor = new Cursor(new Uint8Array(2));
+  const cursor = new Cursor(Bytes.alloc(2));
 
   const n = 42;
 
@@ -84,7 +85,7 @@ test('writeUint16 then readUint16', async () => {
 });
 
 test('writeUint24 then readUint24', async () => {
-  const cursor = new Cursor(new Uint8Array(3));
+  const cursor = new Cursor(Bytes.alloc(3));
 
   const n = 42;
 
@@ -109,7 +110,7 @@ test('writeUint24 then readUint24', async () => {
 });
 
 test('writeUint32 then readUint32', async () => {
-  const cursor = new Cursor(new Uint8Array(4));
+  const cursor = new Cursor(Bytes.alloc(4));
 
   const n = 42;
 

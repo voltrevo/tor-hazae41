@@ -1,5 +1,5 @@
+import { Bytes } from '../../../hazae41/bytes';
 import { bitwise_unpack } from '../../../utils/bitwise';
-import { Bytes } from '@hazae41/bytes';
 import { Cursor } from '@hazae41/cursor';
 
 export class Length {
@@ -12,7 +12,7 @@ export class Length {
   }
 
   #writeOrThrow7(cursor: Cursor) {
-    const lengthBytesBytes = new Uint8Array([this.value]);
+    const lengthBytesBytes = Bytes.from([this.value]);
     const lengthBitsMemory = bitwise_unpack(lengthBytesBytes);
 
     cursor.writeOrThrow(lengthBitsMemory.subarray(1)); // 8 - 1

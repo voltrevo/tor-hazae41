@@ -1,4 +1,5 @@
 import { Cursor } from '@hazae41/cursor';
+import { Bytes } from '../../../../../../../hazae41/bytes';
 
 export type RelayExtend2Link =
   | RelayExtend2LinkIPv4
@@ -93,7 +94,7 @@ export class RelayExtend2LinkLegacyID {
 
   static readonly type = 2;
 
-  constructor(readonly fingerprint: Uint8Array) {}
+  constructor(readonly fingerprint: Bytes) {}
 
   sizeOrThrow() {
     return 1 + 1 + this.fingerprint.length;
@@ -111,7 +112,7 @@ export class RelayExtend2LinkModernID {
 
   static readonly type = 3;
 
-  constructor(readonly fingerprint: Uint8Array) {}
+  constructor(readonly fingerprint: Bytes) {}
 
   sizeOrThrow() {
     return 1 + 1 + this.fingerprint.length;

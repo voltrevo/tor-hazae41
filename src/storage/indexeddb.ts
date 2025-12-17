@@ -1,3 +1,4 @@
+import { Bytes } from '../hazae41/bytes/index.js';
 import type { IStorage } from './types.js';
 
 export class IndexedDBStorage implements IStorage {
@@ -28,7 +29,7 @@ export class IndexedDBStorage implements IStorage {
     return this.dbPromise;
   }
 
-  async read(key: string): Promise<Uint8Array> {
+  async read(key: string): Promise<Bytes> {
     const db = await this.getDB();
     return new Promise((resolve, reject) => {
       const transaction = db.transaction(this.storeName, 'readonly');
@@ -46,7 +47,7 @@ export class IndexedDBStorage implements IStorage {
     });
   }
 
-  async write(key: string, value: Uint8Array): Promise<void> {
+  async write(key: string, value: Bytes): Promise<void> {
     const db = await this.getDB();
     return new Promise((resolve, reject) => {
       const transaction = db.transaction(this.storeName, 'readwrite');

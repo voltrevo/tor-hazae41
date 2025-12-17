@@ -6,6 +6,7 @@ import {
   bitwise_unpack,
   bitwise_xor_mod,
 } from './bitwise';
+import { Bytes } from '../hazae41/bytes';
 
 /**
  * Test vectors generated from @hazae41/bitwise.wasm
@@ -78,7 +79,7 @@ const TEST_VECTORS = {
 };
 
 function assertBytesEqual(
-  actual: Uint8Array,
+  actual: Bytes,
   expected: number[],
   message?: string
 ): void {
@@ -97,7 +98,7 @@ function assertBytesEqual(
 test('bitwise_unpack', async () => {
   for (let i = 0; i < TEST_VECTORS.unpack.length; i++) {
     const vector = TEST_VECTORS.unpack[i];
-    const bytes = new Uint8Array(vector.input);
+    const bytes = Bytes.from(vector.input);
     const bits = bitwise_unpack(bytes);
 
     assertBytesEqual(bits, vector.output, `unpack vector ${i}`);
@@ -107,7 +108,7 @@ test('bitwise_unpack', async () => {
 test('bitwise_pack_left', async () => {
   for (let i = 0; i < TEST_VECTORS.pack_left.length; i++) {
     const vector = TEST_VECTORS.pack_left[i];
-    const bits = new Uint8Array(vector.input);
+    const bits = Bytes.from(vector.input);
     const bytes = bitwise_pack_left(bits);
 
     assertBytesEqual(bytes, vector.output, `pack_left vector ${i}`);
@@ -117,7 +118,7 @@ test('bitwise_pack_left', async () => {
 test('bitwise_pack_right', async () => {
   for (let i = 0; i < TEST_VECTORS.pack_right.length; i++) {
     const vector = TEST_VECTORS.pack_right[i];
-    const bits = new Uint8Array(vector.input);
+    const bits = Bytes.from(vector.input);
     const bytes = bitwise_pack_right(bits);
 
     assertBytesEqual(bytes, vector.output, `pack_right vector ${i}`);
@@ -127,8 +128,8 @@ test('bitwise_pack_right', async () => {
 test('bitwise_xor_mod', async () => {
   for (let i = 0; i < TEST_VECTORS.xor_mod.length; i++) {
     const vector = TEST_VECTORS.xor_mod[i];
-    const target = new Uint8Array(vector.target);
-    const mask = new Uint8Array(vector.mask);
+    const target = Bytes.from(vector.target);
+    const mask = Bytes.from(vector.mask);
 
     bitwise_xor_mod(target, mask);
 
@@ -137,7 +138,7 @@ test('bitwise_xor_mod', async () => {
 });
 
 test('bitwise roundtrip: unpack -> pack_left', async () => {
-  const original = new Uint8Array([0xa5, 0x3c, 0xf0]);
+  const original = Bytes.from([0xa5, 0x3c, 0xf0]);
   const bits = bitwise_unpack(original);
   const recovered = bitwise_pack_left(bits);
 
@@ -145,7 +146,7 @@ test('bitwise roundtrip: unpack -> pack_left', async () => {
 });
 
 test('WebSocket scenario: opcode extraction', async () => {
-  const opcodeBytes = new Uint8Array([0b00001010]); // opcode 10 (pong)
+  const opcodeBytes = Bytes.from([0b00001010]); // opcode 10 (pong)
   const opcodeBits = bitwise_unpack(opcodeBytes);
 
   // Extract last 4 bits (as the code does)

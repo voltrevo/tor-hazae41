@@ -4,17 +4,19 @@
  * No initialization needed - stateless factories
  */
 
+import { Bytes } from '../hazae41/bytes';
+
 export namespace Ed25519 {
   export class Signature {
-    constructor(private data: Uint8Array) {}
+    constructor(private data: Bytes) {}
 
     export() {
       return {
-        bytes: new Uint8Array(this.data),
+        bytes: Bytes.from(this.data),
       };
     }
 
-    static import(bytes: Uint8Array | { bytes: Uint8Array }): Signature {
+    static import(bytes: Bytes | { bytes: Bytes }): Signature {
       const signatureBytes = bytes instanceof Uint8Array ? bytes : bytes.bytes;
 
       if (signatureBytes.length !== 64) {
@@ -23,18 +25,18 @@ export namespace Ed25519 {
         );
       }
 
-      return new Signature(new Uint8Array(signatureBytes));
+      return new Signature(Bytes.from(signatureBytes));
     }
   }
 
   export class VerifyingKey {
     constructor(
-      private publicKeyBytes: Uint8Array,
+      private publicKeyBytes: Bytes,
       private publicKey: CryptoKey
     ) {}
 
     async verify(
-      payload: Uint8Array | { bytes: Uint8Array },
+      payload: Bytes | { bytes: Bytes },
       signature: Signature
     ): Promise<boolean> {
       const payloadBytes =
@@ -56,12 +58,12 @@ export namespace Ed25519 {
 
     async export() {
       return {
-        bytes: new Uint8Array(this.publicKeyBytes),
+        bytes: Bytes.from(this.publicKeyBytes),
       };
     }
 
     static async import(
-      bytes: Uint8Array | { bytes: Uint8Array },
+      bytes: Bytes | { bytes: Bytes },
       _extractable?: boolean
     ): Promise<VerifyingKey> {
       const keyBytes = bytes instanceof Uint8Array ? bytes : bytes.bytes;
@@ -81,7 +83,7 @@ export namespace Ed25519 {
           ['verify']
         );
 
-        return new VerifyingKey(new Uint8Array(keyBytes), publicKey);
+        return new VerifyingKey(Bytes.from(keyBytes), publicKey);
       } catch (error) {
         throw new Error(`Failed to import Ed25519 public key: ${error}`);
       }

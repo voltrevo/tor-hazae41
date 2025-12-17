@@ -1,7 +1,6 @@
 import { ASN1 } from '@hazae41/asn1';
 import { Base16 } from '@hazae41/base16';
 import { Base64 } from '@hazae41/base64';
-import { Bytes } from '@hazae41/bytes';
 import { fetch } from '../../../../fleche';
 import { OIDs, X509 } from '@hazae41/x509';
 import { Mutable } from '../../../libs/typescript/typescript';
@@ -16,6 +15,7 @@ import {
   applyDiffOrThrow,
 } from './diff.js';
 import { Log } from '../../../../Log';
+import { Bytes } from '../../../../hazae41/bytes';
 
 export interface Consensus {
   readonly type: string;
@@ -696,9 +696,7 @@ export namespace Consensus {
       assert(certificate != null, `Missing certificate for ${it.identity}`);
 
       const signed = Bytes.fromUtf8(consensus.preimage);
-      const hashed = new Uint8Array(
-        await crypto.subtle.digest('SHA-256', signed)
-      );
+      const hashed = Bytes.from(await crypto.subtle.digest('SHA-256', signed));
 
       using signingKey = Base64.get()
         .getOrThrow()
@@ -810,7 +808,7 @@ export namespace Consensus {
         .getOrThrow()
         .decodePaddedOrThrow(cert.identityKey);
 
-      const identity = new Uint8Array(
+      const identity = Bytes.from(
         await crypto.subtle.digest('SHA-1', identityKey.bytes)
       );
       const fingerprint = Base16.encodeOrThrow(identity);
@@ -821,9 +819,7 @@ export namespace Consensus {
       );
 
       const signed = Bytes.fromUtf8(cert.preimage);
-      const hashed = new Uint8Array(
-        await crypto.subtle.digest('SHA-1', signed)
-      );
+      const hashed = Bytes.from(await crypto.subtle.digest('SHA-1', signed));
 
       const algorithmAsn1 = ASN1.ObjectIdentifier.create(
         undefined,
@@ -995,15 +991,13 @@ export namespace Consensus {
       );
 
       const buffer = await response.arrayBuffer();
-      const digest = new Uint8Array(
-        await crypto.subtle.digest('SHA-256', buffer)
-      );
+      const digest = Bytes.from(await crypto.subtle.digest('SHA-256', buffer));
 
       const digest64 = Base64.get().getOrThrow().encodeUnpaddedOrThrow(digest);
 
       assert(digest64 === microdescHash, `Digest mismatch`);
 
-      const text = Bytes.toUtf8(new Uint8Array(buffer));
+      const text = Bytes.toUtf8(Bytes.from(buffer));
       const [data] = parseOrThrow(text);
 
       assert(data != null, `Empty microdescriptor`);
@@ -1058,7 +1052,7 @@ export namespace Consensus {
         }
 
         const buffer = await response.arrayBuffer();
-        const text = Bytes.toUtf8(new Uint8Array(buffer));
+        const text = Bytes.toUtf8(Bytes.from(buffer));
         const bodiesWithText = parseWithRawTextOrThrow(text);
 
         assert(
@@ -1071,7 +1065,7 @@ export namespace Consensus {
           // Convert text to bytes for hash calculation
           const encoder = new TextEncoder();
           const rawBytes = encoder.encode(rawText);
-          const digest = new Uint8Array(
+          const digest = Bytes.from(
             await crypto.subtle.digest('SHA-256', rawBytes)
           );
           const calculatedHash = Base64.get()

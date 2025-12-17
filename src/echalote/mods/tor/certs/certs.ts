@@ -1,5 +1,4 @@
 import { Writable } from '@hazae41/binary';
-import { Bytes } from '@hazae41/bytes';
 import { X509 } from '@hazae41/x509';
 import { Ed25519 } from '../../../../TorClient/WebCryptoEd25519.js';
 import { assert } from '../../../../utils/assert.js';
@@ -10,6 +9,7 @@ import {
   RsaCert,
   UnknownCertExtensionError,
 } from '../index.js';
+import { Bytes } from '../../../../hazae41/bytes/index.js';
 
 export type CertError =
   | DuplicatedCertError
@@ -186,10 +186,8 @@ export namespace Certs {
       RsaBigInt.RsaPublicKey.from_public_key_der(publicKeyMemory);
 
     const prefix = Bytes.fromUtf8('Tor TLS RSA/Ed25519 cross-certificate');
-    const prefixed = Bytes.concat([prefix, certs.rsa_to_ed.payload]);
-    const hashed = new Uint8Array(
-      await crypto.subtle.digest('SHA-256', prefixed)
-    );
+    const prefixed = Bytes.concat(prefix, certs.rsa_to_ed.payload);
+    const hashed = Bytes.from(await crypto.subtle.digest('SHA-256', prefixed));
 
     const hashedMemory = new RsaBigInt.Memory(hashed);
     const signatureMemory = new RsaBigInt.Memory(certs.rsa_to_ed.signature);
@@ -246,7 +244,7 @@ export namespace Certs {
     if (verified !== true) throw new InvalidSignatureError();
 
     const tls = Writable.writeToBytesOrThrow(tlsCerts[0].toDER());
-    const hash = new Uint8Array(await crypto.subtle.digest('SHA-256', tls));
+    const hash = Bytes.from(await crypto.subtle.digest('SHA-256', tls));
 
     if (Bytes.equals(hash, certs.sign_to_tls.certKey) !== true)
       throw new InvalidCertError();

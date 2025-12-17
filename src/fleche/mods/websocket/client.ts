@@ -1,7 +1,6 @@
 import { Base64 } from '@hazae41/base64';
 import { Readable, Writable } from '@hazae41/binary';
 import { bitwise_pack_right, bitwise_unpack } from '../../../utils/bitwise';
-import { Bytes } from '@hazae41/bytes';
 import { HalfDuplex } from '@hazae41/cascade';
 import { Cursor } from '@hazae41/cursor';
 import { Future } from '@hazae41/future';
@@ -20,6 +19,7 @@ import {
 } from './errors.js';
 import { WebSocketFrame } from './frame.js';
 import { IClock } from '../../../clock';
+import { Bytes } from '../../../hazae41/bytes';
 
 const ACCEPT_SUFFIX = Bytes.fromUtf8('258EAFA5-E914-47DA-95CA-C5AB0DC85B11');
 
@@ -34,7 +34,7 @@ export class WebSocketClientDuplex extends EventTarget implements WebSocket {
 
   readonly http: HttpClientDuplex;
 
-  readonly duplex: HalfDuplex<Uint8Array, Uint8Array>;
+  readonly duplex: HalfDuplex<Bytes, Bytes>;
 
   readonly #buffer = new Resizer();
 
@@ -107,7 +107,7 @@ export class WebSocketClientDuplex extends EventTarget implements WebSocket {
       head: e => this.#onHead(e),
     });
 
-    this.duplex = new HalfDuplex<Uint8Array, Uint8Array>({
+    this.duplex = new HalfDuplex<Bytes, Bytes>({
       input: {
         start: () => this.#onInputStart(),
         write: m => this.#onInputWrite(m),
@@ -241,7 +241,7 @@ export class WebSocketClientDuplex extends EventTarget implements WebSocket {
     else if (data instanceof Blob)
       return await this.#splitOrThrow(
         WebSocketFrame.opcodes.text,
-        new Uint8Array(await data.arrayBuffer())
+        Bytes.from(await data.arrayBuffer())
       );
     else if ('buffer' in data)
       return await this.#splitOrThrow(
@@ -251,7 +251,7 @@ export class WebSocketClientDuplex extends EventTarget implements WebSocket {
     else
       return await this.#splitOrThrow(
         WebSocketFrame.opcodes.text,
-        new Uint8Array(data)
+        Bytes.from(data)
       );
   }
 
@@ -310,11 +310,11 @@ export class WebSocketClientDuplex extends EventTarget implements WebSocket {
     if (!Strings.equalsIgnoreCase(headers.get('Upgrade'), 'websocket'))
       throw new InvalidHttpHeaderValue('Upgrade');
 
-    const prehash = Bytes.concat([
+    const prehash = Bytes.concat(
       Bytes.fromUtf8(this.#keyBase64),
-      ACCEPT_SUFFIX,
-    ]);
-    const hash = new Uint8Array(await crypto.subtle.digest('SHA-1', prehash));
+      ACCEPT_SUFFIX
+    );
+    const hash = Bytes.from(await crypto.subtle.digest('SHA-1', prehash));
 
     const hashBase64 = Base64.get().getOrThrow().encodePaddedOrThrow(hash);
 
@@ -375,7 +375,7 @@ export class WebSocketClientDuplex extends EventTarget implements WebSocket {
     // No initialization needed for pure JS implementation
   }
 
-  async #onInputWrite(chunk: Uint8Array) {
+  async #onInputWrite(chunk: Bytes) {
     // Console.debug(this.constructor.name, "<-", chunk.length)
 
     const bitsMemory = bitwise_unpack(chunk);
@@ -386,15 +386,15 @@ export class WebSocketClientDuplex extends EventTarget implements WebSocket {
     return await this.#onReadDirect(bitsMemory);
   }
 
-  async #onReadBuffered(chunk: Uint8Array) {
+  async #onReadBuffered(chunk: Bytes) {
     this.#buffer.writeOrThrow(chunk);
-    const full = new Uint8Array(this.#buffer.inner.before);
+    const full = Bytes.from(this.#buffer.inner.before);
 
     this.#buffer.inner.offset = 0;
     return await this.#onReadDirect(full);
   }
 
-  async #onReadDirect(chunk: Uint8Array) {
+  async #onReadDirect(chunk: Bytes) {
     const cursor = new Cursor(chunk);
 
     while (cursor.remaining) {
@@ -516,7 +516,7 @@ export class WebSocketClientDuplex extends EventTarget implements WebSocket {
 
     const final = true;
     const opcode = this.#current.opcode;
-    const payload = new Uint8Array(this.#current.buffer.before);
+    const payload = Bytes.from(this.#current.buffer.before);
     const full = WebSocketFrame.from({ final, opcode, payload });
 
     this.#current.opcode = undefined;
@@ -530,7 +530,7 @@ export class WebSocketClientDuplex extends EventTarget implements WebSocket {
     this.duplex.output.enqueue(bitwise_pack_right(bits));
   }
 
-  async #splitOrThrow(opcode: number, data: Uint8Array) {
+  async #splitOrThrow(opcode: number, data: Bytes) {
     const chunks = new Cursor(data).splitOrThrow(32_768);
     const peeker = Iterators.peek(chunks);
 

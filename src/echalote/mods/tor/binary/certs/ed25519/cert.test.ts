@@ -2,6 +2,7 @@ import { test } from '@hazae41/phobos';
 import { assert } from '../../../../../../utils/assert';
 import { Ed25519Cert } from './cert.js';
 import { Cursor } from '@hazae41/cursor';
+import { Bytes } from '../../../../../../hazae41/bytes';
 
 // Test data captured from real Tor network communication
 const edToSignCertHex =
@@ -10,8 +11,8 @@ const edToSignCertHex =
 const signToTlsCertHex =
   '050068010500077b0d03edb538cd2c0d6742d96560f4a626c6c8ad97694080b36c05645c30a9e986d8070059c9d47ea488e01c1c0f879a08b4e4e97cc47477f5c5727384f0d5f1f2cbaed2d1b28340bbbaaab3be48d23e6afa26a4a9649e0edda9a6d78b984df703e13a00';
 
-function hexToUint8Array(hex: string): Uint8Array {
-  const bytes = new Uint8Array(hex.length / 2);
+function hexToUint8Array(hex: string): Bytes {
+  const bytes = Bytes.alloc(hex.length / 2);
   for (let i = 0; i < hex.length; i += 2) {
     bytes[i / 2] = parseInt(hex.slice(i, i + 2), 16);
   }

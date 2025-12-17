@@ -1,5 +1,4 @@
 import { Opaque, Writable } from '@hazae41/binary';
-import { Bytes } from '@hazae41/bytes';
 import {
   FullDuplex,
   SimplexParams,
@@ -26,6 +25,7 @@ import {
   HttpTransfer,
   HttpUpgradingState,
 } from './state.js';
+import { Bytes } from '../../../hazae41/bytes';
 
 export namespace Lines {
   export const rn = Bytes.fromUtf8('\r\n');
@@ -51,7 +51,7 @@ export interface HttpStreamParams {
 export class HttpClientDuplex {
   readonly #class = HttpClientDuplex;
 
-  readonly duplex: FullDuplex<Opaque, Writable, Uint8Array, Uint8Array>;
+  readonly duplex: FullDuplex<Opaque, Writable, Bytes, Bytes>;
 
   #resolveOnStart = new Future<void>();
 
@@ -62,7 +62,7 @@ export class HttpClientDuplex {
    * @param subduplex
    */
   constructor(readonly params: HttpStreamParams) {
-    this.duplex = new FullDuplex<Opaque, Writable, Uint8Array, Uint8Array>({
+    this.duplex = new FullDuplex<Opaque, Writable, Bytes, Bytes>({
       input: {
         write: m => this.#onInputWrite(m),
         close: () => this.#onInputClose(),
@@ -205,9 +205,9 @@ export class HttpClientDuplex {
 
     if (encoder == null) throw new UnsupportedContentEncoding(type);
 
-    const sourcer = new SuperReadableStream<Uint8Array>({});
+    const sourcer = new SuperReadableStream<Bytes>({});
 
-    const sinker = new SuperWritableStream<Uint8Array>({
+    const sinker = new SuperWritableStream<Bytes>({
       write: c => this.duplex.output.enqueue(new Opaque(c)),
       abort: e => this.duplex.output.error(e),
       close: () => this.duplex.output.close(),
@@ -240,9 +240,9 @@ export class HttpClientDuplex {
 
     if (decoder == null) throw new UnsupportedContentEncoding(type);
 
-    const sourcer = new SuperReadableStream<Uint8Array>({});
+    const sourcer = new SuperReadableStream<Bytes>({});
 
-    const sinker = new SuperWritableStream<Uint8Array>({
+    const sinker = new SuperWritableStream<Bytes>({
       write: c => this.duplex.input.enqueue(c),
       abort: e => this.duplex.input.error(e),
       close: () => this.duplex.input.close(),
@@ -257,9 +257,9 @@ export class HttpClientDuplex {
   }
 
   async #onReadHead(
-    chunk: Uint8Array,
+    chunk: Bytes,
     state: HttpHeadingState | HttpUpgradingState
-  ): Promise<Nullable<Uint8Array>> {
+  ): Promise<Nullable<Bytes>> {
     const { buffer } = state;
 
     buffer.writeOrThrow(chunk);
@@ -295,10 +295,10 @@ export class HttpClientDuplex {
 
     await this.params.head?.call(this, { headers, status, statusText });
 
-    return new Uint8Array(rawBody);
+    return Bytes.from(rawBody);
   }
 
-  async #onReadNoneBody(chunk: Uint8Array, state: HttpHeadedState) {
+  async #onReadNoneBody(chunk: Bytes, state: HttpHeadedState) {
     if (state.server_transfer.type !== 'none')
       throw new InvalidHttpStateError();
 
@@ -311,7 +311,7 @@ export class HttpClientDuplex {
     }
   }
 
-  async #onReadLenghtedBody(chunk: Uint8Array, state: HttpHeadedState) {
+  async #onReadLenghtedBody(chunk: Bytes, state: HttpHeadedState) {
     if (state.server_transfer.type !== 'lengthed')
       throw new InvalidHttpStateError();
 
@@ -340,7 +340,7 @@ export class HttpClientDuplex {
     }
   }
 
-  async #onReadChunkedBody(chunk: Uint8Array, state: HttpHeadedState) {
+  async #onReadChunkedBody(chunk: Bytes, state: HttpHeadedState) {
     if (state.server_transfer.type !== 'chunked')
       throw new InvalidHttpStateError();
 
@@ -465,7 +465,7 @@ export class HttpClientDuplex {
     }
   }
 
-  async #onOutputWrite(chunk: Uint8Array) {
+  async #onOutputWrite(chunk: Bytes) {
     Console.debug(this.constructor.name, '->', Bytes.toUtf8(chunk));
 
     if (this.#state.type === 'upgrading' || this.#state.type === 'upgraded') {
@@ -485,10 +485,7 @@ export class HttpClientDuplex {
     throw new InvalidHttpStateError();
   }
 
-  async #onWriteNone(
-    chunk: Uint8Array,
-    state: HttpHeadingState | HttpHeadedState
-  ) {
+  async #onWriteNone(chunk: Bytes, state: HttpHeadingState | HttpHeadedState) {
     const { client_compression } = state;
 
     if (client_compression == null) {
@@ -499,7 +496,7 @@ export class HttpClientDuplex {
   }
 
   async #onWriteLengthed(
-    chunk: Uint8Array,
+    chunk: Bytes,
     state: HttpHeadingState | HttpHeadedState
   ) {
     if (state.client_transfer.type !== 'lengthed')
@@ -523,7 +520,7 @@ export class HttpClientDuplex {
   }
 
   async #onWriteChunked(
-    chunk: Uint8Array,
+    chunk: Bytes,
     state: HttpHeadingState | HttpHeadedState
   ) {
     const text = new TextDecoder().decode(chunk);

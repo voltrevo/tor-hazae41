@@ -1,5 +1,6 @@
 import type { Nullable } from '../../../libs/nullable/mod';
 import { Cursor } from '../../../../cursor/mod';
+import { Bytes } from '../../../../bytes';
 
 export type ReadError = ReadUnderflowError | ReadUnknownError;
 
@@ -82,7 +83,7 @@ export namespace Readable {
    */
   export function readFromBytesOrNull<T extends Readable.Infer<T>>(
     readable: T,
-    bytes: Uint8Array
+    bytes: Bytes
   ): Nullable<Readable.Output<T>> {
     try {
       const cursor = new Cursor(bytes);
@@ -106,7 +107,7 @@ export namespace Readable {
    */
   export function readFromBytesOrThrow<T extends Readable.Infer<T>>(
     readable: T,
-    bytes: Uint8Array
+    bytes: Bytes
   ): Readable.Output<T> {
     const cursor = new Cursor(bytes);
     const output = readable.readOrThrow(cursor);

@@ -1,23 +1,24 @@
 import { Writable } from '@hazae41/binary';
 import { Cursor } from '@hazae41/cursor';
+import { Bytes } from '../../../hazae41/bytes';
 
 export class Resizer {
-  inner: Cursor<Uint8Array>;
+  inner: Cursor<Bytes>;
 
   constructor(
     readonly minimum = 2 ** 10,
     readonly maximum = 2 ** 20
   ) {
-    this.inner = new Cursor(new Uint8Array(this.minimum));
+    this.inner = new Cursor(Bytes.alloc(this.minimum));
   }
 
-  writeOrThrow(chunk: Uint8Array) {
+  writeOrThrow(chunk: Bytes) {
     const length = this.inner.offset + chunk.length;
 
     if (length > this.maximum) throw new Error(`Maximum size exceeded`);
 
     if (length > this.inner.length) {
-      const resized = new Cursor(new Uint8Array(length));
+      const resized = new Cursor(Bytes.alloc(length));
       resized.writeOrThrow(this.inner.before);
       this.inner = resized;
     }
@@ -31,7 +32,7 @@ export class Resizer {
     if (length > this.maximum) throw new Error(`Maximum size exceeded`);
 
     if (length > this.inner.length) {
-      const resized = new Cursor(new Uint8Array(length));
+      const resized = new Cursor(Bytes.alloc(length));
       resized.writeOrThrow(this.inner.before);
       this.inner = resized;
     }

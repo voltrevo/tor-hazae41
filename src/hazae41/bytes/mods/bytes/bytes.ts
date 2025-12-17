@@ -4,12 +4,14 @@ import { Buffers } from '../../libs/buffers/index';
 import { Utf8 } from '../../libs/utf8/utf8';
 
 export type Bytes<N extends number = number> =
-  globalThis.Uint8Array<ArrayBuffer> & { length: N };
+  globalThis.Uint8Array<ArrayBuffer> & {
+    length: N;
+  };
 
 export namespace Bytes {
   /**
    * Alloc 0-lengthed bytes using standard constructor
-   * @returns `Uint8Array<[]>`
+   * @returns `Bytes<[]>`
    */
   export function empty(): Bytes<0> {
     return alloc(0);
@@ -197,7 +199,7 @@ export namespace Bytes {
    * @param list
    * @returns
    */
-  export function concat(list: Bytes[]) {
+  export function concat(...list: Bytes[]) {
     if ('process' in globalThis) return fromView(Buffer.concat(list));
 
     const length = list.reduce((p, c) => p + c.length, 0);

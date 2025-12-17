@@ -1,4 +1,5 @@
-import { Empty, Writable } from '../../../../binary/mod';
+import { Empty } from '../../../../binary/mod';
+import { Bytes } from '../../../../bytes';
 import { Cursor } from '../../../../cursor/mod';
 import { SmuxSegment, SmuxUpdate } from '../segment/index';
 import { SecretSmuxDuplex } from '../stream/index';
@@ -44,15 +45,15 @@ export class SecretSmuxReader {
     else return await this.#onReadDirect(chunk.bytes);
   }
 
-  async #onReadBuffered(chunk: Uint8Array) {
+  async #onReadBuffered(chunk: Bytes) {
     this.parent.buffer.writeOrThrow(chunk);
-    const full = new Uint8Array(this.parent.buffer.before);
+    const full = Bytes.from(this.parent.buffer.before);
 
     this.parent.buffer.offset = 0;
     return await this.#onReadDirect(full);
   }
 
-  async #onReadDirect(chunk: Uint8Array) {
+  async #onReadDirect(chunk: Bytes) {
     const cursor = new Cursor(chunk);
 
     while (cursor.remaining) {
