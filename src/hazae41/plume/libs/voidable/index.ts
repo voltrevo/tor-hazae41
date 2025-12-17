@@ -1,1 +1,1 @@
-export type Voidable<T> = T | void
+export type Voidable<T> = T | void;

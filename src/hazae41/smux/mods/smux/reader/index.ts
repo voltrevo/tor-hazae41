@@ -1,151 +1,148 @@
-import { Empty, Writable } from "../../../../binary/mod.ts";
-import { Cursor } from "../../../../cursor/mod.ts";
-import { SmuxSegment, SmuxUpdate } from "../segment/index";
-import { SecretSmuxDuplex } from "../stream/index";
+import { Empty, Writable } from '../../../../binary/mod.ts';
+import { Cursor } from '../../../../cursor/mod.ts';
+import { SmuxSegment, SmuxUpdate } from '../segment/index';
+import { SecretSmuxDuplex } from '../stream/index';
 
 export type SmuxReadError =
   | UnknownSmuxCommandError
   | InvalidSmuxVersionError
-  | InvalidSmuxStreamError
+  | InvalidSmuxStreamError;
 
 export class UnknownSmuxCommandError extends Error {
-  readonly #class = UnknownSmuxCommandError
-  readonly name = this.#class.name
+  readonly #class = UnknownSmuxCommandError;
+  readonly name = this.#class.name;
 
   constructor() {
-    super(`Unknown SMUX command`)
+    super(`Unknown SMUX command`);
   }
-
 }
 
 export class InvalidSmuxVersionError extends Error {
-  readonly #class = InvalidSmuxVersionError
-  readonly name = this.#class.name
+  readonly #class = InvalidSmuxVersionError;
+  readonly name = this.#class.name;
 
-  constructor(
-    readonly version: number
-  ) {
-    super(`Invalid SMUX version ${version}`)
+  constructor(readonly version: number) {
+    super(`Invalid SMUX version ${version}`);
   }
 }
 
 export class InvalidSmuxStreamError extends Error {
-  readonly #class = InvalidSmuxStreamError
-  readonly name = this.#class.name
+  readonly #class = InvalidSmuxStreamError;
+  readonly name = this.#class.name;
 
-  constructor(
-    readonly stream: number
-  ) {
-    super(`Invalid SMUX stream ${stream}`)
+  constructor(readonly stream: number) {
+    super(`Invalid SMUX stream ${stream}`);
   }
 }
 
-
 export class SecretSmuxReader {
-
-  constructor(
-    readonly parent: SecretSmuxDuplex
-  ) { }
+  constructor(readonly parent: SecretSmuxDuplex) {}
 
   async onWrite(chunk: any) {
     if (this.parent.buffer.offset)
-      return await this.#onReadBuffered(chunk.bytes)
-    else
-      return await this.#onReadDirect(chunk.bytes)
+      return await this.#onReadBuffered(chunk.bytes);
+    else return await this.#onReadDirect(chunk.bytes);
   }
 
   async #onReadBuffered(chunk: Uint8Array) {
-    this.parent.buffer.writeOrThrow(chunk)
-    const full = new Uint8Array(this.parent.buffer.before)
+    this.parent.buffer.writeOrThrow(chunk);
+    const full = new Uint8Array(this.parent.buffer.before);
 
-    this.parent.buffer.offset = 0
-    return await this.#onReadDirect(full)
+    this.parent.buffer.offset = 0;
+    return await this.#onReadDirect(full);
   }
 
   async #onReadDirect(chunk: Uint8Array) {
-    const cursor = new Cursor(chunk)
+    const cursor = new Cursor(chunk);
 
     while (cursor.remaining) {
-      let segment: SmuxSegment<any>
+      let segment: SmuxSegment<any>;
 
       try {
-        segment = Readable.readOrRollbackAndThrow(SmuxSegment, cursor)
+        segment = Readable.readOrRollbackAndThrow(SmuxSegment, cursor);
       } catch (e: unknown) {
-        this.parent.buffer.writeOrThrow(cursor.after)
-        break
+        this.parent.buffer.writeOrThrow(cursor.after);
+        break;
       }
 
-      await this.#onSegment(segment)
+      await this.#onSegment(segment);
     }
   }
 
   async #onSegment(segment: SmuxSegment<any>) {
     if (segment.version !== 2)
-      throw new InvalidSmuxVersionError(segment.version)
+      throw new InvalidSmuxVersionError(segment.version);
 
     // Console.log("<-", segment)
 
     if (segment.command === SmuxSegment.commands.psh)
-      return await this.#onPshSegment(segment)
+      return await this.#onPshSegment(segment);
     if (segment.command === SmuxSegment.commands.nop)
-      return await this.#onNopSegment(segment)
+      return await this.#onNopSegment(segment);
     if (segment.command === SmuxSegment.commands.upd)
-      return await this.#onUpdSegment(segment)
+      return await this.#onUpdSegment(segment);
     if (segment.command === SmuxSegment.commands.fin)
-      return await this.#onFinSegment(segment)
+      return await this.#onFinSegment(segment);
 
-    throw new UnknownSmuxCommandError()
+    throw new UnknownSmuxCommandError();
   }
 
   async #onPshSegment(segment: SmuxSegment<any>) {
     if (segment.stream !== this.parent.stream)
-      throw new InvalidSmuxStreamError(segment.stream)
+      throw new InvalidSmuxStreamError(segment.stream);
 
-    this.parent.selfRead += segment.fragment.bytes.length
-    this.parent.selfIncrement += segment.fragment.bytes.length
+    this.parent.selfRead += segment.fragment.bytes.length;
+    this.parent.selfIncrement += segment.fragment.bytes.length;
 
-    this.parent.input.enqueue(segment.fragment)
+    this.parent.input.enqueue(segment.fragment);
 
-    if (this.parent.selfIncrement >= (this.parent.selfWindow / 2)) {
-      const version = 2
-      const command = SmuxSegment.commands.upd
-      const stream = this.parent.stream
-      const fragment = new SmuxUpdate(this.parent.selfRead, this.parent.selfWindow)
+    if (this.parent.selfIncrement >= this.parent.selfWindow / 2) {
+      const version = 2;
+      const command = SmuxSegment.commands.upd;
+      const stream = this.parent.stream;
+      const fragment = new SmuxUpdate(
+        this.parent.selfRead,
+        this.parent.selfWindow
+      );
 
-      const segment = SmuxSegment.newOrThrow({ version, command, stream, fragment })
+      const segment = SmuxSegment.newOrThrow({
+        version,
+        command,
+        stream,
+        fragment,
+      });
 
-      this.parent.output.enqueue(segment)
+      this.parent.output.enqueue(segment);
 
-      this.parent.selfIncrement = 0
+      this.parent.selfIncrement = 0;
     }
   }
 
   async #onNopSegment(ping: SmuxSegment<any>) {
-    const version = 2
-    const command = SmuxSegment.commands.nop
-    const stream = ping.stream
-    const fragment = new Empty()
+    const version = 2;
+    const command = SmuxSegment.commands.nop;
+    const stream = ping.stream;
+    const fragment = new Empty();
 
-    const pong = SmuxSegment.empty({ version, command, stream, fragment })
+    const pong = SmuxSegment.empty({ version, command, stream, fragment });
 
-    this.parent.output.enqueue(pong)
+    this.parent.output.enqueue(pong);
   }
 
   async #onUpdSegment(segment: SmuxSegment<any>) {
     if (segment.stream !== this.parent.stream)
-      throw new InvalidSmuxStreamError(segment.stream)
+      throw new InvalidSmuxStreamError(segment.stream);
 
-    const update = segment.fragment.readIntoOrThrow(SmuxUpdate)
+    const update = segment.fragment.readIntoOrThrow(SmuxUpdate);
 
-    this.parent.peerConsumed = update.consumed
-    this.parent.peerWindow = update.window
+    this.parent.peerConsumed = update.consumed;
+    this.parent.peerWindow = update.window;
   }
 
   async #onFinSegment(segment: SmuxSegment<any>) {
     if (segment.stream !== this.parent.stream)
-      throw new InvalidSmuxStreamError(segment.stream)
+      throw new InvalidSmuxStreamError(segment.stream);
 
-    this.parent.output.close()
+    this.parent.output.close();
   }
-
 }

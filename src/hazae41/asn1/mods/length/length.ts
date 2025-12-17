@@ -1,118 +1,99 @@
-import { Cursor } from "../../../cursor/mod.ts";
+import { Cursor } from '../../../cursor/mod.ts';
 
 export class Length {
-
-  constructor(
-    readonly value: number
-  ) { }
+  constructor(readonly value: number) {}
 
   toDER() {
-    return Length.DER.from(this)
+    return Length.DER.from(this);
   }
-
 }
 
 export namespace Length {
-
-  export type DER =
-    | DER.Short
-    | DER.Long
+  export type DER = DER.Short | DER.Long;
 
   export namespace DER {
-
     export function from(length: Length): DER {
-      if (length.value < 128)
-        return new Short(length.value)
+      if (length.value < 128) return new Short(length.value);
 
-      let floor = length.value
+      let floor = length.value;
 
-      const values = new Array<number>()
+      const values = new Array<number>();
 
       do {
-        values.push(floor % 256)
-        floor = Math.floor(floor / 256)
-      } while (floor)
+        values.push(floor % 256);
+        floor = Math.floor(floor / 256);
+      } while (floor);
 
-      values.reverse()
+      values.reverse();
 
-      return new Long(length.value, values)
+      return new Long(length.value, values);
     }
 
     export function readOrThrow(cursor: Cursor) {
-      const first = cursor.readUint8OrThrow()
+      const first = cursor.readUint8OrThrow();
 
-      if (first < 128)
-        return new Short(first)
+      if (first < 128) return new Short(first);
 
-      let count = first
+      let count = first;
 
       /**
        * Disable the first BE bit
        */
-      count &= ~(1 << (8 - 0 - 1))
+      count &= ~(1 << (8 - 0 - 1));
 
-      let value = 0
+      let value = 0;
 
-      const values = new Array<number>()
+      const values = new Array<number>();
 
       for (let i = 0; i < count; i++) {
-        const byte = cursor.readUint8OrThrow()
-        value = (value * 256) + byte
-        values.push(byte)
+        const byte = cursor.readUint8OrThrow();
+        value = value * 256 + byte;
+        values.push(byte);
       }
 
-      return new Long(value, values)
+      return new Long(value, values);
     }
 
     export class Short extends Length {
-
-      constructor(
-        readonly value: number
-      ) {
-        super(value)
+      constructor(readonly value: number) {
+        super(value);
       }
 
       sizeOrThrow() {
-        return 1
+        return 1;
       }
 
       writeOrThrow(cursor: Cursor) {
-        cursor.writeUint8OrThrow(this.value)
+        cursor.writeUint8OrThrow(this.value);
       }
-
     }
 
     export class Long extends Length {
-
       constructor(
         readonly value: number,
         readonly values: Array<number>
       ) {
-        super(value)
+        super(value);
       }
 
       sizeOrThrow() {
-        return 1 + this.values.length
+        return 1 + this.values.length;
       }
 
       writeOrThrow(cursor: Cursor) {
-        let count = this.values.length
+        let count = this.values.length;
 
         /**
          * Enable the first BE bit
          */
-        count |= 1 << (8 - 0 - 1)
+        count |= 1 << (8 - 0 - 1);
 
-        cursor.writeUint8OrThrow(count)
+        cursor.writeUint8OrThrow(count);
 
-        for (const byte of this.values)
-          cursor.writeUint8OrThrow(byte)
+        for (const byte of this.values) cursor.writeUint8OrThrow(byte);
 
-        return
+        return;
       }
-
     }
-
   }
-
 }

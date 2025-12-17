@@ -1,43 +1,35 @@
 export class Deferred {
-
-  constructor(
-    readonly value: () => void
-  ) { }
+  constructor(readonly value: () => void) {}
 
   static void() {
-    return new Deferred(() => { })
+    return new Deferred(() => {});
   }
 
   [Symbol.dispose]() {
-    this.value()
+    this.value();
   }
 
   async [Symbol.asyncDispose]() {
-    this[Symbol.dispose]()
+    this[Symbol.dispose]();
   }
 
   get() {
-    return this.value
+    return this.value;
   }
-
 }
 
 export class AsyncDeferred {
-
-  constructor(
-    readonly value: () => PromiseLike<void>
-  ) { }
+  constructor(readonly value: () => PromiseLike<void>) {}
 
   static void() {
-    return new AsyncDeferred(async () => { })
+    return new AsyncDeferred(async () => {});
   }
 
   async [Symbol.asyncDispose]() {
-    await this.value()
+    await this.value();
   }
 
   get() {
-    return this.value
+    return this.value;
   }
-
 }

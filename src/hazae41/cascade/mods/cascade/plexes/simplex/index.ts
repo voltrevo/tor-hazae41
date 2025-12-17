@@ -1,183 +1,176 @@
-import { Awaitable } from "../../../../libs/promises/index.ts"
-import { SuperReadableStream } from "../../streams/readable/index"
-import { SuperWritableStream } from "../../streams/writable/index"
+import { Awaitable } from '../../../../libs/promises/index.ts';
+import { SuperReadableStream } from '../../streams/readable/index';
+import { SuperWritableStream } from '../../streams/writable/index';
 
 export interface SimplexParams<W, R = W> {
   /**
    * Called when the stream is started
-   * @param this 
+   * @param this
    */
-  start?(this: Simplex<W, R>): Awaitable<void>
+  start?(this: Simplex<W, R>): Awaitable<void>;
 
   /**
    * Called when the stream is closed
-   * @param this 
+   * @param this
    */
-  close?(this: Simplex<W, R>): Awaitable<void>
+  close?(this: Simplex<W, R>): Awaitable<void>;
 
   /**
    * Called when the stream is errored
-   * @param this 
-   * @param reason 
+   * @param this
+   * @param reason
    */
-  error?(this: Simplex<W, R>, reason?: unknown): Awaitable<void>
+  error?(this: Simplex<W, R>, reason?: unknown): Awaitable<void>;
 
   /**
    * Called when a chunk is written to the stream
-   * @param this 
-   * @param chunk 
+   * @param this
+   * @param chunk
    */
-  write?(this: Simplex<W, R>, chunk: W): Awaitable<void>
+  write?(this: Simplex<W, R>, chunk: W): Awaitable<void>;
 }
 
 export class Simplex<W, R = W> {
+  readonly #reader: SuperReadableStream<R>;
+  readonly #writer: SuperWritableStream<W>;
 
-  readonly #reader: SuperReadableStream<R>
-  readonly #writer: SuperWritableStream<W>
+  #starting = false;
+  #started = false;
 
-  #starting = false
-  #started = false
+  #closing?: { reason?: never };
+  #closed?: { reason?: never };
 
-  #closing?: { reason?: never }
-  #closed?: { reason?: never }
+  #erroring?: { reason?: unknown };
+  #errored?: { reason?: unknown };
 
-  #erroring?: { reason?: unknown }
-  #errored?: { reason?: unknown }
-
-  constructor(
-    readonly params: SimplexParams<W, R> = {}
-  ) {
+  constructor(readonly params: SimplexParams<W, R> = {}) {
     this.#writer = new SuperWritableStream<W>({
       start: () => this.#onStart(),
       write: c => this.#onWrite(c),
       close: () => this.#onClose(),
-      abort: e => this.#onError(e)
-    })
+      abort: e => this.#onError(e),
+    });
 
     this.#reader = new SuperReadableStream<R>({
-      cancel: e => this.#onError(e)
-    })
+      cancel: e => this.#onError(e),
+    });
   }
 
   [Symbol.dispose]() {
-    this.close()
+    this.close();
   }
 
   get readable() {
-    return this.#reader.substream
+    return this.#reader.substream;
   }
 
   get writable() {
-    return this.#writer.substream
+    return this.#writer.substream;
   }
 
   get starting() {
-    return this.#starting
+    return this.#starting;
   }
 
   get started() {
-    return this.#started
+    return this.#started;
   }
 
   get closing() {
-    return this.#closing
+    return this.#closing;
   }
 
   get closed() {
-    return this.#closed
+    return this.#closed;
   }
 
   get erroring() {
-    return this.#erroring
+    return this.#erroring;
   }
 
   get errored() {
-    return this.#errored
+    return this.#errored;
   }
 
   get stopped() {
-    return this.#errored || this.#closed
+    return this.#errored || this.#closed;
   }
 
   async #onStart() {
-    if (this.#starting)
-      return
-    this.#starting = true
+    if (this.#starting) return;
+    this.#starting = true;
 
     try {
-      await this.params.start?.call(this)
+      await this.params.start?.call(this);
     } catch (e: unknown) {
-      this.error(e)
-      throw e
+      this.error(e);
+      throw e;
     }
 
-    this.#started = true
+    this.#started = true;
   }
 
   async #onClose() {
-    if (this.#closing)
-      return
-    this.#closing = {}
+    if (this.#closing) return;
+    this.#closing = {};
 
     try {
-      await this.params.close?.call(this)
+      await this.params.close?.call(this);
     } catch (e: unknown) {
-      this.error(e)
-      throw e
+      this.error(e);
+      throw e;
     }
 
     try {
-      this.#reader.close()
-    } catch { }
+      this.#reader.close();
+    } catch {}
 
     try {
-      this.#writer.error()
-    } catch { }
+      this.#writer.error();
+    } catch {}
 
-    this.#closed = {}
+    this.#closed = {};
   }
 
   async #onError(reason?: unknown) {
-    if (this.#erroring)
-      return
-    this.#erroring = { reason }
+    if (this.#erroring) return;
+    this.#erroring = { reason };
 
     try {
-      await this.params.error?.call(this, reason)
+      await this.params.error?.call(this, reason);
     } finally {
       try {
-        this.#writer.error(reason)
-      } catch { }
+        this.#writer.error(reason);
+      } catch {}
 
       try {
-        this.#reader.error(reason)
-      } catch { }
+        this.#reader.error(reason);
+      } catch {}
 
-      this.#errored = { reason }
+      this.#errored = { reason };
     }
   }
 
   async #onWrite(data: W) {
     try {
-      await this.params.write?.call(this, data)
+      await this.params.write?.call(this, data);
     } catch (e: unknown) {
-      this.error(e)
-      throw e
+      this.error(e);
+      throw e;
     }
   }
 
   enqueue(chunk?: R) {
     try {
-      this.#reader.enqueue(chunk)
-    } catch { }
+      this.#reader.enqueue(chunk);
+    } catch {}
   }
 
   error(reason?: unknown) {
-    this.#onError(reason).catch(console.error)
+    this.#onError(reason).catch(console.error);
   }
 
   close() {
-    this.#onClose().catch(console.error)
+    this.#onClose().catch(console.error);
   }
-
 }

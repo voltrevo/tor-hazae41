@@ -1,1 +1,1 @@
-export * as Signals from "./signals/index";
+export * as Signals from './signals/index';

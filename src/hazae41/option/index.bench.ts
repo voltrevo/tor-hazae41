@@ -1,1 +1,1 @@
-console.log("no bench")
+console.log('no bench');

@@ -1,113 +1,101 @@
-import { DERTriplet, ObjectIdentifier } from "../../../../asn1/index.ts";
-import { invert } from "../../../libs/invert/index.ts";
-import { OIDs } from "../../oids/oids.ts";
+import { DERTriplet, ObjectIdentifier } from '../../../../asn1/index.ts';
+import { invert } from '../../../libs/invert/index.ts';
+import { OIDs } from '../../oids/oids.ts';
 
 export namespace KnownAttributeTypes {
-  export type Key = keyof typeof keys
-  export type Value = keyof typeof values
+  export type Key = keyof typeof keys;
+  export type Value = keyof typeof values;
 
   export const keys = {
-    [OIDs.keys.commonName]: "CN",
-    [OIDs.keys.localityName]: "L",
-    [OIDs.keys.stateOrProvinceName]: "ST",
-    [OIDs.keys.organizationName]: "O",
-    [OIDs.keys.organizationalUnitName]: "OU",
-    [OIDs.keys.countryName]: "C",
-    [OIDs.keys.streetAddress]: "STREET",
-    [OIDs.keys.domainComponent]: "DC",
-    [OIDs.keys.userId]: "UID"
-  } as const
+    [OIDs.keys.commonName]: 'CN',
+    [OIDs.keys.localityName]: 'L',
+    [OIDs.keys.stateOrProvinceName]: 'ST',
+    [OIDs.keys.organizationName]: 'O',
+    [OIDs.keys.organizationalUnitName]: 'OU',
+    [OIDs.keys.countryName]: 'C',
+    [OIDs.keys.streetAddress]: 'STREET',
+    [OIDs.keys.domainComponent]: 'DC',
+    [OIDs.keys.userId]: 'UID',
+  } as const;
 
   export function isKey(key: string): key is Key {
-    return Object.keys(keys).includes(key)
+    return Object.keys(keys).includes(key);
   }
 
   export function isValue(value: string): value is Value {
-    return Object.keys(values).includes(value)
+    return Object.keys(values).includes(value);
   }
 
-  export const values = invert(keys)
+  export const values = invert(keys);
 }
 
 export class KnownAttributeType {
-
-  constructor(
-    readonly inner: ObjectIdentifier.DER<KnownAttributeTypes.Key>
-  ) { }
+  constructor(readonly inner: ObjectIdentifier.DER<KnownAttributeTypes.Key>) {}
 
   isKnown(): this is KnownAttributeType {
-    return true
+    return true;
   }
 
   toDER(): DERTriplet {
-    return this.inner
+    return this.inner;
   }
 
   static fromASN1(triplet: ObjectIdentifier.DER<KnownAttributeTypes.Key>) {
-    return new KnownAttributeType(triplet)
+    return new KnownAttributeType(triplet);
   }
 
   toX501(): string {
-    return KnownAttributeTypes.keys[this.inner.value]
+    return KnownAttributeTypes.keys[this.inner.value];
   }
 
   static fromX501(name: KnownAttributeTypes.Value) {
-    const key = KnownAttributeTypes.values[name]
-    const inner = ObjectIdentifier.create(undefined, key).toDER()
+    const key = KnownAttributeTypes.values[name];
+    const inner = ObjectIdentifier.create(undefined, key).toDER();
 
-    return new KnownAttributeType(inner)
+    return new KnownAttributeType(inner);
   }
-
 }
 
 export class UnknownAttributeType {
-
-  constructor(
-    readonly inner: ObjectIdentifier.DER
-  ) { }
+  constructor(readonly inner: ObjectIdentifier.DER) {}
 
   isKnown(): false {
-    return false
+    return false;
   }
 
   toDER(): DERTriplet {
-    return this.inner
+    return this.inner;
   }
 
   static fromASN1(triplet: ObjectIdentifier.DER) {
-    return new UnknownAttributeType(triplet)
+    return new UnknownAttributeType(triplet);
   }
 
   toX501(): string {
-    return this.inner.value
+    return this.inner.value;
   }
-
 }
 
-export type AttributeType =
-  | KnownAttributeType
-  | UnknownAttributeType
+export type AttributeType = KnownAttributeType | UnknownAttributeType;
 
-function isKnownOID(triplet: ObjectIdentifier): triplet is ObjectIdentifier<KnownAttributeTypes.Key> {
-  return KnownAttributeTypes.isKey(triplet.value)
+function isKnownOID(
+  triplet: ObjectIdentifier
+): triplet is ObjectIdentifier<KnownAttributeTypes.Key> {
+  return KnownAttributeTypes.isKey(triplet.value);
 }
 
 export namespace AttributeType {
-
   export function fromASN1(triplet: ObjectIdentifier.DER) {
-    if (isKnownOID(triplet))
-      return KnownAttributeType.fromASN1(triplet)
-    else
-      return UnknownAttributeType.fromASN1(triplet)
+    if (isKnownOID(triplet)) return KnownAttributeType.fromASN1(triplet);
+    else return UnknownAttributeType.fromASN1(triplet);
   }
 
   export function fromX501OrThrow(x501: string) {
     if (KnownAttributeTypes.isValue(x501))
-      return KnownAttributeType.fromX501(x501)
+      return KnownAttributeType.fromX501(x501);
 
-    const inner = ObjectIdentifier.create(undefined, x501).toDER()
+    const inner = ObjectIdentifier.create(undefined, x501).toDER();
 
-    return new UnknownAttributeType(inner)
+    return new UnknownAttributeType(inner);
   }
-
 }

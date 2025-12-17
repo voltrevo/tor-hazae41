@@ -1,47 +1,53 @@
-import { DERCursor, DERTriplet, Integer, Sequence } from "../../../../asn1/index.ts";
-import { OIDs } from "../../oids/oids.ts";
+import {
+  DERCursor,
+  DERTriplet,
+  Integer,
+  Sequence,
+} from '../../../../asn1/index.ts';
+import { OIDs } from '../../oids/oids.ts';
 
 export interface RsaPublicKeyJSON {
-  readonly publicExponent: string,
-  readonly modulus: string
+  readonly publicExponent: string;
+  readonly modulus: string;
 }
 
 export class RsaPublicKey {
-
-  static oid = OIDs.keys.rsaEncryption
+  static oid = OIDs.keys.rsaEncryption;
 
   constructor(
     readonly publicExponent: Integer,
     readonly modulus: Integer
-  ) { }
+  ) {}
 
   toDER(): DERTriplet {
     return Sequence.DER.create(undefined, [
       this.publicExponent,
-      this.modulus
-    ] as const).toDER()
+      this.modulus,
+    ] as const).toDER();
   }
 
   toJSON(): RsaPublicKeyJSON {
-    const publicExponent = this.publicExponent.value.toString(16)
-    const modulus = this.modulus.value.toString(16)
+    const publicExponent = this.publicExponent.value.toString(16);
+    const modulus = this.modulus.value.toString(16);
 
-    return { publicExponent, modulus }
+    return { publicExponent, modulus };
   }
 
   static fromJSON(json: RsaPublicKeyJSON) {
-    const publicExponent = Integer.create(undefined, BigInt("0x" + json.publicExponent))
-    const modulus = Integer.create(undefined, BigInt("0x" + json.modulus))
+    const publicExponent = Integer.create(
+      undefined,
+      BigInt('0x' + json.publicExponent)
+    );
+    const modulus = Integer.create(undefined, BigInt('0x' + json.modulus));
 
-    return new this(publicExponent, modulus)
+    return new this(publicExponent, modulus);
   }
 
   static resolveOrThrow(parent: DERCursor) {
-    const cursor = parent.subAsOrThrow(Sequence.DER)
-    const publicExponent = cursor.readAsOrThrow(Integer.DER)
-    const modulus = cursor.readAsOrThrow(Integer.DER)
+    const cursor = parent.subAsOrThrow(Sequence.DER);
+    const publicExponent = cursor.readAsOrThrow(Integer.DER);
+    const modulus = cursor.readAsOrThrow(Integer.DER);
 
-    return new RsaPublicKey(publicExponent, modulus)
+    return new RsaPublicKey(publicExponent, modulus);
   }
-
 }

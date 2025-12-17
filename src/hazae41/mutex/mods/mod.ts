@@ -1,2 +1,1 @@
-export * from "./mutex/mod.ts";
-
+export * from './mutex/mod.ts';

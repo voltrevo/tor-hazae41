@@ -1,5 +1,5 @@
-import type { Closure } from "../../../mods/runner/closure/mod.ts";
-import { Context } from "../../../mods/runner/context/mod.ts";
+import type { Closure } from '../../../mods/runner/closure/mod.ts';
+import { Context } from '../../../mods/runner/context/mod.ts';
 
 /**
  * Run a test block
@@ -8,5 +8,5 @@ import { Context } from "../../../mods/runner/context/mod.ts";
  * @returns result of closure
  */
 export function test(name: string, closure: Closure): void {
-  return Context.test(name, closure)
+  return Context.test(name, closure);
 }

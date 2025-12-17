@@ -1,59 +1,57 @@
-import { Nullable } from "../../libs/nullable/index.ts"
-import { BorrowedError } from "../borrow/index.ts"
-import { Deferred } from "../deferred/index.ts"
-import { MovedError } from "../move/index.ts"
-import { Ref } from "../ref/index.ts"
-import { Wrap } from "../wrap/index.ts"
+import { Nullable } from '../../libs/nullable/index.ts';
+import { BorrowedError } from '../borrow/index.ts';
+import { Deferred } from '../deferred/index.ts';
+import { MovedError } from '../move/index.ts';
+import { Ref } from '../ref/index.ts';
+import { Wrap } from '../wrap/index.ts';
 
 /**
  * A movable and borrowable reference
  */
 export class Box<T> implements Disposable {
-
-  #state: "owned" | "borrowed" | "moved" = "owned"
+  #state: 'owned' | 'borrowed' | 'moved' = 'owned';
 
   /**
    * An movable and borrowable reference
-   * @param value 
+   * @param value
    */
   constructor(
     readonly value: T,
     readonly clean: Disposable
-  ) { }
+  ) {}
 
   static wrap<T extends Disposable>(value: T) {
-    return new Box(value, value)
+    return new Box(value, value);
   }
 
   static from<T>(value: Wrap<T>) {
-    return new Box(value.get(), value)
+    return new Box(value.get(), value);
   }
 
   static with<T>(value: T, clean: (value: T) => void) {
-    return new Box(value, new Deferred(() => clean(value)))
+    return new Box(value, new Deferred(() => clean(value)));
   }
 
   [Symbol.dispose]() {
-    if (this.moved)
-      return
+    if (this.moved) return;
 
-    this.clean[Symbol.dispose]()
+    this.clean[Symbol.dispose]();
   }
 
   async [Symbol.asyncDispose]() {
-    this[Symbol.dispose]()
+    this[Symbol.dispose]();
   }
 
   get owned() {
-    return this.#state === "owned"
+    return this.#state === 'owned';
   }
 
   get borrowed() {
-    return this.#state === "borrowed"
+    return this.#state === 'borrowed';
   }
 
   get moved() {
-    return this.#state === "moved"
+    return this.#state === 'moved';
   }
 
   /**
@@ -61,7 +59,7 @@ export class Box<T> implements Disposable {
    * @returns T
    */
   get() {
-    return this.value
+    return this.value;
   }
 
   /**
@@ -69,12 +67,10 @@ export class Box<T> implements Disposable {
    * @returns T or null-like if not owned
    */
   getOrNull(): Nullable<T> {
-    if (this.borrowed)
-      return
-    if (this.moved)
-      return
+    if (this.borrowed) return;
+    if (this.moved) return;
 
-    return this.value
+    return this.value;
   }
 
   /**
@@ -83,30 +79,24 @@ export class Box<T> implements Disposable {
    * @throws NotOwnedError if not owned
    */
   getOrThrow(): T {
-    if (this.borrowed)
-      throw new BorrowedError()
-    if (this.moved)
-      throw new MovedError()
+    if (this.borrowed) throw new BorrowedError();
+    if (this.moved) throw new MovedError();
 
-    return this.value
+    return this.value;
   }
 
   checkOrNull(): Nullable<this> {
-    if (this.borrowed)
-      return
-    if (this.moved)
-      return
+    if (this.borrowed) return;
+    if (this.moved) return;
 
-    return this
+    return this;
   }
 
   checkOrThrow(): this {
-    if (this.borrowed)
-      throw new BorrowedError()
-    if (this.moved)
-      throw new MovedError()
+    if (this.borrowed) throw new BorrowedError();
+    if (this.moved) throw new MovedError();
 
-    return this
+    return this;
   }
 
   /**
@@ -114,14 +104,12 @@ export class Box<T> implements Disposable {
    * @returns T or null-like if not owned
    */
   unwrapOrNull(): Nullable<T> {
-    if (this.borrowed)
-      return
-    if (this.moved)
-      return
+    if (this.borrowed) return;
+    if (this.moved) return;
 
-    this.#state = "moved"
+    this.#state = 'moved';
 
-    return this.value
+    return this.value;
   }
 
   /**
@@ -130,14 +118,12 @@ export class Box<T> implements Disposable {
    * @throws BoxMovedError if not owned
    */
   unwrapOrThrow(): T {
-    if (this.borrowed)
-      throw new BorrowedError()
-    if (this.moved)
-      throw new MovedError()
+    if (this.borrowed) throw new BorrowedError();
+    if (this.moved) throw new MovedError();
 
-    this.#state = "moved"
+    this.#state = 'moved';
 
-    return this.value
+    return this.value;
   }
 
   /**
@@ -145,14 +131,12 @@ export class Box<T> implements Disposable {
    * @returns Box<T> or null-like if moved
    */
   moveOrNull(): Nullable<Box<T>> {
-    if (this.borrowed)
-      return
-    if (this.moved)
-      return
+    if (this.borrowed) return;
+    if (this.moved) return;
 
-    this.#state = "moved"
+    this.#state = 'moved';
 
-    return new Box(this.value, this.clean)
+    return new Box(this.value, this.clean);
   }
 
   /**
@@ -161,40 +145,37 @@ export class Box<T> implements Disposable {
    * @throws BoxMovedError if already moved
    */
   moveOrThrow(): Box<T> {
-    if (this.borrowed)
-      throw new BorrowedError()
-    if (this.moved)
-      throw new MovedError()
+    if (this.borrowed) throw new BorrowedError();
+    if (this.moved) throw new MovedError();
 
-    this.#state = "moved"
+    this.#state = 'moved';
 
-    return new Box(this.value, this.clean)
+    return new Box(this.value, this.clean);
   }
 
   borrowOrNull(): Nullable<Ref<T>> {
-    if (this.borrowed)
-      return
-    if (this.moved)
-      return
+    if (this.borrowed) return;
+    if (this.moved) return;
 
-    this.#state = "borrowed"
+    this.#state = 'borrowed';
 
-    const dispose = () => { this.#state = "owned" }
+    const dispose = () => {
+      this.#state = 'owned';
+    };
 
-    return new Ref(this.value, new Deferred(dispose))
+    return new Ref(this.value, new Deferred(dispose));
   }
 
   borrowOrThrow(): Ref<T> {
-    if (this.borrowed)
-      throw new BorrowedError()
-    if (this.moved)
-      throw new MovedError()
+    if (this.borrowed) throw new BorrowedError();
+    if (this.moved) throw new MovedError();
 
-    this.#state = "borrowed"
+    this.#state = 'borrowed';
 
-    const dispose = () => { this.#state = "owned" }
+    const dispose = () => {
+      this.#state = 'owned';
+    };
 
-    return new Ref(this.value, new Deferred(dispose))
+    return new Ref(this.value, new Deferred(dispose));
   }
-
 }

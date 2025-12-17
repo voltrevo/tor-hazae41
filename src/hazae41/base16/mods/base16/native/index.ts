@@ -1,4 +1,4 @@
-import { Adapter } from "../adapter/index";
+import { Adapter } from '../adapter/index';
 
 declare global {
   interface Uint8Array {
@@ -11,22 +11,26 @@ declare global {
 }
 
 export function fromNative() {
-
   function encodeOrThrow(bytes: Uint8Array) {
-    return bytes.toHex()
+    return bytes.toHex();
   }
 
   function decodeOrThrow(text: string) {
-    return Uint8Array.fromHex(text)
+    return Uint8Array.fromHex(text);
   }
 
   function padStartAndDecodeOrThrow(text: string) {
-    return decodeOrThrow(text.length % 2 ? "0" + text : text)
+    return decodeOrThrow(text.length % 2 ? '0' + text : text);
   }
 
   function padEndAndDecodeOrThrow(text: string) {
-    return decodeOrThrow(text.length % 2 ? text + "0" : text)
+    return decodeOrThrow(text.length % 2 ? text + '0' : text);
   }
 
-  return { encodeOrThrow, decodeOrThrow, padStartAndDecodeOrThrow, padEndAndDecodeOrThrow } satisfies Adapter
+  return {
+    encodeOrThrow,
+    decodeOrThrow,
+    padStartAndDecodeOrThrow,
+    padEndAndDecodeOrThrow,
+  } satisfies Adapter;
 }

@@ -1,1 +1,1 @@
-export * from "./mods/index.bench";
+export * from './mods/index.bench';

@@ -1,4 +1,4 @@
-import type { Awaitable } from "../../libs/awaitable/mod.ts";
+import type { Awaitable } from '../../libs/awaitable/mod.ts';
 
 /**
  * Check if a closure throws
@@ -7,10 +7,10 @@ import type { Awaitable } from "../../libs/awaitable/mod.ts";
  */
 export function throws(closure: () => unknown): boolean {
   try {
-    closure()
-    return false
+    closure();
+    return false;
   } catch (_: unknown) {
-    return true
+    return true;
   }
 }
 
@@ -19,11 +19,13 @@ export function throws(closure: () => unknown): boolean {
  * @param closure async closure to check
  * @returns a promise that returns true if the closure rejected
  */
-export async function rejects(closure: () => Awaitable<unknown>): Promise<boolean> {
+export async function rejects(
+  closure: () => Awaitable<unknown>
+): Promise<boolean> {
   try {
-    await closure()
-    return false
+    await closure();
+    return false;
   } catch (_: unknown) {
-    return true
+    return true;
   }
 }

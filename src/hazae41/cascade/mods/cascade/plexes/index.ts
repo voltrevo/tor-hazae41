@@ -1,3 +1,2 @@
-export * from "./duplex/index"
-export * from "./simplex/index"
-
+export * from './duplex/index';
+export * from './simplex/index';

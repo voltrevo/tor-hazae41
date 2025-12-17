@@ -1,1 +1,1 @@
-export * from "./lengthed/index";
+export * from './lengthed/index';

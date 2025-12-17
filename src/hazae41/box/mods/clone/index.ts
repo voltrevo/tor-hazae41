@@ -1,56 +1,53 @@
-import { Deferred } from "../deferred/index.ts"
-import { Void } from "../void/index.ts"
-import { Wrap } from "../wrap/index.ts"
+import { Deferred } from '../deferred/index.ts';
+import { Void } from '../void/index.ts';
+import { Wrap } from '../wrap/index.ts';
 
 export class Clone<T> {
-
-  #count = 1
+  #count = 1;
 
   constructor(
     readonly value: T,
     readonly clean: Disposable
-  ) { }
+  ) {}
 
   static void() {
-    return new Clone<void>(undefined, new Void())
+    return new Clone<void>(undefined, new Void());
   }
 
   static wrap<T extends Disposable>(value: T) {
-    return new Clone(value, value)
+    return new Clone(value, value);
   }
 
   static from<T>(value: Wrap<T>) {
-    return new Clone(value.get(), value)
+    return new Clone(value.get(), value);
   }
 
   static with<T>(value: T, clean: (value: T) => void) {
-    return new Clone(value, new Deferred(() => clean(value)))
+    return new Clone(value, new Deferred(() => clean(value)));
   }
 
   [Symbol.dispose]() {
-    this.#count--
+    this.#count--;
 
-    if (this.#count > 0)
-      return
+    if (this.#count > 0) return;
 
-    this.clean[Symbol.dispose]()
+    this.clean[Symbol.dispose]();
   }
 
   async [Symbol.asyncDispose]() {
-    this[Symbol.dispose]()
+    this[Symbol.dispose]();
   }
 
   get count() {
-    return this.#count
+    return this.#count;
   }
 
   get() {
-    return this.value
+    return this.value;
   }
 
   clone() {
-    this.#count++
-    return this
+    this.#count++;
+    return this;
   }
-
 }

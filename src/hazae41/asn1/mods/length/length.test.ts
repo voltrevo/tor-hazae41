@@ -1,40 +1,40 @@
-import { Base16 } from "../../../base16/index.ts";
-import { Writable } from "../../../binary/mod.ts";
-import { Cursor } from "../../../cursor/mod.ts";
-import { assert, test } from "../../../phobos/mod.ts";
-import { Length } from "./length.ts";
-import { relative, resolve } from "node:path";
+import { Base16 } from '../../../base16/index.ts';
+import { Writable } from '../../../binary/mod.ts';
+import { Cursor } from '../../../cursor/mod.ts';
+import { assert, test } from '../../../phobos/mod.ts';
+import { Length } from './length.ts';
+import { relative, resolve } from 'node:path';
 
-const directory = resolve("./dist/test/")
-const { pathname } = new URL(import.meta.url)
-console.log(relative(directory, pathname.replace(".mjs", ".ts")))
+const directory = resolve('./dist/test/');
+const { pathname } = new URL(import.meta.url);
+console.log(relative(directory, pathname.replace('.mjs', '.ts')));
 
 function hexToCursor(hex: string) {
-  const hex2 = hex.replaceAll(" ", "")
-  const buffer = Base16.padStartAndDecodeOrThrow(hex2)
-  return new Cursor(buffer)
+  const hex2 = hex.replaceAll(' ', '');
+  const buffer = Base16.padStartAndDecodeOrThrow(hex2);
+  return new Cursor(buffer);
 }
 
 function hexToLength(hex: string) {
-  const cursor = hexToCursor(hex)
-  const length = Length.DER.readOrThrow(cursor)
-  return length.value
+  const cursor = hexToCursor(hex);
+  const length = Length.DER.readOrThrow(cursor);
+  return length.value;
 }
 
-test("Read", async () => {
-  assert(hexToLength("82 01 7F") === 383)
-  assert(hexToLength("82 04 92") === 1170)
-})
+test('Read', async () => {
+  assert(hexToLength('82 01 7F') === 383);
+  assert(hexToLength('82 04 92') === 1170);
+});
 
 function checkReadWrite(hex: string) {
-  const input = hexToCursor(hex)
-  const length = Length.DER.readOrThrow(input)
+  const input = hexToCursor(hex);
+  const length = Length.DER.readOrThrow(input);
 
-  const output = Writable.writeToBytesOrThrow(length)
-  return Buffer.from(input.bytes).equals(Buffer.from(output))
+  const output = Writable.writeToBytesOrThrow(length);
+  return Buffer.from(input.bytes).equals(Buffer.from(output));
 }
 
-test("Read then write", async () => {
-  assert(checkReadWrite("82 01 7F"))
-  assert(checkReadWrite("82 04 92"))
-})
+test('Read then write', async () => {
+  assert(checkReadWrite('82 01 7F'));
+  assert(checkReadWrite('82 04 92'));
+});

@@ -2,35 +2,31 @@
  * An interior mutable reference
  */
 export class Cell<T> {
-
   /**
    * A mutable reference
-   * @param value 
+   * @param value
    */
-  constructor(
-    public value: T
-  ) { }
+  constructor(public value: T) {}
 
   [Symbol.dispose](this: Cell<Disposable>) {
-    this.value[Symbol.dispose]()
+    this.value[Symbol.dispose]();
   }
 
   async [Symbol.asyncDispose](this: Cell<AsyncDisposable>) {
-    await this.value[Symbol.asyncDispose]()
+    await this.value[Symbol.asyncDispose]();
   }
 
   get() {
-    return this.value
+    return this.value;
   }
 
   set(value: T) {
-    this.value = value
+    this.value = value;
   }
 
   getAndSet(value: T) {
-    const old = this.value
-    this.value = value
-    return old
+    const old = this.value;
+    this.value = value;
+    return old;
   }
-
 }

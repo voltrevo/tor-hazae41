@@ -1,2 +1,1 @@
-export * from "./base16/index";
-
+export * from './base16/index';

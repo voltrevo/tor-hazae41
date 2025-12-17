@@ -1,7 +1,5 @@
 export class Void {
+  [Symbol.dispose]() {}
 
-  [Symbol.dispose]() { }
-
-  async [Symbol.asyncDispose]() { }
-
+  async [Symbol.asyncDispose]() {}
 }
