@@ -1,4 +1,4 @@
-import '@hazae41/symbol-dispose-polyfill';
+import '../../symbol-dispose-polyfill';
 
 import { Future } from '../../future/index';
 import { Some } from '../../option/index';
