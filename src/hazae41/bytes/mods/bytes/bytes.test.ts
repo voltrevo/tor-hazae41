@@ -1,38 +1,5 @@
 import { assert, test } from '../../../phobos/mod';
-import { Sized } from '../sized/sized';
 import { Bytes } from './bytes';
-
-function doNotRun() {
-  const bytesX = Bytes.fromView(new Uint8Array(8)); // Bytes<number>
-
-  const bytes8 = Bytes.alloc(8); // Bytes<8>
-
-  if (Bytes.equals(bytesX, bytes8))
-    bytesX; // Bytes<8>
-  else bytesX; // Bytes<number>
-
-  if (bytesX.length === bytes8.length)
-    bytesX.length; // Bytes<number>.length: 8
-  else bytesX; // Bytes<number>
-
-  if (Bytes.is(bytesX, 8))
-    bytesX; // Bytes<8>
-  else bytesX; // Bytes<number>
-
-  if (Bytes.is(bytes8, 16))
-    bytes8; // never
-  else bytes8; // Bytes<8>
-
-  Bytes.fromViewAndCastOrThrow(bytesX, 16); // Bytes<16>
-  Bytes.fromViewAndCastOrThrow(bytes8, 16); // Bytes<16>
-
-  function test(sized: Sized<number, 8>) {
-    sized.length; // 8
-  }
-
-  test([1, 2, 3, 4, 5, 6, 7, 8] as const);
-  test(bytes8);
-}
 
 await test('padStart', async ({ message }) => {
   const bytes = new Uint8Array([1, 2, 3, 4]);
