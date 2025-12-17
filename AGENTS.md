@@ -8,6 +8,9 @@
 - read README.md
   - keep this up to date
   - focus on public api and underlying concepts
+- follow the user's instructions closely
+  - if you can't follow an instruction, but you have a reasonable variation, proceed but let the user know at the end
+  - if there isn't a reasonable variation, stop and let the user decide what to do
 - use invariant(cond) to check expected conditions hold
   - do not insert trivial invariants, like when the exact condition has immediately been checked previously
   - only use invariant(cond) when you expect cond will _always_ be true because it is logically guaranteed by the design
