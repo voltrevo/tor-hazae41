@@ -1,6 +1,6 @@
-import { Bitset } from '@hazae41/bitset';
 import { Cursor } from '../../../../hazae41/cursor/mod';
 import { Unknown, Writable } from '../../../../hazae41/binary/mod';
+import { Bitset } from '../../../../hazae41/bitset';
 
 export type TurboFrameError =
   | UnexpectedContinuationError

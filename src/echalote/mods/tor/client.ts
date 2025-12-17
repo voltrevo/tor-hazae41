@@ -1,5 +1,4 @@
 import { WebCryptoAes128Ctr } from '../../../TorClient/WebCryptoAes128Ctr';
-import { Bitset } from '@hazae41/bitset';
 import { Ciphers, TlsClientDuplex } from '../../../cadenas';
 import { HalfDuplex } from '@hazae41/cascade';
 import { Future } from '@hazae41/future';
@@ -61,6 +60,7 @@ import { Bytes } from '../../../hazae41/bytes';
 import { Cursor } from '../../../hazae41/cursor/mod';
 import { Readable, Unknown, Writable } from '../../../hazae41/binary/mod';
 import { X509 } from '../../../hazae41/x509';
+import { Bitset } from '../../../hazae41/bitset';
 
 export interface Guard {
   readonly identity: Bytes<20>;

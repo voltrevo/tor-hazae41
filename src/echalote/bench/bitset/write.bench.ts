@@ -1,6 +1,6 @@
-import { Bitset } from '@hazae41/bitset';
 import { benchSync } from '@hazae41/deimos';
 import { relative, resolve } from 'path';
+import { Bitset } from '../../../hazae41/bitset';
 
 const samples = 100_000;
 
