@@ -1,6 +1,3 @@
-export * from './pem/pem.test';
-export * from './types/index.test';
-
 import { assert, test } from '../../phobos/mod';
 import { readFile } from 'fs/promises';
 import { Bytes } from '../libs/bytes/index';

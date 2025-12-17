@@ -1,8 +1,3 @@
-export * from './length/length.test';
-export * from './triplets/index.test';
-export * from './type/type.test';
-export * from './variable_length_quantity/variable_length_quantity.test';
-
 import { Base64 } from '../../base64/index';
 import { Readable, Writable } from '../../binary/mod';
 import { assert, test } from '../../phobos/mod';

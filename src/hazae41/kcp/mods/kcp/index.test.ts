@@ -4,8 +4,6 @@ import { test } from '../../../phobos/mod';
 import { relative, resolve } from 'path';
 import { KcpDuplex } from './stream/index';
 
-export * from './segment/index.test';
-
 const directory = resolve('./dist/test/');
 const { pathname } = new URL(import.meta.url);
 console.log(relative(directory, pathname.replace('.mjs', '.ts')));
