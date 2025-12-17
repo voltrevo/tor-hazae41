@@ -1,4 +1,4 @@
-import { Base16 } from '@hazae41/base16';
+import { Base16 } from '../../../hazae41/base16';
 import { Bytes } from '../../../hazae41/bytes';
 
 export namespace BigBytes {

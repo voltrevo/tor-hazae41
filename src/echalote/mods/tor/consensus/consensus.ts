@@ -1,6 +1,4 @@
 import { ASN1 } from '@hazae41/asn1';
-import { Base16 } from '@hazae41/base16';
-import { Base64 } from '@hazae41/base64';
 import { fetch } from '../../../../fleche';
 import { OIDs, X509 } from '@hazae41/x509';
 import { Mutable } from '../../../libs/typescript/typescript';
@@ -16,6 +14,8 @@ import {
 } from './diff.js';
 import { Log } from '../../../../Log';
 import { Bytes } from '../../../../hazae41/bytes';
+import { Base16 } from '../../../../hazae41/base16';
+import { Base64 } from '../../../../hazae41/base64';
 
 export interface Consensus {
   readonly type: string;
@@ -698,9 +698,7 @@ export namespace Consensus {
       const signed = Bytes.fromUtf8(consensus.preimage);
       const hashed = Bytes.from(await crypto.subtle.digest('SHA-256', signed));
 
-      using signingKey = Base64.get()
-        .getOrThrow()
-        .decodePaddedOrThrow(certificate.signingKey);
+      const signingKey = Base64.decodePaddedOrThrow(certificate.signingKey);
 
       const algorithmAsn1 = ASN1.ObjectIdentifier.create(
         undefined,
@@ -713,7 +711,7 @@ export namespace Consensus {
       const subjectPublicKey = ASN1.BitString.create(
         undefined,
         0,
-        signingKey.bytes
+        signingKey
       ).toDER();
       const subjectPublicKeyInfo = new X509.SubjectPublicKeyInfo(
         algorithmId,
@@ -804,12 +802,10 @@ export namespace Consensus {
     }
 
     export async function verifyOrThrow(cert: Certificate) {
-      using identityKey = Base64.get()
-        .getOrThrow()
-        .decodePaddedOrThrow(cert.identityKey);
+      const identityKey = Base64.decodePaddedOrThrow(cert.identityKey);
 
       const identity = Bytes.from(
-        await crypto.subtle.digest('SHA-1', identityKey.bytes)
+        await crypto.subtle.digest('SHA-1', identityKey)
       );
       const fingerprint = Base16.encodeOrThrow(identity);
 
@@ -832,7 +828,7 @@ export namespace Consensus {
       const subjectPublicKey = ASN1.BitString.create(
         undefined,
         0,
-        identityKey.bytes
+        identityKey
       ).toDER();
       const subjectPublicKeyInfo = new X509.SubjectPublicKeyInfo(
         algorithmId,
@@ -841,13 +837,11 @@ export namespace Consensus {
 
       const publicKey = X509.writeToBytesOrThrow(subjectPublicKeyInfo);
 
-      using signature = Base64.get()
-        .getOrThrow()
-        .decodePaddedOrThrow(cert.signature);
+      const signature = Base64.decodePaddedOrThrow(cert.signature);
 
       const hashedM = new RsaBigInt.Memory(hashed);
       const publicKeyM = new RsaBigInt.Memory(publicKey);
-      const signatureM = new RsaBigInt.Memory(signature.bytes);
+      const signatureM = new RsaBigInt.Memory(signature);
 
       const publicKeyX = RsaBigInt.RsaPublicKey.from_public_key_der(publicKeyM);
       const verified = publicKeyX.verify_pkcs1v15_unprefixed(
@@ -993,7 +987,7 @@ export namespace Consensus {
       const buffer = await response.arrayBuffer();
       const digest = Bytes.from(await crypto.subtle.digest('SHA-256', buffer));
 
-      const digest64 = Base64.get().getOrThrow().encodeUnpaddedOrThrow(digest);
+      const digest64 = Base64.encodeUnpaddedOrThrow(digest);
 
       assert(digest64 === microdescHash, `Digest mismatch`);
 
@@ -1068,9 +1062,7 @@ export namespace Consensus {
           const digest = Bytes.from(
             await crypto.subtle.digest('SHA-256', rawBytes)
           );
-          const calculatedHash = Base64.get()
-            .getOrThrow()
-            .encodeUnpaddedOrThrow(digest);
+          const calculatedHash = Base64.encodeUnpaddedOrThrow(digest);
 
           // Store in map using calculated hash
           hashToBodyMap.set(calculatedHash, { body, rawText });

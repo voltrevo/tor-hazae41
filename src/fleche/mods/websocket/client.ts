@@ -1,4 +1,3 @@
-import { Base64 } from '@hazae41/base64';
 import { bitwise_pack_right, bitwise_unpack } from '../../../utils/bitwise';
 import { HalfDuplex } from '@hazae41/cascade';
 import { Future } from '@hazae41/future';
@@ -20,6 +19,7 @@ import { IClock } from '../../../clock';
 import { Bytes } from '../../../hazae41/bytes';
 import { Cursor } from '../../../hazae41/cursor/mod';
 import { Readable, Writable } from '../../../hazae41/binary/mod';
+import { Base64 } from '../../../hazae41/base64';
 
 const ACCEPT_SUFFIX = Bytes.fromUtf8('258EAFA5-E914-47DA-95CA-C5AB0DC85B11');
 
@@ -41,9 +41,7 @@ export class WebSocketClientDuplex extends EventTarget implements WebSocket {
   readonly #current = new WebSocketMessageState();
 
   readonly #keyBytes = Bytes.random(16);
-  readonly #keyBase64 = Base64.get()
-    .getOrThrow()
-    .encodePaddedOrThrow(this.#keyBytes);
+  readonly #keyBase64 = Base64.encodePaddedOrThrow(this.#keyBytes);
 
   #readyState: number = WebSocket.CONNECTING;
 
@@ -316,7 +314,7 @@ export class WebSocketClientDuplex extends EventTarget implements WebSocket {
     );
     const hash = Bytes.from(await crypto.subtle.digest('SHA-1', prehash));
 
-    const hashBase64 = Base64.get().getOrThrow().encodePaddedOrThrow(hash);
+    const hashBase64 = Base64.encodePaddedOrThrow(hash);
 
     if (headers.get('Sec-WebSocket-Accept') !== hashBase64)
       throw new InvalidHttpHeaderValue('Sec-WebSocket-Accept');

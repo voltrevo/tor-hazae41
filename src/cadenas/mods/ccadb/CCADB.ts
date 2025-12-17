@@ -1,5 +1,3 @@
-import { Base64 } from '@hazae41/base64';
-import { Base16 } from '@hazae41/base16';
 import { X509 } from '@hazae41/x509';
 import { App } from '../../../TorClient/App.js';
 import { certHashes } from './certHashes.js';
@@ -9,6 +7,8 @@ import type { IClock } from '../../../clock/IClock.js';
 import { Log } from '../../../Log/index.js';
 import { Bytes } from '../../../hazae41/bytes/index.js';
 import { Writable } from '../../../hazae41/binary/mod.js';
+import { Base16 } from '../../../hazae41/base16/index.js';
+import { Base64 } from '../../../hazae41/base64/index.js';
 
 export interface Trusted {
   readonly hashBase16: string;
@@ -92,9 +92,7 @@ export class CCADB {
     for (const base64 of base64Certs) {
       try {
         // Decode base64 to DER bytes
-        const derBytes = Base64.get()
-          .getOrThrow()
-          .decodePaddedOrThrow(base64).bytes;
+        const derBytes = Base64.decodePaddedOrThrow(base64);
 
         // Parse X.509 certificate
         const x509 = X509.readAndResolveFromBytesOrThrow(

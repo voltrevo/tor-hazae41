@@ -1,5 +1,4 @@
 import { IA5String, Integer, ObjectIdentifier, Sequence } from '@hazae41/asn1';
-import { Base16 } from '@hazae41/base16';
 import { Certificate, OtherName, SubjectAltName, X509 } from '@hazae41/x509';
 import { BigBytes } from '../libs/bigint/bigint.js';
 import { BigMath } from '../libs/bigmath/index.js';
@@ -54,6 +53,7 @@ import { CCADB } from './ccadb/CCADB.js';
 import { Bytes } from '../../hazae41/bytes/index.js';
 import { Cursor } from '../../hazae41/cursor/mod.js';
 import { Readable, Unknown, Writable } from '../../hazae41/binary/mod.js';
+import { Base16 } from '../../hazae41/base16/index.js';
 
 export type TlsClientState =
   | TlsClientNoneState

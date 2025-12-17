@@ -1,5 +1,4 @@
 import { WebCryptoAes128Ctr } from '../../../TorClient/WebCryptoAes128Ctr';
-import { Base64 } from '@hazae41/base64';
 import { Bitset } from '@hazae41/bitset';
 import { Future } from '@hazae41/future';
 import { Option } from '@hazae41/option';
@@ -42,6 +41,7 @@ import { invariant } from '../../../utils/debug';
 import { getErrorDetails } from '../../../utils/getErrorDetails';
 import { Bytes } from '../../../hazae41/bytes';
 import { Unknown } from '../../../hazae41/binary/mod';
+import { Base64 } from '../../../hazae41/base64';
 
 export const IPv6 = {
   always: 3,
@@ -394,23 +394,15 @@ export class SecretCircuit {
   ) {
     if (this.closed != null) throw this.closed.reason;
 
-    using relayid_rsa_x = Base64.get()
-      .getOrThrow()
-      .decodeUnpaddedOrThrow(microdesc.identity);
-    const relayid_rsa = relayid_rsa_x.bytes.slice();
+    const relayid_rsa = Base64.decodeUnpaddedOrThrow(microdesc.identity);
     Bytes.assertLen(relayid_rsa, HASH_LEN);
 
-    using ntor_key_x = Base64.get()
-      .getOrThrow()
-      .decodeUnpaddedOrThrow(microdesc.ntorOnionKey);
-
-    const ntor_key: Bytes = ntor_key_x.bytes.slice();
+    const ntor_key = Base64.decodeUnpaddedOrThrow(microdesc.ntorOnionKey);
     Bytes.assertLen(ntor_key, 32);
 
     const relayid_ed = Option.wrap(microdesc.idEd25519)
       .mapSync(x => {
-        using memory = Base64.get().getOrThrow().decodeUnpaddedOrThrow(x);
-        return memory.bytes.slice();
+        return Base64.decodeUnpaddedOrThrow(x);
       })
       .getOrNull();
 
