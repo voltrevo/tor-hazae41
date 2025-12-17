@@ -14,7 +14,7 @@ export class ClientDiffieHellmanPublic {
   }
 
   static from(bytes: Bytes) {
-    const dh_Yc = Vector(Number16).from(Unknown.new(bytes));
+    const dh_Yc = Vector(Number16).from(new Unknown(bytes));
 
     return new ClientDiffieHellmanPublic(dh_Yc);
   }
