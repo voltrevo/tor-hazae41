@@ -151,6 +151,10 @@ export class Cursor<N extends number = number> {
     return subarray as Bytes<N>;
   }
 
+  getAndCopyOrThrow<N extends number>(length: N): Bytes<N> {
+    return Bytes.from(this.getOrThrow(length));
+  }
+
   /**
    * Read a subarray of the bytes
    * @param length
@@ -158,6 +162,12 @@ export class Cursor<N extends number = number> {
    */
   readOrThrow<N extends number>(length: N): Bytes<N> {
     const subarray = this.getOrThrow(length);
+    this.offset += length;
+    return subarray;
+  }
+
+  readAndCopyOrThrow<N extends number>(length: N): Bytes<N> {
+    const subarray = this.getAndCopyOrThrow(length);
     this.offset += length;
     return subarray;
   }
