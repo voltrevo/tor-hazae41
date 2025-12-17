@@ -1,6 +1,6 @@
 // deno-lint-ignore-file
-import { Option } from './option/mod.ts';
-import { Some } from './some/mod.ts';
+import { Option } from './option/mod';
+import { Some } from './some/mod';
 
 async function doNoRun(option: Option<number>) {
   const mapped = option

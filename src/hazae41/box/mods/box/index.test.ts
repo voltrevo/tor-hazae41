@@ -1,7 +1,7 @@
 import '@hazae41/symbol-dispose-polyfill';
 
-import { assert, test } from '../../../phobos/mod.ts';
-import { Borrow, Borrowable } from '../borrow/index.ts';
+import { assert, test } from '../../../phobos/mod';
+import { Borrow, Borrowable } from '../borrow/index';
 import { Box } from './index';
 
 class Resource implements Disposable {

@@ -1,4 +1,4 @@
-import { assert, test } from '../../../../phobos/mod.ts';
+import { assert, test } from '../../../../phobos/mod';
 import { relative, resolve } from 'path';
 import { Validity } from './validity';
 

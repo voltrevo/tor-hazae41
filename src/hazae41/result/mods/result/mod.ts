@@ -2,7 +2,7 @@
  * @module
  */
 
-export * from './catched/mod.ts';
-export * from './err/mod.ts';
-export * from './ok/mod.ts';
-export * from './result/mod.ts';
+export * from './catched/mod';
+export * from './err/mod';
+export * from './ok/mod';
+export * from './result/mod';

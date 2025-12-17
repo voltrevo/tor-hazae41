@@ -1,5 +1,5 @@
-import { DERCursor, DERTriplet, Set } from '../../../../asn1/index.ts';
-import { AttributeTypeAndValue } from '../attribute_type_and_value/attribute_type_and_value.ts';
+import { DERCursor, DERTriplet, Set } from '../../../../asn1/index';
+import { AttributeTypeAndValue } from '../attribute_type_and_value/attribute_type_and_value';
 
 const UNESCAPED_PLUS_REGEX = /[^\\]\+/g;
 

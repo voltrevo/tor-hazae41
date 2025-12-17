@@ -1,6 +1,6 @@
-import { Nullable } from '../../libs/nullable/index.ts';
-import { Deferred } from '../deferred/index.ts';
-import { Wrap } from '../wrap/index.ts';
+import { Nullable } from '../../libs/nullable/index';
+import { Deferred } from '../deferred/index';
+import { Wrap } from '../wrap/index';
 
 export class MovedError extends Error {
   readonly #class = MovedError;

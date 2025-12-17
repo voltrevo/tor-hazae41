@@ -1,6 +1,6 @@
 import '@hazae41/symbol-dispose-polyfill';
 
-import { test } from '../../../phobos/mod.ts';
+import { test } from '../../../phobos/mod';
 import { AsyncDisposer, Disposer } from './dispose';
 
 await test('sync', async ({ message, test }) => {

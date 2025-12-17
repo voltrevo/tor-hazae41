@@ -4,7 +4,7 @@ import {
   GeneralizedTime,
   Sequence,
   UTCTime,
-} from '../../../../asn1/index.ts';
+} from '../../../../asn1/index';
 
 export type Time = UTCTime.DER | GeneralizedTime.DER;
 

@@ -1,5 +1,5 @@
-import { Cursor } from '../../../cursor/mod.ts';
-import { Unimplemented } from '../errors/errors.ts';
+import { Cursor } from '../../../cursor/mod';
+import { Unimplemented } from '../errors/errors';
 
 export class Type {
   static clazzes = {

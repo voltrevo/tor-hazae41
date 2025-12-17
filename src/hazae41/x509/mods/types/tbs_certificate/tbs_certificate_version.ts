@@ -4,8 +4,8 @@ import {
   DERTriplet,
   Integer,
   Type,
-} from '../../../../asn1/index.ts';
-import { Nullable } from '../../../libs/nullable/index.ts';
+} from '../../../../asn1/index';
+import { Nullable } from '../../../libs/nullable/index';
 
 export class TBSCertificateVersion {
   readonly #class = TBSCertificateVersion;

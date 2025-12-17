@@ -1,6 +1,6 @@
-import type { Awaitable } from '../../../libs/awaitable/mod.ts';
-import { Err } from '../../../mods/result/mod.ts';
-import type { Option } from '../option/mod.ts';
+import type { Awaitable } from '../../../libs/awaitable/mod';
+import { Err } from '../../../mods/result/mod';
+import type { Option } from '../option/mod';
 
 export class NoneError extends Error {
   constructor() {

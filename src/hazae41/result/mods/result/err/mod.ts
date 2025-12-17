@@ -1,5 +1,5 @@
-import type { Awaitable } from '../../../libs/awaitable/mod.ts';
-import { None, Some } from '../../../mods/option/mod.ts';
+import type { Awaitable } from '../../../libs/awaitable/mod';
+import { None, Some } from '../../../mods/option/mod';
 
 export namespace Err {
   /**

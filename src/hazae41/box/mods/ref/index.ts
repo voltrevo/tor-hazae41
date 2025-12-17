@@ -1,5 +1,5 @@
-import { Deferred } from '../deferred/index.ts';
-import { AsyncWrap, Wrap } from '../wrap/index.ts';
+import { Deferred } from '../deferred/index';
+import { AsyncWrap, Wrap } from '../wrap/index';
 
 /**
  * A simple reference

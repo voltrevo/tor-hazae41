@@ -1,4 +1,4 @@
-import type { Awaitable } from '../../libs/awaitable/mod.ts';
+import type { Awaitable } from '../../libs/awaitable/mod';
 
 /**
  * Check if a closure throws

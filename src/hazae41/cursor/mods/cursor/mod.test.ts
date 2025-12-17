@@ -1,8 +1,8 @@
 // deno-lint-ignore-file require-await
-import { assert, test, throws } from '../../../phobos/mod.ts';
+import { assert, test, throws } from '../../../phobos/mod';
 import { Buffer } from 'node:buffer';
 import { relative, resolve } from 'node:path';
-import { Cursor } from './mod.ts';
+import { Cursor } from './mod';
 
 const directory = resolve('./dist/test/');
 const { pathname } = new URL(import.meta.url);

@@ -1,7 +1,7 @@
-import type { Lengthed } from '../../../libs/lengthed/mod.ts';
-import { Readable } from '../../../mods/binary/readable/mod.ts';
-import { Writable } from '../../../mods/binary/writable/mod.ts';
-import type { Cursor } from '../../../../cursor/mod.ts';
+import type { Lengthed } from '../../../libs/lengthed/mod';
+import { Readable } from '../../../mods/binary/readable/mod';
+import { Writable } from '../../../mods/binary/writable/mod';
+import type { Cursor } from '../../../../cursor/mod';
 
 export class Unknown<
   T extends ArrayBufferLike = ArrayBufferLike,

@@ -1,5 +1,5 @@
-import { Cursor } from '../../../../cursor/mod.ts';
-import { Opaque } from '../../triplets/opaque/opaque.ts';
+import { Cursor } from '../../../../cursor/mod';
+import { Opaque } from '../../triplets/opaque/opaque';
 
 export namespace DER {
   export function readOrThrow(cursor: Cursor) {

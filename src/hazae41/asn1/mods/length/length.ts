@@ -1,4 +1,4 @@
-import { Cursor } from '../../../cursor/mod.ts';
+import { Cursor } from '../../../cursor/mod';
 
 export class Length {
   constructor(readonly value: number) {}

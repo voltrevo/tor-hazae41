@@ -1,8 +1,8 @@
-import { Cursor } from '../../../../cursor/mod.ts';
-import { InvalidValueError } from '../../errors/errors.ts';
-import { Length } from '../../length/length.ts';
-import { DERTriplet } from '../../resolvers/der/triplet.ts';
-import { Type } from '../../type/type.ts';
+import { Cursor } from '../../../../cursor/mod';
+import { InvalidValueError } from '../../errors/errors';
+import { Length } from '../../length/length';
+import { DERTriplet } from '../../resolvers/der/triplet';
+import { Type } from '../../type/type';
 
 export class IA5String {
   static readonly type = Type.create(

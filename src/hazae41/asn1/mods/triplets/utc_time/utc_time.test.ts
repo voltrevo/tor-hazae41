@@ -1,8 +1,8 @@
-import { Base16 } from '../../../../base16/index.ts';
-import { Writable } from '../../../../binary/mod.ts';
-import { Cursor } from '../../../../cursor/mod.ts';
-import { assert, test } from '../../../../phobos/mod.ts';
-import { UTCTime } from './utc_time.ts';
+import { Base16 } from '../../../../base16/index';
+import { Writable } from '../../../../binary/mod';
+import { Cursor } from '../../../../cursor/mod';
+import { assert, test } from '../../../../phobos/mod';
+import { UTCTime } from './utc_time';
 import { relative, resolve } from 'node:path';
 
 const directory = resolve('./dist/test/');

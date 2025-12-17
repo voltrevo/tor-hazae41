@@ -1,5 +1,5 @@
-import { assert, rejects, test, throws } from '../../../phobos/mod.ts';
-import { Mutex, Semaphore } from './mod.ts';
+import { assert, rejects, test, throws } from '../../../phobos/mod';
+import { Mutex, Semaphore } from './mod';
 
 test('run', async () => {
   const promises = new Array<Promise<void>>();

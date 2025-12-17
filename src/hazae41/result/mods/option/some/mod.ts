@@ -1,7 +1,7 @@
-import type { Awaitable } from '../../../libs/awaitable/mod.ts';
-import { Ok } from '../../../mods/result/mod.ts';
-import { None } from '../none/mod.ts';
-import type { Option } from '../option/mod.ts';
+import type { Awaitable } from '../../../libs/awaitable/mod';
+import { Ok } from '../../../mods/result/mod';
+import { None } from '../none/mod';
+import type { Option } from '../option/mod';
 
 export interface SomeInit<T> {
   readonly inner: T;

@@ -1,6 +1,6 @@
 // deno-lint-ignore-file
-import { None, NoneInit } from '../none/mod.ts';
-import { Some, SomeInit } from '../some/mod.ts';
+import { None, NoneInit } from '../none/mod';
+import { Some, SomeInit } from '../some/mod';
 
 export type Nullable<T> = T | undefined | null;
 

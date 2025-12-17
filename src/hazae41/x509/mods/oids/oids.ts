@@ -1,4 +1,4 @@
-import { invert } from '../../libs/invert/index.ts';
+import { invert } from '../../libs/invert/index';
 
 export namespace OIDs {
   export type Key = keyof typeof keys;

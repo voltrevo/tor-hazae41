@@ -1,6 +1,6 @@
 import Node from 'node:test';
-import type { Closure } from '../closure/mod.ts';
-import { TestError } from '../error/mod.ts';
+import type { Closure } from '../closure/mod';
+import { TestError } from '../error/mod';
 
 export interface Context {
   readonly name: string;

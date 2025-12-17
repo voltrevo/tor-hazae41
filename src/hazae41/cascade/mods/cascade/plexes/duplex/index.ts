@@ -1,4 +1,4 @@
-import { Awaitable } from '../../../../libs/promises/index.ts';
+import { Awaitable } from '../../../../libs/promises/index';
 import { Simplex, SimplexParams } from '../simplex/index';
 
 export interface FullDuplexParams<IW, IR = IW, OW = IR, OR = IW> {

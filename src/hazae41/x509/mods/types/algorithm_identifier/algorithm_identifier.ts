@@ -3,8 +3,8 @@ import {
   DERTriplet,
   ObjectIdentifier,
   Sequence,
-} from '../../../../asn1/index.ts';
-import { Nullable } from '../../../libs/nullable/index.ts';
+} from '../../../../asn1/index';
+import { Nullable } from '../../../libs/nullable/index';
 
 export class AlgorithmIdentifier {
   constructor(

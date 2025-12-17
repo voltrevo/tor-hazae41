@@ -4,11 +4,11 @@ import {
   DERCursor,
   DERTriplet,
   Sequence,
-} from '../../../../asn1/index.ts';
-import { Readable } from '../../../../binary/mod.ts';
-import { Unimplemented } from '../../errors.ts';
-import { RsaPublicKey } from '../../keys/rsa/public.ts';
-import { AlgorithmIdentifier } from '../algorithm_identifier/algorithm_identifier.ts';
+} from '../../../../asn1/index';
+import { Readable } from '../../../../binary/mod';
+import { Unimplemented } from '../../errors';
+import { RsaPublicKey } from '../../keys/rsa/public';
+import { AlgorithmIdentifier } from '../algorithm_identifier/algorithm_identifier';
 
 export type SubjectPublicKey = RsaPublicKey;
 

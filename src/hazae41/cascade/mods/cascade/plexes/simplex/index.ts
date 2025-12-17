@@ -1,4 +1,4 @@
-import { Awaitable } from '../../../../libs/promises/index.ts';
+import { Awaitable } from '../../../../libs/promises/index';
 import { SuperReadableStream } from '../../streams/readable/index';
 import { SuperWritableStream } from '../../streams/writable/index';
 

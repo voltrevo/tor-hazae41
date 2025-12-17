@@ -1,5 +1,5 @@
-import { DERCursor, DERTriplet } from '../../../../asn1/index.ts';
-import { RDNSequence } from '../rdn_sequence/rdn_sequence.ts';
+import { DERCursor, DERTriplet } from '../../../../asn1/index';
+import { RDNSequence } from '../rdn_sequence/rdn_sequence';
 
 export class Name {
   constructor(readonly inner: RDNSequence) {}

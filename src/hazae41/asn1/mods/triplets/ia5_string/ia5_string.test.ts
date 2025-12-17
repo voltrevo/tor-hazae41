@@ -1,7 +1,7 @@
-import { Base16 } from '../../../../base16/index.ts';
-import { Writable } from '../../../../binary/mod.ts';
-import { Cursor } from '../../../../cursor/mod.ts';
-import { assert, test } from '../../../../phobos/mod.ts';
+import { Base16 } from '../../../../base16/index';
+import { Writable } from '../../../../binary/mod';
+import { Cursor } from '../../../../cursor/mod';
+import { assert, test } from '../../../../phobos/mod';
 import { relative, resolve } from 'node:path';
 import { IA5String } from './ia5_string';
 

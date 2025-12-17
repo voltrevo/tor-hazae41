@@ -1,4 +1,4 @@
-import { Millis } from '../../../libs/millis/millis.ts';
+import { Millis } from '../../../libs/millis/millis';
 
 export class Result {
   constructor(

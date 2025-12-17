@@ -1,8 +1,8 @@
 import '@hazae41/symbol-dispose-polyfill';
 
-import { Future } from '../../future/index.ts';
-import { Some } from '../../option/index.ts';
-import { assert, test } from '../../phobos/mod.ts';
+import { Future } from '../../future/index';
+import { Some } from '../../option/index';
+import { assert, test } from '../../phobos/mod';
 import { relative, resolve } from 'path';
 import { SuperEventTarget } from './target';
 import { waitWithCloseAndErrorOrThrow } from './waiters';

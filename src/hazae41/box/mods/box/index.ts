@@ -1,9 +1,9 @@
-import { Nullable } from '../../libs/nullable/index.ts';
-import { BorrowedError } from '../borrow/index.ts';
-import { Deferred } from '../deferred/index.ts';
-import { MovedError } from '../move/index.ts';
-import { Ref } from '../ref/index.ts';
-import { Wrap } from '../wrap/index.ts';
+import { Nullable } from '../../libs/nullable/index';
+import { BorrowedError } from '../borrow/index';
+import { Deferred } from '../deferred/index';
+import { MovedError } from '../move/index';
+import { Ref } from '../ref/index';
+import { Wrap } from '../wrap/index';
 
 /**
  * A movable and borrowable reference

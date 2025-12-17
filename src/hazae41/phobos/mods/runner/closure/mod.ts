@@ -1,4 +1,4 @@
-import type { Awaitable } from '../../../libs/awaitable/mod.ts';
-import type { Context } from '../mod.ts';
+import type { Awaitable } from '../../../libs/awaitable/mod';
+import type { Context } from '../mod';
 
 export type Closure = (context: Context) => Awaitable<void>;

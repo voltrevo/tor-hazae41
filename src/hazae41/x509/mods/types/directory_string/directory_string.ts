@@ -3,8 +3,8 @@ import {
   PrintableString,
   TeletexString,
   UTF8String,
-} from '../../../../asn1/index.ts';
-import { Unimplemented } from '../../errors.ts';
+} from '../../../../asn1/index';
+import { Unimplemented } from '../../errors';
 
 export namespace DirectoryString {
   export type Inner =

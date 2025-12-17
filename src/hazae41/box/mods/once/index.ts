@@ -1,6 +1,6 @@
-import { Nullable } from '../../libs/nullable/index.ts';
-import { Deferred } from '../deferred/index.ts';
-import { AsyncWrap, Wrap } from '../wrap/index.ts';
+import { Nullable } from '../../libs/nullable/index';
+import { Deferred } from '../deferred/index';
+import { AsyncWrap, Wrap } from '../wrap/index';
 
 export class DisposedError extends Error {
   readonly #class = DisposedError;

@@ -1,5 +1,5 @@
-import { assert, test } from '../../../phobos/mod.ts';
-import { PEM } from './pem.ts';
+import { assert, test } from '../../../phobos/mod';
+import { PEM } from './pem';
 import { readFile } from 'node:fs/promises';
 import { relative, resolve } from 'node:path';
 

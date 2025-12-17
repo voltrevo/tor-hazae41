@@ -1,4 +1,4 @@
-import { assert, test } from '../../../phobos/mod.ts';
+import { assert, test } from '../../../phobos/mod';
 import { Clone } from './index';
 
 class Resource implements Disposable {

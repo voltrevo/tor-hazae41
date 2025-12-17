@@ -1,8 +1,8 @@
-import { DER, DERTriplet, DERable } from '../../../../asn1/index.ts';
-import { Base16 } from '../../../../base16/index.ts';
-import { Readable, Writable } from '../../../../binary/mod.ts';
-import { InvalidFormatError } from '../../errors.ts';
-import { DirectoryString } from '../directory_string/directory_string.ts';
+import { DER, DERTriplet, DERable } from '../../../../asn1/index';
+import { Base16 } from '../../../../base16/index';
+import { Readable, Writable } from '../../../../binary/mod';
+import { InvalidFormatError } from '../../errors';
+import { DirectoryString } from '../directory_string/directory_string';
 
 function escape(match: string) {
   const bytes = new TextEncoder().encode(match);

@@ -1,5 +1,5 @@
-import { Ok } from '../../../result/mod.ts';
-import { Awaitable } from '../../libs/awaitable/index.ts';
+import { Ok } from '../../../result/mod';
+import { Awaitable } from '../../libs/awaitable/index';
 import { None } from './none';
 import { Option } from './option';
 

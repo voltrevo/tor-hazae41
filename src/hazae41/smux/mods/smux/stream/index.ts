@@ -1,7 +1,7 @@
-import { Readable } from '../../../../binary/mod.ts';
-import { FullDuplex } from '../../../../cascade/index.ts';
-import { Cursor } from '../../../../cursor/mod.ts';
-import { Future } from '../../../../future/index.ts';
+import { Readable } from '../../../../binary/mod';
+import { FullDuplex } from '../../../../cascade/index';
+import { Cursor } from '../../../../cursor/mod';
+import { Future } from '../../../../future/index';
 import { SecretSmuxReader } from '../reader/index';
 import { SecretSmuxWriter } from '../writer/index';
 

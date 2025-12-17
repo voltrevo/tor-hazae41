@@ -1,5 +1,5 @@
-import { Empty, Writable } from '../../../../binary/mod.ts';
-import { Cursor } from '../../../../cursor/mod.ts';
+import { Empty, Writable } from '../../../../binary/mod';
+import { Cursor } from '../../../../cursor/mod';
 
 export interface KcpSegmentParams<Fragment extends Writable> {
   readonly conversation: number;

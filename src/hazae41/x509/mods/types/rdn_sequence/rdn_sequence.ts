@@ -1,5 +1,5 @@
-import { DERCursor, DERTriplet, Sequence } from '../../../../asn1/index.ts';
-import { RelativeDistinguishedName } from '../relative_distinguished_name/relative_distinguished_name.ts';
+import { DERCursor, DERTriplet, Sequence } from '../../../../asn1/index';
+import { RelativeDistinguishedName } from '../relative_distinguished_name/relative_distinguished_name';
 
 const UNESCAPED_COMMA_REGEX = /[^\\],/g;
 

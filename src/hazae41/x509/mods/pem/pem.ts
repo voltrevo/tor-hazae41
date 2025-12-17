@@ -1,4 +1,4 @@
-import { Base64 } from '../../../base64/index.ts';
+import { Base64 } from '../../../base64/index';
 
 export namespace PEM {
   export const header = `-----BEGIN CERTIFICATE-----`;

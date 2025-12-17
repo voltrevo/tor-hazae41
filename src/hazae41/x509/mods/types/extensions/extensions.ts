@@ -8,10 +8,10 @@ import {
   OctetString,
   Sequence,
   Type,
-} from '../../../../asn1/index.ts';
-import { Readable, Writable } from '../../../../binary/mod.ts';
-import { Nullable } from '../../../libs/nullable/index.ts';
-import { OIDs } from '../../oids/oids.ts';
+} from '../../../../asn1/index';
+import { Readable, Writable } from '../../../../binary/mod';
+import { Nullable } from '../../../libs/nullable/index';
+import { OIDs } from '../../oids/oids';
 import { SubjectAltName } from './subject_alt_name/subject_alt_name';
 
 export class Extensions {

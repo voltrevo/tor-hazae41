@@ -1,6 +1,6 @@
-import { Opaque, Readable, Writable } from '../../../../binary/mod.ts';
-import { assert, test } from '../../../../phobos/mod.ts';
-import { Bytes } from '../../../libs/bytes/index.ts';
+import { Opaque, Readable, Writable } from '../../../../binary/mod';
+import { assert, test } from '../../../../phobos/mod';
+import { Bytes } from '../../../libs/bytes/index';
 import { relative, resolve } from 'path';
 import { SmuxSegment } from './index';
 

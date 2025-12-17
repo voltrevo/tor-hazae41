@@ -1,4 +1,4 @@
-import { Future } from '../../future/index.ts';
+import { Future } from '../../future/index';
 import { SuperEventTarget } from './target';
 
 export type CloseEvents = {

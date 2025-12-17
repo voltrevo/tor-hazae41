@@ -1,1 +1,1 @@
-export * from './cursor/mod.ts';
+export * from './cursor/mod';

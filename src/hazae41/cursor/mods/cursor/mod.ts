@@ -1,5 +1,5 @@
-import { Data } from '../../libs/dataviews/mod.ts';
-import type { Uint8Array } from '../../libs/lengthed/mod.ts';
+import { Data } from '../../libs/dataviews/mod';
+import type { Uint8Array } from '../../libs/lengthed/mod';
 
 export type CursorError = CursorReadError | CursorWriteError;
 

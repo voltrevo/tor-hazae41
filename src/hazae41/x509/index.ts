@@ -1,2 +1,2 @@
-export * from './mods/index.ts';
+export * from './mods/index';
 export * as X509 from './mods/index';

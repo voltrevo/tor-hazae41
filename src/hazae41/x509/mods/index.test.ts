@@ -1,11 +1,11 @@
 export * from './pem/pem.test';
 export * from './types/index.test';
 
-import { assert, test } from '../../phobos/mod.ts';
+import { assert, test } from '../../phobos/mod';
 import { readFile } from 'fs/promises';
-import { Bytes } from '../libs/bytes/index.ts';
-import { PEM } from './pem/pem.ts';
-import { Certificate } from './types/certificate/certificate.ts';
+import { Bytes } from '../libs/bytes/index';
+import { PEM } from './pem/pem';
+import { Certificate } from './types/certificate/certificate';
 import { relative, resolve } from 'path';
 import {
   readAndResolveFromBytesOrThrow,

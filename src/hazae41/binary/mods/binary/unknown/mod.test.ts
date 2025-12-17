@@ -1,9 +1,9 @@
 // deno-lint-ignore-file no-unused-vars require-await
-import { assert, test } from '../../../../phobos/mod.ts';
+import { assert, test } from '../../../../phobos/mod';
 import { Buffer } from 'node:buffer';
 import { relative, resolve } from 'node:path';
-import { Readable } from '../readable/mod.ts';
-import { Unknown } from './mod.ts';
+import { Readable } from '../readable/mod';
+import { Unknown } from './mod';
 
 function equals(a: Uint8Array, b: Uint8Array) {
   return Buffer.from(a).equals(Buffer.from(b));

@@ -1,5 +1,5 @@
-import { Context } from '../context/mod.ts';
-import { Result } from '../result/mod.ts';
+import { Context } from '../context/mod';
+import { Result } from '../result/mod';
 
 export class BenchError extends Error {}
 

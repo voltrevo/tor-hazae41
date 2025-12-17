@@ -1,4 +1,4 @@
-import { Signals } from '../../signals/index.ts';
+import { Signals } from '../../signals/index';
 import { CloseEvents, rejectOnClose } from './closed';
 import { ErrorEvents, rejectOnError } from './errored';
 import { SuperEventMap, SuperEventTarget, SuperEventWaiter } from './target';

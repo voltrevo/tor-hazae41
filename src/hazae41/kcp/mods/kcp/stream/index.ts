@@ -1,8 +1,8 @@
-import { Empty, Writable } from '../../../../binary/mod.ts';
-import { FullDuplex } from '../../../../cascade/index.ts';
-import { Cursor } from '../../../../cursor/mod.ts';
-import { Future } from '../../../../future/index.ts';
-import { Awaitable } from '../../../libs/promises/index.ts';
+import { Empty, Writable } from '../../../../binary/mod';
+import { FullDuplex } from '../../../../cascade/index';
+import { Cursor } from '../../../../cursor/mod';
+import { Future } from '../../../../future/index';
+import { Awaitable } from '../../../libs/promises/index';
 import { SecretKcpReader } from '../reader/index';
 import { SecretKcpWriter } from '../writer/index';
 

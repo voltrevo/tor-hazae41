@@ -1,5 +1,5 @@
-import { DERTriplet } from './der/triplet.ts';
-import { Type } from '../type/type.ts';
+import { DERTriplet } from './der/triplet';
+import { Type } from '../type/type';
 
 export interface Triplet {
   readonly type: Type;

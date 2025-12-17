@@ -1,5 +1,5 @@
-import { Empty, Writable } from '../../../../binary/mod.ts';
-import { Cursor } from '../../../../cursor/mod.ts';
+import { Empty, Writable } from '../../../../binary/mod';
+import { Cursor } from '../../../../cursor/mod';
 import { SmuxSegment, SmuxUpdate } from '../segment/index';
 import { SecretSmuxDuplex } from '../stream/index';
 

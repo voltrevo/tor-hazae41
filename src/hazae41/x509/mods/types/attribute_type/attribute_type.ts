@@ -1,6 +1,6 @@
-import { DERTriplet, ObjectIdentifier } from '../../../../asn1/index.ts';
-import { invert } from '../../../libs/invert/index.ts';
-import { OIDs } from '../../oids/oids.ts';
+import { DERTriplet, ObjectIdentifier } from '../../../../asn1/index';
+import { invert } from '../../../libs/invert/index';
+import { OIDs } from '../../oids/oids';
 
 export namespace KnownAttributeTypes {
   export type Key = keyof typeof keys;

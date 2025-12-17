@@ -1,9 +1,9 @@
-import { Readable } from '../../../../binary/mod.ts';
-import { Nullable } from '../../../libs/nullable/index.ts';
-import { Class } from '../../../libs/reflection/index.ts';
-import { DERTriplet } from './triplet.ts';
-import { Opaque } from '../../triplets/opaque/opaque.ts';
-import { Type } from '../../type/type.ts';
+import { Readable } from '../../../../binary/mod';
+import { Nullable } from '../../../libs/nullable/index';
+import { Class } from '../../../libs/reflection/index';
+import { DERTriplet } from './triplet';
+import { Opaque } from '../../triplets/opaque/opaque';
+import { Type } from '../../type/type';
 
 export interface DERHolder extends DERTriplet {
   readonly triplets: DERTriplet[];

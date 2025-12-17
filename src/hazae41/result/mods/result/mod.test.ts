@@ -1,5 +1,5 @@
 // deno-lint-ignore-file
-import { Err, Ok, Result } from '../../mods/result/mod.ts';
+import { Err, Ok, Result } from '../../mods/result/mod';
 import { assert, test, throws } from 'jsr:@hazae41/phobos';
 
 function get(result: Result<string, never>) {

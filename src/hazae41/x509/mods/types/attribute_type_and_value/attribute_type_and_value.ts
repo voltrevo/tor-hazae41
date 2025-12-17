@@ -4,17 +4,17 @@ import {
   ObjectIdentifier,
   Sequence,
   UTF8String,
-} from '../../../../asn1/index.ts';
+} from '../../../../asn1/index';
 import {
   AttributeType,
   KnownAttributeType,
   UnknownAttributeType,
-} from '../attribute_type/attribute_type.ts';
+} from '../attribute_type/attribute_type';
 import {
   KnownAttributeValue,
   UnknownAttributeValue,
-} from '../attribute_value/attribute_value.ts';
-import { DirectoryString } from '../directory_string/directory_string.ts';
+} from '../attribute_value/attribute_value';
+import { DirectoryString } from '../directory_string/directory_string';
 
 export class KnownAttributeTypeAndValue {
   constructor(

@@ -1,8 +1,8 @@
-import { Base16 } from '../../../base16/index.ts';
-import { Cursor } from '../../../cursor/mod.ts';
-import { assert, test } from '../../../phobos/mod.ts';
-import { Sequence } from '../triplets/sequence/sequence.ts';
-import { Type } from './type.ts';
+import { Base16 } from '../../../base16/index';
+import { Cursor } from '../../../cursor/mod';
+import { assert, test } from '../../../phobos/mod';
+import { Sequence } from '../triplets/sequence/sequence';
+import { Type } from './type';
 import { relative, resolve } from 'node:path';
 
 const directory = resolve('./dist/test/');

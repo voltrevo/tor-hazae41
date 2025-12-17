@@ -1,5 +1,5 @@
-import { Buffers } from '../../../libs/buffers/buffers.ts';
-import { Bytes } from '../../../libs/bytes/bytes.ts';
+import { Buffers } from '../../../libs/buffers/buffers';
+import { Bytes } from '../../../libs/bytes/bytes';
 import { Adapter } from '../adapter/index';
 import { fromNative } from '../native/index';
 

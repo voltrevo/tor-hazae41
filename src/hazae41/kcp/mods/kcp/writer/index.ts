@@ -1,5 +1,5 @@
-import { Writable } from '../../../../binary/mod.ts';
-import { Future } from '../../../../future/index.ts';
+import { Writable } from '../../../../binary/mod';
+import { Future } from '../../../../future/index';
 import { KcpSegment } from '../segment/index';
 import { SecretKcpDuplex } from '../stream/index';
 

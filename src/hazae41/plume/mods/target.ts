@@ -1,8 +1,8 @@
-import { Future } from '../../future/index.ts';
-import { None, Option, Some } from '../../option/index.ts';
-import { WeakParameters } from '../libs/parameters/index.ts';
-import { Awaitable } from '../libs/promises/index.ts';
-import { Voidable } from '../libs/voidable/index.ts';
+import { Future } from '../../future/index';
+import { None, Option, Some } from '../../option/index';
+import { WeakParameters } from '../libs/parameters/index';
+import { Awaitable } from '../libs/promises/index';
+import { Voidable } from '../libs/voidable/index';
 
 export type SuperEventDescriptor = (...args: any) => any;
 

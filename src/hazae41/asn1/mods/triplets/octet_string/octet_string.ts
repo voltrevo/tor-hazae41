@@ -1,8 +1,8 @@
-import { Base16 } from '../../../../base16/index.ts';
-import { Cursor } from '../../../../cursor/mod.ts';
-import { Length } from '../../length/length.ts';
-import { DERTriplet } from '../../resolvers/der/triplet.ts';
-import { Type } from '../../type/type.ts';
+import { Base16 } from '../../../../base16/index';
+import { Cursor } from '../../../../cursor/mod';
+import { Length } from '../../length/length';
+import { DERTriplet } from '../../resolvers/der/triplet';
+import { Type } from '../../type/type';
 
 export class OctetString {
   static readonly type = Type.create(

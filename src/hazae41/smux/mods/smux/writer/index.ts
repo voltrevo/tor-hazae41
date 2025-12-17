@@ -1,4 +1,4 @@
-import { Empty, Writable } from '../../../../binary/mod.ts';
+import { Empty, Writable } from '../../../../binary/mod';
 import { SmuxSegment, SmuxUpdate } from '../segment/index';
 import { SecretSmuxDuplex } from '../stream/index';
 

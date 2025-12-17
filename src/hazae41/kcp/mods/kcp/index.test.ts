@@ -1,6 +1,6 @@
-import { Opaque, Writable } from '../../../binary/mod.ts';
-import { HalfDuplex } from '../../../cascade/index.ts';
-import { test } from '../../../phobos/mod.ts';
+import { Opaque, Writable } from '../../../binary/mod';
+import { HalfDuplex } from '../../../cascade/index';
+import { test } from '../../../phobos/mod';
 import { relative, resolve } from 'path';
 import { KcpDuplex } from './stream/index';
 

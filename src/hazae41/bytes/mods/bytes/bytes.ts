@@ -1,7 +1,7 @@
-import { ArrayLike } from '../../../arrays/index.ts';
-import { Ascii } from '../../libs/ascii/ascii.ts';
-import { Buffers } from '../../libs/buffers/index.ts';
-import { Utf8 } from '../../libs/utf8/utf8.ts';
+import { ArrayLike } from '../../../arrays/index';
+import { Ascii } from '../../libs/ascii/ascii';
+import { Buffers } from '../../libs/buffers/index';
+import { Utf8 } from '../../libs/utf8/utf8';
 
 export type Uint8Array<N extends number = number> = number extends N
   ? globalThis.Uint8Array

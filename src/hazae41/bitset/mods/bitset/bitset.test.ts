@@ -1,4 +1,4 @@
-import { assert, test, throws } from '../../../phobos/mod.ts';
+import { assert, test, throws } from '../../../phobos/mod';
 import { relative, resolve } from 'node:path';
 import { Bitset } from './bitset';
 

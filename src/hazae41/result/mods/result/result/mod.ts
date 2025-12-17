@@ -1,8 +1,8 @@
-import type { Awaitable } from '../../../libs/awaitable/mod.ts';
-import type { Nullable } from '../../../libs/nullable/mod.ts';
-import { Catched } from '../catched/mod.ts';
-import { Err } from '../err/mod.ts';
-import { Ok } from '../ok/mod.ts';
+import type { Awaitable } from '../../../libs/awaitable/mod';
+import type { Nullable } from '../../../libs/nullable/mod';
+import { Catched } from '../catched/mod';
+import { Err } from '../err/mod';
+import { Ok } from '../ok/mod';
 
 export interface Unwrappable<T = unknown> {
   getOrThrow(): T;

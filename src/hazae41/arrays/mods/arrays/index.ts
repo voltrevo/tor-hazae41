@@ -1,4 +1,4 @@
-import { Nullable } from '../../libs/nullable/index.ts';
+import { Nullable } from '../../libs/nullable/index';
 
 /**
  * Get the last index

@@ -1,4 +1,4 @@
-import { test } from '../../../phobos/mod.ts';
+import { test } from '../../../phobos/mod';
 import { Cell } from './index';
 
 function alloc(value: number) {

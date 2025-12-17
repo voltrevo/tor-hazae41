@@ -1,5 +1,5 @@
-import { Err } from '../../../result/mod.ts';
-import { Awaitable } from '../../libs/awaitable/index.ts';
+import { Err } from '../../../result/mod';
+import { Awaitable } from '../../libs/awaitable/index';
 import { Option } from './option';
 
 export class NoneError extends Error {

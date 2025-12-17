@@ -1,10 +1,10 @@
-import { Cursor } from '../../../../cursor/mod.ts';
-import { Numbers } from '../../../libs/numbers/index.ts';
-import { InvalidValueError } from '../../errors/errors.ts';
-import { Length } from '../../length/length.ts';
-import { DERTriplet } from '../../resolvers/der/triplet.ts';
-import { Type } from '../../type/type.ts';
-import { VLQ } from '../../variable_length_quantity/variable_length_quantity.ts';
+import { Cursor } from '../../../../cursor/mod';
+import { Numbers } from '../../../libs/numbers/index';
+import { InvalidValueError } from '../../errors/errors';
+import { Length } from '../../length/length';
+import { DERTriplet } from '../../resolvers/der/triplet';
+import { Type } from '../../type/type';
+import { VLQ } from '../../variable_length_quantity/variable_length_quantity';
 
 export class NotAnOID extends Error {
   readonly #class = NotAnOID;

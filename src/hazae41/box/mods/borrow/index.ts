@@ -1,7 +1,7 @@
-import { Nullable } from '../../libs/nullable/index.ts';
-import { Deferred } from '../deferred/index.ts';
-import { Ref } from '../ref/index.ts';
-import { Wrap } from '../wrap/index.ts';
+import { Nullable } from '../../libs/nullable/index';
+import { Deferred } from '../deferred/index';
+import { Ref } from '../ref/index';
+import { Wrap } from '../wrap/index';
 
 export class BorrowedError extends Error {
   readonly #class = BorrowedError;

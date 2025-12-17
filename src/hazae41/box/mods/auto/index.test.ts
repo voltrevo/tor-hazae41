@@ -1,7 +1,7 @@
 import '@hazae41/symbol-dispose-polyfill';
 
-import { Future } from '../../../future/index.ts';
-import { test } from '../../../phobos/mod.ts';
+import { Future } from '../../../future/index';
+import { test } from '../../../phobos/mod';
 import { Auto } from './index';
 
 class Resource implements Disposable {

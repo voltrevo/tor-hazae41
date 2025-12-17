@@ -3,8 +3,8 @@ import {
   DERTriplet,
   Integer,
   Sequence,
-} from '../../../../asn1/index.ts';
-import { OIDs } from '../../oids/oids.ts';
+} from '../../../../asn1/index';
+import { OIDs } from '../../oids/oids';
 
 export interface RsaPublicKeyJSON {
   readonly publicExponent: string;

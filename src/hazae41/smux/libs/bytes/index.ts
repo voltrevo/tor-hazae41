@@ -1,4 +1,4 @@
-import { Buffers } from '../buffers/index.ts';
+import { Buffers } from '../buffers/index';
 
 export namespace Bytes {
   export function equals(a: Uint8Array, b: Uint8Array): boolean {

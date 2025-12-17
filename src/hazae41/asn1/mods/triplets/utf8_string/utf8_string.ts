@@ -1,7 +1,7 @@
-import { Cursor } from '../../../../cursor/mod.ts';
-import { Length } from '../../length/length.ts';
-import { DERTriplet } from '../../resolvers/der/triplet.ts';
-import { Type } from '../../type/type.ts';
+import { Cursor } from '../../../../cursor/mod';
+import { Length } from '../../length/length';
+import { DERTriplet } from '../../resolvers/der/triplet';
+import { Type } from '../../type/type';
 
 export class UTF8String {
   static readonly type = Type.create(
