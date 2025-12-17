@@ -21,13 +21,13 @@ export namespace Context {
     }
 
     static test(name: string, closure: Closure) {
-      Promise.try(async () => {
+      (async () => {
         try {
           await closure(new Standalone(name));
         } catch (cause: unknown) {
           throw new TestError(name, { cause });
         }
-      }).catch(console.error);
+      })().catch(console.error);
     }
 
     async test(name: string, closure: Closure): Promise<void> {
@@ -49,7 +49,7 @@ export namespace Context {
     }
 
     static test(name: string, closure: Closure) {
-      Deno.test(name, c => Promise.try(() => closure(new DenoContext(c))));
+      Deno.test(name, c => (async () => closure(new DenoContext(c)))());
     }
 
     get name(): string {
@@ -64,7 +64,7 @@ export namespace Context {
      */
     async test(name: string, closure: Closure): Promise<void> {
       return void (await this.inner.step(name, c =>
-        Promise.try(() => closure(new DenoContext(c)))
+        (async () => closure(new DenoContext(c)))()
       ));
     }
   }
@@ -75,7 +75,7 @@ export namespace Context {
     }
 
     static test(name: string, closure: Closure) {
-      Node.test(name, t => Promise.try(() => closure(new NodeContext(t))));
+      Node.test(name, t => (async () => closure(new NodeContext(t)))());
     }
 
     get name(): string {
@@ -84,7 +84,7 @@ export namespace Context {
 
     test(name: string, closure: Closure): Promise<void> {
       return this.inner.test(name, t =>
-        Promise.try(() => closure(new NodeContext(t)))
+        (async () => closure(new NodeContext(t)))()
       );
     }
   }

@@ -7,42 +7,42 @@ test('run', async () => {
   const mutex = new Mutex(new Array<string>());
 
   promises.push(
-    Promise.try(async () => {
-      await mutex.runOrWait(async order => {
-        order.push('first start');
-        await new Promise(ok => setTimeout(ok, 100));
-        order.push('first end');
-      });
-    })
-  );
-
-  promises.push(
-    Promise.try(async () => {
+    (async () => {
       await mutex.runOrWait(async order => {
         order.push('second start');
         await new Promise(ok => setTimeout(ok, 100));
         order.push('second end');
       });
-    })
+    })()
   );
 
   promises.push(
-    Promise.try(async () => {
+    (async () => {
+      await mutex.runOrWait(async order => {
+        order.push('second start');
+        await new Promise(ok => setTimeout(ok, 100));
+        order.push('second end');
+      });
+    })()
+  );
+
+  promises.push(
+    (async () => {
       await mutex.runOrWait(async order => {
         order.push('third start');
         await new Promise(ok => setTimeout(ok, 100));
         order.push('third end');
       });
-    })
+    })()
   );
 
   promises.push(
-    Promise.try(() => {
+    (async () => {
       assert(
         throws(() => mutex.getOrThrow()),
         `lock should err`
       );
-    })
+    })()
   );
 
   await Promise.all(promises);
@@ -71,40 +71,40 @@ test('acquire', async () => {
   const mutex = new Mutex(new Array<string>());
 
   promises.push(
-    Promise.try(async () => {
+    (async () => {
       using clone = await mutex.lockOrWait();
       clone.value.push('first start');
       await new Promise(ok => setTimeout(ok, 100));
       clone.value.push('first end');
-    })
+    })()
   );
 
   promises.push(
-    Promise.try(async () => {
+    (async () => {
       await mutex.runOrWait(async order => {
         order.push('second start');
         await new Promise(ok => setTimeout(ok, 100));
         order.push('second end');
       });
-    })
+    })()
   );
 
   promises.push(
-    Promise.try(async () => {
+    (async () => {
       using clone = await mutex.lockOrWait();
       clone.value.push('third start');
       await new Promise(ok => setTimeout(ok, 100));
       clone.value.push('third end');
-    })
+    })()
   );
 
   promises.push(
-    Promise.try(async () => {
+    (async () => {
       assert(
         await rejects(() => mutex.runOrThrow(async () => {})),
         `tryLock should err`
       );
-    })
+    })()
   );
 
   await Promise.all(promises);
