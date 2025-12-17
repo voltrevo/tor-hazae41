@@ -10,7 +10,7 @@
         --json <JSON string or @file> (sets Content-Type if not present)
     -F, --form <name=value | name=@file> (repeatable; uses FormData)
     -o, --output <file>
-    -i, --include          (prepend response headers to output)
+    -i, --include          (prepend response headers in output)
     -s, --silent           (suppress progress/info)
     -v, --verbose          (show request + response status/headers)
     -L, --location         (follow redirects; default in fetch)
@@ -25,7 +25,6 @@
 
 import { readFileSync, writeFileSync, existsSync } from 'node:fs';
 import { stdout, stderr } from 'node:process';
-import { Buffer } from 'buffer';
 
 import { TorClient } from '../TorClient/versions/standard';
 import { getErrorDetails } from '../utils/getErrorDetails';
@@ -34,10 +33,10 @@ import { Log } from '../Log';
 type Opts = {
   method?: string;
   headers: [string, string][];
-  data?: { kind: 'raw' | 'binary' | 'json'; value: string | Buffer };
+  data?: { kind: 'raw' | 'binary' | 'json'; value: string | Uint8Array };
   form: Array<{
     name: string;
-    value: string | { filePath: string; data: Buffer; filename: string };
+    value: string | { filePath: string; data: Uint8Array; filename: string };
   }>;
   output?: string;
   include: boolean;
@@ -60,25 +59,30 @@ function parseHeader(h: string): [string, string] {
   return [h.slice(0, idx).trim(), h.slice(idx + 1).trim()];
 }
 
-function readFromSourceSpec(spec: string): Buffer {
-  // @file -> read file, @- -> stdin, otherwise literal
-  if (spec.startsWith('@')) {
-    const path = spec.slice(1);
-    if (path === '-') {
-      const buf = readStdinSync();
-      return buf;
-    }
-    if (!existsSync(path)) die(`No such file: ${path}`);
-    return readFileSync(path);
+function readFromSourceSpec(spec: string): Uint8Array {
+  if (spec === '@-') {
+    return readStdinSync();
   }
-  return Buffer.from(spec, 'utf8');
+  if (spec[0] === '@') {
+    const path = spec.slice(1);
+    if (!existsSync(path)) die(`No such file: ${path}`);
+    return new Uint8Array(readFileSync(path));
+  }
+  return new TextEncoder().encode(spec);
 }
 
-function readStdinSync(): Buffer {
-  const chunks: Buffer[] = [];
+function readStdinSync(): Uint8Array {
+  const chunks: Uint8Array[] = [];
   const buf = readFileSync(0); // fd 0 (stdin) in Node allows sync read
-  chunks.push(buf);
-  return Buffer.concat(chunks);
+  chunks.push(new Uint8Array(buf));
+  const length = chunks.reduce((a, b) => a + b.length, 0);
+  const result = new Uint8Array(length);
+  let offset = 0;
+  for (const chunk of chunks) {
+    result.set(chunk, offset);
+    offset += chunk.length;
+  }
+  return result;
 }
 
 function showHelp(): never {
@@ -137,7 +141,7 @@ function parseArgs(argv: string[]): Opts {
       const v = args.shift();
       if (!v) die('Missing value for --data');
       const buf = readFromSourceSpec(v);
-      opts.data = { kind: 'raw', value: buf.toString('utf8') };
+      opts.data = { kind: 'raw', value: new TextDecoder().decode(buf) };
       if (!opts.method) opts.method = 'POST';
     } else if (a === '--data-binary') {
       const v = args.shift();
@@ -150,7 +154,7 @@ function parseArgs(argv: string[]): Opts {
       if (!v) die('Missing value for --json');
       const buf = readFromSourceSpec(v);
       // Validate JSON? Keep as-is but try to stringify if not valid object string
-      const text = buf.toString('utf8');
+      const text = new TextDecoder().decode(buf);
       // Try to parse to ensure it's valid JSON; otherwise treat as string
       try {
         JSON.parse(text);
@@ -268,7 +272,7 @@ async function main() {
     if (body !== undefined) {
       const size =
         typeof body === 'string'
-          ? Buffer.byteLength(body, 'utf8')
+          ? new TextEncoder().encode(body).length
           : body instanceof Blob
             ? body.size
             : body instanceof Uint8Array
@@ -323,7 +327,7 @@ async function main() {
 
   // Body
   const arrayBuf = await res.arrayBuffer();
-  const buf = Buffer.from(arrayBuf);
+  const buf = new Uint8Array(arrayBuf);
 
   if (opts.output) {
     writeFileSync(opts.output, buf);

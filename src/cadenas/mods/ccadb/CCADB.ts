@@ -1,4 +1,5 @@
-import { Buffer } from 'buffer';
+import { Base64 } from '@hazae41/base64';
+import { Base16 } from '@hazae41/base16';
 import { X509 } from '@hazae41/x509';
 import { Writable } from '@hazae41/binary';
 import { App } from '../../../TorClient/App.js';
@@ -90,7 +91,9 @@ export class CCADB {
     for (const base64 of base64Certs) {
       try {
         // Decode base64 to DER bytes
-        const derBytes = Buffer.from(base64, 'base64');
+        const derBytes = Base64.get()
+          .getOrThrow()
+          .decodePaddedOrThrow(base64).bytes;
 
         // Parse X.509 certificate
         const x509 = X509.readAndResolveFromBytesOrThrow(
@@ -105,7 +108,7 @@ export class CCADB {
         const hash = new Uint8Array(
           await crypto.subtle.digest('SHA-256', spki)
         );
-        const hashBase16 = Buffer.from(hash).toString('hex');
+        const hashBase16 = Base16.encodeOrThrow(hash);
 
         // Check if certificate is in whitelist
         if (!this.whitelistSet.has(hashBase16)) {
@@ -119,7 +122,7 @@ export class CCADB {
         const x501 = x509.tbsCertificate.subject.toX501OrThrow();
 
         // Convert DER to hex
-        const certBase16 = derBytes.toString('hex');
+        const certBase16 = Base16.encodeOrThrow(derBytes);
 
         // Extract notAfter date
         const validity = x509.tbsCertificate.validity;

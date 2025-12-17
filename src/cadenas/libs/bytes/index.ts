@@ -1,10 +1,16 @@
 import { Cursor } from '@hazae41/cursor';
-import { Buffers } from '../../libs/buffers/index.js';
 
 export namespace Bytes {
   export function equals(a: Uint8Array, b: Uint8Array): boolean {
     if ('indexedDB' in globalThis) return indexedDB.cmp(a, b) === 0;
-    if ('process' in globalThis) return Buffers.fromView(a).equals(b);
+    if ('process' in globalThis) {
+      // Node.js: manual byte comparison
+      if (a.length !== b.length) return false;
+      for (let i = 0; i < a.length; i++) {
+        if (a[i] !== b[i]) return false;
+      }
+      return true;
+    }
     throw new Error(`Could not compare bytes`);
   }
 

@@ -1,4 +1,3 @@
-import { Buffer } from 'buffer';
 import { test } from '@hazae41/phobos';
 import { assert } from '../utils/assert';
 import { MicrodescManager } from './MicrodescManager';
@@ -14,8 +13,7 @@ function createMockMicrodesc(
 ): Echalote.Consensus.Microdesc {
   return {
     nickname: overrides.nickname || 'test-relay',
-    identity:
-      overrides.identity || Buffer.from('test-identity').toString('base64'),
+    identity: overrides.identity || btoa('test-identity'),
     date: overrides.date || '2024-01-01',
     hour: overrides.hour || '12:00:00',
     hostname: overrides.hostname || 'test.example.com',

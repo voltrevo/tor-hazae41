@@ -1,4 +1,3 @@
-import { Buffer } from 'buffer';
 import { test } from '@hazae41/phobos';
 import { readFile } from 'fs/promises';
 import { Echalote } from '../echalote/index.js';
@@ -38,7 +37,7 @@ test('Hidden services directory lookup', async () => {
 
   console.log(
     `${relTimestamp()} | Blinded pubkey:`,
-    Buffer.from(blindedPubkey).toString('base64')
+    btoa(String.fromCharCode(...blindedPubkey))
   );
 
   console.log('✓ Hidden services directory test completed successfully');

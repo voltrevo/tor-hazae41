@@ -1,4 +1,3 @@
-import { Buffer } from 'buffer';
 import { test } from '@hazae41/phobos';
 import { assert } from '../../../utils/assert';
 import { Buffers } from './buffers.js';
@@ -7,7 +6,7 @@ test('Buffers.fromView with Uint8Array', async () => {
   const array = new Uint8Array([1, 2, 3, 4, 5]);
   const buffer = Buffers.fromView(array);
 
-  assert(Buffer.isBuffer(buffer));
+  assert(buffer instanceof Uint8Array);
   assert(buffer.length === 5);
   assert(buffer[0] === 1);
   assert(buffer[4] === 5);
@@ -17,7 +16,7 @@ test('Buffers.fromView with Uint16Array', async () => {
   const array = new Uint16Array([256, 512, 1024]);
   const buffer = Buffers.fromView(array);
 
-  assert(Buffer.isBuffer(buffer));
+  assert(buffer instanceof Uint8Array);
   assert(buffer.length === 6); // 3 * 2 bytes
 });
 
@@ -25,7 +24,7 @@ test('Buffers.fromView with Uint32Array', async () => {
   const array = new Uint32Array([100000, 200000]);
   const buffer = Buffers.fromView(array);
 
-  assert(Buffer.isBuffer(buffer));
+  assert(buffer instanceof Uint8Array);
   assert(buffer.length === 8); // 2 * 4 bytes
 });
 
@@ -33,7 +32,7 @@ test('Buffers.fromView with Float32Array', async () => {
   const array = new Float32Array([1.5, 2.5, 3.5]);
   const buffer = Buffers.fromView(array);
 
-  assert(Buffer.isBuffer(buffer));
+  assert(buffer instanceof Uint8Array);
   assert(buffer.length === 12); // 3 * 4 bytes
 });
 
@@ -41,7 +40,7 @@ test('Buffers.fromView with Int8Array', async () => {
   const array = new Int8Array([-1, 0, 1, 127, -128]);
   const buffer = Buffers.fromView(array);
 
-  assert(Buffer.isBuffer(buffer));
+  assert(buffer instanceof Uint8Array);
   assert(buffer.length === 5);
 });
 
@@ -73,7 +72,7 @@ test('Buffers.fromView with empty view', async () => {
   const array = new Uint8Array(0);
   const buffer = Buffers.fromView(array);
 
-  assert(Buffer.isBuffer(buffer));
+  assert(buffer instanceof Uint8Array);
   assert(buffer.length === 0);
 });
 
@@ -84,7 +83,7 @@ test('Buffers.fromView with DataView', async () => {
 
   const buffer = Buffers.fromView(view);
 
-  assert(Buffer.isBuffer(buffer));
+  assert(buffer instanceof Uint8Array);
   assert(buffer.length === 8);
 });
 
@@ -92,7 +91,7 @@ test('Buffers.fromView with BigInt64Array', async () => {
   const array = new BigInt64Array([123n, 456n]);
   const buffer = Buffers.fromView(array);
 
-  assert(Buffer.isBuffer(buffer));
+  assert(buffer instanceof Uint8Array);
   assert(buffer.length === 16); // 2 * 8 bytes
 });
 
