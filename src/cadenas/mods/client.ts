@@ -1,4 +1,3 @@
-import { Future } from '@hazae41/future';
 import { Awaitable } from '../libs/promises/index.js';
 import { Resizer } from '../libs/resizer/resizer.js';
 import { PlaintextRecord } from '../mods/binary/records/record.js';
@@ -10,6 +9,7 @@ import { Cursor } from '../../hazae41/cursor/mod.js';
 import { Readable, Unknown, Writable } from '../../hazae41/binary/mod.js';
 import { X509 } from '../../hazae41/x509/index.js';
 import { FullDuplex } from '../../hazae41/cascade/index.js';
+import { Future } from '../../hazae41/future/index.js';
 
 export interface TlsClientDuplexParams {
   /**

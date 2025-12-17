@@ -1,10 +1,10 @@
-import { Future } from '@hazae41/future';
 import { Awaitable } from '../../../libs/promises/index';
 import { SecretTurboReader } from './reader.js';
 import { SecretTurboWriter } from './writer.js';
 import { Bytes } from '../../../../hazae41/bytes';
 import { Unknown, Writable } from '../../../../hazae41/binary/mod';
 import { FullDuplex } from '../../../../hazae41/cascade';
+import { Future } from '../../../../hazae41/future';
 
 export interface TurboDuplexParams {
   readonly client?: Bytes;

@@ -1,5 +1,4 @@
 import { WebCryptoAes128Ctr } from '../../../TorClient/WebCryptoAes128Ctr';
-import { Future } from '@hazae41/future';
 import { Option } from '@hazae41/option';
 import {
   CloseEvents,
@@ -42,6 +41,7 @@ import { Bytes } from '../../../hazae41/bytes';
 import { Unknown } from '../../../hazae41/binary/mod';
 import { Base64 } from '../../../hazae41/base64';
 import { Bitset } from '../../../hazae41/bitset';
+import { Future } from '../../../hazae41/future';
 
 export const IPv6 = {
   always: 3,

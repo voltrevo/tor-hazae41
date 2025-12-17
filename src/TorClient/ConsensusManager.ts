@@ -3,12 +3,12 @@ import { IStorage } from '../storage';
 import { computeFullConsensusHash } from '../echalote/mods/tor/consensus/diff';
 import { getErrorDetails } from '../utils/getErrorDetails';
 import { IClock } from '../clock';
-import { Future } from '@hazae41/future';
 import { CertificateManager } from './CertificateManager';
 import { Log } from '../Log';
 import { App } from './App';
 import { CircuitManager } from './CircuitManager';
 import { Bytes } from '../hazae41/bytes';
+import { Future } from '../hazae41/future';
 
 export interface ConsensusManagerOptions {
   app: App;

@@ -4,7 +4,6 @@ import {
   SuperReadableStream,
   SuperWritableStream,
 } from '../../../hazae41/cascade';
-import { Future } from '@hazae41/future';
 import { Nullable } from '../../libs/nullable/index';
 import { Awaitable } from '../../libs/promises/index';
 import { Resizer } from '../../libs/resizer/resizer';
@@ -26,6 +25,7 @@ import {
 } from './state.js';
 import { Bytes } from '../../../hazae41/bytes';
 import { Unknown, Writable } from '../../../hazae41/binary/mod';
+import { Future } from '../../../hazae41/future';
 
 export namespace Lines {
   export const rn = Bytes.fromUtf8('\r\n');
