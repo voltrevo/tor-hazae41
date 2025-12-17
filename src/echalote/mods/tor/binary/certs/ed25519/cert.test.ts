@@ -1,4 +1,4 @@
-import { test } from '@hazae41/phobos';
+import { test } from '../../../../../../hazae41/phobos/mod';
 import { assert } from '../../../../../../utils/assert';
 import { Ed25519Cert } from './cert.js';
 import { Bytes } from '../../../../../../hazae41/bytes';

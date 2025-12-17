@@ -1,4 +1,4 @@
-import { test } from '@hazae41/phobos';
+import { test } from '../../../../hazae41/phobos/mod';
 import { readFile, readdir } from 'fs/promises';
 import { join } from 'path';
 import { computeSignedPartHash } from './diff.js';

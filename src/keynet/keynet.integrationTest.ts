@@ -1,4 +1,4 @@
-import { test } from '@hazae41/phobos';
+import { test } from '../hazae41/phobos/mod';
 import { Log, TorClient } from '../TorClient/versions/standard';
 
 test('Keynet connection through TorClient (transparent)', async () => {

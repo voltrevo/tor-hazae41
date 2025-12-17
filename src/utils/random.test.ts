@@ -1,4 +1,4 @@
-import { test } from '@hazae41/phobos';
+import { test } from '../hazae41/phobos/mod';
 import { assert } from './assert';
 import { selectRandomElement } from './random';
 

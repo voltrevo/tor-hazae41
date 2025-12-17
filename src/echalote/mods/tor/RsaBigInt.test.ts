@@ -3,7 +3,7 @@
  * Tests cryptographic signature verification against 15 real Tor network vectors
  */
 
-import { test } from '@hazae41/phobos';
+import { test } from '../../../hazae41/phobos/mod';
 import { RsaBigInt } from './RsaBigInt.js';
 import { assert } from '../../../utils/assert.js';
 import testVectors from './rsa-test-vectors.json' assert { type: 'json' };

@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { test } from '@hazae41/phobos';
+import { test } from '../hazae41/phobos/mod';
 import { assert } from './assert';
 import { isMiddleRelay, isExitRelay } from './relayFilters';
 

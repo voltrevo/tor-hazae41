@@ -1,4 +1,4 @@
-import { test } from '@hazae41/phobos';
+import { test } from '../hazae41/phobos/mod';
 import { assert } from '../utils/assert';
 import { WebCryptoAes128Ctr } from './WebCryptoAes128Ctr';
 import { Bytes } from '../hazae41/bytes';

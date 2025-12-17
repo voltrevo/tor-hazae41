@@ -1,4 +1,4 @@
-import { test } from '@hazae41/phobos';
+import { test } from '../hazae41/phobos/mod';
 import { readFile } from 'fs/promises';
 import { Echalote } from '../echalote/index.js';
 import { decodeOnionPubKey } from './decodeOnionPubkey.js';

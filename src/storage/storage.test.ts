@@ -1,4 +1,4 @@
-import { test } from '@hazae41/phobos';
+import { test } from '../hazae41/phobos/mod';
 import { assert } from '../utils/assert';
 import { rmSync } from 'fs';
 import { createAutoStorage, FsStorage, MemoryStorage } from './index.js';

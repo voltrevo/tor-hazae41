@@ -1,4 +1,3 @@
-import { test } from '@hazae41/phobos';
 import { assert } from '../../../utils/assert.js';
 import { CCADB } from './CCADB.js';
 import { MemoryStorage } from '../../../storage/index.js';
@@ -6,6 +5,7 @@ import { Log } from '../../../Log/index.js';
 import { App } from '../../../TorClient/App.js';
 import { VirtualClock } from '../../../clock/index.js';
 import { Bytes } from '../../../hazae41/bytes/index.js';
+import { test } from '../../../hazae41/phobos/mod.js';
 
 // Mock base64 certificates (raw form for storage)
 const mockBase64Certs = ['YWJjMTIz', 'ZGVmNDU2'];

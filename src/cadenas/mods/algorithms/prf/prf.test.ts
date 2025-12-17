@@ -1,8 +1,9 @@
-import { assert, test } from '@hazae41/phobos';
 import { prfOrThrow } from './prf.js';
 import { Bytes } from '../../../../hazae41/bytes/index.js';
+import { test } from '../../../../hazae41/phobos/mod.js';
+import { assert } from '../../../../utils/assert.js';
 
-test('PRF (master secret)', async ({ message: _1 }) => {
+test('PRF (master secret)', async () => {
   const premaster_secret = Bytes.random(128);
 
   const client_random = Bytes.random(32);

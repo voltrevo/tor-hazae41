@@ -1,4 +1,4 @@
-import { test } from '@hazae41/phobos';
+import { test } from '../../../hazae41/phobos/mod';
 import { assert } from '../../../utils/assert';
 import { Resizer } from './resizer.js';
 import { Bytes } from '../../../hazae41/bytes';

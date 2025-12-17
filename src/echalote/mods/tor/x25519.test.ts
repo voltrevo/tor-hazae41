@@ -6,7 +6,7 @@
  * library correctly computes shared secrets and handles key operations.
  */
 
-import { test } from '@hazae41/phobos';
+import { test } from '../../../hazae41/phobos/mod';
 import { assert } from '../../../utils/assert';
 import { X25519 } from './x25519';
 import { Bytes } from '../../../hazae41/bytes';

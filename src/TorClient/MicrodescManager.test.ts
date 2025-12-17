@@ -1,4 +1,4 @@
-import { test } from '@hazae41/phobos';
+import { test } from '../hazae41/phobos/mod';
 import { assert } from '../utils/assert';
 import { MicrodescManager } from './MicrodescManager';
 import { MemoryStorage } from '../storage';
