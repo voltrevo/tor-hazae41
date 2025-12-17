@@ -20,6 +20,7 @@ export class IA5String {
     /**
      * ASCII
      */
+    // eslint-disable-next-line no-control-regex
     return /^[\x00-\x7F]*$/.test(value);
   }
 
