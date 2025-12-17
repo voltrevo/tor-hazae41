@@ -1,4 +1,3 @@
-import { Base64 } from '@hazae41/base64';
 import { Circuit, Consensus, Echalote, TorClientDuplex } from '../echalote';
 import { Log } from '../Log';
 import { selectRandomElement } from '../utils/random';
@@ -11,6 +10,7 @@ import { assert } from '../utils/assert';
 import type { App } from './App';
 import { ConsensusManager } from './ConsensusManager';
 import { Bytes } from '../hazae41/bytes';
+import { Base64 } from '../hazae41/base64/mods';
 
 /**
  * Events emitted by CircuitBuilder.
@@ -157,9 +157,7 @@ export class CircuitBuilder extends EventEmitter<CircuitBuilderEvents> {
       // keynet servers choose an rsa key such that the first byte of their rsa
       // fingerprint (m.identity) matches the first byte of their ed25519 key
       // (pubkey).
-      m =>
-        Base64.get().getOrThrow().decodePaddedOrThrow(m.identity).bytes[0] ===
-        pubkey[0]
+      m => Base64.decodePaddedOrThrow(m.identity)[0] === pubkey[0]
     );
 
     const fullCandidates = await this.microdescManager.getMicrodescs(
@@ -171,11 +169,7 @@ export class CircuitBuilder extends EventEmitter<CircuitBuilderEvents> {
 
     for (const candidate of fullCandidates) {
       if (
-        Bytes.equals(
-          Base64.get().getOrThrow().decodePaddedOrThrow(candidate.idEd25519)
-            .bytes,
-          pubkey
-        )
+        Bytes.equals(Base64.decodePaddedOrThrow(candidate.idEd25519), pubkey)
       ) {
         keynetNode = candidate;
         break;
