@@ -1,12 +1,36 @@
 import { nodeResolve } from '@rollup/plugin-node-resolve';
 import commonjs from '@rollup/plugin-commonjs';
+import { readFileSync } from 'fs';
+import { execSync } from 'child_process';
+
+// Read package version and LICENSE
+const pkg = JSON.parse(readFileSync('package.json', 'utf-8'));
+const license = readFileSync('LICENSE', 'utf-8');
+const commitHash = execSync('git rev-parse --short=7 HEAD', {
+  encoding: 'utf-8',
+}).trim();
+
+// Check for uncommitted changes
+const status = execSync('git status --porcelain', { encoding: 'utf-8' }).trim();
+const hasChanges = status.length > 0;
+const changedSuffix = hasChanges ? '-changed' : '';
+
+// Convert LICENSE to a JavaScript comment block
+const licenseComment =
+  '/*\n' +
+  license
+    .split('\n')
+    .map(line => ' * ' + line)
+    .join('\n') +
+  '\n */';
 
 export default {
   input: 'dist/TorClient/versions/singleton.mjs',
   output: {
-    file: 'dist-singleton/tor.mjs',
+    file: `dist-singleton/tor-js-singleton-${pkg.version}-${commitHash}${changedSuffix}.mjs`,
     format: 'es',
     sourcemap: false,
+    banner: licenseComment,
   },
   // Only externalize native Node.js modules
   external: [
