@@ -1,4 +1,8 @@
-import { CloseEvents, ErrorEvents, SuperEventTarget } from '@hazae41/plume';
+import {
+  CloseEvents,
+  ErrorEvents,
+  SuperEventTarget,
+} from '../../../hazae41/plume';
 import { Console } from '../console/index';
 import { RelayCell } from './binary/cells/direct/relay/cell';
 import { RelayDataCell } from './binary/cells/relayed/relay_data/cell';

@@ -5,7 +5,7 @@ import {
   ErrorEvents,
   Plume,
   SuperEventTarget,
-} from '@hazae41/plume';
+} from '../../../hazae41/plume';
 import { Sha1Hasher } from './Sha1Hasher';
 import { X25519 } from './x25519';
 import { Console } from '../console/index';
