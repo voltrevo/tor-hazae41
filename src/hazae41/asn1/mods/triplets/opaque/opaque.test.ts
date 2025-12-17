@@ -1,7 +1,7 @@
 import { Base16 } from '../../../../base16/index';
 import { Readable, Writable } from '../../../../binary/mod';
 import { assert, test } from '../../../../phobos/mod';
-import { Integer } from './index';
+import { Integer } from '../integer/integer';
 import { DER } from '../../resolvers/der/index';
 import { relative, resolve } from 'node:path';
 import { Opaque } from './opaque';

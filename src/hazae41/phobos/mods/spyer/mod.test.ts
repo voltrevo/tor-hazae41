@@ -1,4 +1,4 @@
-import { assert, spy, test } from '@/mod';
+import { assert, spy, test } from '../mod';
 
 test('spyer', async ({ test }) => {
   await test('a simple boolean-not function', () => {

@@ -13,13 +13,13 @@ class Resource implements Disposable {
   }
 }
 
-await test('auto', async ({ test, message }) => {
-  console.log(`--- ${message} ---`);
+await test('auto', async ({ name }) => {
+  console.log(`--- ${name} ---`);
 
   const resource = new Resource();
 
   {
-    const auto = new Auto(resource);
+    const _auto = new Auto(resource);
   }
 
   await new Promise(ok => setTimeout(ok, 1_000));

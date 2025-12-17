@@ -31,9 +31,9 @@ function* getPointersOrThrow() {
   yield new Pointer(789);
 }
 
-await test('slot', async ({ test, message }) => {
+await test('slot', async ({ name }) => {
   try {
-    console.log(`--- ${message} ---`);
+    console.log(`--- ${name} ---`);
 
     using result = new Cell(new Pointer(1));
 
@@ -47,5 +47,7 @@ await test('slot', async ({ test, message }) => {
     }
 
     console.log(result.get().value);
-  } catch {}
+  } catch {
+    console.error('fixme');
+  }
 });

@@ -1,8 +1,9 @@
-import { Opaque, Writable } from '../../../binary/mod';
+import { Writable } from '../../../binary/mod';
 import { HalfDuplex } from '../../../cascade/index';
 import { test } from '../../../phobos/mod';
 import { relative, resolve } from 'path';
 import { KcpDuplex } from './stream/index';
+import { Opaque } from '../../../asn1/mods/triplets/opaque/opaque';
 
 const directory = resolve('./dist/test/');
 const { pathname } = new URL(import.meta.url);

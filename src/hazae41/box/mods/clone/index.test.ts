@@ -9,8 +9,8 @@ class Resource implements Disposable {
   }
 }
 
-await test('count', async ({ test, message }) => {
-  console.log(`--- ${message} ---`);
+await test('count', async ({ name }) => {
+  console.log(`--- ${name} ---`);
 
   const resource = new Resource();
 

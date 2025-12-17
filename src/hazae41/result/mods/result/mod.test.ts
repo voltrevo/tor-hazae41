@@ -1,19 +1,5 @@
-// deno-lint-ignore-file
+import { assert, test, throws } from '../../../phobos/mod';
 import { Err, Ok, Result } from '../../mods/result/mod';
-import { assert, test, throws } from 'jsr:@hazae41/phobos';
-
-function get(result: Result<string, never>) {
-  if (result.isOk()) return result.get();
-  if (result.isErr()) return result.get();
-}
-
-class CustomError extends Error {
-  readonly #class = CustomError;
-
-  constructor(x: number) {
-    super(`first`);
-  }
-}
 
 test('try-catch', async ({ name }) => {
   assert(

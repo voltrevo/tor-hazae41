@@ -1,8 +1,9 @@
-import { Opaque, Readable, Writable } from '../../../../binary/mod';
+import { Readable, Writable } from '../../../../binary/mod';
 import { assert, test } from '../../../../phobos/mod';
 import { Bytes } from '../../../libs/bytes/index';
 import { relative, resolve } from 'path';
 import { KcpSegment } from './index';
+import { Opaque } from '../../../../asn1/mods/triplets/opaque/opaque';
 
 const directory = resolve('./dist/test/');
 const { pathname } = new URL(import.meta.url);

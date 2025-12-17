@@ -36,24 +36,24 @@ class B<T extends Disposable> {
   }
 }
 
-await test('holder', async ({ test, message }) => {
-  console.log(`--- ${message} ---`);
+await test('holder', async ({ name }) => {
+  console.log(`--- ${name} ---`);
 
-  console.log(message);
+  console.log(name);
 
   const resource = new Resource();
   const box = Box.wrap(resource);
 
   {
     using a = new A(box);
-    using b = a.toB();
+    using _b = a.toB();
   }
 
   assert(resource.disposed);
 });
 
-await test('dummy', async ({ test, message }) => {
-  console.log(`--- ${message} ---`);
+await test('dummy', async ({ name }) => {
+  console.log(`--- ${name} ---`);
 
   const resource = new Resource();
 
@@ -61,7 +61,7 @@ await test('dummy', async ({ test, message }) => {
    * This block will keep ownership of the box
    */
   {
-    using box = Box.wrap(resource);
+    using _box = Box.wrap(resource);
 
     assert(!resource.disposed);
   }
@@ -69,8 +69,8 @@ await test('dummy', async ({ test, message }) => {
   assert(resource.disposed);
 });
 
-await test('borrow', async ({ test, message }) => {
-  console.log(`--- ${message} ---`);
+await test('borrow', async ({ name }) => {
+  console.log(`--- ${name} ---`);
 
   const resource = new Resource();
 

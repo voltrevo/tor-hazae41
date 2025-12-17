@@ -1,4 +1,4 @@
-import { assert, rejects, test, throws } from '@/mod';
+import { assert, rejects, test, throws } from '../mod';
 
 function throwable() {
   throw new Error('lol');

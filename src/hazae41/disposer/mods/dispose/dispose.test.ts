@@ -3,8 +3,8 @@ import '@hazae41/symbol-dispose-polyfill';
 import { test } from '../../../phobos/mod';
 import { AsyncDisposer, Disposer } from './dispose';
 
-await test('sync', async ({ message, test }) => {
-  console.log(message);
+await test('sync', async ({ name }) => {
+  console.log(name);
 
   function f(i: number) {
     const create = async () => {
@@ -26,8 +26,8 @@ await test('sync', async ({ message, test }) => {
   await Promise.all([a, b, c]);
 });
 
-await test('async', async ({ message, test }) => {
-  console.log(message);
+await test('async', async ({ name }) => {
+  console.log(name);
 
   function f(i: number) {
     const create = async () => {
