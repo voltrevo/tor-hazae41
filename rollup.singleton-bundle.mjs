@@ -27,7 +27,7 @@ const licenseComment =
 export default {
   input: 'dist/TorClient/versions/singleton.mjs',
   output: {
-    file: `dist-singleton/tor-js-singleton-${pkg.version}-${commitHash}${changedSuffix}.mjs`,
+    file: `dist-singleton/tor-js-singleton-${pkg.version}-${commitHash}${changedSuffix}/index.mjs`,
     format: 'es',
     sourcemap: false,
     banner: licenseComment,

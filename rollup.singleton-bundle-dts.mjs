@@ -16,7 +16,7 @@ const changedSuffix = hasChanges ? '-changed' : '';
 export default {
   input: 'dist/TorClient/versions/singleton.d.ts',
   output: {
-    file: `dist-singleton/tor-js-singleton-${pkg.version}-${commitHash}${changedSuffix}.d.ts`,
+    file: `dist-singleton/tor-js-singleton-${pkg.version}-${commitHash}${changedSuffix}/index.d.ts`,
     format: 'es',
   },
   plugins: [dts()],
