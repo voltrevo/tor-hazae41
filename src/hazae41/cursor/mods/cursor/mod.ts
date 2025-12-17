@@ -184,6 +184,16 @@ export class Cursor<N extends number = number> {
   }
 
   /**
+   * Split into chunks of maximum length bytes
+   * @param length chunk size
+   */
+  *splitOrThrow(length: number): Generator<Bytes, void> {
+    while (this.remaining >= length) yield this.readOrThrow(length);
+    if (this.remaining) yield this.readOrThrow(this.remaining);
+    return;
+  }
+
+  /**
    * Fill length bytes with value after offset
    * @param value value to fill
    * @param length length to fill
