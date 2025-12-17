@@ -1,7 +1,7 @@
-import { KcpDuplex } from '@hazae41/kcp';
 import { SmuxDuplex } from '@hazae41/smux';
 import { TurboDuplex } from './turbo/stream';
 import { Unknown, Writable } from '../../../hazae41/binary/mod';
+import { KcpDuplex } from '../../../hazae41/kcp';
 
 export function createSnowflakeStream(raw: {
   outer: ReadableWritablePair<Unknown, Writable>;
