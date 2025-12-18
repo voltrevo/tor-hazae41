@@ -18,7 +18,7 @@ import { ServerNameList } from '../extensions/server_name/server_name_list.js';
 import { Bytes } from '../../../../../../bytes/index.js';
 import { Cursor } from '../../../../../../cursor/mod.js';
 import { Unknown } from '../../../../../../binary/mod.js';
-import { SafeUnknown } from '../../../../../../binary/mods/binary/safe-unknown/mod.js';
+import { SafeUnknown } from '../../../../../../binary/safe-unknown/mod';
 
 export class ClientHello2 {
   readonly #class = ClientHello2;

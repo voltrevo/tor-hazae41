@@ -1,5 +1,5 @@
-import { Bytes } from '../../../../bytes';
-import { Cursor } from '../../../../cursor/mod';
+import { Bytes } from '../../bytes';
+import { Cursor } from '../../cursor/mod';
 
 export type WriteError =
   | SizeUnknownError

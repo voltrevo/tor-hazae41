@@ -1,8 +1,8 @@
 // deno-lint-ignore-file no-unused-vars require-await
-import { assert, test } from '../../../../phobos/mod';
+import { assert, test } from '../../phobos/mod';
 import { Readable } from '../readable/mod';
 import { Unknown } from './mod';
-import { Bytes } from '../../../../bytes';
+import { Bytes } from '../../bytes';
 
 test('Opaque', async () => {
   const bytes = Bytes.from([1, 2, 3, 4, 5]);

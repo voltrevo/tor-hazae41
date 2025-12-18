@@ -1,4 +1,4 @@
-import type { Cursor } from '../../../../cursor/mod';
+import { Cursor } from '../../cursor/mod';
 
 export class Empty {
   constructor() {}

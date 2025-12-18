@@ -3,8 +3,8 @@ import { ReadableVector } from '../../../vectors/readable.js';
 import { Vector } from '../../../vectors/writable.js';
 import { Bytes } from '../../../../../../bytes/index.js';
 import { Cursor } from '../../../../../../cursor/mod.js';
-import { SafeUnknown } from '../../../../../../binary/mods/binary/safe-unknown/mod.js';
 import { Unknown } from '../../../../../../binary/mod.js';
+import { SafeUnknown } from '../../../../../../binary/safe-unknown/mod.js';
 
 export class ECPoint {
   constructor(readonly point: Vector<Number8, Unknown>) {}

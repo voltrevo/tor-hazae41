@@ -4,7 +4,7 @@ import { Vector } from '../../../vectors/writable.js';
 import { Bytes } from '../../../../../../bytes/index.js';
 import { Cursor } from '../../../../../../cursor/mod.js';
 import { Unknown } from '../../../../../../binary/mod.js';
-import { SafeUnknown } from '../../../../../../binary/mods/binary/safe-unknown/mod.js';
+import { SafeUnknown } from '../../../../../../binary/safe-unknown/mod.js';
 
 export class ClientDiffieHellmanPublic {
   constructor(readonly dh_Yc: Vector<Number16, Unknown>) {}
