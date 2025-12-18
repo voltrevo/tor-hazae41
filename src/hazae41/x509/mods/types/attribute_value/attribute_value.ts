@@ -1,5 +1,4 @@
 import { DER, DERTriplet, DERable } from '../../../../asn1/index';
-import { Base16 } from '../../../../base16/index';
 import { Bytes } from '../../../../bytes/index';
 import { Readable, Writable } from '../../../../binary/mod';
 import { InvalidFormatError } from '../../errors';
@@ -7,14 +6,14 @@ import { DirectoryString } from '../directory_string/directory_string';
 
 function escape(match: string) {
   const bytes = Bytes.fromUtf8(match);
-  const hex = Base16.encodeOrThrow(bytes);
+  const hex = Bytes.toHex(bytes);
   return hex.replaceAll(/../g, m => '\\' + m);
 }
 
 function unescape(match: string) {
   const hex = match.replaceAll('\\', '');
 
-  const decoded = Base16.padStartAndDecodeOrThrow(hex);
+  const decoded = Bytes.fromHexAllowMissing0(hex);
 
   return new TextDecoder().decode(decoded);
 }
@@ -91,7 +90,7 @@ export class UnknownAttributeValue<T extends DERTriplet = DERTriplet> {
 
   toX501OrThrow() {
     const bytes = Writable.writeToBytesOrThrow(this.inner);
-    const hex = Base16.encodeOrThrow(bytes);
+    const hex = Bytes.toHex(bytes);
 
     return `#${hex}`;
   }
@@ -100,7 +99,7 @@ export class UnknownAttributeValue<T extends DERTriplet = DERTriplet> {
     if (!hex.startsWith('#'))
       throw new InvalidFormatError(`AttributeValue not preceded by hash`);
 
-    const decoded = Base16.padStartAndDecodeOrThrow(hex.slice(1));
+    const decoded = Bytes.fromHexAllowMissing0(hex.slice(1));
     const triplet = Readable.readFromBytesOrThrow(DER, decoded);
 
     return new UnknownAttributeValue(triplet);

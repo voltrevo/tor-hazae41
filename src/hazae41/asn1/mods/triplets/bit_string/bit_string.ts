@@ -1,4 +1,3 @@
-import { Base16 } from '../../../../base16/index';
 import { Bytes } from '../../../../bytes';
 import { Cursor } from '../../../../cursor/mod';
 import { Length } from '../../length/length';
@@ -27,7 +26,7 @@ export class BitString {
   }
 
   toString() {
-    const bignum = BigInt('0x' + Base16.encodeOrThrow(this.bytes));
+    const bignum = BigInt('0x' + Bytes.toHex(this.bytes));
     const cursor = bignum.toString(2).padStart(this.bytes.length * 8, '0');
 
     return `BITSTRING ${cursor.slice(0, cursor.length - this.padding)}`;

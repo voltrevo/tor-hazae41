@@ -17,7 +17,6 @@ import { IClock } from '../../../../clock';
 import { Bytes } from '../../../bytes';
 import { Cursor } from '../../../cursor/mod';
 import { Readable, Writable } from '../../../binary/mod';
-import { Base64 } from '../../../base64';
 import { HalfDuplex } from '../../../cascade';
 import { Future } from '../../../future';
 import { assert } from '../../../../utils/assert';
@@ -42,7 +41,7 @@ export class WebSocketClientDuplex extends EventTarget implements WebSocket {
   readonly #current = new WebSocketMessageState();
 
   readonly #keyBytes = Bytes.random(16);
-  readonly #keyBase64 = Base64.encodePaddedOrThrow(this.#keyBytes);
+  readonly #keyBase64 = Bytes.toBase64(this.#keyBytes);
 
   #readyState: number = WebSocket.CONNECTING;
 
@@ -320,7 +319,7 @@ export class WebSocketClientDuplex extends EventTarget implements WebSocket {
     );
     const hash = Bytes.from(await crypto.subtle.digest('SHA-1', prehash));
 
-    const hashBase64 = Base64.encodePaddedOrThrow(hash);
+    const hashBase64 = Bytes.toBase64(hash);
 
     if (headers.get('Sec-WebSocket-Accept') !== hashBase64)
       throw new InvalidHttpHeaderValue('Sec-WebSocket-Accept');

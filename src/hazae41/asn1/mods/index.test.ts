@@ -1,4 +1,3 @@
-import { Base64 } from '../../base64/index';
 import { Readable, Writable } from '../../binary/mod';
 import { assert, test } from '../../phobos/mod';
 import { DER } from './resolvers/der/index';
@@ -17,7 +16,7 @@ export namespace PEM {
 
     const body = text.slice(header.length, -footer.length);
 
-    return Base64.decodePaddedOrThrow(body);
+    return Bytes.fromBase64(body);
   }
 }
 
@@ -33,7 +32,7 @@ export namespace PKCS7 {
 
     const body = text.slice(header.length, -footer.length);
 
-    return Base64.decodePaddedOrThrow(body);
+    return Bytes.fromBase64(body);
   }
 }
 
@@ -78,7 +77,7 @@ test('Cert frank4dd-dsa', async () => {
 
 test('Cert Tor', async () => {
   const text = TestCerts.torTrimmed;
-  const buffer = Base64.decodePaddedOrThrow(text);
+  const buffer = Bytes.fromBase64(text);
   const triplet = Readable.readFromBytesOrThrow(DER, buffer);
 
   assert(compare(buffer, Writable.writeToBytesOrThrow(triplet)));
@@ -86,7 +85,7 @@ test('Cert Tor', async () => {
 
 test('Cert Tor 2', async () => {
   const text = TestCerts.tor2Trimmed;
-  const buffer = Base64.decodePaddedOrThrow(text);
+  const buffer = Bytes.fromBase64(text);
   const triplet = Readable.readFromBytesOrThrow(DER, buffer);
 
   assert(compare(buffer, Writable.writeToBytesOrThrow(triplet)));

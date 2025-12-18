@@ -280,6 +280,15 @@ export namespace Bytes {
     return bytes;
   }
 
+  export function fromHexAllowMissing0(hex: string): Bytes {
+    if (hex.length % 2 === 1) {
+      // TODO: does this ever happen?
+      return fromHex('0' + hex);
+    }
+
+    return fromHex(hex);
+  }
+
   export interface Base64Options {
     alphabet?: 'base64' | 'base64url';
     omitPadding?: boolean;

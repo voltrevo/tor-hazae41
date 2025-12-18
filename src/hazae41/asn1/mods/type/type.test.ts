@@ -1,4 +1,4 @@
-import { Base16 } from '../../../base16/index';
+import { Bytes } from '../../../bytes';
 import { Cursor } from '../../../cursor/mod';
 import { assert, test } from '../../../phobos/mod';
 import { Sequence } from '../triplets/sequence/sequence';
@@ -6,7 +6,7 @@ import { Type } from './type';
 
 function hexToType(hex: string) {
   const hex2 = hex.replaceAll(' ', '');
-  const buffer = Base16.padStartAndDecodeOrThrow(hex2);
+  const buffer = Bytes.fromHexAllowMissing0(hex2);
   return Type.DER.readOrThrow(new Cursor(buffer));
 }
 

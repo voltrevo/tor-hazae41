@@ -1,4 +1,3 @@
-import { Base16 } from '../../../../base16/index';
 import { Readable } from '../../../../binary/mod';
 import { Nullable } from '../../../../binary/libs/nullable/mod';
 import { Cursor } from '../../../../cursor/mod';
@@ -42,7 +41,7 @@ export class OpaqueTriplet {
   }
 
   toString() {
-    return `OPAQUE ${Base16.encodeOrThrow(this.bytes)}`;
+    return `OPAQUE ${Bytes.toHex(this.bytes)}`;
   }
 
   readIntoOrNull<T extends Readable.Infer<T>>(

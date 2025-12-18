@@ -1,4 +1,3 @@
-import { Base64 } from '../../../base64/index';
 import { Bytes } from '../../../bytes';
 
 export namespace PEM {
@@ -31,13 +30,13 @@ export namespace PEM {
 
     const body = text.slice(header.length, -footer.length);
 
-    return Base64.decodePaddedOrThrow(body);
+    return Bytes.fromBase64(body);
   }
 
   export function encodeOrThrow(bytes: Bytes): string {
     let result = `${header}\n`;
 
-    let body = Base64.encodePaddedOrThrow(bytes);
+    let body = Bytes.toBase64(bytes);
 
     while (body) {
       result += `${body.slice(0, 64)}\n`;

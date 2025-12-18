@@ -39,7 +39,6 @@ import { invariant } from '../../../../utils/debug';
 import { getErrorDetails } from '../../../../utils/getErrorDetails';
 import { Bytes } from '../../../bytes';
 import { Unknown } from '../../../binary/mod';
-import { Base64 } from '../../../base64';
 import { Bitset } from '../../../bitset';
 import { Future } from '../../../future';
 
@@ -394,15 +393,15 @@ export class SecretCircuit {
   ) {
     if (this.closed != null) throw this.closed.reason;
 
-    const relayid_rsa = Base64.decodeUnpaddedOrThrow(microdesc.identity);
+    const relayid_rsa = Bytes.fromBase64(microdesc.identity);
     Bytes.assertLen(relayid_rsa, HASH_LEN);
 
-    const ntor_key = Base64.decodeUnpaddedOrThrow(microdesc.ntorOnionKey);
+    const ntor_key = Bytes.fromBase64(microdesc.ntorOnionKey);
     Bytes.assertLen(ntor_key, 32);
 
     const relayid_ed = Option.wrap(microdesc.idEd25519)
       .mapSync(x => {
-        return Base64.decodeUnpaddedOrThrow(x);
+        return Bytes.fromBase64(x);
       })
       .getOrNull();
 

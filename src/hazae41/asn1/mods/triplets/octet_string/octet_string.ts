@@ -1,4 +1,3 @@
-import { Base16 } from '../../../../base16/index';
 import { Bytes } from '../../../../bytes';
 import { Cursor } from '../../../../cursor/mod';
 import { Length } from '../../length/length';
@@ -26,7 +25,7 @@ export class OctetString {
   }
 
   toString() {
-    return `OCTET STRING ${Base16.encodeOrThrow(this.bytes)}`;
+    return `OCTET STRING ${Bytes.toHex(this.bytes)}`;
   }
 }
 

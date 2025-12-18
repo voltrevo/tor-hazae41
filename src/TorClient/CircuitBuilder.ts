@@ -15,7 +15,6 @@ import { assert } from '../utils/assert';
 import type { App } from './App';
 import { ConsensusManager } from './ConsensusManager';
 import { Bytes } from '../hazae41/bytes';
-import { Base64 } from '../hazae41/base64/mods';
 
 /**
  * Events emitted by CircuitBuilder.
@@ -162,7 +161,7 @@ export class CircuitBuilder extends EventEmitter<CircuitBuilderEvents> {
       // keynet servers choose an rsa key such that the first byte of their rsa
       // fingerprint (m.identity) matches the first byte of their ed25519 key
       // (pubkey).
-      m => Base64.decodePaddedOrThrow(m.identity)[0] === pubkey[0]
+      m => Bytes.fromBase64(m.identity)[0] === pubkey[0]
     );
 
     const fullCandidates = await this.microdescManager.getMicrodescs(
@@ -173,9 +172,7 @@ export class CircuitBuilder extends EventEmitter<CircuitBuilderEvents> {
     let keynetNode: Consensus.Microdesc | undefined;
 
     for (const candidate of fullCandidates) {
-      if (
-        Bytes.equals(Base64.decodePaddedOrThrow(candidate.idEd25519), pubkey)
-      ) {
+      if (Bytes.equals(Bytes.fromBase64(candidate.idEd25519), pubkey)) {
         keynetNode = candidate;
         break;
       }

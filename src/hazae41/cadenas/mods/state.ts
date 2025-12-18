@@ -53,7 +53,6 @@ import { CCADB } from './ccadb/CCADB.js';
 import { Bytes } from '../../bytes/index.js';
 import { Cursor } from '../../cursor/mod.js';
 import { Readable, Unknown, Writable } from '../../binary/mod.js';
-import { Base16 } from '../../base16/index.js';
 
 export type TlsClientState =
   | TlsClientNoneState
@@ -448,7 +447,7 @@ export class TlsClientHandshakeServerHelloState implements TlsClientHandshakeSer
 
         if (trusted == null) continue;
 
-        const raw = Base16.padStartAndDecodeOrThrow(trusted.certBase16);
+        const raw = Bytes.fromHexAllowMissing0(trusted.certBase16);
         const x509 = X509.readAndResolveFromBytesOrThrow(X509.Certificate, raw);
 
         next = x509;
@@ -622,7 +621,7 @@ export class TlsClientHandshakeServerHelloState implements TlsClientHandshakeSer
 
       if (notAfter && now > new Date(notAfter)) continue;
 
-      const trustedIdentityHash = Base16.padStartAndDecodeOrThrow(
+      const trustedIdentityHash = Bytes.fromHexAllowMissing0(
         trusted.hashBase16
       );
 

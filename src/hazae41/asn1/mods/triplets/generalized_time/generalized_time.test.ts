@@ -1,12 +1,12 @@
-import { Base16 } from '../../../../base16/index';
 import { Writable } from '../../../../binary/mod';
+import { Bytes } from '../../../../bytes';
 import { Cursor } from '../../../../cursor/mod';
 import { assert, test } from '../../../../phobos/mod';
 import { GeneralizedTime } from './generalized_time';
 
 function hexToCursor(hex: string) {
   const hex2 = hex.replaceAll(' ', '');
-  const buffer = Base16.padStartAndDecodeOrThrow(hex2);
+  const buffer = Bytes.fromHexAllowMissing0(hex2);
   return new Cursor(buffer);
 }
 

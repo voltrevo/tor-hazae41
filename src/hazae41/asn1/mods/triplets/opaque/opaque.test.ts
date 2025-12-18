@@ -1,4 +1,3 @@
-import { Base16 } from '../../../../base16/index';
 import { Readable, Writable } from '../../../../binary/mod';
 import { assert, test } from '../../../../phobos/mod';
 import { Integer } from '../integer/integer';
@@ -8,7 +7,7 @@ import { Bytes } from '../../../../bytes';
 
 function hexToBytes(hex: string) {
   const hex2 = hex.replaceAll(' ', '');
-  return Base16.padStartAndDecodeOrThrow(hex2);
+  return Bytes.fromHexAllowMissing0(hex2);
 }
 
 function bytesToTriplet(bytes: Bytes) {

@@ -6,8 +6,6 @@ import type { IClock } from '../../../../clock/IClock.js';
 import { Log } from '../../../../Log/index.js';
 import { Bytes } from '../../../bytes/index.js';
 import { Writable } from '../../../binary/mod.js';
-import { Base16 } from '../../../base16/index.js';
-import { Base64 } from '../../../base64/index.js';
 import { X509 } from '../../../x509/index.js';
 
 export interface Trusted {
@@ -92,7 +90,7 @@ export class CCADB {
     for (const base64 of base64Certs) {
       try {
         // Decode base64 to DER bytes
-        const derBytes = Base64.decodePaddedOrThrow(base64);
+        const derBytes = Bytes.fromBase64(base64);
 
         // Parse X.509 certificate
         const x509 = X509.readAndResolveFromBytesOrThrow(
@@ -105,7 +103,7 @@ export class CCADB {
           x509.tbsCertificate.subjectPublicKeyInfo.toDER()
         );
         const hash = Bytes.from(await crypto.subtle.digest('SHA-256', spki));
-        const hashBase16 = Base16.encodeOrThrow(hash);
+        const hashBase16 = Bytes.toHex(hash);
 
         // Check if certificate is in whitelist
         if (!this.whitelistSet.has(hashBase16)) {
@@ -119,7 +117,7 @@ export class CCADB {
         const x501 = x509.tbsCertificate.subject.toX501OrThrow();
 
         // Convert DER to hex
-        const certBase16 = Base16.encodeOrThrow(derBytes);
+        const certBase16 = Bytes.toHex(derBytes);
 
         // Extract notAfter date
         const validity = x509.tbsCertificate.validity;

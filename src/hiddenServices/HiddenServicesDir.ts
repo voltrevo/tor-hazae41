@@ -2,7 +2,6 @@ import { Consensus } from '../hazae41/echalote/index.js';
 import { hash } from './hash.js';
 import { assert } from '../utils/assert.js';
 import { Bytes } from '../hazae41/bytes/index.js';
-import { Base64 } from '../hazae41/base64/index.js';
 
 export class HiddenServicesDir {
   constructor(public consensus: Consensus) {}
@@ -56,9 +55,7 @@ export class HiddenServicesDir {
   }
 
   sharedRandomValue(): Bytes {
-    return Base64.decodePaddedOrThrow(
-      this.consensus.sharedRandCurrentValue.random
-    );
+    return Bytes.fromBase64(this.consensus.sharedRandCurrentValue.random);
   }
 
   async serviceIndex(replicaNum: number, blindedPublicKey: Bytes) {

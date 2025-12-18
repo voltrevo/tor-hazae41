@@ -14,8 +14,6 @@ import {
 } from './diff.js';
 import { Log } from '../../../../../Log';
 import { Bytes } from '../../../../bytes';
-import { Base16 } from '../../../../base16';
-import { Base64 } from '../../../../base64';
 
 export interface Consensus {
   readonly type: string;
@@ -698,7 +696,7 @@ export namespace Consensus {
       const signed = Bytes.fromUtf8(consensus.preimage);
       const hashed = Bytes.from(await crypto.subtle.digest('SHA-256', signed));
 
-      const signingKey = Base64.decodePaddedOrThrow(certificate.signingKey);
+      const signingKey = Bytes.fromBase64(certificate.signingKey);
 
       const algorithmAsn1 = ASN1.ObjectIdentifier.create(
         undefined,
@@ -720,7 +718,7 @@ export namespace Consensus {
 
       const publicKey = X509.writeToBytesOrThrow(subjectPublicKeyInfo);
 
-      const signature = Base64.decodePaddedOrThrow(it.signature);
+      const signature = Bytes.fromBase64(it.signature);
 
       const signatureM = new RsaBigInt.Memory(signature);
       const hashedM = new RsaBigInt.Memory(hashed);
@@ -800,12 +798,12 @@ export namespace Consensus {
     }
 
     export async function verifyOrThrow(cert: Certificate) {
-      const identityKey = Base64.decodePaddedOrThrow(cert.identityKey);
+      const identityKey = Bytes.fromBase64(cert.identityKey);
 
       const identity = Bytes.from(
         await crypto.subtle.digest('SHA-1', identityKey)
       );
-      const fingerprint = Base16.encodeOrThrow(identity);
+      const fingerprint = Bytes.toHex(identity);
 
       assert(
         fingerprint.toLowerCase() === cert.fingerprint.toLowerCase(),
@@ -835,7 +833,7 @@ export namespace Consensus {
 
       const publicKey = X509.writeToBytesOrThrow(subjectPublicKeyInfo);
 
-      const signature = Base64.decodePaddedOrThrow(cert.signature);
+      const signature = Bytes.fromBase64(cert.signature);
 
       const hashedM = new RsaBigInt.Memory(hashed);
       const publicKeyM = new RsaBigInt.Memory(publicKey);
@@ -985,7 +983,7 @@ export namespace Consensus {
       const buffer = await response.arrayBuffer();
       const digest = Bytes.from(await crypto.subtle.digest('SHA-256', buffer));
 
-      const digest64 = Base64.encodeUnpaddedOrThrow(digest);
+      const digest64 = Bytes.toBase64(digest, { omitPadding: true });
 
       assert(digest64 === microdescHash, `Digest mismatch`);
 
@@ -1060,7 +1058,7 @@ export namespace Consensus {
           const digest = Bytes.from(
             await crypto.subtle.digest('SHA-256', rawBytes)
           );
-          const calculatedHash = Base64.encodeUnpaddedOrThrow(digest);
+          const calculatedHash = Bytes.toBase64(digest, { omitPadding: true });
 
           // Store in map using calculated hash
           hashToBodyMap.set(calculatedHash, { body, rawText });
