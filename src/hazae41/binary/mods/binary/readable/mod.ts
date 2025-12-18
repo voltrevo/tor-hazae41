@@ -1,6 +1,6 @@
-import type { Nullable } from '../../../libs/nullable/mod';
 import { Cursor } from '../../../../cursor/mod';
 import { Bytes } from '../../../../bytes';
+import { Nullable } from '../../../../common/Nullable';
 
 export type ReadError = ReadUnderflowError | ReadUnknownError;
 

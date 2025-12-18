@@ -50,7 +50,7 @@ export namespace TeletexString {
     }
 
     static from(asn1: TeletexString) {
-      const bytes = Bytes.fromUtf8(asn1.value);
+      const bytes = Bytes.encodeUtf8(asn1.value);
       const length = new Length(bytes.length).toDER();
 
       return new DER(asn1.type.toDER(), length, asn1.value, bytes);

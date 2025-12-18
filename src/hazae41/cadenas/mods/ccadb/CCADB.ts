@@ -194,7 +194,7 @@ export class CCADB {
       };
 
       const text = JSON.stringify(payload);
-      const data = Bytes.fromUtf8(text);
+      const data = Bytes.encodeUtf8(text);
       await this.storage.write(CCADB.STORAGE_KEY, data);
 
       this.log.info(

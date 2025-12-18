@@ -693,7 +693,7 @@ export namespace Consensus {
 
       assert(certificate != null, `Missing certificate for ${it.identity}`);
 
-      const signed = Bytes.fromUtf8(consensus.preimage);
+      const signed = Bytes.encodeUtf8(consensus.preimage);
       const hashed = Bytes.from(await crypto.subtle.digest('SHA-256', signed));
 
       const signingKey = Bytes.fromBase64(certificate.signingKey);
@@ -810,7 +810,7 @@ export namespace Consensus {
         `Fingerprint mismatch`
       );
 
-      const signed = Bytes.fromUtf8(cert.preimage);
+      const signed = Bytes.encodeUtf8(cert.preimage);
       const hashed = Bytes.from(await crypto.subtle.digest('SHA-1', signed));
 
       const algorithmAsn1 = ASN1.ObjectIdentifier.create(
@@ -987,7 +987,7 @@ export namespace Consensus {
 
       assert(digest64 === microdescHash, `Digest mismatch`);
 
-      const text = Bytes.toUtf8(Bytes.from(buffer));
+      const text = Bytes.decodeUtf8(Bytes.from(buffer));
       const [data] = parseOrThrow(text);
 
       assert(data != null, `Empty microdescriptor`);
@@ -1042,7 +1042,7 @@ export namespace Consensus {
         }
 
         const buffer = await response.arrayBuffer();
-        const text = Bytes.toUtf8(Bytes.from(buffer));
+        const text = Bytes.decodeUtf8(Bytes.from(buffer));
         const bodiesWithText = parseWithRawTextOrThrow(text);
 
         assert(

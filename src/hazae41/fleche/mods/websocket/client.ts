@@ -21,7 +21,7 @@ import { HalfDuplex } from '../../../cascade';
 import { Future } from '../../../future';
 import { assert } from '../../../../utils/assert';
 
-const ACCEPT_SUFFIX = Bytes.fromUtf8('258EAFA5-E914-47DA-95CA-C5AB0DC85B11');
+const ACCEPT_SUFFIX = Bytes.encodeUtf8('258EAFA5-E914-47DA-95CA-C5AB0DC85B11');
 
 export class WebSocketMessageState {
   readonly buffer = new Cursor(Bytes.alloc(64 * 1024));
@@ -234,7 +234,7 @@ export class WebSocketClientDuplex extends EventTarget implements WebSocket {
     if (typeof data === 'string')
       return await this.#splitOrThrow(
         WebSocketFrame.opcodes.text,
-        Bytes.fromUtf8(data)
+        Bytes.encodeUtf8(data)
       );
     else if (data instanceof Blob)
       return await this.#splitOrThrow(
@@ -314,7 +314,7 @@ export class WebSocketClientDuplex extends EventTarget implements WebSocket {
       throw new InvalidHttpHeaderValue('Upgrade');
 
     const prehash = Bytes.concat(
-      Bytes.fromUtf8(this.#keyBase64),
+      Bytes.encodeUtf8(this.#keyBase64),
       ACCEPT_SUFFIX
     );
     const hash = Bytes.from(await crypto.subtle.digest('SHA-1', prehash));
@@ -466,7 +466,7 @@ export class WebSocketClientDuplex extends EventTarget implements WebSocket {
 
   async #onTextFrame(frame: WebSocketFrame) {
     this.dispatchEvent(
-      new MessageEvent('message', { data: Bytes.toUtf8(frame.payload) })
+      new MessageEvent('message', { data: Bytes.decodeUtf8(frame.payload) })
     );
   }
 
@@ -489,7 +489,7 @@ export class WebSocketClientDuplex extends EventTarget implements WebSocket {
         frame.payload
       );
       const reason =
-        close.reason == null ? undefined : Bytes.toUtf8(close.reason);
+        close.reason == null ? undefined : Bytes.decodeUtf8(close.reason);
 
       Console.debug('Close frame received', close.code, reason);
 

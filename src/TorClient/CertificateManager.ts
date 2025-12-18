@@ -250,7 +250,7 @@ export class CertificateManager {
 
       // Serialize certificate to text format
       const textToSave = await this.serializeCertificate(certificate);
-      const data = Bytes.fromUtf8(textToSave);
+      const data = Bytes.encodeUtf8(textToSave);
       await this.storage.write(key, data);
 
       // Update in-memory cache

@@ -10,7 +10,7 @@ export class WebSocketClose {
   static from(code: number, reason?: string) {
     return new WebSocketClose(
       code,
-      reason == null ? undefined : Bytes.fromUtf8(reason)
+      reason == null ? undefined : Bytes.encodeUtf8(reason)
     );
   }
 
@@ -30,7 +30,7 @@ export class WebSocketClose {
 
     if (cursor.remaining) {
       const bytes = cursor.readOrThrow(cursor.remaining);
-      const reason = Bytes.toUtf8(bytes);
+      const reason = Bytes.decodeUtf8(bytes);
       return WebSocketClose.from(code, reason);
     }
 

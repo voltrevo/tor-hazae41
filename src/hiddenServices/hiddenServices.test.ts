@@ -74,7 +74,7 @@ test('decodeOnionPubkey() with valid .onion address', async () => {
 
   // Calculate checksum
   const version = 0x03;
-  const prefix = Bytes.fromUtf8('.onion checksum');
+  const prefix = Bytes.encodeUtf8('.onion checksum');
   const toHash = Bytes.alloc(prefix.length + 32 + 1);
   toHash.set(prefix, 0);
   toHash.set(pubkey, prefix.length);
@@ -176,7 +176,7 @@ test('decodeOnionStylePubkey() with correct checksum', async () => {
   pubkey[1] = 99;
 
   const version = 0x03;
-  const prefix = Bytes.fromUtf8('.onion checksum');
+  const prefix = Bytes.encodeUtf8('.onion checksum');
   const toHash = Bytes.alloc(prefix.length + 32 + 1);
   toHash.set(prefix, 0);
   toHash.set(pubkey, prefix.length);

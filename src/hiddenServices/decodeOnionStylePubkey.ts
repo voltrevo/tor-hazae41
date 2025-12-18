@@ -28,7 +28,7 @@ export async function decodeOnionStylePubKey(
     );
 
   // 4) Verify checksum = first 2 bytes of SHA3-256(".onion checksum" || pubkey || version)
-  const prefix = Bytes.fromUtf8('.onion checksum');
+  const prefix = Bytes.encodeUtf8('.onion checksum');
   const toHash = Bytes.alloc(prefix.length + 32 + 1);
   toHash.set(prefix, 0);
   toHash.set(pubkey, prefix.length);

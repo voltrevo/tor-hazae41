@@ -28,8 +28,8 @@ import { Unknown, Writable } from '../../../binary/mod';
 import { Future } from '../../../future';
 
 export namespace Lines {
-  export const rn = Bytes.fromUtf8('\r\n');
-  export const rnrn = Bytes.fromUtf8('\r\n\r\n');
+  export const rn = Bytes.encodeUtf8('\r\n');
+  export const rnrn = Bytes.encodeUtf8('\r\n\r\n');
 }
 
 export interface HttpStreamParams {
@@ -120,7 +120,7 @@ export class HttpClientDuplex {
       this.constructor.name,
       '<-',
       chunk.bytes.length,
-      Bytes.toUtf8(chunk.bytes)
+      Bytes.decodeUtf8(chunk.bytes)
     );
 
     let bytes = chunk.bytes;
@@ -271,7 +271,7 @@ export class HttpClientDuplex {
     const rawHead = buffer.inner.before.subarray(0, split);
     const rawBody = buffer.inner.before.subarray(split + Lines.rnrn.length);
 
-    const [rawStatus, ...rawHeaders] = Bytes.toUtf8(rawHead).split('\r\n');
+    const [rawStatus, ...rawHeaders] = Bytes.decodeUtf8(rawHead).split('\r\n');
     const [_version, statusString, statusText] = rawStatus.split(' ');
 
     const status = Number(statusString);
@@ -368,7 +368,7 @@ export class HttpClientDuplex {
        */
 
       const lengthBytes = slice.subarray(0, index);
-      const lengthUtf8 = Bytes.toUtf8(lengthBytes);
+      const lengthUtf8 = Bytes.decodeUtf8(lengthBytes);
       const length = parseInt(lengthUtf8, 16);
 
       let rest = slice.subarray(index + 2);
@@ -446,7 +446,7 @@ export class HttpClientDuplex {
     head += `\r\n`;
 
     Console.debug(this.constructor.name, '->', head.length, head);
-    this.duplex.output.enqueue(new Unknown(Bytes.fromUtf8(head)));
+    this.duplex.output.enqueue(new Unknown(Bytes.encodeUtf8(head)));
 
     const buffer = new Resizer();
 
@@ -466,7 +466,7 @@ export class HttpClientDuplex {
   }
 
   async #onOutputWrite(chunk: Bytes) {
-    Console.debug(this.constructor.name, '->', Bytes.toUtf8(chunk));
+    Console.debug(this.constructor.name, '->', Bytes.decodeUtf8(chunk));
 
     if (this.#state.type === 'upgrading' || this.#state.type === 'upgraded') {
       this.duplex.output.enqueue(new Unknown(chunk));
@@ -532,21 +532,21 @@ export class HttpClientDuplex {
     const { client_compression } = state;
 
     if (client_compression == null) {
-      this.duplex.output.enqueue(new Unknown(Bytes.fromUtf8(line)));
+      this.duplex.output.enqueue(new Unknown(Bytes.encodeUtf8(line)));
     } else {
-      client_compression.sourcer.enqueue(Bytes.fromUtf8(line));
+      client_compression.sourcer.enqueue(Bytes.encodeUtf8(line));
     }
   }
 
   async #onOutputClose() {
     if (this.#state.type === 'heading') {
       if (this.#state.client_transfer.type === 'none') {
-        this.duplex.output.enqueue(new Unknown(Bytes.fromUtf8(`\r\n`)));
+        this.duplex.output.enqueue(new Unknown(Bytes.encodeUtf8(`\r\n`)));
         return;
       }
 
       if (this.#state.client_transfer.type === 'chunked') {
-        this.duplex.output.enqueue(new Unknown(Bytes.fromUtf8(`0\r\n\r\n`)));
+        this.duplex.output.enqueue(new Unknown(Bytes.encodeUtf8(`0\r\n\r\n`)));
         return;
       }
     }

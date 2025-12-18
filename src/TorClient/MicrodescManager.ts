@@ -249,7 +249,7 @@ export class MicrodescManager {
 
       // Serialize microdesc to JSON format
       const textToSave = await this.serializeMicrodesc(microdesc);
-      const data = Bytes.fromUtf8(textToSave);
+      const data = Bytes.encodeUtf8(textToSave);
       await this.storage.write(key, data);
 
       // Update in-memory cache

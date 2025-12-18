@@ -77,11 +77,11 @@ export namespace NtorResult {
     secret_input.writeOrThrow(public_b);
     secret_input.writeOrThrow(public_x);
     secret_input.writeOrThrow(public_y);
-    secret_input.writeOrThrow(Bytes.fromUtf8(protoid));
+    secret_input.writeOrThrow(Bytes.encodeUtf8(protoid));
 
-    const t_mac = Bytes.fromUtf8(`${protoid}:mac`);
-    const t_key = Bytes.fromUtf8(`${protoid}:key_extract`);
-    const t_verify = Bytes.fromUtf8(`${protoid}:verify`);
+    const t_mac = Bytes.encodeUtf8(`${protoid}:mac`);
+    const t_key = Bytes.encodeUtf8(`${protoid}:key_extract`);
+    const t_verify = Bytes.encodeUtf8(`${protoid}:verify`);
 
     const kt_verify = await crypto.subtle.importKey(
       'raw',
@@ -104,8 +104,8 @@ export namespace NtorResult {
     auth_input.writeOrThrow(public_b);
     auth_input.writeOrThrow(public_y);
     auth_input.writeOrThrow(public_x);
-    auth_input.writeOrThrow(Bytes.fromUtf8(protoid));
-    auth_input.writeOrThrow(Bytes.fromUtf8(server));
+    auth_input.writeOrThrow(Bytes.encodeUtf8(protoid));
+    auth_input.writeOrThrow(Bytes.encodeUtf8(server));
 
     const t_mac_key = await crypto.subtle.importKey(
       'raw',
@@ -118,7 +118,7 @@ export namespace NtorResult {
       await crypto.subtle.sign('HMAC', t_mac_key, auth_input.bytes)
     ) as Bytes<32>;
 
-    const m_expand = Bytes.fromUtf8(`${protoid}:key_expand`);
+    const m_expand = Bytes.encodeUtf8(`${protoid}:key_expand`);
 
     const secret_input_key = await crypto.subtle.importKey(
       'raw',

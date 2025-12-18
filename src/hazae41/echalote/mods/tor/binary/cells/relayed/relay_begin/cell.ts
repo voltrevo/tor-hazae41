@@ -21,7 +21,7 @@ export class RelayBeginCell {
   ) {}
 
   static create(address: string, flags: number) {
-    return new RelayBeginCell(address, Bytes.fromUtf8(address), flags);
+    return new RelayBeginCell(address, Bytes.encodeUtf8(address), flags);
   }
 
   get early(): false {
@@ -47,7 +47,7 @@ export class RelayBeginCell {
 
   static readOrThrow(cursor: Cursor) {
     const bytes = Bytes.from(cursor.readNulledOrThrow());
-    const address = Bytes.toUtf8(bytes);
+    const address = Bytes.decodeUtf8(bytes);
     const flags = cursor.readUint32OrThrow();
 
     return new RelayBeginCell(address, bytes, flags);

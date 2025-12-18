@@ -58,7 +58,7 @@ export namespace UTCTime {
       const mm = pad2(asn1.value.getUTCMinutes());
       const ss = pad2(asn1.value.getUTCSeconds());
 
-      const bytes = Bytes.fromUtf8(`${YY}${MM}${DD}${hh}${mm}${ss}Z`);
+      const bytes = Bytes.encodeUtf8(`${YY}${MM}${DD}${hh}${mm}${ss}Z`);
       const length = new Length(bytes.length).toDER();
 
       return new DER(asn1.type.toDER(), length, asn1.value, bytes);

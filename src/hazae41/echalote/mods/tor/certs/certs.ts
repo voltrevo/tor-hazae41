@@ -185,7 +185,7 @@ export namespace Certs {
     const publicKeyPointer =
       RsaBigInt.RsaPublicKey.from_public_key_der(publicKeyMemory);
 
-    const prefix = Bytes.fromUtf8('Tor TLS RSA/Ed25519 cross-certificate');
+    const prefix = Bytes.encodeUtf8('Tor TLS RSA/Ed25519 cross-certificate');
     const prefixed = Bytes.concat(prefix, certs.rsa_to_ed.payload);
     const hashed = Bytes.from(await crypto.subtle.digest('SHA-256', prefixed));
 

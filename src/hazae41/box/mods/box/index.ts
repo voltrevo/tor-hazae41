@@ -1,4 +1,4 @@
-import { Nullable } from '../../libs/nullable/index';
+import { Nullable } from '../../../common/Nullable';
 import { BorrowedError } from '../borrow/index';
 import { Deferred } from '../deferred/index';
 import { MovedError } from '../move/index';

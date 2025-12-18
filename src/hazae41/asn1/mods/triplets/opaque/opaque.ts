@@ -1,5 +1,4 @@
 import { Readable } from '../../../../binary/mod';
-import { Nullable } from '../../../../binary/libs/nullable/mod';
 import { Cursor } from '../../../../cursor/mod';
 import { Length } from '../../length/length';
 import { DERTriplet } from '../../resolvers/der/triplet';
@@ -19,6 +18,7 @@ import { TeletexString } from '../teletex_string/teletex_string';
 import { UTCTime } from '../utc_time/utc_time';
 import { UTF8String } from '../utf8_string/utf8_string';
 import { Bytes } from '../../../../bytes';
+import { Nullable } from '../../../../common/Nullable';
 
 export class OpaqueTriplet {
   /**

@@ -19,7 +19,7 @@ export type DiffCommand =
  * The signed part is everything up to and including "directory-signature ".
  */
 export async function computeSignedPartHash(preimage: string): Promise<string> {
-  const signedPart = Bytes.fromUtf8(preimage);
+  const signedPart = Bytes.encodeUtf8(preimage);
   const hash = await sha3(signedPart, 256);
   return hash;
 }
@@ -30,7 +30,7 @@ export async function computeSignedPartHash(preimage: string): Promise<string> {
 export async function computeFullConsensusHash(
   consensusText: string
 ): Promise<string> {
-  const bytes = Bytes.fromUtf8(consensusText);
+  const bytes = Bytes.encodeUtf8(consensusText);
   const hash = await sha3(bytes, 256);
   return hash;
 }

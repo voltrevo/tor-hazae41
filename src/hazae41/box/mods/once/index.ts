@@ -1,4 +1,4 @@
-import { Nullable } from '../../libs/nullable/index';
+import { Nullable } from '../../../common/Nullable';
 import { Deferred } from '../deferred/index';
 import { AsyncWrap, Wrap } from '../wrap/index';
 

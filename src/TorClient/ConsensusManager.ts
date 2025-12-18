@@ -236,7 +236,7 @@ export class ConsensusManager {
 
       // Reconstruct the full consensus text from preimage + signatureText
       const textToSave = await this.serializeConsensus(consensus);
-      const data = Bytes.fromUtf8(textToSave);
+      const data = Bytes.encodeUtf8(textToSave);
       await this.storage.write(key, data);
 
       this.log.info(`Saved consensus to cache: ${key}`);

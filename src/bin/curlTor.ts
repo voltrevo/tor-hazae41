@@ -69,7 +69,7 @@ function readFromSourceSpec(spec: string): Bytes {
     if (!existsSync(path)) die(`No such file: ${path}`);
     return Bytes.from(readFileSync(path));
   }
-  return Bytes.fromUtf8(spec);
+  return Bytes.encodeUtf8(spec);
 }
 
 function readStdinSync(): Bytes {
@@ -273,7 +273,7 @@ async function main() {
     if (body !== undefined) {
       const size =
         typeof body === 'string'
-          ? Bytes.fromUtf8(body).length
+          ? Bytes.encodeUtf8(body).length
           : body instanceof Blob
             ? body.size
             : body instanceof Uint8Array

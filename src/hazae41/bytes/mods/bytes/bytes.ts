@@ -1,7 +1,6 @@
 import { assert } from '../../../../utils/assert';
 import { ArrayLike } from '../../../arrays/index';
-import { Ascii } from '../../libs/ascii/ascii';
-import { Utf8 } from '../../libs/utf8/utf8';
+import { Ascii } from '../../../common/Ascii';
 
 export type Bytes<N extends number = number> =
   globalThis.Uint8Array<ArrayBuffer> & {
@@ -9,6 +8,9 @@ export type Bytes<N extends number = number> =
   };
 
 export namespace Bytes {
+  const encoder = new TextEncoder();
+  const decoder = new TextDecoder();
+
   /**
    * Alloc 0-lengthed bytes using standard constructor
    * @returns `Bytes<[]>`
@@ -129,8 +131,8 @@ export namespace Bytes {
    * @param text
    * @returns
    */
-  export function fromUtf8(text: string): Bytes {
-    return Utf8.encoder.encode(text) as Uint8Array<ArrayBuffer>;
+  export function encodeUtf8(text: string): Bytes {
+    return encoder.encode(text) as Uint8Array<ArrayBuffer>;
   }
 
   /**
@@ -138,8 +140,8 @@ export namespace Bytes {
    * @param text
    * @returns
    */
-  export function toUtf8(bytes: Bytes): string {
-    return Utf8.decoder.decode(bytes);
+  export function decodeUtf8(bytes: Bytes): string {
+    return decoder.decode(bytes);
   }
 
   /**
