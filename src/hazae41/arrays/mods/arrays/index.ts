@@ -1,4 +1,4 @@
-import { Nullable } from '../../libs/nullable/index';
+import { Nullable } from '../../../common/Nullable';
 
 /**
  * Get the last index

@@ -1,9 +1,9 @@
 import { Readable } from '../../../../binary/mod';
-import { Nullable } from '../../../libs/nullable/index';
-import { Class } from '../../../libs/reflection/index';
 import { DERTriplet } from './triplet';
 import { OpaqueTriplet } from '../../triplets/opaque/opaque';
 import { Type } from '../../type/type';
+import { Class } from '../../../../common/reflection';
+import { Nullable } from '../../../../common/Nullable';
 
 export interface DERHolder extends DERTriplet {
   readonly triplets: DERTriplet[];

@@ -1,5 +1,5 @@
+import { Numbers } from '../../../../common/Numbers';
 import { Cursor } from '../../../../cursor/mod';
-import { Numbers } from '../../../libs/numbers/index';
 import { InvalidValueError } from '../../errors/errors';
 import { Length } from '../../length/length';
 import { DERTriplet } from '../../resolvers/der/triplet';

@@ -1,11 +1,11 @@
 import { Cursor } from '../../../../cursor/mod';
 import { DERable } from '../../resolvers/der/derable';
-import { Nullable } from '../../../libs/nullable/index';
 import { Length } from '../../length/length';
 import { DERTriplet } from '../../resolvers/der/triplet';
 import { Triplet } from '../../resolvers/triplet';
 import { OpaqueTriplet } from '../opaque/opaque';
 import { Type } from '../../type/type';
+import { Nullable } from '../../../../common/Nullable';
 
 const stringify = (set: Set) => `SET {
   ${set.triplets
