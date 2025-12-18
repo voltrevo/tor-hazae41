@@ -1,5 +1,4 @@
 import { assert, test } from '../../phobos/mod';
-import { readFile } from 'fs/promises';
 import { PEM } from './pem/pem';
 import { Certificate } from './types/certificate/certificate';
 import { relative, resolve } from 'path';
@@ -8,67 +7,62 @@ import {
   writeToBytesOrThrow,
 } from './types/index';
 import { Bytes } from '../../bytes';
+import { TestCerts } from '../../TestCerts';
 
 const directory = resolve('./dist/test/');
 const { pathname } = new URL(import.meta.url);
 console.log(relative(directory, pathname.replace('.mjs', '.ts')));
 
 test('Cert Ed25519', async () => {
-  const bytes = PEM.decodeOrThrow(
-    await readFile('./certs/ed25519.pem', 'utf8')
-  );
+  const bytes = PEM.decodeOrThrow(TestCerts.ed25519);
   const cert = readAndResolveFromBytesOrThrow(Certificate, bytes);
 
   assert(Bytes.equals(bytes, writeToBytesOrThrow(cert)));
 });
 
 test("Cert Let's Encrypt", async () => {
-  const bytes = PEM.decodeOrThrow(
-    await readFile('./certs/letsencrypt.pem', 'utf8')
-  );
+  const bytes = PEM.decodeOrThrow(TestCerts.letsencrypt);
   const cert = readAndResolveFromBytesOrThrow(Certificate, bytes);
 
   assert(Bytes.equals(bytes, writeToBytesOrThrow(cert)));
 });
 
 test('Cert frank4dd-rsa', async () => {
-  const bytes = Bytes.from(await readFile('./certs/frank4dd-rsa.der'));
+  const bytes = Bytes.from(TestCerts.frank4dd_rsa);
   const cert = readAndResolveFromBytesOrThrow(Certificate, bytes);
 
   assert(Bytes.equals(bytes, writeToBytesOrThrow(cert)));
 });
 
 test('Cert frank4dd-dsa', async () => {
-  const bytes = Bytes.from(await readFile('./certs/frank4dd-dsa.der'));
+  const bytes = Bytes.from(TestCerts.frank4dd_dsa);
   const cert = readAndResolveFromBytesOrThrow(Certificate, bytes);
 
   assert(Bytes.equals(bytes, writeToBytesOrThrow(cert)));
 });
 
 test('Cert Tor', async () => {
-  const bytes = PEM.decodeOrThrow(await readFile('./certs/tor.pem', 'utf8'));
+  const bytes = PEM.decodeOrThrow(TestCerts.tor);
   const cert = readAndResolveFromBytesOrThrow(Certificate, bytes);
 
   assert(Bytes.equals(bytes, writeToBytesOrThrow(cert)));
 });
 
 test('Cert Tor 2', async () => {
-  const bytes = PEM.decodeOrThrow(await readFile('./certs/tor2.pem', 'utf8'));
+  const bytes = PEM.decodeOrThrow(TestCerts.tor2);
   const cert = readAndResolveFromBytesOrThrow(Certificate, bytes);
 
   assert(Bytes.equals(bytes, writeToBytesOrThrow(cert)));
 });
 
 test('Cert full', async () => {
-  const bytes = PEM.decodeOrThrow(await readFile('./certs/full.pem', 'utf8'));
+  const bytes = PEM.decodeOrThrow(TestCerts.full);
   const cert = readAndResolveFromBytesOrThrow(Certificate, bytes);
   assert(Bytes.equals(bytes, writeToBytesOrThrow(cert)));
 });
 
 test('ISRG Root X1', async () => {
-  const bytes = PEM.decodeOrThrow(
-    await readFile('./certs/isrg-root-x1.pem', 'utf8')
-  );
+  const bytes = PEM.decodeOrThrow(TestCerts.isrg_root_x1);
   const cert = readAndResolveFromBytesOrThrow(Certificate, bytes);
   console.log(cert.tbsCertificate.issuer.toX501OrThrow());
   console.log(cert.tbsCertificate.subject.toX501OrThrow());

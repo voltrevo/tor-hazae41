@@ -1,6 +1,5 @@
 import { assert, test } from '../../../phobos/mod';
 import { PEM } from './pem';
-import { readFile } from 'node:fs/promises';
 import { relative, resolve } from 'node:path';
 
 const directory = resolve('./dist/test/');
@@ -12,8 +11,22 @@ function ignoreLastNewline(text: string) {
   return text;
 }
 
+const ed25519pem = `
+-----BEGIN CERTIFICATE-----
+MIIBfzCCATGgAwIBAgIUfI5kSdcO2S0+LkpdL3b2VUJG10YwBQYDK2VwMDUxCzAJ
+BgNVBAYTAklUMQ8wDQYDVQQHDAZNaWxhbm8xFTATBgNVBAMMDFRlc3QgZWQyNTUx
+OTAeFw0yMDA5MDIxMzI1MjZaFw0zMDA5MDIxMzI1MjZaMDUxCzAJBgNVBAYTAklU
+MQ8wDQYDVQQHDAZNaWxhbm8xFTATBgNVBAMMDFRlc3QgZWQyNTUxOTAqMAUGAytl
+cAMhADupL/3LF2beQKKS95PeMPgKI6gxIV3QB9hjJC7/aCGFo1MwUTAdBgNVHQ4E
+FgQUa6W9z536I1l4EmQXrh5y2JqASugwHwYDVR0jBBgwFoAUa6W9z536I1l4EmQX
+rh5y2JqASugwDwYDVR0TAQH/BAUwAwEB/zAFBgMrZXADQQBvc3e+KJZaMzbX5TT9
+kPP9QH8fAvkAV/IWDxZrBL9lhLaY0tDSv0zWbw624uidBKPgmVD5wm3ec60dNVeF
+ZYYG
+-----END CERTIFICATE-----
+`.slice(1);
+
 test('Parse and stringify', async () => {
-  const text = await readFile('./certs/ed25519.pem', 'utf8');
+  const text = ed25519pem;
   const buffer = PEM.decodeOrThrow(text);
   const text2 = PEM.encodeOrThrow(buffer);
 
