@@ -1,6 +1,9 @@
 import { assert } from '../../../../utils/assert';
-import { ArrayLike } from '../../../arrays/index';
 import { Ascii } from '../../../common/Ascii';
+
+export type ArrayLike<T, N extends number = number> = number extends N
+  ? globalThis.ArrayLike<T>
+  : globalThis.ArrayLike<T> & { readonly length: N };
 
 export type Bytes<N extends number = number> =
   globalThis.Uint8Array<ArrayBuffer> & {
