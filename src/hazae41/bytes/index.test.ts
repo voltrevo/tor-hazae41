@@ -1,5 +1,5 @@
-import { assert, test } from '../../../phobos/mod';
-import { Bytes } from './bytes';
+import { assert, test } from '../phobos/mod';
+import { Bytes } from '.';
 
 test('padStart', async () => {
   const bytes = Bytes.from([1, 2, 3, 4]);

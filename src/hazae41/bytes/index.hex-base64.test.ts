@@ -1,5 +1,5 @@
-import { assert, test } from '../../../phobos/mod';
-import { Bytes } from './bytes';
+import { assert, test } from '../phobos/mod';
+import { Bytes } from '.';
 
 // Hex test vectors
 const hexTest0Hex = '';

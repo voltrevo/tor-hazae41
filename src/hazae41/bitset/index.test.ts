@@ -1,5 +1,5 @@
-import { assert, test } from '../../../phobos/mod';
-import { Bitset } from './bitset';
+import { assert, test } from '../phobos/mod';
+import { Bitset } from '.';
 
 test('Identity', async () => {
   const bitset = new Bitset(0b00000000, 8);

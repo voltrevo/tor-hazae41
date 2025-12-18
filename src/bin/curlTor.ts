@@ -29,7 +29,7 @@ import { stdout, stderr } from 'node:process';
 import { TorClient } from '../TorClient/versions/standard';
 import { getErrorDetails } from '../utils/getErrorDetails';
 import { Log } from '../Log';
-import { Bytes } from '../hazae41/bytes/mods';
+import { Bytes } from '../hazae41/bytes';
 
 type Opts = {
   method?: string;
