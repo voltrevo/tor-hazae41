@@ -1,10 +1,10 @@
-import { Awaitable } from '../../../libs/promises/index';
 import { SecretTurboReader } from './reader.js';
 import { SecretTurboWriter } from './writer.js';
 import { Bytes } from '../../../../bytes';
 import { Unknown, Writable } from '../../../../binary/mod';
 import { FullDuplex } from '../../../../cascade';
 import { Future } from '../../../../future';
+import { Awaitable } from '../../../../common/Awaitable.js';
 
 export interface TurboDuplexParams {
   readonly client?: Bytes;

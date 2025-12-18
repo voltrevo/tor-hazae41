@@ -1,4 +1,3 @@
-import { Awaitable } from '../libs/promises/index.js';
 import { Resizer } from '../libs/resizer/resizer.js';
 import { PlaintextRecord } from './binary/records/record.js';
 import { Cipher } from './ciphers/cipher.js';
@@ -10,6 +9,7 @@ import { Readable, Unknown, Writable } from '../../binary/mod.js';
 import { X509 } from '../../x509/index.js';
 import { FullDuplex } from '../../cascade/index.js';
 import { Future } from '../../future/index.js';
+import { Awaitable } from '../../common/Awaitable.js';
 
 export interface TlsClientDuplexParams {
   /**

@@ -5,7 +5,6 @@ import {
   SuperWritableStream,
 } from '../../../cascade';
 import { Nullable } from '../../libs/nullable/index';
-import { Awaitable } from '../../libs/promises/index';
 import { Resizer } from '../../libs/resizer/resizer';
 import { Strings } from '../../libs/strings/strings';
 import { Console } from '../console/index';
@@ -26,6 +25,7 @@ import {
 import { Bytes } from '../../../bytes';
 import { Unknown, Writable } from '../../../binary/mod';
 import { Future } from '../../../future';
+import { Awaitable } from '../../../common/Awaitable';
 
 export namespace Lines {
   export const rn = Bytes.encodeUtf8('\r\n');

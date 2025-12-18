@@ -1,9 +1,9 @@
 import { Writable } from '../../../../binary/mod';
 import { Bytes } from '../../../../bytes';
 import { FullDuplex } from '../../../../cascade/index';
+import { Awaitable } from '../../../../common/Awaitable';
 import { Cursor } from '../../../../cursor/mod';
 import { Future } from '../../../../future/index';
-import { Awaitable } from '../../../libs/promises/index';
 import { SecretKcpReader } from '../reader/index';
 import { SecretKcpWriter } from '../writer/index';
 

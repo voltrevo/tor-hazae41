@@ -1,8 +1,8 @@
 import { Pin } from '../../box';
+import { Awaitable } from '../../common/Awaitable';
 import { Future } from '../../future/index';
 import { None, Option, Some } from '../../option/index';
 import { WeakParameters } from '../libs/parameters/index';
-import { Awaitable } from '../libs/promises/index';
 import { Voidable } from '../libs/voidable/index';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
