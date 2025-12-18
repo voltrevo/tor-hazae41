@@ -1,6 +1,6 @@
-import { test } from '../../../phobos/mod';
-import { assert } from '../../../../utils/assert';
-import { Dates } from './dates.js';
+import { assert } from '../../utils/assert';
+import { test } from '../phobos/mod';
+import { Dates } from './Dates';
 
 test('Dates.fromMillis - converts milliseconds to Date', async () => {
   const millis = 1000;

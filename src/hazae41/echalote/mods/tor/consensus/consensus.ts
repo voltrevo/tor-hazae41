@@ -1,7 +1,7 @@
 import { ASN1 } from '../../../../asn1';
 import { fetch } from '../../../../fleche';
 import { OIDs, X509 } from '../../../../x509';
-import { Mutable } from '../../../libs/typescript/typescript';
+import { Mutable } from '../../../../common/Mutable';
 import { assert } from '../../../../../utils/assert.js';
 import { Circuit } from '../circuit.js';
 import { RsaBigInt } from '../RsaBigInt.js';

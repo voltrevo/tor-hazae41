@@ -1,5 +1,5 @@
 import { Cursor } from '../../../../../../../cursor/mod';
-import { Dates } from '../../../../../../libs/dates/dates';
+import { Dates } from '../../../../../../../common/Dates';
 import { Address4, Address6 } from '../../../address';
 import { Unimplemented } from '../../../../errors';
 

@@ -1,4 +1,4 @@
-import { Mutable } from '../../../../../../libs/typescript/typescript';
+import { Mutable } from '../../../../../../../common/Mutable';
 import { CrossCert } from '../../../certs/cross/cert';
 import { Ed25519Cert } from '../../../certs/ed25519/cert';
 import { RsaCert } from '../../../certs/rsa/cert';
