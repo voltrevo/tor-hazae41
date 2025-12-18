@@ -531,3 +531,143 @@ test('VirtualClock - timer cleared during execution', async () => {
   await clock.advanceTime(50);
   expect(executed).toBe(true);
 });
+
+test('VirtualClock - automated mode - wait() auto-executes timers', async () => {
+  const clock = new VirtualClock({ automated: true });
+  const order: number[] = [];
+
+  clock.setTimeout(() => order.push(1), 50);
+  clock.setTimeout(() => order.push(2), 30);
+  clock.setTimeout(() => order.push(3), 70);
+
+  // wait() should auto-execute all timers without calling run()
+  await clock.wait();
+
+  expect(order.length === 3).toBe(true);
+  expect(order[0] === 2).toBe(true);
+  expect(order[1] === 1).toBe(true);
+  expect(order[2] === 3).toBe(true);
+});
+
+test('VirtualClock - automated mode - wait() called immediately waits for background execution', async () => {
+  const clock = new VirtualClock({ automated: true });
+  let executed = false;
+
+  clock.setTimeout(() => {
+    executed = true;
+  }, 50);
+
+  // wait() should wait for the background auto-execution
+  const waitPromise = clock.wait();
+  await waitPromise;
+
+  expect(executed).toBe(true);
+});
+
+test('VirtualClock - automated mode - concurrent wait() calls', async () => {
+  const clock = new VirtualClock({ automated: true });
+  const order: number[] = [];
+
+  clock.setTimeout(() => order.push(1), 30);
+  clock.setTimeout(() => order.push(2), 60);
+
+  // Multiple concurrent wait() calls should all resolve
+  const [, , ,] = await Promise.all([clock.wait(), clock.wait(), clock.wait()]);
+
+  expect(order.length === 2).toBe(true);
+  expect(order[0] === 1).toBe(true);
+  expect(order[1] === 2).toBe(true);
+});
+
+test('VirtualClock - automated mode - wait() throws on manual mode', async () => {
+  const clock = new VirtualClock({ automated: false });
+  let thrown = false;
+
+  try {
+    await clock.wait();
+  } catch (error) {
+    thrown =
+      error instanceof Error && error.message === 'Cannot wait in manual mode';
+  }
+
+  expect(thrown).toBe(true);
+});
+
+test('VirtualClock - automated mode - wait() propagates timer errors', async () => {
+  const clock = new VirtualClock({ automated: true });
+  const testError = new Error('Test error from timer');
+
+  clock.setTimeout(() => {
+    throw testError;
+  }, 50);
+
+  let caughtError: Error | null = null;
+  try {
+    await clock.wait();
+  } catch (error) {
+    caughtError = error as Error;
+  }
+
+  expect(caughtError?.message === 'Test error from timer').toBe(true);
+});
+
+test('VirtualClock - automated mode - cannot schedule timers after error', async () => {
+  const clock = new VirtualClock({ automated: true });
+  const testError = new Error('Test error');
+
+  clock.setTimeout(() => {
+    throw testError;
+  }, 50);
+
+  await clock.wait().catch(() => {
+    // Catch the error
+  });
+
+  let thrown = false;
+  try {
+    clock.setTimeout(() => {}, 100);
+  } catch (error) {
+    thrown =
+      error instanceof Error &&
+      error.message.includes('Cannot schedule timers after error');
+  }
+
+  expect(thrown).toBe(true);
+});
+
+test('VirtualClock - automated mode - setInterval with wait()', async () => {
+  const clock = new VirtualClock({ automated: true });
+  let count = 0;
+
+  clock.setInterval(() => {
+    count++;
+    if (count >= 3) {
+      clock.stop();
+    }
+  }, 50);
+
+  await clock.wait();
+  expect(count === 3).toBe(true);
+});
+
+test('VirtualClock - automated mode - tasks scheduling more tasks with wait()', async () => {
+  const clock = new VirtualClock({ automated: true });
+  const order: number[] = [];
+
+  clock.setTimeout(() => {
+    order.push(1);
+    clock.setTimeout(() => {
+      order.push(2);
+    }, 20);
+  }, 30);
+
+  clock.setTimeout(() => {
+    order.push(3);
+  }, 40);
+
+  await clock.wait();
+  expect(order.length === 3).toBe(true);
+  expect(order[0] === 1).toBe(true);
+  expect(order[1] === 3).toBe(true);
+  expect(order[2] === 2).toBe(true);
+});

@@ -131,9 +131,8 @@ export class ResourcePool<R> extends EventEmitter<ResourcePoolEvents<R>> {
       throw new Error('ResourcePool is disposed');
     }
 
-    this.ensureInFlight();
-
     while (this.pool.length === 0) {
+      this.ensureInFlight();
       await this.nextUpdate();
     }
 

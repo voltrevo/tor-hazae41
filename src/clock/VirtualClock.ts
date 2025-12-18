@@ -6,6 +6,7 @@ interface Timer {
   id: number;
   executeTime: number;
   callback: () => void;
+  actualCallback?: () => void;
   interval?: number;
   refed: boolean;
 }
@@ -24,6 +25,8 @@ export class VirtualClock implements IClock {
   private running: boolean;
   private stopRequested: boolean;
   private log?: Log;
+  private autoRunPromise?: Promise<void>;
+  private storedError?: Error;
 
   constructor(options: VirtualClockOptions = {}) {
     this.currentTime = options.startTime ?? 0;
@@ -53,18 +56,30 @@ export class VirtualClock implements IClock {
   }
 
   setTimeout(callback: () => void, delay: number): unknown {
+    if (this.storedError) {
+      throw new Error(
+        `Cannot schedule timers after error: ${this.storedError.message}`
+      );
+    }
+
     const id = this.nextId++;
     const timer: Timer = {
       id,
       executeTime: this.currentTime + delay,
+      actualCallback: callback,
       callback: () => {
-        // Schedule callback as macrotask
+        // Schedule callback as macrotask (for manual mode or non-automated execution)
         setTimeout(callback, 0);
       },
       refed: true, // Default to refed (matching Node.js behavior)
     };
 
     this.timers.set(id, timer);
+
+    // In automated mode, ensure auto-execution starts
+    if (this.automated) {
+      this.ensureAutoRun();
+    }
 
     return id;
   }
@@ -74,12 +89,19 @@ export class VirtualClock implements IClock {
   }
 
   setInterval(callback: () => void, interval: number): unknown {
+    if (this.storedError) {
+      throw new Error(
+        `Cannot schedule timers after error: ${this.storedError.message}`
+      );
+    }
+
     const id = this.nextId++;
     const timer: Timer = {
       id,
       executeTime: this.currentTime + interval,
+      actualCallback: callback,
       callback: () => {
-        // Schedule callback as macrotask
+        // Schedule callback as macrotask (for manual mode or non-automated execution)
         setTimeout(callback, 0);
       },
       interval,
@@ -87,6 +109,11 @@ export class VirtualClock implements IClock {
     };
 
     this.timers.set(id, timer);
+
+    // In automated mode, ensure auto-execution starts
+    if (this.automated) {
+      this.ensureAutoRun();
+    }
 
     return id;
   }
@@ -136,6 +163,7 @@ export class VirtualClock implements IClock {
           id: timer.id,
           executeTime: this.currentTime + timer.interval,
           callback: timer.callback,
+          actualCallback: timer.actualCallback,
           interval: timer.interval,
           refed: timer.refed, // Preserve ref state for recurring timers
         };
@@ -149,9 +177,99 @@ export class VirtualClock implements IClock {
     }
   }
 
+  private ensureAutoRun(): void {
+    if (this.autoRunPromise || !this.automated) {
+      return;
+    }
+
+    this.autoRunPromise = this.performAutoRun();
+  }
+
+  private async performAutoRun(): Promise<void> {
+    // Defer to next macrotask to allow more timers to be scheduled in current turn
+    await new Promise(resolve => setTimeout(resolve, 0));
+
+    try {
+      while (this.timers.size > 0 && !this.stopRequested) {
+        const refedTimers = Array.from(this.timers.values()).filter(
+          timer => timer.refed
+        );
+
+        // Exit if only unref'd timers remain
+        if (refedTimers.length === 0) break;
+
+        const nextTimers = refedTimers.sort(
+          (a, b) => a.executeTime - b.executeTime
+        );
+
+        if (nextTimers.length === 0) break;
+
+        const nextTimer = nextTimers[0];
+        this.currentTime = nextTimer.executeTime;
+
+        const timer = this.timers.get(nextTimer.id);
+        if (!timer) continue;
+
+        this.timers.delete(timer.id);
+
+        try {
+          // Execute the actual callback directly (not wrapped in setTimeout)
+          if (timer.actualCallback) {
+            timer.actualCallback();
+          } else {
+            timer.callback();
+          }
+        } catch (error) {
+          // Store error and stop auto-execution
+          this.storedError =
+            error instanceof Error ? error : new Error(String(error));
+          this.log?.error(`Timer callback error: ${this.storedError.message}`);
+          break;
+        }
+
+        if (timer.interval) {
+          const newTimer: Timer = {
+            id: timer.id,
+            executeTime: this.currentTime + timer.interval,
+            callback: timer.callback,
+            actualCallback: timer.actualCallback,
+            interval: timer.interval,
+            refed: timer.refed,
+          };
+          this.timers.set(timer.id, newTimer);
+        }
+
+        // Yield to event loop after each timer
+        await new Promise(resolve => setTimeout(resolve, 0));
+      }
+    } finally {
+      this.autoRunPromise = undefined;
+      this.running = false;
+      this.stopRequested = false;
+    }
+  }
+
   async run(): Promise<void> {
+    console.log(
+      'DEPRECATED: VirtualClock.run() is deprecated. Use wait() instead.'
+    );
+
     assert(this.automated, 'Cannot run manual clock in automated mode');
 
+    if (this.storedError) {
+      throw this.storedError;
+    }
+
+    // If auto-execution is already running, wait for it
+    if (this.autoRunPromise) {
+      await this.autoRunPromise;
+      if (this.storedError) {
+        throw this.storedError;
+      }
+      return;
+    }
+
+    // Otherwise, manually execute timers (for backward compatibility with stop())
     if (this.running) {
       return;
     }
@@ -159,55 +277,78 @@ export class VirtualClock implements IClock {
     this.running = true;
     this.stopRequested = false;
 
-    while (this.timers.size > 0 && !this.stopRequested) {
-      const refedTimers = Array.from(this.timers.values()).filter(
-        timer => timer.refed
-      );
-
-      // Exit if only unref'd timers remain
-      if (refedTimers.length === 0) break;
-
-      const nextTimers = refedTimers.sort(
-        (a, b) => a.executeTime - b.executeTime
-      );
-
-      if (nextTimers.length === 0) break;
-
-      const nextTimer = nextTimers[0];
-      this.currentTime = nextTimer.executeTime;
-
-      const timer = this.timers.get(nextTimer.id);
-      if (!timer) continue;
-
-      this.timers.delete(timer.id);
-
-      try {
-        timer.callback();
-      } catch (error) {
-        this.log?.error(
-          `Timer callback error: ${error instanceof Error ? error.message : String(error)}`
+    try {
+      while (this.timers.size > 0 && !this.stopRequested) {
+        const refedTimers = Array.from(this.timers.values()).filter(
+          timer => timer.refed
         );
-      }
 
-      if (timer.interval) {
-        const newTimer: Timer = {
-          id: timer.id,
-          executeTime: this.currentTime + timer.interval,
-          callback: timer.callback,
-          interval: timer.interval,
-          refed: timer.refed, // Preserve ref state for recurring timers
-        };
-        this.timers.set(timer.id, newTimer);
-      }
+        // Exit if only unref'd timers remain
+        if (refedTimers.length === 0) break;
 
-      await new Promise(resolve => setTimeout(resolve, 0));
+        const nextTimers = refedTimers.sort(
+          (a, b) => a.executeTime - b.executeTime
+        );
+
+        if (nextTimers.length === 0) break;
+
+        const nextTimer = nextTimers[0];
+        this.currentTime = nextTimer.executeTime;
+
+        const timer = this.timers.get(nextTimer.id);
+        if (!timer) continue;
+
+        this.timers.delete(timer.id);
+
+        try {
+          timer.callback();
+        } catch (error) {
+          // Store error and stop execution
+          this.storedError =
+            error instanceof Error ? error : new Error(String(error));
+          this.log?.error(`Timer callback error: ${this.storedError.message}`);
+          throw this.storedError;
+        }
+
+        if (timer.interval) {
+          const newTimer: Timer = {
+            id: timer.id,
+            executeTime: this.currentTime + timer.interval,
+            callback: timer.callback,
+            actualCallback: timer.actualCallback,
+            interval: timer.interval,
+            refed: timer.refed, // Preserve ref state for recurring timers
+          };
+          this.timers.set(timer.id, newTimer);
+        }
+
+        await new Promise(resolve => setTimeout(resolve, 0));
+      }
+    } finally {
+      this.running = false;
+    }
+  }
+
+  async wait(): Promise<void> {
+    assert(this.automated, 'Cannot wait in manual mode');
+
+    if (this.storedError) {
+      throw this.storedError;
     }
 
-    this.running = false;
+    // Wait for auto-execution to complete
+    if (this.autoRunPromise) {
+      await this.autoRunPromise;
+    }
+
+    // Re-throw if error occurred during auto-execution
+    if (this.storedError) {
+      throw this.storedError;
+    }
   }
 
   stop(): void {
-    if (!this.automated || !this.running) {
+    if (!this.automated) {
       return;
     }
 

@@ -290,7 +290,7 @@ test('ResourcePool: dispose throws on subsequent operations', async () => {
   expect(threwOnAcquire).toBe(true);
 });
 
-test.skip('ResourcePool: racing multiple concurrent acquires', async () => {
+test('ResourcePool: racing multiple concurrent acquires', async () => {
   const clock = new VirtualClock();
   const createdResources: MockResource[] = [];
 
@@ -404,8 +404,8 @@ test('ResourcePool: configurable backoff parameters', async () => {
   pool.dispose();
 });
 
-test.skip('ResourcePool: minInFlightCount races multiple creations on empty acquire', async () => {
-  const clock = new VirtualClock();
+test('ResourcePool: minInFlightCount races multiple creations on empty acquire', async () => {
+  const clock = new VirtualClock({ automated: true });
   let createCount = 0;
   const creationOrder: number[] = [];
 
@@ -424,17 +424,23 @@ test.skip('ResourcePool: minInFlightCount races multiple creations on empty acqu
   });
 
   // Acquire from empty pool - should race 3 creations
-  const resource = await pool.acquire();
+  const acquirePromise = pool.acquire();
+
+  const resource = await acquirePromise;
 
   assert(resource.id.startsWith('r'), 'should return a valid resource');
   expect(createCount === 3).toBe(true);
   expect(creationOrder.length === 3).toBe(true);
 
   pool.dispose();
+  await clock.wait();
+
+  // All 3 creations should have completed with their 10ms delays
+  expect(clock.now() === 10).toBe(true);
 });
 
-test.skip('ResourcePool: minInFlightCount leftover creations fill buffer', async () => {
-  const clock = new VirtualClock();
+test('ResourcePool: minInFlightCount leftover creations fill buffer', async () => {
+  const clock = new VirtualClock({ automated: true });
   let createCount = 0;
 
   const factory = async () => {
@@ -451,12 +457,14 @@ test.skip('ResourcePool: minInFlightCount leftover creations fill buffer', async
   });
 
   // Acquire from empty pool - races 3, returns 1
-  const resource1 = await pool.acquire();
+  const acquirePromise = pool.acquire();
+
+  const resource1 = await acquirePromise;
   assert(resource1.id.startsWith('r'), 'should return first resource');
   expect(createCount === 3).toBe(true);
 
-  // Give background buffering time to complete
-  await clock.delay(50);
+  // Wait for background buffering to complete
+  await clock.wait();
 
   // Now pool should have buffered the 2 other successful creations
   assert(pool.size() === 2, 'should have 2 resources in buffer from racing');
@@ -467,8 +475,8 @@ test.skip('ResourcePool: minInFlightCount leftover creations fill buffer', async
   pool.dispose();
 });
 
-test.skip('ResourcePool: minInFlightCount error handling ignores failures from race', async () => {
-  const clock = new VirtualClock();
+test('ResourcePool: minInFlightCount error handling ignores failures from race', async () => {
+  const clock = new VirtualClock({ automated: true });
   let createCount = 0;
 
   const factory = async () => {
@@ -489,12 +497,14 @@ test.skip('ResourcePool: minInFlightCount error handling ignores failures from r
   });
 
   // Acquire - races 3, first succeeds (returned), second fails (dropped), third succeeds (buffered)
-  const resource = await pool.acquire();
+  const acquirePromise = pool.acquire();
+
+  const resource = await acquirePromise;
   assert(resource.id.startsWith('r'), 'should return a successful resource');
   expect(createCount === 3).toBe(true);
 
-  // Give background buffering time
-  await clock.delay(50);
+  // Wait for background buffering to complete
+  await clock.wait();
 
   // Should have 1 in buffer (the third one), second one's error was dropped
   assert(
@@ -505,8 +515,8 @@ test.skip('ResourcePool: minInFlightCount error handling ignores failures from r
   pool.dispose();
 });
 
-test.skip('ResourcePool: minInFlightCount with partial errors buffers successes', async () => {
-  const clock = new VirtualClock();
+test('ResourcePool: minInFlightCount with partial errors buffers successes', async () => {
+  const clock = new VirtualClock({ automated: true });
   let createCount = 0;
 
   const factory = async () => {
@@ -527,12 +537,13 @@ test.skip('ResourcePool: minInFlightCount with partial errors buffers successes'
   });
 
   // Acquire - races 3, first fails, 2nd and 3rd succeed
-  const resource = await pool.acquire();
+  const acquirePromise = pool.acquire();
+
+  const resource = await acquirePromise;
   assert(resource.id.startsWith('r'), 'should return a successful resource');
   expect(createCount === 3).toBe(true);
 
-  // Give background buffering time to complete
-  await clock.delay(50);
+  await clock.wait();
 
   // Should have at least 1 in buffer (the other successful one)
   assert(
@@ -583,8 +594,8 @@ test('ResourcePool: minInFlightCount with targetSize maintains wholistic account
   pool.dispose();
 });
 
-test.skip('ResourcePool: minInFlightCount with targetSize=0 can overfill', async () => {
-  const clock = new VirtualClock();
+test('ResourcePool: minInFlightCount with targetSize=0 can overfill', async () => {
+  const clock = new VirtualClock({ automated: true });
   let createCount = 0;
 
   const factory = async () => {
@@ -602,11 +613,12 @@ test.skip('ResourcePool: minInFlightCount with targetSize=0 can overfill', async
   });
 
   // With targetSize=0, acquire should race 3 and buffer 2
-  const resource = await pool.acquire();
+  const acquirePromise = pool.acquire();
+
+  const resource = await acquirePromise;
   assert(resource.id.startsWith('r'), 'should return resource');
 
-  // Give background buffering time
-  await clock.delay(50);
+  await clock.wait();
 
   // Should have overfilled the buffer to 2 even though targetSize=0
   assert(
@@ -617,8 +629,8 @@ test.skip('ResourcePool: minInFlightCount with targetSize=0 can overfill', async
   pool.dispose();
 });
 
-test.skip('ResourcePool: minInFlightCount sequential acquires reuse buffered resources', async () => {
-  const clock = new VirtualClock();
+test('ResourcePool: minInFlightCount sequential acquires reuse buffered resources', async () => {
+  const clock = new VirtualClock({ automated: true });
   let createCount = 0;
 
   const factory = async () => {
@@ -635,12 +647,11 @@ test.skip('ResourcePool: minInFlightCount sequential acquires reuse buffered res
   });
 
   // First acquire - races 3
-  const r1 = await pool.acquire();
+  const acquirePromise1 = pool.acquire();
+
+  const r1 = await acquirePromise1;
   const initialCreateCount = createCount;
   expect(initialCreateCount === 3).toBe(true);
-
-  // Give buffering time
-  await clock.delay(50);
 
   // Second acquire - should get buffered resource (no new creation)
   const r2 = await pool.acquire();
@@ -648,6 +659,7 @@ test.skip('ResourcePool: minInFlightCount sequential acquires reuse buffered res
   expect(r1.id !== r2.id).toBe(true);
 
   pool.dispose();
+  await clock.wait();
 });
 
 test('ResourcePool: target-size-reached emitted again when pool drops below target', async () => {

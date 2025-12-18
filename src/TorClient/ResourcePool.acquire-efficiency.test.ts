@@ -28,8 +28,8 @@ function createMockResource(
   return resource;
 }
 
-test.skip('ResourcePool.acquire-efficiency: concurrent acquires reuse in-flight creations', async () => {
-  const clock = new VirtualClock();
+test('ResourcePool.acquire-efficiency: concurrent acquires reuse in-flight creations', async () => {
+  const clock = new VirtualClock({ automated: true });
   const createdIds: string[] = [];
 
   const factory = async () => {
@@ -47,7 +47,10 @@ test.skip('ResourcePool.acquire-efficiency: concurrent acquires reuse in-flight 
   });
 
   // Call acquire twice rapidly
-  const results = await Promise.all([pool.acquire(), pool.acquire()]);
+  const acquirePromise1 = pool.acquire();
+  const acquirePromise2 = pool.acquire();
+
+  const results = await Promise.all([acquirePromise1, acquirePromise2]);
 
   expect(results[0].id !== '').toBe(true);
   expect(results[1].id !== '').toBe(true);
@@ -70,4 +73,8 @@ test.skip('ResourcePool.acquire-efficiency: concurrent acquires reuse in-flight 
   expect(results[0].id !== results[1].id).toBe(true);
 
   pool.dispose();
+  await clock.wait();
+
+  // Both creations completed with 100ms delays
+  expect(clock.now() === 100).toBe(true);
 });
