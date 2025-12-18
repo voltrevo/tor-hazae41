@@ -4,7 +4,6 @@ import { test } from '../../../phobos/mod';
 import { Bytes } from '../../../bytes/index';
 import { KcpDuplex } from './stream/index';
 
-
 const conversation = 12345;
 
 function pipeToKcp(raw: { outer: ReadableWritablePair<Unknown, Writable> }): {

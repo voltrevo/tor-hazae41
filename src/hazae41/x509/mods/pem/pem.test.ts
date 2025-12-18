@@ -1,7 +1,6 @@
 import { assert, test } from '../../../phobos/mod';
 import { PEM } from './pem';
 
-
 function ignoreLastNewline(text: string) {
   if (text.endsWith('\n')) return text.slice(0, -1);
   return text;

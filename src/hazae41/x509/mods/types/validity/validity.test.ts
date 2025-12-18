@@ -1,7 +1,6 @@
 import { assert, test } from '../../../../phobos/mod';
 import { Validity } from './validity';
 
-
 test('Validity generation', async () => {
   const inOneDay = Validity.generate(1);
 

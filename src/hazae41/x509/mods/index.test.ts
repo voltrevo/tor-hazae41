@@ -8,7 +8,6 @@ import {
 import { Bytes } from '../../bytes';
 import { TestCerts } from '../../TestCerts';
 
-
 test('Cert Ed25519', async () => {
   const bytes = PEM.decodeOrThrow(TestCerts.ed25519);
   const cert = readAndResolveFromBytesOrThrow(Certificate, bytes);

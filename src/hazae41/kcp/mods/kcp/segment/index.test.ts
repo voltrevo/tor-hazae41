@@ -3,7 +3,6 @@ import { assert, test } from '../../../../phobos/mod';
 import { KcpSegment } from './index';
 import { Bytes } from '../../../../bytes';
 
-
 test('kcp segment', async () => {
   const conversation = 12345;
   const command = KcpSegment.commands.push;

@@ -5,7 +5,6 @@ import { assert, test } from '../../../../phobos/mod';
 import { DER } from '../../resolvers/der/index';
 import { Sequence } from './sequence';
 
-
 function hexToCursor(hex: string) {
   const hex2 = hex.replaceAll(' ', '');
   const buffer = Base16.padStartAndDecodeOrThrow(hex2);

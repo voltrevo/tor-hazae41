@@ -1,7 +1,6 @@
 import { assert, test } from '../../../../phobos/mod';
 import { Name } from './name';
 
-
 function checkFromTo(x501: string, message?: string) {
   // console.log("aaa", x501)
   // console.log("bbb", Name.tryFromX501(x501).unwrap().tryToX501().unwrap())

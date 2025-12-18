@@ -6,7 +6,6 @@ import { assert, test } from '../../phobos/mod';
 import { SuperEventTarget } from './target';
 import { waitWithCloseAndErrorOrThrow } from './waiters';
 
-
 test('AsyncEventTarget', async () => {
   const target = new SuperEventTarget<{
     test: (order: 'first' | 'second') => number;

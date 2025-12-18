@@ -6,7 +6,6 @@ import { DER } from '../../resolvers/der/index';
 import { OpaqueTriplet } from './opaque';
 import { Bytes } from '../../../../bytes';
 
-
 function hexToBytes(hex: string) {
   const hex2 = hex.replaceAll(' ', '');
   return Base16.padStartAndDecodeOrThrow(hex2);

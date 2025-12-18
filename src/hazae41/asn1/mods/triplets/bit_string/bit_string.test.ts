@@ -4,7 +4,6 @@ import { Cursor } from '../../../../cursor/mod';
 import { assert, test } from '../../../../phobos/mod';
 import { BitString } from './bit_string';
 
-
 function hexToCursor(hex: string) {
   const hex2 = hex.replaceAll(' ', '');
   const buffer = Base16.padStartAndDecodeOrThrow(hex2);

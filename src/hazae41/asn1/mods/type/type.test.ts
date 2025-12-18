@@ -4,7 +4,6 @@ import { assert, test } from '../../../phobos/mod';
 import { Sequence } from '../triplets/sequence/sequence';
 import { Type } from './type';
 
-
 function hexToType(hex: string) {
   const hex2 = hex.replaceAll(' ', '');
   const buffer = Base16.padStartAndDecodeOrThrow(hex2);

@@ -37,7 +37,6 @@ export namespace PKCS7 {
   }
 }
 
-
 function compare(a: Bytes, b: Bytes) {
   return Buffer.from(a).equals(Buffer.from(b));
 }

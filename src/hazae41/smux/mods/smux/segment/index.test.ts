@@ -3,7 +3,6 @@ import { assert, test } from '../../../../phobos/mod';
 import { SmuxSegment } from './index';
 import { Bytes } from '../../../../bytes';
 
-
 test('kcp segment', async () => {
   const version = 2;
   const command = SmuxSegment.commands.psh;

@@ -1,7 +1,6 @@
 import { assert, test, throws } from '../../../phobos/mod';
 import { Bitset } from './bitset';
 
-
 test('Identity', async () => {
   const bitset = new Bitset(0b00000000, 8);
 

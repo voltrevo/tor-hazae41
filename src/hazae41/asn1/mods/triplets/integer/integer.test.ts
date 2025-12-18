@@ -4,7 +4,6 @@ import { Bytes } from '../../../../bytes';
 import { assert, test } from '../../../../phobos/mod';
 import { Integer } from './integer';
 
-
 function hexToBytes(hex: string) {
   const hex2 = hex.replaceAll(' ', '');
   return Base16.padStartAndDecodeOrThrow(hex2);
