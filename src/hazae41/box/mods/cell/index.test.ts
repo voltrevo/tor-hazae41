@@ -31,7 +31,7 @@ function* getPointersOrThrow() {
   yield new Pointer(789);
 }
 
-await test('slot', async ({ name }) => {
+test('slot', async ({ name }) => {
   try {
     console.log(`--- ${name} ---`);
 

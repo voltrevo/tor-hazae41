@@ -1,3 +1,4 @@
+import { test } from '../../../phobos/mod';
 import { FullDuplex } from './index';
 
 class A {
@@ -138,20 +139,22 @@ class B {
   }
 }
 
-const a = new A();
-const b = new B();
+test('cascade/index', async () => {
+  const a = new A();
+  const b = new B();
 
-a.duplex.inner.readable
-  .pipeTo(b.duplex.inner.writable)
-  .then(() => console.log('-> done'))
-  .catch(e => console.error('-> error', e));
-b.duplex.inner.readable
-  .pipeTo(a.duplex.inner.writable)
-  .then(() => console.log('<- done'))
-  .catch(e => console.error('<- error', e));
+  a.duplex.inner.readable
+    .pipeTo(b.duplex.inner.writable)
+    .then(() => console.log('-> done'))
+    .catch(e => console.error('-> error', e));
+  b.duplex.inner.readable
+    .pipeTo(a.duplex.inner.writable)
+    .then(() => console.log('<- done'))
+    .catch(e => console.error('<- error', e));
 
-a.send('hello');
+  a.send('hello');
 
-await new Promise(ok => setTimeout(ok, 10000));
+  await new Promise(ok => setTimeout(ok, 10000));
 
-a.close();
+  a.close();
+});

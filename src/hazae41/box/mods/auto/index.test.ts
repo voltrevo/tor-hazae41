@@ -13,7 +13,7 @@ class Resource implements Disposable {
   }
 }
 
-await test('auto', async ({ name }) => {
+test('auto', async ({ name }) => {
   console.log(`--- ${name} ---`);
 
   const resource = new Resource();

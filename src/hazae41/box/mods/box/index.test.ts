@@ -36,7 +36,7 @@ class B<T extends Disposable> {
   }
 }
 
-await test('holder', async ({ name }) => {
+test('holder', async ({ name }) => {
   console.log(`--- ${name} ---`);
 
   console.log(name);
@@ -52,7 +52,7 @@ await test('holder', async ({ name }) => {
   assert(resource.disposed);
 });
 
-await test('dummy', async ({ name }) => {
+test('dummy', async ({ name }) => {
   console.log(`--- ${name} ---`);
 
   const resource = new Resource();
@@ -69,7 +69,7 @@ await test('dummy', async ({ name }) => {
   assert(resource.disposed);
 });
 
-await test('borrow', async ({ name }) => {
+test('borrow', async ({ name }) => {
   console.log(`--- ${name} ---`);
 
   const resource = new Resource();
