@@ -6,6 +6,7 @@ export * from './clone/index';
 export * from './deferred/index';
 export * from './move/index';
 export * from './once/index';
+export * from './pin/index';
 export * from './ref/index';
 export * from './stack/index';
 export * from './tick/index';

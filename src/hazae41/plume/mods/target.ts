@@ -1,3 +1,4 @@
+import { Pin } from '../../box';
 import { Future } from '../../future/index';
 import { None, Option, Some } from '../../option/index';
 import { WeakParameters } from '../libs/parameters/index';
@@ -157,6 +158,6 @@ export class SuperEventTarget<M extends SuperEventMap> {
       { passive: true }
     );
 
-    return Object.assign(future.promise, { dispose }) as any;
+    return Pin.with(future.promise, dispose);
   }
 }
