@@ -6,7 +6,7 @@ import {
   Plume,
   SuperEventTarget,
 } from '../../../plume';
-import { Resizer } from '../../libs/resizer/resizer';
+import { Resizer } from '../../../common/Resizer';
 import { Console } from '../console/index';
 import { Sha1Hasher } from './Sha1Hasher';
 import { TypedAddress } from './binary/address';

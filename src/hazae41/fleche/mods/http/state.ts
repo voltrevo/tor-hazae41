@@ -1,7 +1,7 @@
 import { Nullable } from '../../libs/nullable/index';
-import { Resizer } from '../../libs/resizer/resizer';
 import { Bytes } from '../../../bytes';
 import { SuperReadableStream } from '../../../cascade';
+import { Resizer } from '../../../common/Resizer';
 
 export type HttpState =
   | HttpNoneState

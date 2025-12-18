@@ -1,6 +1,7 @@
-import { Writable } from '../../../binary/mod';
-import { Bytes } from '../../../bytes';
-import { Cursor } from '../../../cursor/mod';
+import { assert } from '../../utils/assert.js';
+import { Bytes } from '../bytes/index.js';
+import { Cursor } from '../cursor/mod.js';
+import { Writable } from '../binary/mod.js';
 
 export class Resizer {
   inner: Cursor;
@@ -15,7 +16,7 @@ export class Resizer {
   writeOrThrow(chunk: Bytes) {
     const length = this.inner.offset + chunk.length;
 
-    if (length > this.maximum) throw new Error(`Maximum size exceeded`);
+    assert(length <= this.maximum, `Maximum size exceeded`);
 
     if (length > this.inner.length) {
       const resized = new Cursor(Bytes.alloc(length));
@@ -29,7 +30,7 @@ export class Resizer {
   writeFromOrThrow(writable: Writable) {
     const length = this.inner.offset + writable.sizeOrThrow();
 
-    if (length > this.maximum) throw new Error(`Maximum size exceeded`);
+    assert(length <= this.maximum, `Maximum size exceeded`);
 
     if (length > this.inner.length) {
       const resized = new Cursor(Bytes.alloc(length));

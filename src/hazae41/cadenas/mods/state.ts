@@ -1,7 +1,6 @@
 import { IA5String, Integer, ObjectIdentifier, Sequence } from '../../asn1';
 import { Certificate, OtherName, SubjectAltName, X509 } from '../../x509';
-import { BigBytes } from '../libs/bigint/bigint.js';
-import { BigMath } from '../libs/bigmath/index.js';
+import { BigintBytes } from '../../common/BigintBytes.js';
 import { prfOrThrow } from './algorithms/prf/prf.js';
 import { List } from './binary/lists/writable.js';
 import { Number24 } from './binary/numbers/number24.js';
@@ -53,6 +52,7 @@ import { CCADB } from './ccadb/CCADB.js';
 import { Bytes } from '../../bytes/index.js';
 import { Cursor } from '../../cursor/mod.js';
 import { Readable, Unknown, Writable } from '../../binary/mod.js';
+import { bigModularExponent } from '../../common/bigModularExponent';
 
 export type TlsClientState =
   | TlsClientNoneState
@@ -541,8 +541,8 @@ export class TlsClientHandshakeServerHelloState implements TlsClientHandshakeSer
           const sAsn1 = signatureAsn1.triplets[1].readIntoOrThrow(Integer.DER);
 
           const rAndS = new Cursor(Bytes.alloc(32 * 2));
-          rAndS.writeOrThrow(BigBytes.exportOrThrow(rAsn1.value));
-          rAndS.writeOrThrow(BigBytes.exportOrThrow(sAsn1.value));
+          rAndS.writeOrThrow(BigintBytes.toBytes(rAsn1.value));
+          rAndS.writeOrThrow(BigintBytes.toBytes(sAsn1.value));
 
           verified = await crypto.subtle.verify(
             signatureAlgorithm,
@@ -598,8 +598,8 @@ export class TlsClientHandshakeServerHelloState implements TlsClientHandshakeSer
           const sAsn1 = signatureAsn1.triplets[1].readIntoOrThrow(Integer.DER);
 
           const rAndS = new Cursor(Bytes.alloc(48 * 2));
-          rAndS.writeOrThrow(BigBytes.exportOrThrow(rAsn1.value));
-          rAndS.writeOrThrow(BigBytes.exportOrThrow(sAsn1.value));
+          rAndS.writeOrThrow(BigintBytes.toBytes(rAsn1.value));
+          rAndS.writeOrThrow(BigintBytes.toBytes(sAsn1.value));
 
           verified = await crypto.subtle.verify(
             signatureAlgorithm,
@@ -755,8 +755,8 @@ export class TlsClientHandshakeServerHelloState implements TlsClientHandshakeSer
         const sAsn1 = signatureAsn1.triplets[1].readIntoOrThrow(Integer.DER);
 
         const rAndS = new Cursor(Bytes.alloc(32 * 2));
-        rAndS.writeOrThrow(BigBytes.exportOrThrow(rAsn1.value));
-        rAndS.writeOrThrow(BigBytes.exportOrThrow(sAsn1.value));
+        rAndS.writeOrThrow(BigintBytes.toBytes(rAsn1.value));
+        rAndS.writeOrThrow(BigintBytes.toBytes(sAsn1.value));
 
         const verified = await crypto.subtle.verify(
           signatureAlgorithm,
@@ -795,19 +795,19 @@ export class TlsClientHandshakeServerHelloState implements TlsClientHandshakeSer
   } {
     const { dh_g, dh_p, dh_Ys } = params;
 
-    const g = BigBytes.importOrThrow(dh_g.value.bytes);
-    const p = BigBytes.importOrThrow(dh_p.value.bytes);
-    const Ys = BigBytes.importOrThrow(dh_Ys.value.bytes);
+    const g = BigintBytes.fromBytes(dh_g.value.bytes);
+    const p = BigintBytes.fromBytes(dh_p.value.bytes);
+    const Ys = BigintBytes.fromBytes(dh_Ys.value.bytes);
 
     const dh_yc = crypto.getRandomValues(Bytes.alloc(dh_p.value.bytes.length));
 
-    const yc = BigBytes.importOrThrow(dh_yc);
+    const yc = BigintBytes.fromBytes(dh_yc);
 
-    const Yc = BigMath.umodpow(g, yc, p);
-    const Z = BigMath.umodpow(Ys, yc, p);
+    const Yc = bigModularExponent(g, yc, p);
+    const Z = bigModularExponent(Ys, yc, p);
 
-    const dh_Yc = BigBytes.exportOrThrow(Yc);
-    const dh_Z = BigBytes.exportOrThrow(Z);
+    const dh_Yc = BigintBytes.toBytes(Yc);
+    const dh_Z = BigintBytes.toBytes(Z);
 
     return { dh_Yc, dh_Z };
   }

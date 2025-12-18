@@ -1,4 +1,4 @@
-import { Resizer } from '../resizer/resizer';
+import { Resizer } from '../../../common/Resizer';
 import { Bytes } from '../../../bytes';
 import { Cursor } from '../../../cursor/mod';
 import { Unknown, Writable } from '../../../binary/mod';

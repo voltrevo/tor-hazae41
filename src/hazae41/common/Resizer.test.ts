@@ -1,9 +1,9 @@
-import { test } from '../../../phobos/mod';
-import { assert } from '../../../../utils/assert';
-import { Resizer } from './resizer.js';
-import { Bytes } from '../../../bytes';
-import { Cursor } from '../../../cursor/mod';
-import { Writable } from '../../../binary/mod';
+import { test } from '../phobos/mod';
+import { assert } from '../../utils/assert';
+import { Resizer } from './Resizer.js';
+import { Bytes } from '../bytes';
+import { Cursor } from '../cursor/mod';
+import { Writable } from '../binary/mod';
 
 test('Resizer - constructor with defaults', async () => {
   const resizer = new Resizer();

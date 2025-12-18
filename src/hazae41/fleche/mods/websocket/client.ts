@@ -1,7 +1,6 @@
 import { bitwise_pack_right, bitwise_unpack } from '../../../../utils/bitwise';
 import { rejectOnAbort } from '../../../signals/mods/signals';
 import { Iterators } from '../../libs/iterables/iterators';
-import { Resizer } from '../../libs/resizer/resizer';
 import { Strings } from '../../libs/strings/strings';
 import { Console } from '../console/index';
 import { HttpClientDuplex } from '../http/client';
@@ -20,6 +19,7 @@ import { Readable, Writable } from '../../../binary/mod';
 import { HalfDuplex } from '../../../cascade';
 import { Future } from '../../../future';
 import { assert } from '../../../../utils/assert';
+import { Resizer } from '../../../common/Resizer';
 
 const ACCEPT_SUFFIX = Bytes.encodeUtf8('258EAFA5-E914-47DA-95CA-C5AB0DC85B11');
 

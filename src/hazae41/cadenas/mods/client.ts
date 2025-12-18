@@ -1,4 +1,3 @@
-import { Resizer } from '../libs/resizer/resizer.js';
 import { PlaintextRecord } from './binary/records/record.js';
 import { Cipher } from './ciphers/cipher.js';
 import { TlsClientNoneState, TlsClientState } from './state.js';
@@ -10,6 +9,7 @@ import { X509 } from '../../x509/index.js';
 import { FullDuplex } from '../../cascade/index.js';
 import { Future } from '../../future/index.js';
 import { Awaitable } from '../../common/Awaitable.js';
+import { Resizer } from '../../common/Resizer.js';
 
 export interface TlsClientDuplexParams {
   /**
