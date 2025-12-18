@@ -2,8 +2,19 @@ import { Pin } from '../../box';
 import { Awaitable } from '../../common/Awaitable';
 import { Future } from '../../future/index';
 import { None, Option, Some } from '../../option/index';
-import { WeakParameters } from '../libs/parameters/index';
-import { Voidable } from '../libs/voidable/index';
+
+export type Voidable<T> = T | void;
+
+/**
+ * Like `Parameters<T>` but fixed
+ */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export type WeakParameters<T extends (...args: any) => any> = (T extends (
+  ...args: infer P
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+) => any
+  ? [P]
+  : never)[0];
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type SuperEventDescriptor = (...args: any) => any;
