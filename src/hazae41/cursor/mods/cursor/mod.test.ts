@@ -1,17 +1,7 @@
 // deno-lint-ignore-file require-await
 import { assert, test, throws } from '../../../phobos/mod';
-import { Buffer } from 'node:buffer';
-import { relative, resolve } from 'node:path';
 import { Cursor } from './mod';
 import { Bytes } from '../../../bytes';
-
-const directory = resolve('./dist/test/');
-const { pathname } = new URL(import.meta.url);
-console.log(relative(directory, pathname.replace('.mjs', '.ts')));
-
-function equals(a: Bytes, b: Bytes) {
-  return Buffer.from(a).equals(Buffer.from(b));
-}
 
 test('write then read', async () => {
   const bytes = Bytes.from([1, 2, 3, 4]);
@@ -19,18 +9,18 @@ test('write then read', async () => {
 
   cursor.writeOrThrow(bytes);
   assert(cursor.offset === bytes.length);
-  assert(equals(cursor.bytes, bytes));
+  assert(Bytes.equals(cursor.bytes, bytes));
 
   cursor.offset = 0;
 
   const bytes2 = cursor.readOrThrow(bytes.length);
   assert(cursor.offset === bytes.length);
-  assert(equals(cursor.bytes, bytes2));
+  assert(Bytes.equals(cursor.bytes, bytes2));
 
   assert(bytes.length === bytes2.length);
-  assert(equals(bytes, bytes2));
+  assert(Bytes.equals(bytes, bytes2));
 
-  const overflowing = Buffer.from([1, 2, 3, 4, 5]);
+  const overflowing = Bytes.from([1, 2, 3, 4, 5]);
 
   assert(throws(() => cursor.writeOrThrow(overflowing)));
   assert(throws(() => cursor.readOrThrow(overflowing.length)));
@@ -44,14 +34,14 @@ test('writeUint8 then readUint8', async () => {
   cursor.writeUint8OrThrow(n);
   assert(cursor.offset === 1);
   assert(cursor.length === 1);
-  assert(equals(cursor.bytes, Bytes.from([n])));
+  assert(Bytes.equals(cursor.bytes, Bytes.from([n])));
 
   cursor.offset = 0;
 
   const n2 = cursor.readUint8OrThrow();
   assert(cursor.offset === 1);
   assert(cursor.length === 1);
-  assert(equals(cursor.bytes, Bytes.from([n])));
+  assert(Bytes.equals(cursor.bytes, Bytes.from([n])));
 
   assert(n === n2);
 
@@ -106,7 +96,10 @@ test('writeUint24 then readUint24', async () => {
   // assert(throws(() => cursor.writeUint24OrThrow(2 ** 24)))
   // assert(throws(() => cursor.writeUint24OrThrow(-1)))
 
-  assert(Buffer.from(cursor.bytes).readUintBE(0, 3) === 42);
+  // Verify the written value is 42 as big-endian uint24
+  const bytes = cursor.bytes;
+  const value = (bytes[0] << 16) | (bytes[1] << 8) | bytes[2];
+  assert(value === 42);
 });
 
 test('writeUint32 then readUint32', async () => {

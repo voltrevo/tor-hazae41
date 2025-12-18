@@ -1,12 +1,8 @@
 import { Readable, Writable, Unknown } from '../../../../binary/mod';
 import { assert, test } from '../../../../phobos/mod';
-import { relative, resolve } from 'path';
 import { SmuxSegment } from './index';
 import { Bytes } from '../../../../bytes';
 
-const directory = resolve('./dist/test/');
-const { pathname } = new URL(import.meta.url);
-console.log(relative(directory, pathname.replace('.mjs', '.ts')));
 
 test('kcp segment', async () => {
   const version = 2;

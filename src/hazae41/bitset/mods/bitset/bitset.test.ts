@@ -1,10 +1,6 @@
 import { assert, test, throws } from '../../../phobos/mod';
-import { relative, resolve } from 'node:path';
 import { Bitset } from './bitset';
 
-const directory = resolve('./dist/test/');
-const { pathname } = new URL(import.meta.url);
-console.log(relative(directory, pathname.replace('.mjs', '.ts')));
 
 test('Identity', async () => {
   const bitset = new Bitset(0b00000000, 8);

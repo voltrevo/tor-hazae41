@@ -1,10 +1,6 @@
 import { assert, test } from '../../../../phobos/mod';
-import { relative, resolve } from 'path';
 import { Validity } from './validity';
 
-const directory = resolve('./dist/test/');
-const { pathname } = new URL(import.meta.url);
-console.log(relative(directory, pathname.replace('.mjs', '.ts')));
 
 test('Validity generation', async () => {
   const inOneDay = Validity.generate(1);

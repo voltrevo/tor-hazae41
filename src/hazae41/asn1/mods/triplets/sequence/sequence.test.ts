@@ -3,12 +3,8 @@ import { Writable } from '../../../../binary/mod';
 import { Cursor } from '../../../../cursor/mod';
 import { assert, test } from '../../../../phobos/mod';
 import { DER } from '../../resolvers/der/index';
-import { relative, resolve } from 'node:path';
 import { Sequence } from './sequence';
 
-const directory = resolve('./dist/test/');
-const { pathname } = new URL(import.meta.url);
-console.log(relative(directory, pathname.replace('.mjs', '.ts')));
 
 function hexToCursor(hex: string) {
   const hex2 = hex.replaceAll(' ', '');

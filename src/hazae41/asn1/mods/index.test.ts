@@ -1,7 +1,6 @@
 import { Base64 } from '../../base64/index';
 import { Readable, Writable } from '../../binary/mod';
 import { assert, test } from '../../phobos/mod';
-import { relative, resolve } from 'node:path';
 import { DER } from './resolvers/der/index';
 import { Bytes } from '../../bytes';
 import { TestCerts } from '../../TestCerts';
@@ -38,9 +37,6 @@ export namespace PKCS7 {
   }
 }
 
-const directory = resolve('./dist/test/');
-const { pathname } = new URL(import.meta.url);
-console.log(relative(directory, pathname.replace('.mjs', '.ts')));
 
 function compare(a: Bytes, b: Bytes) {
   return Buffer.from(a).equals(Buffer.from(b));

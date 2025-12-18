@@ -2,12 +2,8 @@ import { Writable, Unknown } from '../../../binary/mod';
 import { HalfDuplex } from '../../../cascade/index';
 import { test } from '../../../phobos/mod';
 import { Bytes } from '../../../bytes/index';
-import { relative, resolve } from 'path';
 import { KcpDuplex } from './stream/index';
 
-const directory = resolve('./dist/test/');
-const { pathname } = new URL(import.meta.url);
-console.log(relative(directory, pathname.replace('.mjs', '.ts')));
 
 const conversation = 12345;
 

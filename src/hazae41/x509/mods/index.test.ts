@@ -1,7 +1,6 @@
 import { assert, test } from '../../phobos/mod';
 import { PEM } from './pem/pem';
 import { Certificate } from './types/certificate/certificate';
-import { relative, resolve } from 'path';
 import {
   readAndResolveFromBytesOrThrow,
   writeToBytesOrThrow,
@@ -9,9 +8,6 @@ import {
 import { Bytes } from '../../bytes';
 import { TestCerts } from '../../TestCerts';
 
-const directory = resolve('./dist/test/');
-const { pathname } = new URL(import.meta.url);
-console.log(relative(directory, pathname.replace('.mjs', '.ts')));
 
 test('Cert Ed25519', async () => {
   const bytes = PEM.decodeOrThrow(TestCerts.ed25519);

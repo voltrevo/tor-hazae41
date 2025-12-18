@@ -1,10 +1,6 @@
 import { assert, test } from '../../../phobos/mod';
 import { PEM } from './pem';
-import { relative, resolve } from 'node:path';
 
-const directory = resolve('./dist/test/');
-const { pathname } = new URL(import.meta.url);
-console.log(relative(directory, pathname.replace('.mjs', '.ts')));
 
 function ignoreLastNewline(text: string) {
   if (text.endsWith('\n')) return text.slice(0, -1);

@@ -2,12 +2,8 @@ import { Base16 } from '../../../../base16/index';
 import { Writable } from '../../../../binary/mod';
 import { Cursor } from '../../../../cursor/mod';
 import { assert, test } from '../../../../phobos/mod';
-import { relative, resolve } from 'node:path';
 import { IA5String } from './ia5_string';
 
-const directory = resolve('./dist/test/');
-const { pathname } = new URL(import.meta.url);
-console.log(relative(directory, pathname.replace('.mjs', '.ts')));
 
 function hexToCursor(hex: string) {
   const hex2 = hex.replaceAll(' ', '');

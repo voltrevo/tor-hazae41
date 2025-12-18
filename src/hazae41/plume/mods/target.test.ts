@@ -3,13 +3,9 @@ import '../../symbol-dispose-polyfill/mod';
 import { Future } from '../../future/index';
 import { Some } from '../../option/index';
 import { assert, test } from '../../phobos/mod';
-import { relative, resolve } from 'path';
 import { SuperEventTarget } from './target';
 import { waitWithCloseAndErrorOrThrow } from './waiters';
 
-const directory = resolve('./dist/test/');
-const { pathname } = new URL(import.meta.url);
-console.log(relative(directory, pathname.replace('.mjs', '.ts')));
 
 test('AsyncEventTarget', async () => {
   const target = new SuperEventTarget<{

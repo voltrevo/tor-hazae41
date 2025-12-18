@@ -3,11 +3,7 @@ import { Readable, Writable } from '../../../../binary/mod';
 import { Bytes } from '../../../../bytes';
 import { assert, test } from '../../../../phobos/mod';
 import { Integer } from './integer';
-import { relative, resolve } from 'node:path';
 
-const directory = resolve('./dist/test/');
-const { pathname } = new URL(import.meta.url);
-console.log(relative(directory, pathname.replace('.mjs', '.ts')));
 
 function hexToBytes(hex: string) {
   const hex2 = hex.replaceAll(' ', '');
