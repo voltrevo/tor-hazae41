@@ -24,17 +24,21 @@ export default defineConfig({
     ...(isBrowser && {
       browser: {
         enabled: true,
-        provider: playwright({
-          launchOptions: {
-            headless: true,
-          },
-        }),
+        headless: true,
+        provider: playwright(),
         instances: [
           {
             browser: 'chromium',
           },
         ],
       },
+      // Exclude tests that require Node.js APIs (fs, etc)
+      exclude: [
+        'node_modules',
+        'dist',
+        'src/storage/storage.test.ts',
+        'src/storage/tsconfig-paths.test.ts',
+      ],
     }),
   },
   resolve: {
