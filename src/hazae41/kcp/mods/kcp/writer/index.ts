@@ -1,7 +1,7 @@
 import { Writable } from '../../../../binary/mod';
-import { Future } from '../../../../future/index';
-import { KcpSegment } from '../segment/index';
-import { SecretKcpDuplex } from '../stream/index';
+import { Future } from '../../../../future';
+import { KcpSegment } from '../segment';
+import { SecretKcpDuplex } from '../stream';
 
 export class SecretKcpWriter {
   constructor(readonly parent: SecretKcpDuplex) {}

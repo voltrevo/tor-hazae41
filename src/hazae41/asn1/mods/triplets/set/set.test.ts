@@ -2,7 +2,7 @@ import { Writable } from '../../../../binary/mod';
 import { Bytes } from '../../../../bytes';
 import { Cursor } from '../../../../cursor/mod';
 import { assert, test } from '../../../../phobos/mod';
-import { DER } from '../../resolvers/der/index';
+import { DER } from '../../resolvers/der';
 import { Set } from './set';
 
 function hexToCursor(hex: string) {

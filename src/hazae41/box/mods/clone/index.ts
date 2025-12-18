@@ -1,6 +1,6 @@
-import { Deferred } from '../deferred/index';
-import { Void } from '../void/index';
-import { Wrap } from '../wrap/index';
+import { Deferred } from '../deferred';
+import { Void } from '../void';
+import { Wrap } from '../wrap';
 
 export class Clone<T> {
   #count = 1;

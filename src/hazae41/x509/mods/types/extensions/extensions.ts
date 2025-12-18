@@ -8,7 +8,7 @@ import {
   OctetString,
   Sequence,
   Type,
-} from '../../../../asn1/index';
+} from '../../../../asn1';
 import { Readable, Writable } from '../../../../binary/mod';
 import { Nullable } from '../../../../common/Nullable';
 import { OIDs } from '../../oids/oids';

@@ -1,8 +1,8 @@
 import { Empty, /*any,*/ Readable, Writable } from '../../../../binary/mod';
 import { Cursor } from '../../../../cursor/mod';
-import { Console } from '../../console/index';
-import { KcpSegment } from '../segment/index';
-import { SecretKcpDuplex } from '../stream/index';
+import { Console } from '../../console';
+import { KcpSegment } from '../segment';
+import { SecretKcpDuplex } from '../stream';
 
 export type KcpReadError = ExpectedKcpSegmentError | UnknownKcpCommandError;
 

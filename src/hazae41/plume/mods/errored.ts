@@ -1,4 +1,4 @@
-import { Future } from '../../future/index';
+import { Future } from '../../future';
 import { SuperEventTarget } from './target';
 
 export type ErrorEvents = {

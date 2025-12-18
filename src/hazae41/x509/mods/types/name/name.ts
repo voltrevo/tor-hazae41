@@ -1,4 +1,4 @@
-import { DERCursor, DERTriplet } from '../../../../asn1/index';
+import { DERCursor, DERTriplet } from '../../../../asn1';
 import { RDNSequence } from '../rdn_sequence/rdn_sequence';
 
 export class Name {

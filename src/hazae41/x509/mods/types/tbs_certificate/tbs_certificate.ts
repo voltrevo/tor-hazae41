@@ -5,7 +5,7 @@ import {
   Integer,
   Sequence,
   Type,
-} from '../../../../asn1/index';
+} from '../../../../asn1';
 import { AlgorithmIdentifier } from '../algorithm_identifier/algorithm_identifier';
 import { Name } from '../name/name';
 import { SubjectPublicKeyInfo } from '../subject_public_key_info/subject_public_key_info';

@@ -1,2 +1,2 @@
-export * from './mods/index';
-export * as ASN1 from './mods/index';
+export * from './mods';
+export * as ASN1 from './mods';

@@ -1,8 +1,8 @@
 import { Empty, Readable, Writable } from '../../../../binary/mod';
 import { Bytes } from '../../../../bytes';
 import { Cursor } from '../../../../cursor/mod';
-import { SmuxSegment, SmuxUpdate } from '../segment/index';
-import { SecretSmuxDuplex } from '../stream/index';
+import { SmuxSegment, SmuxUpdate } from '../segment';
+import { SecretSmuxDuplex } from '../stream';
 
 export type SmuxReadError =
   | UnknownSmuxCommandError

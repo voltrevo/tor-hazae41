@@ -1,10 +1,10 @@
 import { Writable } from '../../../../binary/mod';
 import { Bytes } from '../../../../bytes';
-import { FullDuplex } from '../../../../cascade/index';
+import { FullDuplex } from '../../../../cascade';
 import { Cursor } from '../../../../cursor/mod';
-import { Future } from '../../../../future/index';
-import { SecretSmuxReader } from '../reader/index';
-import { SecretSmuxWriter } from '../writer/index';
+import { Future } from '../../../../future';
+import { SecretSmuxReader } from '../reader';
+import { SecretSmuxWriter } from '../writer';
 
 export interface SmuxDuplexParams {
   readonly stream?: number;

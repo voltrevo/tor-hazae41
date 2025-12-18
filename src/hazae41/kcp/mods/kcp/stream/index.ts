@@ -1,11 +1,11 @@
 import { Writable } from '../../../../binary/mod';
 import { Bytes } from '../../../../bytes';
-import { FullDuplex } from '../../../../cascade/index';
+import { FullDuplex } from '../../../../cascade';
 import { Awaitable } from '../../../../common/Awaitable';
 import { Cursor } from '../../../../cursor/mod';
-import { Future } from '../../../../future/index';
-import { SecretKcpReader } from '../reader/index';
-import { SecretKcpWriter } from '../writer/index';
+import { Future } from '../../../../future';
+import { SecretKcpReader } from '../reader';
+import { SecretKcpWriter } from '../writer';
 
 export interface KcpDuplexParams {
   /**

@@ -1,4 +1,4 @@
-import { DERTriplet, ObjectIdentifier } from '../../../../asn1/index';
+import { DERTriplet, ObjectIdentifier } from '../../../../asn1';
 import { invert } from '../../../../common/invert';
 import { OIDs } from '../../oids/oids';
 

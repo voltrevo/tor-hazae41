@@ -1,5 +1,5 @@
 import { test } from '../../../phobos/mod';
-import { FullDuplex } from './index';
+import { FullDuplex } from '.';
 
 class A {
   readonly #class = A;

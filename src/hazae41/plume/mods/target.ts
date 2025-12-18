@@ -1,7 +1,7 @@
 import { Pin } from '../../box';
 import { Awaitable } from '../../common/Awaitable';
-import { Future } from '../../future/index';
-import { None, Option, Some } from '../../option/index';
+import { Future } from '../../future';
+import { None, Option, Some } from '../../option';
 
 export type Voidable<T> = T | void;
 

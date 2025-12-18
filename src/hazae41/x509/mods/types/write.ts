@@ -1,4 +1,4 @@
-import { DERable } from '../../../asn1/index';
+import { DERable } from '../../../asn1';
 import { Writable } from '../../../binary/mod';
 import { Bytes } from '../../../bytes';
 

@@ -1,6 +1,6 @@
 import { Nullable } from '../../../common/Nullable';
-import { Deferred } from '../deferred/index';
-import { Wrap } from '../wrap/index';
+import { Deferred } from '../deferred';
+import { Wrap } from '../wrap';
 
 export class MovedError extends Error {
   readonly #class = MovedError;

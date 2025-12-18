@@ -1,8 +1,8 @@
 import { Writable, Unknown } from '../../../binary/mod';
-import { HalfDuplex } from '../../../cascade/index';
+import { HalfDuplex } from '../../../cascade';
 import { test } from '../../../phobos/mod';
-import { Bytes } from '../../../bytes/index';
-import { KcpDuplex } from './stream/index';
+import { Bytes } from '../../../bytes';
+import { KcpDuplex } from './stream';
 
 const conversation = 12345;
 

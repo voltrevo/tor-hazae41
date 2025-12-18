@@ -4,7 +4,7 @@ import {
   DERCursor,
   DERTriplet,
   Sequence,
-} from '../../../../asn1/index';
+} from '../../../../asn1';
 import { Readable } from '../../../../binary/mod';
 import { Unimplemented } from '../../errors';
 import { RsaPublicKey } from '../../keys/rsa/public';

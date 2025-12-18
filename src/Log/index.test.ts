@@ -1,6 +1,6 @@
 import { test } from '../hazae41/phobos/mod';
 import { assert } from '../utils/assert';
-import { Log, LogLevel } from './index';
+import { Log, LogLevel } from '.';
 import { VirtualClock } from '../clock/VirtualClock';
 
 test('Log - basic debug logging', async () => {

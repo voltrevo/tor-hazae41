@@ -1,5 +1,5 @@
 export * from './errors';
-export * from './keys/index';
+export * from './keys';
 export * from './oids/oids';
 export * from './pem/pem';
-export * from './types/index';
+export * from './types';

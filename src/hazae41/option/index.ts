@@ -1,1 +1,1 @@
-export * from './mods/index';
+export * from './mods';

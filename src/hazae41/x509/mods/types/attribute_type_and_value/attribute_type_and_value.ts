@@ -4,7 +4,7 @@ import {
   ObjectIdentifier,
   Sequence,
   UTF8String,
-} from '../../../../asn1/index';
+} from '../../../../asn1';
 import {
   AttributeType,
   KnownAttributeType,

@@ -1,6 +1,6 @@
 import { Readable, Writable } from '../../binary/mod';
 import { assert, test } from '../../phobos/mod';
-import { DER } from './resolvers/der/index';
+import { DER } from './resolvers/der';
 import { Bytes } from '../../bytes';
 import { TestCerts } from '../../common/TestCerts';
 

@@ -3,7 +3,7 @@ import {
   DERTriplet,
   ObjectIdentifier,
   Sequence,
-} from '../../../../asn1/index';
+} from '../../../../asn1';
 import { Nullable } from '../../../../common/Nullable';
 
 export class AlgorithmIdentifier {

@@ -1,1 +1,1 @@
-export * from './kcp/index';
+export * from './kcp';

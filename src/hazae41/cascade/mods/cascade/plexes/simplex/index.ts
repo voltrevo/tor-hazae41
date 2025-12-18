@@ -1,6 +1,6 @@
 import { Awaitable } from '../../../../../common/Awaitable';
-import { SuperReadableStream } from '../../streams/readable/index';
-import { SuperWritableStream } from '../../streams/writable/index';
+import { SuperReadableStream } from '../../streams/readable';
+import { SuperWritableStream } from '../../streams/writable';
 
 export interface SimplexParams<W, R = W> {
   /**

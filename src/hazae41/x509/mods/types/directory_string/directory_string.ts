@@ -3,7 +3,7 @@ import {
   PrintableString,
   TeletexString,
   UTF8String,
-} from '../../../../asn1/index';
+} from '../../../../asn1';
 import { Unimplemented } from '../../errors';
 
 export namespace DirectoryString {

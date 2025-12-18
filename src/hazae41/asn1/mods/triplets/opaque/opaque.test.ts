@@ -1,7 +1,7 @@
 import { Readable, Writable } from '../../../../binary/mod';
 import { assert, test } from '../../../../phobos/mod';
 import { Integer } from '../integer/integer';
-import { DER } from '../../resolvers/der/index';
+import { DER } from '../../resolvers/der';
 import { OpaqueTriplet } from './opaque';
 import { Bytes } from '../../../../bytes';
 

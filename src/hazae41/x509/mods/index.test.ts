@@ -1,10 +1,7 @@
 import { assert, test } from '../../phobos/mod';
 import { PEM } from './pem/pem';
 import { Certificate } from './types/certificate/certificate';
-import {
-  readAndResolveFromBytesOrThrow,
-  writeToBytesOrThrow,
-} from './types/index';
+import { readAndResolveFromBytesOrThrow, writeToBytesOrThrow } from './types';
 import { Bytes } from '../../bytes';
 import { TestCerts } from '../../common/TestCerts';
 

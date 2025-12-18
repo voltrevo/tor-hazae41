@@ -1,5 +1,5 @@
 import { Awaitable } from '../../../../../common/Awaitable';
-import { Simplex, SimplexParams } from '../simplex/index';
+import { Simplex, SimplexParams } from '../simplex';
 
 export interface FullDuplexParams<IW, IR = IW, OW = IR, OR = IW> {
   readonly input?: SimplexParams<IW, OR>;

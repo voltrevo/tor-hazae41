@@ -5,7 +5,7 @@ import {
   SuperWritableStream,
 } from '../../../cascade';
 import { Strings } from '../../../common/Strings';
-import { Console } from '../console/index';
+import { Console } from '../console';
 import {
   ContentLengthOverflowError,
   InvalidHttpStateError,

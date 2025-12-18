@@ -1,6 +1,6 @@
 import { Readable, Writable, Unknown } from '../../../../binary/mod';
 import { assert, test } from '../../../../phobos/mod';
-import { KcpSegment } from './index';
+import { KcpSegment } from '.';
 import { Bytes } from '../../../../bytes';
 
 test('kcp segment', async () => {

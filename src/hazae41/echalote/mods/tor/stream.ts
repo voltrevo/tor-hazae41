@@ -1,5 +1,5 @@
 import { CloseEvents, ErrorEvents, SuperEventTarget } from '../../../plume';
-import { Console } from '../console/index';
+import { Console } from '../console';
 import { RelayCell } from './binary/cells/direct/relay/cell';
 import { RelayDataCell } from './binary/cells/relayed/relay_data/cell';
 import { RelayEndCell } from './binary/cells/relayed/relay_end/cell';

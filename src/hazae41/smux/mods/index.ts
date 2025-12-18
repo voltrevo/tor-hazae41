@@ -1,1 +1,1 @@
-export * from './smux/index';
+export * from './smux';

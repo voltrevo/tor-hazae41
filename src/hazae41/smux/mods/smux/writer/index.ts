@@ -1,6 +1,6 @@
 import { Empty, Writable } from '../../../../binary/mod';
-import { SmuxSegment, SmuxUpdate } from '../segment/index';
-import { SecretSmuxDuplex } from '../stream/index';
+import { SmuxSegment, SmuxUpdate } from '../segment';
+import { SecretSmuxDuplex } from '../stream';
 
 export type SmuxWriteError = PeerWindowOverflow;
 

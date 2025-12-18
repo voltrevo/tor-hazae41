@@ -1,8 +1,8 @@
 import '../../../symbol-dispose-polyfill/mod';
 
 import { assert, test } from '../../../phobos/mod';
-import { Borrow, Borrowable } from '../borrow/index';
-import { Box } from './index';
+import { Borrow, Borrowable } from '../borrow';
+import { Box } from '.';
 
 class Resource implements Disposable {
   disposed = false;

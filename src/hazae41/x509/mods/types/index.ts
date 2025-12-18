@@ -4,7 +4,7 @@ export * from './attribute_type_and_value/attribute_type_and_value';
 export * from './attribute_value/attribute_value';
 export * from './certificate/certificate';
 export * from './directory_string/directory_string';
-export * from './extensions/index';
+export * from './extensions';
 export * from './name/name';
 export * from './rdn_sequence/rdn_sequence';
 export * from './read';

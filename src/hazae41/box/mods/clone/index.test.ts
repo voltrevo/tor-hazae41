@@ -1,5 +1,5 @@
 import { assert, test } from '../../../phobos/mod';
-import { Clone } from './index';
+import { Clone } from '.';
 
 class Resource implements Disposable {
   disposed = false;

@@ -1,2 +1,2 @@
-export * from './mods/index';
-export * as Plume from './mods/index';
+export * from './mods';
+export * as Plume from './mods';

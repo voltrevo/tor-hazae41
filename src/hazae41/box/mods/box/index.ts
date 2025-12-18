@@ -1,9 +1,9 @@
 import { Nullable } from '../../../common/Nullable';
-import { BorrowedError } from '../borrow/index';
-import { Deferred } from '../deferred/index';
-import { MovedError } from '../move/index';
-import { Ref } from '../ref/index';
-import { Wrap } from '../wrap/index';
+import { BorrowedError } from '../borrow';
+import { Deferred } from '../deferred';
+import { MovedError } from '../move';
+import { Ref } from '../ref';
+import { Wrap } from '../wrap';
 
 /**
  * A movable and borrowable reference

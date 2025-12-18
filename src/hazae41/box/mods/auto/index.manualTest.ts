@@ -1,8 +1,8 @@
 import '../../../symbol-dispose-polyfill/mod';
 
-import { Future } from '../../../future/index';
+import { Future } from '../../../future';
 import { test } from '../../../phobos/mod';
-import { Auto } from './index';
+import { Auto } from '.';
 
 class Resource implements Disposable {
   readonly future = new Future<void>();

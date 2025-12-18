@@ -1,3 +1,3 @@
-export * from './readable/index';
-export * from './transform/index';
-export * from './writable/index';
+export * from './readable';
+export * from './transform';
+export * from './writable';

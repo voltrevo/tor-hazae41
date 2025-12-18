@@ -8,8 +8,8 @@ import {
 } from '../../../plume';
 import { Sha1Hasher } from './Sha1Hasher';
 import { X25519 } from './x25519';
-import { Console } from '../console/index';
-import { Ntor } from './algorithms/ntor/index';
+import { Console } from '../console';
+import { Ntor } from './algorithms/ntor';
 import { DestroyCell } from './binary/cells/direct/destroy/cell';
 import { RelayBeginCell } from './binary/cells/relayed/relay_begin/cell';
 import { RelayDataCell } from './binary/cells/relayed/relay_data/cell';

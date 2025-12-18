@@ -1,1 +1,1 @@
-export * from './option/index';
+export * from './option';

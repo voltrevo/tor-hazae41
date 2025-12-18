@@ -1,9 +1,4 @@
-import {
-  BitString,
-  DERCursor,
-  DERTriplet,
-  Sequence,
-} from '../../../../asn1/index';
+import { BitString, DERCursor, DERTriplet, Sequence } from '../../../../asn1';
 import { AlgorithmIdentifier } from '../algorithm_identifier/algorithm_identifier';
 import { TBSCertificate } from '../tbs_certificate/tbs_certificate';
 

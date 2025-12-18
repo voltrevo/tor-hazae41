@@ -1,5 +1,5 @@
-import { DER, DERTriplet, DERable } from '../../../../asn1/index';
-import { Bytes } from '../../../../bytes/index';
+import { DER, DERTriplet, DERable } from '../../../../asn1';
+import { Bytes } from '../../../../bytes';
 import { Readable, Writable } from '../../../../binary/mod';
 import { InvalidFormatError } from '../../errors';
 import { DirectoryString } from '../directory_string/directory_string';

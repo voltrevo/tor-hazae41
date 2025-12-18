@@ -7,7 +7,7 @@ import {
   SuperEventTarget,
 } from '../../../plume';
 import { Resizer } from '../../../common/Resizer';
-import { Console } from '../console/index';
+import { Console } from '../console';
 import { Sha1Hasher } from './Sha1Hasher';
 import { TypedAddress } from './binary/address';
 import { Cell } from './binary/cells/cell';

@@ -6,7 +6,7 @@ import {
   ObjectIdentifier,
   Sequence,
   Type,
-} from '../../../../../asn1/index';
+} from '../../../../../asn1';
 
 export class SubjectAltName {
   constructor(readonly inner: GeneralNames) {}

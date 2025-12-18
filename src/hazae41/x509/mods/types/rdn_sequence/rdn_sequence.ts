@@ -1,4 +1,4 @@
-import { DERCursor, DERTriplet, Sequence } from '../../../../asn1/index';
+import { DERCursor, DERTriplet, Sequence } from '../../../../asn1';
 import { RelativeDistinguishedName } from '../relative_distinguished_name/relative_distinguished_name';
 
 const UNESCAPED_COMMA_REGEX = /[^\\],/g;

@@ -1,9 +1,4 @@
-import {
-  DERCursor,
-  DERTriplet,
-  Integer,
-  Sequence,
-} from '../../../../asn1/index';
+import { DERCursor, DERTriplet, Integer, Sequence } from '../../../../asn1';
 import { OIDs } from '../../oids/oids';
 
 export interface RsaPublicKeyJSON {

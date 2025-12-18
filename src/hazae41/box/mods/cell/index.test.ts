@@ -1,6 +1,6 @@
 import { assert } from '../../../../utils/assert';
 import { test } from '../../../phobos/mod';
-import { Cell } from './index';
+import { Cell } from '.';
 
 function alloc(_value: number) {}
 

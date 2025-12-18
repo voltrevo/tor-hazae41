@@ -1,2 +1,2 @@
-export * from './der/index';
+export * from './der';
 export * from './triplet';

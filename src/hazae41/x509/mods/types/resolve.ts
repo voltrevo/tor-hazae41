@@ -1,4 +1,4 @@
-import { DERCursor } from '../../../asn1/index';
+import { DERCursor } from '../../../asn1';
 
 export interface Resolvable<T> {
   resolveOrThrow(cursor: DERCursor): T;

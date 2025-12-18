@@ -4,7 +4,7 @@ import {
   DERTriplet,
   Integer,
   Type,
-} from '../../../../asn1/index';
+} from '../../../../asn1';
 import { Nullable } from '../../../../common/Nullable';
 
 export class TBSCertificateVersion {

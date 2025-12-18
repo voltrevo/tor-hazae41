@@ -1,7 +1,7 @@
 import '../../symbol-dispose-polyfill/mod';
 
-import { Future } from '../../future/index';
-import { Some } from '../../option/index';
+import { Future } from '../../future';
+import { Some } from '../../option';
 import { assert, test } from '../../phobos/mod';
 import { SuperEventTarget } from './target';
 import { waitWithCloseAndErrorOrThrow } from './waiters';

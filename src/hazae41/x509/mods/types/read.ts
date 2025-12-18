@@ -1,4 +1,4 @@
-import { DER, DERCursor } from '../../../asn1/index';
+import { DER, DERCursor } from '../../../asn1';
 import { Readable } from '../../../binary/mod';
 import { Bytes } from '../../../bytes';
 import { Resolvable } from './resolve';
