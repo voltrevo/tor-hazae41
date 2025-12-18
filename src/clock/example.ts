@@ -63,7 +63,7 @@ async function runExamples() {
   }, 3000);
 
   console.log('Running automated event loop...');
-  await automatedClock.run();
+  await automatedClock.wait();
   console.log('AutomatedClock: All timers completed');
   console.log('Final time:', automatedClock.now());
 }

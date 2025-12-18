@@ -201,7 +201,7 @@ test('VirtualClock - automated mode - basic event loop', async () => {
   clock.setTimeout(() => order.push(2), 30);
   clock.setTimeout(() => order.push(3), 70);
 
-  await clock.run();
+  await clock.wait();
   expect(order.length === 3).toBe(true);
   expect(order[0] === 2).toBe(true);
   expect(order[1] === 1).toBe(true);
@@ -223,7 +223,7 @@ test('VirtualClock - automated mode - tasks scheduling more tasks', async () => 
     order.push(3);
   }, 40);
 
-  await clock.run();
+  await clock.wait();
   expect(order.length === 3).toBe(true);
   expect(order[0] === 1).toBe(true);
   expect(order[1] === 3).toBe(true);
@@ -241,7 +241,7 @@ test('VirtualClock - automated mode - setInterval', async () => {
     }
   }, 50);
 
-  await clock.run();
+  await clock.wait();
   expect(count === 3).toBe(true);
 });
 
@@ -262,7 +262,7 @@ test('VirtualClock - automated mode - stop execution', async () => {
     count++;
   }, 150);
 
-  await clock.run();
+  await clock.wait();
   expect(count === 2).toBe(true);
 });
 
@@ -278,7 +278,7 @@ test('VirtualClock - automated mode - delay', async () => {
     order.push(1);
   }, 30);
 
-  await clock.run();
+  await clock.wait();
   expect(order.length === 2).toBe(true);
   expect(order[0] === 1).toBe(true);
   expect(order[1] === 2).toBe(true);
@@ -322,7 +322,7 @@ test('VirtualClock - automated mode - unref behavior', async () => {
 
   clock.unref(unrefedTimerId);
 
-  await clock.run();
+  await clock.wait();
   expect(refedExecuted).toBe(true);
   expect(!unrefedExecuted).toBe(true);
   expect(clock.now() === 1000).toBe(true);
@@ -339,7 +339,7 @@ test('VirtualClock - automated mode - ref after unref', async () => {
   clock.unref(_timerId);
   clock.ref(_timerId);
 
-  await clock.run();
+  await clock.wait();
   expect(executed).toBe(true);
   expect(clock.now() === 3000).toBe(true);
 });
@@ -397,7 +397,7 @@ test('VirtualClock - automated mode - delayUnref behavior', async () => {
     unrefedExecuted = true;
   });
 
-  await clock.run();
+  await clock.wait();
   expect(refedExecuted).toBe(true);
   expect(!unrefedExecuted).toBe(true);
   expect(clock.now() === 1000).toBe(true);
@@ -423,7 +423,7 @@ test('VirtualClock - automated mode - timer callback execution', async () => {
     callbackExecuted = true;
   }, 50);
 
-  await clock.run();
+  await clock.wait();
   expect(callbackExecuted).toBe(true);
 });
 
@@ -456,22 +456,21 @@ test('VirtualClock - advanceTime on automated mode should throw', async () => {
   expect(thrown).toBe(true);
 });
 
-test('VirtualClock - run on manual mode should throw', async () => {
+test('VirtualClock - wait on manual mode should throw', async () => {
   const clock = new VirtualClock({ automated: false });
   let thrown = false;
 
   try {
-    await clock.run();
+    await clock.wait();
   } catch (error) {
     thrown =
-      error instanceof Error &&
-      error.message === 'Cannot run manual clock in automated mode';
+      error instanceof Error && error.message === 'Cannot wait in manual mode';
   }
 
   expect(thrown).toBe(true);
 });
 
-test('VirtualClock - run called twice returns immediately', async () => {
+test('VirtualClock - concurrent wait() calls', async () => {
   const clock = new VirtualClock({ automated: true });
   let count = 0;
 
@@ -479,10 +478,9 @@ test('VirtualClock - run called twice returns immediately', async () => {
     count++;
   }, 50);
 
-  // First run
-  const promise1 = clock.run();
-  // Second run should return immediately
-  const promise2 = clock.run();
+  // Multiple concurrent wait() calls should all resolve
+  const promise1 = clock.wait();
+  const promise2 = clock.wait();
 
   await Promise.all([promise1, promise2]);
   expect(count === 1).toBe(true);
