@@ -1,4 +1,4 @@
-import { Empty, Writable } from '../../../../binary/mod';
+import { Empty, Writable, Unknown } from '../../../../binary/mod';
 import { Bytes } from '../../../../bytes';
 import { Cursor } from '../../../../cursor/mod';
 
@@ -137,7 +137,7 @@ export class KcpSegment<Fragment extends Writable> {
     const unackSerial = cursor.readUint32OrThrow(true);
     const length = cursor.readUint32OrThrow(true);
     const bytes = Bytes.from(cursor.readOrThrow(length));
-    const fragment = new any(bytes);
+    const fragment = new Unknown(bytes);
 
     return KcpSegment.newOrThrow({
       conversation,

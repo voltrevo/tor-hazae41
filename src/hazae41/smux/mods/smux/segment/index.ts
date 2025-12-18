@@ -1,4 +1,4 @@
-import { Empty, Writable } from '../../../../binary/mod';
+import { Empty, Writable, Unknown } from '../../../../binary/mod';
 import { Bytes } from '../../../../bytes';
 import { Cursor } from '../../../../cursor/mod';
 
@@ -91,7 +91,7 @@ export class SmuxSegment<Fragment extends Writable> {
     const length = cursor.readUint16OrThrow(true);
     const stream = cursor.readUint32OrThrow(true);
     const bytes = Bytes.from(cursor.readOrThrow(length));
-    const fragment = new any(bytes);
+    const fragment = new Unknown(bytes);
 
     return SmuxSegment.newOrThrow({ version, command, stream, fragment });
   }
