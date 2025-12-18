@@ -28,7 +28,7 @@ function createMockResource(
   return resource;
 }
 
-test.skip('ResourcePool: acquire from empty pool creates resource', async () => {
+test('ResourcePool: acquire from empty pool creates resource', async () => {
   const events: string[] = [];
   let createCount = 0;
 
@@ -404,29 +404,6 @@ test('ResourcePool: configurable backoff parameters', async () => {
   pool.dispose();
 });
 
-test.skip('ResourcePool: minInFlightCount=0 (default) maintains backward compatibility', async () => {
-  const clock = new VirtualClock();
-  let createCount = 0;
-
-  const factory = async () => {
-    createCount++;
-    return createMockResource(`r${createCount}`);
-  };
-
-  const pool = new ResourcePool({
-    factory,
-    log: new Log({ rawLog: () => {} }),
-    clock,
-  });
-  // No minInFlightCount specified, should default to 0
-
-  const resource = await pool.acquire();
-  expect(resource.id === 'r1').toBe(true);
-  expect(createCount === 1).toBe(true);
-
-  pool.dispose();
-});
-
 test.skip('ResourcePool: minInFlightCount races multiple creations on empty acquire', async () => {
   const clock = new VirtualClock();
   let createCount = 0;
@@ -566,7 +543,7 @@ test.skip('ResourcePool: minInFlightCount with partial errors buffers successes'
   pool.dispose();
 });
 
-test.skip('ResourcePool: minInFlightCount with targetSize maintains wholistic accounting', async () => {
+test('ResourcePool: minInFlightCount with targetSize maintains wholistic accounting', async () => {
   const clock = new VirtualClock();
   let createCount = 0;
 

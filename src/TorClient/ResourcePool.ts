@@ -22,7 +22,7 @@ export interface ResourcePoolOptions<R> {
   log: Log;
   /** Desired pool size to maintain (default: 0) */
   targetSize?: number;
-  /** Minimum number of in-flight creations to maintain during acquire() (default: 0) */
+  /** Minimum number of in-flight creations to maintain during acquire() (default: 1, must be > 0) */
   minInFlightCount?: number;
   /** Optional maximum concurrent creations (default: null = unlimited) */
   concurrencyLimit?: number | null;
@@ -90,7 +90,7 @@ export class ResourcePool<R> extends EventEmitter<ResourcePoolEvents<R>> {
     this.clock = options.clock;
     this.log = options.log;
     this.targetSize = options.targetSize ?? 0;
-    this.minInFlightCount = options.minInFlightCount ?? 0;
+    this.minInFlightCount = options.minInFlightCount ?? 1;
     this.concurrencyLimit = options.concurrencyLimit
       ? limit(options.concurrencyLimit)
       : null;
@@ -98,6 +98,18 @@ export class ResourcePool<R> extends EventEmitter<ResourcePoolEvents<R>> {
     this.backoffMaxMs = options.backoffMaxMs ?? 60000;
     this.backoffMultiplier = options.backoffMultiplier ?? 1.1;
     this.lastFailTime = this.clock.now();
+
+    // Validate configuration
+    if (this.minInFlightCount <= 0) {
+      throw new Error(
+        `ResourcePool: minInFlightCount must be > 0, got ${this.minInFlightCount}`
+      );
+    }
+    if (this.targetSize === 0 && this.minInFlightCount === 0) {
+      throw new Error(
+        'ResourcePool: Both targetSize and minInFlightCount cannot be 0 (no resources would ever be created)'
+      );
+    }
 
     // Start background maintenance
     this.maintenanceAbortController = new AbortController();
