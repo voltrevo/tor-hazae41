@@ -15,7 +15,7 @@ function checkReadWriteOID(hex: string) {
   const triplet = ObjectIdentifier.DER.readOrThrow(input);
 
   const output = Writable.writeToBytesOrThrow(triplet);
-  return Buffer.from(input.bytes).equals(Buffer.from(output));
+  return Bytes.equals(input.bytes, output);
 }
 
 test('Read then write', async () => {

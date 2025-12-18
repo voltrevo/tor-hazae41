@@ -65,7 +65,7 @@ test('Buffers.fromView preserves data after modification', async () => {
   // Modify original array
   array[0] = 99;
 
-  // Buffer should reflect the change (they share the same underlying buffer)
+  // buffer should reflect the change (they share the same underlying buffer)
   assert(buffer[0] === 99);
 });
 

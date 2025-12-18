@@ -102,7 +102,9 @@ export default {
     }
 
     // Calculate sizes
-    const plainSize = Buffer.byteLength(bundleContent, 'utf8');
+    let before = Date.now();
+    const plainSize = new TextEncoder().encode(bundleContent).length;
+    console.log(Date.now() - before);
     const gzippedContent = gzipSync(bundleContent);
     const gzippedSize = gzippedContent.length;
 

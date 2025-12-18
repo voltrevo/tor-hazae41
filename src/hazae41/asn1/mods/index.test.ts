@@ -36,43 +36,41 @@ export namespace PKCS7 {
   }
 }
 
-function compare(a: Bytes, b: Bytes) {
-  return Buffer.from(a).equals(Buffer.from(b));
-}
-
 test('Cert Ed25519', async () => {
   const text = TestCerts.ed25519;
   const triplet = Readable.readFromBytesOrThrow(DER, PEM.parse(text));
 
-  assert(compare(PEM.parse(text), Writable.writeToBytesOrThrow(triplet)));
+  assert(Bytes.equals(PEM.parse(text), Writable.writeToBytesOrThrow(triplet)));
 });
 
 test("Cert Let's Encrypt", async () => {
   const text = TestCerts.letsencrypt;
   const triplet = Readable.readFromBytesOrThrow(DER, PEM.parse(text));
 
-  assert(compare(PEM.parse(text), Writable.writeToBytesOrThrow(triplet)));
+  assert(Bytes.equals(PEM.parse(text), Writable.writeToBytesOrThrow(triplet)));
 });
 
 test('Cert PKCS7', async () => {
   const text = TestCerts.pkcs7;
   const triplet = Readable.readFromBytesOrThrow(DER, PKCS7.parse(text));
 
-  assert(compare(PKCS7.parse(text), Writable.writeToBytesOrThrow(triplet)));
+  assert(
+    Bytes.equals(PKCS7.parse(text), Writable.writeToBytesOrThrow(triplet))
+  );
 });
 
 test('Cert frank4dd-rsa', async () => {
   const buffer = Bytes.from(TestCerts.frank4dd_rsa);
   const triplet = Readable.readFromBytesOrThrow(DER, buffer);
 
-  assert(compare(buffer, Writable.writeToBytesOrThrow(triplet)));
+  assert(Bytes.equals(buffer, Writable.writeToBytesOrThrow(triplet)));
 });
 
 test('Cert frank4dd-dsa', async () => {
   const buffer = Bytes.from(TestCerts.frank4dd_dsa);
   const triplet = Readable.readFromBytesOrThrow(DER, buffer);
 
-  assert(compare(buffer, Writable.writeToBytesOrThrow(triplet)));
+  assert(Bytes.equals(buffer, Writable.writeToBytesOrThrow(triplet)));
 });
 
 test('Cert Tor', async () => {
@@ -80,7 +78,7 @@ test('Cert Tor', async () => {
   const buffer = Bytes.fromBase64(text);
   const triplet = Readable.readFromBytesOrThrow(DER, buffer);
 
-  assert(compare(buffer, Writable.writeToBytesOrThrow(triplet)));
+  assert(Bytes.equals(buffer, Writable.writeToBytesOrThrow(triplet)));
 });
 
 test('Cert Tor 2', async () => {
@@ -88,5 +86,5 @@ test('Cert Tor 2', async () => {
   const buffer = Bytes.fromBase64(text);
   const triplet = Readable.readFromBytesOrThrow(DER, buffer);
 
-  assert(compare(buffer, Writable.writeToBytesOrThrow(triplet)));
+  assert(Bytes.equals(buffer, Writable.writeToBytesOrThrow(triplet)));
 });

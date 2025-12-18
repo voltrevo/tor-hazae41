@@ -121,7 +121,7 @@ export default {
   if (existsSync(bundlePath)) {
     try {
       const content = readFileSync(bundlePath, 'utf8');
-      const plainSize = Buffer.byteLength(content, 'utf8');
+      const plainSize = new TextEncoder().encode(content).length;
       const gzipped = gzipSync(content);
       const gzipSize = gzipped.length;
 
@@ -176,7 +176,7 @@ export default {
 
   const bundlePath = join(projectRoot, bundleOutput);
   const content = readFileSync(bundlePath, 'utf8');
-  const plainSize = Buffer.byteLength(content, 'utf8');
+  const plainSize = new TextEncoder().encode(content).length;
   const gzipped = gzipSync(content);
   const gzipSize = gzipped.length;
 

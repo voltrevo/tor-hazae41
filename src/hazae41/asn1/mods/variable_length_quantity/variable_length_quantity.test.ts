@@ -33,7 +33,7 @@ function checkReadWriteVLQ(hex: string) {
   const vlq = VLQ.DER.readOrThrow(input);
 
   const output = Writable.writeToBytesOrThrow(vlq);
-  return Buffer.from(input.bytes).equals(Buffer.from(output));
+  return Bytes.equals(input.bytes, output);
 }
 
 test('Read then write', async () => {

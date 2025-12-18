@@ -42,7 +42,7 @@ function checkReadWrite(hex: string) {
   const input = hexToBytes(hex);
   const triplet = bytesToTriplet(input);
   const output = Writable.writeToBytesOrThrow(triplet);
-  return Buffer.from(input).equals(Buffer.from(output));
+  return Bytes.equals(input, output);
 }
 
 test('Read then write', async () => {

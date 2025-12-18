@@ -26,7 +26,7 @@ function checkReadWrite(hex: string) {
   const length = Length.DER.readOrThrow(input);
 
   const output = Writable.writeToBytesOrThrow(length);
-  return Buffer.from(input.bytes).equals(Buffer.from(output));
+  return Bytes.equals(input.bytes, output);
 }
 
 test('Read then write', async () => {

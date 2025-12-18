@@ -246,7 +246,7 @@ async function main() {
       body = opts.data.value as string;
     } else {
       // binary
-      body = Bytes.from(opts.data.value as Buffer);
+      body = Bytes.from(opts.data.value as Bytes);
       if (!headers.has('Content-Type')) {
         headers.set('Content-Type', 'application/octet-stream');
       }

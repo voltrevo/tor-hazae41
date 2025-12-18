@@ -1,4 +1,4 @@
-import { assert, test, throws } from '../../../phobos/mod';
+import { assert, test } from '../../../phobos/mod';
 import { Bitset } from './bitset';
 
 test('Identity', async () => {
@@ -51,21 +51,11 @@ test('Toggle then toggle', async () => {
 test('Export Int32 to Uint32', async () => {
   const bitset = new Bitset(0, 32);
 
-  bitset.toggleBE(0); // -2147483648
-
-  const buffer = Buffer.alloc(4);
-
-  assert(
-    throws(() => buffer.writeUInt32BE(bitset.value, 0)),
-    `Writing value should throw`
-  );
+  bitset.toggleBE(0);
+  assert(bitset.value === -2147483648);
 
   bitset.unsign();
-
-  assert(
-    !throws(() => buffer.writeUInt32BE(bitset.value, 0)),
-    `Writing unsigned value should not throw`
-  );
+  assert(bitset.value === (2147483648 as number));
 });
 
 test('First', async () => {

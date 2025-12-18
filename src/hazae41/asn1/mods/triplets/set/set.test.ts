@@ -18,7 +18,7 @@ function checkReadWrite(hex: string) {
   assert(triplet instanceof Set);
 
   const output = Writable.writeToBytesOrThrow(triplet);
-  return Buffer.from(input.bytes).equals(Buffer.from(output));
+  return Bytes.equals(input.bytes, output);
 }
 
 test('Read then write', async () => {
