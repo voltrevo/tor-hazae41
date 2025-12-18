@@ -20,6 +20,7 @@ import { Readable, Writable } from '../../../hazae41/binary/mod';
 import { Base64 } from '../../../hazae41/base64';
 import { HalfDuplex } from '../../../hazae41/cascade';
 import { Future } from '../../../hazae41/future';
+import { assert } from '../../../utils/assert';
 
 const ACCEPT_SUFFIX = Bytes.fromUtf8('258EAFA5-E914-47DA-95CA-C5AB0DC85B11');
 
@@ -241,16 +242,21 @@ export class WebSocketClientDuplex extends EventTarget implements WebSocket {
         WebSocketFrame.opcodes.text,
         Bytes.from(await data.arrayBuffer())
       );
-    else if ('buffer' in data)
+    else if ('buffer' in data) {
+      assertLocalArrayBufferView(data);
+
       return await this.#splitOrThrow(
         WebSocketFrame.opcodes.binary,
         Bytes.fromView(data)
       );
-    else
+    } else {
+      assert(data instanceof ArrayBuffer);
+
       return await this.#splitOrThrow(
         WebSocketFrame.opcodes.text,
         Bytes.from(data)
       );
+    }
   }
 
   send(data: string | ArrayBufferLike | ArrayBufferView | Blob) {
@@ -571,4 +577,10 @@ export class WebSocketClientDuplex extends EventTarget implements WebSocket {
       await this.#writeOrThrow(frame);
     }
   }
+}
+
+function assertLocalArrayBufferView(
+  view: ArrayBufferView
+): asserts view is ArrayBufferView<ArrayBuffer> {
+  assert(view.buffer instanceof ArrayBuffer);
 }

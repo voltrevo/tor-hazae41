@@ -34,7 +34,7 @@ namespace Requests {
 namespace Pipe {
   export function rejectOnError(
     http: HttpClientDuplex,
-    body: Nullable<ReadableStream<Bytes>>
+    body: Nullable<ReadableStream<Uint8Array>>
   ) {
     const rejectOnError = new Future<never>();
 

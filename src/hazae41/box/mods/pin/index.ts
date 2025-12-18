@@ -1,4 +1,4 @@
-import { Deferred } from 'mods/deferred/index.js';
+import { Deferred } from '../deferred';
 
 export class Pin<T> implements Disposable {
   constructor(

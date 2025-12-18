@@ -121,7 +121,7 @@ export namespace Bytes {
    * @returns
    */
   export function fromUtf8(text: string): Bytes {
-    return Utf8.encoder.encode(text);
+    return Utf8.encoder.encode(text) as Uint8Array<ArrayBuffer>;
   }
 
   /**
@@ -140,7 +140,7 @@ export namespace Bytes {
    */
   export function fromAscii(text: string): Bytes {
     if ('process' in globalThis) return fromView(Buffer.from(text, 'ascii'));
-    return Ascii.encoder.encode(text);
+    return Ascii.encoder.encode(text) as Uint8Array<ArrayBuffer>;
   }
 
   /**
