@@ -1,4 +1,4 @@
-import '../../../symbol-dispose-polyfill';
+import '../../../symbol-dispose-polyfill/mod';
 
 import { assert, test } from '../../../phobos/mod';
 import { Borrow, Borrowable } from '../borrow/index';

@@ -1,4 +1,4 @@
-import '../../../symbol-dispose-polyfill';
+import '../../../symbol-dispose-polyfill/mod';
 
 import { Future } from '../../../future/index';
 import { test } from '../../../phobos/mod';

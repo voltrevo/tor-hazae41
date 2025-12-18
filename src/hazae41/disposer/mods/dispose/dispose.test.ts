@@ -1,4 +1,4 @@
-import '../../../symbol-dispose-polyfill';
+import '../../../symbol-dispose-polyfill/mod';
 
 import { test } from '../../../phobos/mod';
 import { AsyncDisposer, Disposer } from './dispose';
