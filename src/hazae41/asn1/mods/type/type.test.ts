@@ -1,6 +1,6 @@
 import { Bytes } from '../../../bytes';
 import { Cursor } from '../../../cursor/mod';
-import { assert, test } from '../../../phobos/mod';
+import { test, expect } from 'vitest';
 import { Sequence } from '../triplets/sequence/sequence';
 import { Type } from './type';
 
@@ -11,5 +11,5 @@ function hexToType(hex: string) {
 }
 
 test('Read', async () => {
-  assert(hexToType('30').equals(Sequence.DER.type));
+  expect(hexToType('30').equals(Sequence.DER.type)).toBe(true);
 });

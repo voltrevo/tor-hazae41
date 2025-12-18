@@ -1,5 +1,4 @@
-import { test } from '../../../../phobos/mod';
-import { assert } from '../../../../../utils/assert';
+import { test, expect } from 'vitest';
 import { Consensus } from './consensus.js';
 import { Log } from '../../../../../Log';
 
@@ -117,67 +116,44 @@ biB0aGUgdG9yIG5ldHdvcmsgdGhpcyBpcyBqdXN0IGZvciBwYXJzaW5nIHRlc3Rz
 test('microdesc', async () => {
   const result = Consensus.Microdesc.parseOrThrow(microdesc);
 
-  assert(Array.isArray(result), 'Result should be an array');
-  assert(result.length === 1, 'Should parse one microdesc');
-  assert(result[0].onionKey !== undefined, 'Should have onionKey');
-  assert(result[0].ntorOnionKey !== undefined, 'Should have ntorOnionKey');
-  assert(result[0].idEd25519 !== undefined, 'Should have idEd25519');
-  assert(
-    result[0].ntorOnionKey === 'NaEdxqudourIdG2Zhijv+9QSWS8iEsVq6NUExXah7GM',
-    'ntorOnionKey should match expected value'
-  );
-  assert(
-    result[0].idEd25519 === 'uZ0YqbYpBJ8Ts8lomKs8PRlxPFucUJFayt/pWGilkd0',
-    'idEd25519 should match expected value'
-  );
+  expect(Array.isArray(result)).toBe(true);
+  expect(result.length === 1).toBe(true);
+  expect(result[0].onionKey !== undefined).toBe(true);
+  expect(result[0].ntorOnionKey !== undefined).toBe(true);
+  expect(result[0].idEd25519 !== undefined).toBe(true);
+  expect(
+    result[0].ntorOnionKey === 'NaEdxqudourIdG2Zhijv+9QSWS8iEsVq6NUExXah7GM'
+  ).toBe(true);
+  expect(
+    result[0].idEd25519 === 'uZ0YqbYpBJ8Ts8lomKs8PRlxPFucUJFayt/pWGilkd0'
+  ).toBe(true);
 });
 
 test('microdescs', async () => {
   const log = new Log({ rawLog: () => {} });
   const result = await Consensus.parseOrThrow(log, microdescs);
 
-  assert(result.authorities !== undefined, 'Should have authorities array');
-  assert(result.microdescs !== undefined, 'Should have microdescs array');
-  assert(Array.isArray(result.microdescs), 'microdescs should be an array');
-  assert(result.microdescs.length === 14, 'Should parse 14 microdescs');
+  expect(result.authorities !== undefined).toBe(true);
+  expect(result.microdescs !== undefined).toBe(true);
+  expect(Array.isArray(result.microdescs)).toBe(true);
+  expect(result.microdescs.length === 14).toBe(true);
 
   // Check first microdesc
   const first = result.microdescs[0];
-  assert(
-    first.nickname === 'c0der',
-    'First microdesc nickname should be c0der'
-  );
-  assert(
-    first.hostname === '95.216.20.80',
-    'First microdesc hostname should match'
-  );
-  assert(first.orport === 8080, 'First microdesc orport should be 8080');
-  assert(
-    first.ipv6 === '[2a01:4f9:2a:14af::2]:8080',
-    'First microdesc should have IPv6 address'
-  );
-  assert(Array.isArray(first.flags), 'Flags should be an array');
-  assert(first.flags.includes('Fast'), 'Should have Fast flag');
-  assert(first.flags.includes('Guard'), 'Should have Guard flag');
-  assert(first.version === 'Tor 0.4.8.8', 'Version should match');
+  expect(first.nickname === 'c0der').toBe(true);
+  expect(first.hostname === '95.216.20.80').toBe(true);
+  expect(first.orport === 8080).toBe(true);
+  expect(first.ipv6 === '[2a01:4f9:2a:14af::2]:8080').toBe(true);
+  expect(Array.isArray(first.flags)).toBe(true);
+  expect(first.flags.includes('Fast')).toBe(true);
+  expect(first.flags.includes('Guard')).toBe(true);
+  expect(first.version === 'Tor 0.4.8.8').toBe(true);
 
   // Check that all microdescs have required fields
   for (const microdesc of result.microdescs) {
-    assert(
-      microdesc.nickname !== undefined,
-      'Each microdesc should have a nickname'
-    );
-    assert(
-      microdesc.identity !== undefined,
-      'Each microdesc should have an identity'
-    );
-    assert(
-      microdesc.hostname !== undefined,
-      'Each microdesc should have a hostname'
-    );
-    assert(
-      typeof microdesc.orport === 'number',
-      'Each microdesc orport should be a number'
-    );
+    expect(microdesc.nickname !== undefined).toBe(true);
+    expect(microdesc.identity !== undefined).toBe(true);
+    expect(microdesc.hostname !== undefined).toBe(true);
+    expect(typeof microdesc.orport === 'number').toBe(true);
   }
 });

@@ -1,7 +1,7 @@
 import { Writable } from '../../../../binary/mod';
 import { Bytes } from '../../../../bytes';
 import { Cursor } from '../../../../cursor/mod';
-import { assert, test } from '../../../../phobos/mod';
+import { test, expect } from 'vitest';
 import { IA5String } from './ia5_string';
 
 function hexToCursor(hex: string) {
@@ -19,5 +19,7 @@ function checkReadWrite(hex: string) {
 }
 
 test('Read then write', async () => {
-  assert(checkReadWrite('0C 0C 54 65 73 74 20 65 64 32 35 35 31 39'));
+  expect(checkReadWrite('0C 0C 54 65 73 74 20 65 64 32 35 35 31 39')).toBe(
+    true
+  );
 });

@@ -1,4 +1,4 @@
-import { test } from '../hazae41/phobos/mod';
+import { test } from 'vitest';
 import { Circuit, Echalote, TorClientDuplex } from '../hazae41/echalote';
 import { WebSocketDuplex } from './WebSocketDuplex';
 import { createSnowflakeStream } from '../hazae41/echalote';

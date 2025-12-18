@@ -1,26 +1,20 @@
-import { assert, test, throws } from '../../../phobos/mod';
+import { test, expect } from 'vitest';
 import { Err, Ok, Result } from './result';
 
 test('try-catch', async () => {
-  assert(
-    throws(() =>
-      Result.unthrowSync(_t => {
-        throw new Error();
-      })
-    ),
-    `Should have not been catched`
-  );
+  expect(() =>
+    Result.unthrowSync(_t => {
+      throw new Error();
+    })
+  ).toThrow();
 
-  assert(
-    !throws(() =>
-      Result.unthrowSync<Result<void, Error>>(t => {
-        new Err(new Error()).throw(t);
+  expect(() =>
+    Result.unthrowSync<Result<void, Error>>(t => {
+      new Err(new Error()).throw(t);
 
-        return Ok.void();
-      })
-    ),
-    `Should have been catched`
-  );
+      return Ok.void();
+    })
+  ).not.toThrow();
 });
 
 function* okGenerator() {
@@ -41,10 +35,10 @@ test('iterators', async () => {
   const ok = Result.all(okGenerator());
   const err = Result.all(errGenerator());
 
-  assert(
+  expect(
     ok.isOkAndSync(
       inner => JSON.stringify(inner) === JSON.stringify([1, 2, 3, 4])
     )
-  );
-  assert(err.isErrAndSync(inner => inner === 3));
+  ).toBe(true);
+  expect(err.isErrAndSync(inner => inner === 3)).toBe(true);
 });

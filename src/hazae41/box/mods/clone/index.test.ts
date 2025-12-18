@@ -1,4 +1,4 @@
-import { assert, test } from '../../../phobos/mod';
+import { test, expect } from 'vitest';
 import { Clone } from '.';
 
 class Resource implements Disposable {
@@ -23,7 +23,7 @@ test('count', async () => {
       }
     }
 
-    assert(count.count === 1);
+    expect(count.count === 1).toBe(true);
 
     {
       async function use(count: Clone<Resource>) {
@@ -38,9 +38,9 @@ test('count', async () => {
     }
   }
 
-  assert(!resource.disposed);
+  expect(!resource.disposed).toBe(true);
 
   await new Promise(resolve => setTimeout(resolve, 2000));
 
-  assert(resource.disposed);
+  expect(resource.disposed).toBe(true);
 });

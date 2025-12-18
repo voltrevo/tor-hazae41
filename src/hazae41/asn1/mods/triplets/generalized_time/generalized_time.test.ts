@@ -1,7 +1,7 @@
 import { Writable } from '../../../../binary/mod';
 import { Bytes } from '../../../../bytes';
 import { Cursor } from '../../../../cursor/mod';
-import { assert, test } from '../../../../phobos/mod';
+import { test, expect } from 'vitest';
 import { GeneralizedTime } from './generalized_time';
 
 function hexToCursor(hex: string) {
@@ -21,10 +21,10 @@ function reformatDate(text: string) {
 }
 
 test('Read', async () => {
-  assert(
+  expect(
     hexToDate('18 0f 31 39 39 31 30 35 30 36 32 33 34 35 34 30 5a') ===
       reformatDate('1991-05-06 23:45:40 UTC')
-  );
+  ).toBe(true);
 });
 
 function checkReadWrite(hex: string) {
@@ -36,5 +36,7 @@ function checkReadWrite(hex: string) {
 }
 
 test('Read then write', async () => {
-  assert(checkReadWrite('18 0f 31 39 39 31 30 35 30 36 32 33 34 35 34 30 5a'));
+  expect(
+    checkReadWrite('18 0f 31 39 39 31 30 35 30 36 32 33 34 35 34 30 5a')
+  ).toBe(true);
 });

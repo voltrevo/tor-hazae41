@@ -1,5 +1,4 @@
-import { test } from '../../../phobos/mod';
-import { assert } from '../../../../utils/assert';
+import { test, expect } from 'vitest';
 import { Sha1Hasher } from './Sha1Hasher';
 import { Bytes } from '../../../bytes';
 
@@ -22,10 +21,10 @@ test('Sha1Hasher: basic single hash', async () => {
   const hash = hasher.finalizeOrThrow();
 
   const hex = toHex(hash);
-  assert(
+  expect(
     hex === '2aae6c35c94fcfb415dbe95f408b9ce91ee846ed',
     `Expected 2aae6c35c94fcfb415dbe95f408b9ce91ee846ed, got ${hex}`
-  );
+  ).toBe(true);
 });
 
 test('Sha1Hasher: empty input', async () => {
@@ -35,10 +34,10 @@ test('Sha1Hasher: empty input', async () => {
   const hash = hasher.finalizeOrThrow();
 
   const hex = toHex(hash);
-  assert(
+  expect(
     hex === 'da39a3ee5e6b4b0d3255bfef95601890afd80709',
     `Expected da39a3ee5e6b4b0d3255bfef95601890afd80709, got ${hex}`
-  );
+  ).toBe(true);
 });
 
 test('Sha1Hasher: incremental hashing', async () => {
@@ -52,10 +51,10 @@ test('Sha1Hasher: incremental hashing', async () => {
   const hash = hasher.finalizeOrThrow();
 
   const hex = toHex(hash);
-  assert(
+  expect(
     hex === '2aae6c35c94fcfb415dbe95f408b9ce91ee846ed',
     `Incremental hash should equal single update. Expected 2aae6c35c94fcfb415dbe95f408b9ce91ee846ed, got ${hex}`
-  );
+  ).toBe(true);
 });
 
 test('Sha1Hasher: long input', async () => {
@@ -67,10 +66,10 @@ test('Sha1Hasher: long input', async () => {
   const hash = hasher.finalizeOrThrow();
 
   const hex = toHex(hash);
-  assert(
+  expect(
     hex === '291e9a6c66994949b57ba5e650361e98fc36b1ba',
     `Expected 291e9a6c66994949b57ba5e650361e98fc36b1ba, got ${hex}`
-  );
+  ).toBe(true);
 });
 
 test('Sha1Hasher: pancake fox hash', async () => {
@@ -80,10 +79,10 @@ test('Sha1Hasher: pancake fox hash', async () => {
   const hash = hasher.finalizeOrThrow();
 
   const hex = toHex(hash);
-  assert(
+  expect(
     hex === '2fd4e1c67a2d28fced849ee1bb76e7391b93eb12',
     `Expected 2fd4e1c67a2d28fced849ee1bb76e7391b93eb12, got ${hex}`
-  );
+  ).toBe(true);
 });
 
 test('Sha1Hasher: cloneOrThrow does not modify original', async () => {
@@ -105,22 +104,19 @@ test('Sha1Hasher: cloneOrThrow does not modify original', async () => {
   const originalHex = toHex(originalHash);
 
   // These should be different
-  assert(
-    clonedHex !== originalHex,
-    'Cloned and original hashes should be different'
-  );
+  expect(clonedHex !== originalHex).toBe(true);
 
   // Cloned should be 'hello world'
-  assert(
+  expect(
     clonedHex === '2aae6c35c94fcfb415dbe95f408b9ce91ee846ed',
     `Cloned hash should be 'hello world'. Expected 2aae6c35c94fcfb415dbe95f408b9ce91ee846ed, got ${clonedHex}`
-  );
+  ).toBe(true);
 
   // Original should be just 'hello'
-  assert(
+  expect(
     originalHex === 'aaf4c61ddcc5e8a2dabede0f3b482cd9aea9434d',
     `Original hash should be 'hello'. Expected aaf4c61ddcc5e8a2dabede0f3b482cd9aea9434d, got ${originalHex}`
-  );
+  ).toBe(true);
 });
 
 test('Sha1Hasher: output length is always 20 bytes', async () => {
@@ -132,10 +128,10 @@ test('Sha1Hasher: output length is always 20 bytes', async () => {
     hasher.updateOrThrow(toBytes(input));
     const hash = hasher.finalizeOrThrow();
 
-    assert(
+    expect(
       hash.length === 20,
       `SHA1 hash should be 20 bytes, got ${hash.length}`
-    );
+    ).toBe(true);
   }
 });
 
@@ -149,7 +145,7 @@ test('Sha1Hasher: binary data handling', async () => {
   const hash = hasher.finalizeOrThrow();
 
   // Verify it produces a valid hash
-  assert(hash.length === 20, 'Should produce valid 20-byte hash');
+  expect(hash.length === 20).toBe(true);
 
   // Hash should be deterministic
   const hasher2 = await Sha1Hasher.createOrThrow();
@@ -159,10 +155,10 @@ test('Sha1Hasher: binary data handling', async () => {
   const hex1 = toHex(hash);
   const hex2 = toHex(hash2);
 
-  assert(
+  expect(
     hex1 === hex2,
     `Same input should produce same hash. Got ${hex1} and ${hex2}`
-  );
+  ).toBe(true);
 });
 
 test('Sha1Hasher: deterministic hashing', async () => {
@@ -182,10 +178,10 @@ test('Sha1Hasher: deterministic hashing', async () => {
   // All hashes should be identical
   const firstHash = hashes[0];
   for (let i = 1; i < hashes.length; i++) {
-    assert(
+    expect(
       hashes[i] === firstHash,
       `Hash ${i} should match first hash. Got ${hashes[i]} vs ${firstHash}`
-    );
+    ).toBe(true);
   }
 });
 
@@ -209,12 +205,9 @@ test('Sha1Hasher: allows update after finalize', async () => {
   const hex2 = toHex(digest2);
 
   // Verify both digests are correct
-  assert(
-    hex1 === 'aaf4c61ddcc5e8a2dabede0f3b482cd9aea9434d',
-    'First digest should be hello'
-  );
-  assert(
+  expect(hex1 === 'aaf4c61ddcc5e8a2dabede0f3b482cd9aea9434d').toBe(true);
+  expect(
     hex2 === '6adfb183a4a2c94a2f92dab5ade762a47889a5a1',
     `Second digest should be 'hello' + 'world'. Got ${hex2}`
-  );
+  ).toBe(true);
 });

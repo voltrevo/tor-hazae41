@@ -1,5 +1,4 @@
-import { assert } from '../../../../utils/assert';
-import { test } from '../../../phobos/mod';
+import { test, expect } from 'vitest';
 import { Some } from './some';
 
 test('option methods', async () => {
@@ -8,5 +7,5 @@ test('option methods', async () => {
     .mapSync(x => x * 2)
     .zip(new Some('lol')).inner;
 
-  assert(JSON.stringify(mapped) === '[10,"lol"]');
+  expect(JSON.stringify(mapped) === '[10,"lol"]').toBe(true);
 });

@@ -1,4 +1,4 @@
-import { assert, test } from '../../../phobos/mod';
+import { test, expect } from 'vitest';
 import { PEM } from './pem';
 
 function ignoreLastNewline(text: string) {
@@ -25,5 +25,5 @@ test('Parse and stringify', async () => {
   const buffer = PEM.decodeOrThrow(text);
   const text2 = PEM.encodeOrThrow(buffer);
 
-  assert(ignoreLastNewline(text) === ignoreLastNewline(text2));
+  expect(ignoreLastNewline(text) === ignoreLastNewline(text2)).toBe(true);
 });

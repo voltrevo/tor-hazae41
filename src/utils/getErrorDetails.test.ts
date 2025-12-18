@@ -1,5 +1,4 @@
-import { test } from '../hazae41/phobos/mod';
-import { assert } from './assert';
+import { test, expect } from 'vitest';
 import { getErrorDetails } from './getErrorDetails.js';
 
 type ErrorWithCause = Error & { cause?: Error };
@@ -8,9 +7,9 @@ test('getErrorDetails - with Error object', async () => {
   const error = new Error('Test error message');
   const result = getErrorDetails(error);
 
-  assert(typeof result === 'string');
-  assert(result.includes('Error'));
-  assert(result.includes('Test error message'));
+  expect(typeof result === 'string').toBe(true);
+  expect(result.includes('Error')).toBe(true);
+  expect(result.includes('Test error message')).toBe(true);
 });
 
 test('getErrorDetails - with Error that has stack trace', async () => {
@@ -18,8 +17,8 @@ test('getErrorDetails - with Error that has stack trace', async () => {
   error.stack = 'Error: Test error\n    at line 1\n    at line 2';
 
   const result = getErrorDetails(error);
-  assert(result.includes('Error: Test error'));
-  assert(result.includes('at line 1'));
+  expect(result.includes('Error: Test error')).toBe(true);
+  expect(result.includes('at line 1')).toBe(true);
 });
 
 test('getErrorDetails - with stack that includes name but not message', async () => {
@@ -28,8 +27,8 @@ test('getErrorDetails - with stack that includes name but not message', async ()
   error.stack = 'CustomError\n    at line 1';
 
   const result = getErrorDetails(error);
-  assert(result.includes('CustomError'));
-  assert(result.includes('Test error'));
+  expect(result.includes('CustomError')).toBe(true);
+  expect(result.includes('Test error')).toBe(true);
 });
 
 test('getErrorDetails - with stack that includes message but not name', async () => {
@@ -38,8 +37,8 @@ test('getErrorDetails - with stack that includes message but not name', async ()
   error.stack = 'Test error\n    at line 1';
 
   const result = getErrorDetails(error);
-  assert(result.includes('CustomError'));
-  assert(result.includes('Test error'));
+  expect(result.includes('CustomError')).toBe(true);
+  expect(result.includes('Test error')).toBe(true);
 });
 
 test('getErrorDetails - with stack missing both name and message', async () => {
@@ -48,9 +47,9 @@ test('getErrorDetails - with stack missing both name and message', async () => {
   error.stack = 'SomeOtherText\n    at line 1';
 
   const result = getErrorDetails(error);
-  assert(result.includes('CustomError'));
-  assert(result.includes('Test error'));
-  assert(result.includes('Stack:'));
+  expect(result.includes('CustomError')).toBe(true);
+  expect(result.includes('Test error')).toBe(true);
+  expect(result.includes('Stack:')).toBe(true);
 });
 
 test('getErrorDetails - with Error without stack', async () => {
@@ -59,9 +58,9 @@ test('getErrorDetails - with Error without stack', async () => {
   error.stack = undefined;
 
   const result = getErrorDetails(error);
-  assert(result.includes('CustomError'));
-  assert(result.includes('Test error'));
-  assert(!result.includes('Stack:'));
+  expect(result.includes('CustomError')).toBe(true);
+  expect(result.includes('Test error')).toBe(true);
+  expect(!result.includes('Stack:')).toBe(true);
 });
 
 test('getErrorDetails - with Error that has cause', async () => {
@@ -70,9 +69,9 @@ test('getErrorDetails - with Error that has cause', async () => {
   (error as ErrorWithCause).cause = causeError;
 
   const result = getErrorDetails(error);
-  assert(result.includes('Main error'));
-  assert(result.includes('Cause:'));
-  assert(result.includes('Cause error'));
+  expect(result.includes('Main error')).toBe(true);
+  expect(result.includes('Cause:')).toBe(true);
+  expect(result.includes('Cause error')).toBe(true);
 });
 
 test('getErrorDetails - with nested causes', async () => {
@@ -83,17 +82,17 @@ test('getErrorDetails - with nested causes', async () => {
   (topError as ErrorWithCause).cause = middleError;
 
   const result = getErrorDetails(topError);
-  assert(result.includes('Top error'));
-  assert(result.includes('Middle error'));
-  assert(result.includes('Root cause'));
+  expect(result.includes('Top error')).toBe(true);
+  expect(result.includes('Middle error')).toBe(true);
+  expect(result.includes('Root cause')).toBe(true);
 });
 
 test('getErrorDetails - with non-Error object (object)', async () => {
   const obj = { message: 'test' };
   const result = getErrorDetails(obj);
 
-  assert(result.includes('test'));
-  assert(result.includes('message'));
+  expect(result.includes('test')).toBe(true);
+  expect(result.includes('message')).toBe(true);
 });
 
 test('getErrorDetails - with non-Error plain object with constructor', async () => {
@@ -104,37 +103,37 @@ test('getErrorDetails - with non-Error plain object with constructor', async () 
   const obj = new CustomClass();
   const result = getErrorDetails(obj);
 
-  assert(result.includes('CustomClass'));
+  expect(result.includes('CustomClass')).toBe(true);
 });
 
 test('getErrorDetails - with non-Error null', async () => {
   const result = getErrorDetails(null);
 
-  assert(result.includes('null'));
+  expect(result.includes('null')).toBe(true);
 });
 
 test('getErrorDetails - with non-Error undefined', async () => {
   const result = getErrorDetails(undefined);
 
-  assert(result.includes('undefined'));
+  expect(result.includes('undefined')).toBe(true);
 });
 
 test('getErrorDetails - with non-Error string', async () => {
   const result = getErrorDetails('Just a string');
 
-  assert(result.includes('Just a string'));
+  expect(result.includes('Just a string')).toBe(true);
 });
 
 test('getErrorDetails - with non-Error number', async () => {
   const result = getErrorDetails(42);
 
-  assert(result.includes('42'));
+  expect(result.includes('42')).toBe(true);
 });
 
 test('getErrorDetails - with non-Error boolean', async () => {
   const result = getErrorDetails(true);
 
-  assert(result.includes('true'));
+  expect(result.includes('true')).toBe(true);
 });
 
 test('getErrorDetails - with object that has broken constructor property', async () => {
@@ -142,7 +141,7 @@ test('getErrorDetails - with object that has broken constructor property', async
   const result = getErrorDetails(obj);
 
   // Should handle gracefully without throwing
-  assert(typeof result === 'string');
+  expect(typeof result === 'string').toBe(true);
 });
 
 test('getErrorDetails - with Error that has both name and message in stack', async () => {
@@ -151,8 +150,8 @@ test('getErrorDetails - with Error that has both name and message in stack', asy
   error.stack = 'TestError: Test error\n    at line 1';
 
   const result = getErrorDetails(error);
-  assert(result.includes('TestError: Test error'));
-  assert(result === error.stack);
+  expect(result.includes('TestError: Test error')).toBe(true);
+  expect(result === error.stack).toBe(true);
 });
 
 test('getErrorDetails - with SyntaxError', async () => {
@@ -165,9 +164,9 @@ test('getErrorDetails - with SyntaxError', async () => {
 
   if (error!) {
     const result = getErrorDetails(error);
-    assert(
+    expect(
       result.includes('SyntaxError') || result.includes('Unexpected token')
-    );
+    ).toBe(true);
   }
 });
 
@@ -175,6 +174,6 @@ test('getErrorDetails - with TypeError', async () => {
   const error = new TypeError('Cannot read property');
   const result = getErrorDetails(error);
 
-  assert(result.includes('TypeError'));
-  assert(result.includes('Cannot read property'));
+  expect(result.includes('TypeError')).toBe(true);
+  expect(result.includes('Cannot read property')).toBe(true);
 });

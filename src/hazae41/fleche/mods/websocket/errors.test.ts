@@ -1,5 +1,4 @@
-import { test } from '../../../phobos/mod';
-import { assert } from '../../../../utils/assert';
+import { test, expect } from 'vitest';
 import {
   InvalidHttpStatusCode,
   InvalidHttpHeaderValue,
@@ -10,19 +9,19 @@ import {
 test('InvalidHttpStatusCode - constructor without status', async () => {
   const error = new InvalidHttpStatusCode();
 
-  assert(error instanceof Error);
-  assert(error instanceof InvalidHttpStatusCode);
-  assert(error.status === undefined);
-  assert(error.message === 'Invalid HTTP status code undefined');
+  expect(error instanceof Error).toBe(true);
+  expect(error instanceof InvalidHttpStatusCode).toBe(true);
+  expect(error.status === undefined).toBe(true);
+  expect(error.message === 'Invalid HTTP status code undefined').toBe(true);
 });
 
 test('InvalidHttpStatusCode - constructor with status', async () => {
   const error = new InvalidHttpStatusCode(404);
 
-  assert(error instanceof Error);
-  assert(error instanceof InvalidHttpStatusCode);
-  assert(error.status === 404);
-  assert(error.message === 'Invalid HTTP status code 404');
+  expect(error instanceof Error).toBe(true);
+  expect(error instanceof InvalidHttpStatusCode).toBe(true);
+  expect(error.status === 404).toBe(true);
+  expect(error.message === 'Invalid HTTP status code 404').toBe(true);
 });
 
 test('InvalidHttpStatusCode - with various status codes', async () => {
@@ -30,41 +29,41 @@ test('InvalidHttpStatusCode - with various status codes', async () => {
 
   for (const code of testCodes) {
     const error = new InvalidHttpStatusCode(code);
-    assert(error.status === code);
-    assert(error.message.includes(String(code)));
+    expect(error.status === code).toBe(true);
+    expect(error.message.includes(String(code))).toBe(true);
   }
 });
 
 test('InvalidHttpStatusCode - with zero status', async () => {
   const error = new InvalidHttpStatusCode(0);
 
-  assert(error.status === 0);
-  assert(error.message === 'Invalid HTTP status code 0');
+  expect(error.status === 0).toBe(true);
+  expect(error.message === 'Invalid HTTP status code 0').toBe(true);
 });
 
 test('InvalidHttpStatusCode - with negative status', async () => {
   const error = new InvalidHttpStatusCode(-1);
 
-  assert(error.status === -1);
-  assert(error.message.includes('-1'));
+  expect(error.status === -1).toBe(true);
+  expect(error.message.includes('-1')).toBe(true);
 });
 
 test('InvalidHttpStatusCode - is throwable', async () => {
   try {
     throw new InvalidHttpStatusCode(500);
   } catch (e) {
-    assert(e instanceof InvalidHttpStatusCode);
-    assert((e as InvalidHttpStatusCode).status === 500);
+    expect(e instanceof InvalidHttpStatusCode).toBe(true);
+    expect((e as InvalidHttpStatusCode).status === 500).toBe(true);
   }
 });
 
 test('InvalidHttpHeaderValue - constructor with header name', async () => {
   const error = new InvalidHttpHeaderValue('Content-Type');
 
-  assert(error instanceof Error);
-  assert(error instanceof InvalidHttpHeaderValue);
+  expect(error instanceof Error).toBe(true);
+  expect(error instanceof InvalidHttpHeaderValue).toBe(true);
   // Note: The name property is not explicitly set in this class
-  assert(error.message === 'Invalid "Content-Type" header value');
+  expect(error.message === 'Invalid "Content-Type" header value').toBe(true);
 });
 
 test('InvalidHttpHeaderValue - with various header names', async () => {
@@ -78,7 +77,7 @@ test('InvalidHttpHeaderValue - with various header names', async () => {
 
   for (const header of testHeaders) {
     const error = new InvalidHttpHeaderValue(header);
-    assert(error.message.includes(header));
+    expect(error.message.includes(header)).toBe(true);
   }
 });
 
@@ -86,44 +85,46 @@ test('InvalidHttpHeaderValue - is throwable', async () => {
   try {
     throw new InvalidHttpHeaderValue('Custom-Header');
   } catch (e) {
-    assert(e instanceof InvalidHttpHeaderValue);
+    expect(e instanceof InvalidHttpHeaderValue).toBe(true);
     // The message should contain the header name
-    assert((e as Error).message.includes('Custom-Header'));
+    expect((e as Error).message.includes('Custom-Header')).toBe(true);
   }
 });
 
 test('UnexpectedContinuationFrameError - constructor', async () => {
   const error = new UnexpectedContinuationFrameError();
 
-  assert(error instanceof Error);
-  assert(error instanceof UnexpectedContinuationFrameError);
-  assert(error.message === 'Did not expect a continuation frame');
+  expect(error instanceof Error).toBe(true);
+  expect(error instanceof UnexpectedContinuationFrameError).toBe(true);
+  expect(error.message === 'Did not expect a continuation frame').toBe(true);
 });
 
 test('UnexpectedContinuationFrameError - is throwable', async () => {
   try {
     throw new UnexpectedContinuationFrameError();
   } catch (e) {
-    assert(e instanceof UnexpectedContinuationFrameError);
-    assert((e as Error).message === 'Did not expect a continuation frame');
+    expect(e instanceof UnexpectedContinuationFrameError).toBe(true);
+    expect((e as Error).message === 'Did not expect a continuation frame').toBe(
+      true
+    );
   }
 });
 
 test('ExpectedContinuationFrameError - constructor', async () => {
   const error = new ExpectedContinuationFrameError();
 
-  assert(error instanceof Error);
-  assert(error instanceof ExpectedContinuationFrameError);
-  assert(error.name === 'ExpectedContinuationFrameError');
-  assert(error.message === 'Expected a continuation frame');
+  expect(error instanceof Error).toBe(true);
+  expect(error instanceof ExpectedContinuationFrameError).toBe(true);
+  expect(error.name === 'ExpectedContinuationFrameError').toBe(true);
+  expect(error.message === 'Expected a continuation frame').toBe(true);
 });
 
 test('ExpectedContinuationFrameError - is throwable', async () => {
   try {
     throw new ExpectedContinuationFrameError();
   } catch (e) {
-    assert(e instanceof ExpectedContinuationFrameError);
-    assert((e as Error).message === 'Expected a continuation frame');
+    expect(e instanceof ExpectedContinuationFrameError).toBe(true);
+    expect((e as Error).message === 'Expected a continuation frame').toBe(true);
   }
 });
 
@@ -131,10 +132,10 @@ test('WebSocket frame errors are distinguishable', async () => {
   const unexpected = new UnexpectedContinuationFrameError();
   const expected = new ExpectedContinuationFrameError();
 
-  assert(unexpected instanceof UnexpectedContinuationFrameError);
-  assert(!(unexpected instanceof ExpectedContinuationFrameError));
-  assert(expected instanceof ExpectedContinuationFrameError);
-  assert(!(expected instanceof UnexpectedContinuationFrameError));
+  expect(unexpected instanceof UnexpectedContinuationFrameError).toBe(true);
+  expect(unexpected instanceof ExpectedContinuationFrameError).toBe(false);
+  expect(expected instanceof ExpectedContinuationFrameError).toBe(true);
+  expect(expected instanceof UnexpectedContinuationFrameError).toBe(false);
 });
 
 test('All error types extend Error', async () => {
@@ -146,8 +147,8 @@ test('All error types extend Error', async () => {
   ];
 
   for (const error of errors) {
-    assert(error instanceof Error);
-    assert(typeof error.message === 'string');
-    assert(error.message.length > 0);
+    expect(error instanceof Error).toBe(true);
+    expect(typeof error.message === 'string').toBe(true);
+    expect(error.message.length > 0).toBe(true);
   }
 });

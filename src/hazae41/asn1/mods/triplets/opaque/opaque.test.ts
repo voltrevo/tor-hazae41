@@ -1,5 +1,5 @@
 import { Readable, Writable } from '../../../../binary/mod';
-import { assert, test } from '../../../../phobos/mod';
+import { test } from 'vitest';
 import { Integer } from '../integer/integer';
 import { DER } from '../../resolvers/der';
 import { OpaqueTriplet } from './opaque';

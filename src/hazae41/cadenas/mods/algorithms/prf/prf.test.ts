@@ -1,7 +1,6 @@
 import { prfOrThrow } from './prf.js';
 import { Bytes } from '../../../../bytes/index.js';
-import { test } from '../../../../phobos/mod.js';
-import { assert } from '../../../../../utils/assert.js';
+import { test, expect } from 'vitest';
 
 test('PRF (master secret)', async () => {
   const premaster_secret = Bytes.random(128);
@@ -22,7 +21,7 @@ test('PRF (master secret)', async () => {
 
   const _end = Date.now();
 
-  assert(result.length === 48, `result length should be 48`);
+  expect(result.length === 48, `result length should be 48`).toBe(true);
 
   // console.info(message, 'took', end - start, 'ms');
 });

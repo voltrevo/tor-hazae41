@@ -1,5 +1,4 @@
-import { test } from '../hazae41/phobos/mod';
-import { assert } from '../utils/assert';
+import { test, expect } from 'vitest';
 import { SystemClock } from './SystemClock';
 import { VirtualClock } from './VirtualClock';
 
@@ -7,8 +6,8 @@ test('SystemClock - basic functionality', async () => {
   const clock = new SystemClock();
 
   const now = clock.now();
-  assert(typeof now === 'number', 'should return number');
-  assert(now > 0, 'should return positive timestamp');
+  expect(typeof now === 'number').toBe(true);
+  expect(now > 0).toBe(true);
 });
 
 test('SystemClock - setTimeout', async () => {
@@ -23,7 +22,7 @@ test('SystemClock - setTimeout', async () => {
   });
 
   await promise;
-  assert(executed, 'should execute setTimeout callback');
+  expect(executed).toBe(true);
 });
 
 test('SystemClock - clearTimeout', async () => {
@@ -37,7 +36,7 @@ test('SystemClock - clearTimeout', async () => {
   clock.clearTimeout(timerId);
 
   await new Promise(resolve => setTimeout(resolve, 20));
-  assert(!executed, 'should not execute cleared timeout');
+  expect(!executed).toBe(true);
 });
 
 test('SystemClock - setInterval', async () => {
@@ -55,7 +54,7 @@ test('SystemClock - setInterval', async () => {
   });
 
   await promise;
-  assert(count === 3, 'should execute interval 3 times');
+  expect(count === 3).toBe(true);
 });
 
 test('SystemClock - delay', async () => {
@@ -67,22 +66,22 @@ test('SystemClock - delay', async () => {
   });
 
   await new Promise(resolve => setTimeout(resolve, 20));
-  assert(executed, 'should resolve delay after specified time');
+  expect(executed).toBe(true);
 });
 
 test('VirtualClock - manual mode - start at timestamp 0', async () => {
   const clock = new VirtualClock();
-  assert(clock.now() === 0, 'should start at timestamp 0');
+  expect(clock.now() === 0).toBe(true);
 });
 
 test('VirtualClock - manual mode - advance time', async () => {
   const clock = new VirtualClock();
 
   await clock.advanceTime(100);
-  assert(clock.now() === 100, 'should advance to 100');
+  expect(clock.now() === 100).toBe(true);
 
   await clock.advanceTime(50);
-  assert(clock.now() === 150, 'should advance to 150');
+  expect(clock.now() === 150).toBe(true);
 });
 
 test('VirtualClock - manual mode - timer execution', async () => {
@@ -94,10 +93,10 @@ test('VirtualClock - manual mode - timer execution', async () => {
   }, 100);
 
   await clock.advanceTime(50);
-  assert(!executed, 'should not execute before time');
+  expect(!executed).toBe(true);
 
   await clock.advanceTime(50);
-  assert(executed, 'should execute when time reached');
+  expect(executed).toBe(true);
 });
 
 test('VirtualClock - manual mode - multiple timers order', async () => {
@@ -109,10 +108,10 @@ test('VirtualClock - manual mode - multiple timers order', async () => {
   clock.setTimeout(() => order.push(3), 70);
 
   await clock.advanceTime(100);
-  assert(order.length === 3, 'should execute all timers');
-  assert(order[0] === 2, 'should execute timer 2 first');
-  assert(order[1] === 1, 'should execute timer 1 second');
-  assert(order[2] === 3, 'should execute timer 3 third');
+  expect(order.length === 3).toBe(true);
+  expect(order[0] === 2).toBe(true);
+  expect(order[1] === 1).toBe(true);
+  expect(order[2] === 3).toBe(true);
 });
 
 test('VirtualClock - manual mode - setInterval', async () => {
@@ -124,13 +123,13 @@ test('VirtualClock - manual mode - setInterval', async () => {
   }, 50);
 
   await clock.advanceTime(50);
-  assert(count === 1, 'should execute once after 50ms');
+  expect(count === 1).toBe(true);
 
   await clock.advanceTime(50);
-  assert(count === (2 as number), 'should execute twice after 100ms');
+  expect(count === (2 as number)).toBe(true);
 
   await clock.advanceTime(100);
-  assert(count === (4 as number), 'should execute four times after 200ms');
+  expect(count === (4 as number)).toBe(true);
 });
 
 test('VirtualClock - manual mode - clearTimeout', async () => {
@@ -143,7 +142,7 @@ test('VirtualClock - manual mode - clearTimeout', async () => {
 
   clock.clearTimeout(timerId);
   await clock.advanceTime(100);
-  assert(!executed, 'should not execute cleared timeout');
+  expect(!executed).toBe(true);
 });
 
 test('VirtualClock - manual mode - clearInterval', async () => {
@@ -155,11 +154,11 @@ test('VirtualClock - manual mode - clearInterval', async () => {
   }, 50);
 
   await clock.advanceTime(50);
-  assert(count === 1, 'should execute once');
+  expect(count === 1).toBe(true);
 
   clock.clearInterval(intervalId);
   await clock.advanceTime(100);
-  assert(count === 1, 'should not execute after clear');
+  expect(count === 1).toBe(true);
 });
 
 test('VirtualClock - manual mode - delay', async () => {
@@ -171,10 +170,10 @@ test('VirtualClock - manual mode - delay', async () => {
   });
 
   await clock.advanceTime(50);
-  assert(!executed, 'should not resolve before time');
+  expect(!executed).toBe(true);
 
   await clock.advanceTime(50);
-  assert(executed, 'should resolve when time reached');
+  expect(executed).toBe(true);
 });
 
 test('VirtualClock - manual mode - delay with macrotask behavior', async () => {
@@ -189,9 +188,9 @@ test('VirtualClock - manual mode - delay with macrotask behavior', async () => {
 
   await clock.advanceTime(50);
   // Due to macrotask behavior, order.push(1) should execute before delay resolves
-  assert(order.length === 2, 'should have both entries');
-  assert(order[0] === 1, 'should execute synchronous code first');
-  assert(order[1] === 2, 'should resolve delay after macrotask');
+  expect(order.length === 2).toBe(true);
+  expect(order[0] === 1).toBe(true);
+  expect(order[1] === 2).toBe(true);
 });
 
 test('VirtualClock - automated mode - basic event loop', async () => {
@@ -203,10 +202,10 @@ test('VirtualClock - automated mode - basic event loop', async () => {
   clock.setTimeout(() => order.push(3), 70);
 
   await clock.run();
-  assert(order.length === 3, 'should execute all timers');
-  assert(order[0] === 2, 'should execute timer 2 first');
-  assert(order[1] === 1, 'should execute timer 1 second');
-  assert(order[2] === 3, 'should execute timer 3 third');
+  expect(order.length === 3).toBe(true);
+  expect(order[0] === 2).toBe(true);
+  expect(order[1] === 1).toBe(true);
+  expect(order[2] === 3).toBe(true);
 });
 
 test('VirtualClock - automated mode - tasks scheduling more tasks', async () => {
@@ -225,10 +224,10 @@ test('VirtualClock - automated mode - tasks scheduling more tasks', async () => 
   }, 40);
 
   await clock.run();
-  assert(order.length === 3, 'should execute all tasks');
-  assert(order[0] === 1, 'should execute first task');
-  assert(order[1] === 3, 'should execute second task');
-  assert(order[2] === 2, 'should execute nested task');
+  expect(order.length === 3).toBe(true);
+  expect(order[0] === 1).toBe(true);
+  expect(order[1] === 3).toBe(true);
+  expect(order[2] === 2).toBe(true);
 });
 
 test('VirtualClock - automated mode - setInterval', async () => {
@@ -243,7 +242,7 @@ test('VirtualClock - automated mode - setInterval', async () => {
   }, 50);
 
   await clock.run();
-  assert(count === 3, 'should execute interval 3 times');
+  expect(count === 3).toBe(true);
 });
 
 test('VirtualClock - automated mode - stop execution', async () => {
@@ -264,7 +263,7 @@ test('VirtualClock - automated mode - stop execution', async () => {
   }, 150);
 
   await clock.run();
-  assert(count === 2, 'should stop after second timer');
+  expect(count === 2).toBe(true);
 });
 
 test('VirtualClock - automated mode - delay', async () => {
@@ -280,9 +279,9 @@ test('VirtualClock - automated mode - delay', async () => {
   }, 30);
 
   await clock.run();
-  assert(order.length === 2, 'should execute both');
-  assert(order[0] === 1, 'should execute setTimeout first');
-  assert(order[1] === 2, 'should execute delay second');
+  expect(order.length === 2).toBe(true);
+  expect(order[0] === 1).toBe(true);
+  expect(order[1] === 2).toBe(true);
 });
 
 test('VirtualClock - unref/ref basic functionality', async () => {
@@ -295,7 +294,7 @@ test('VirtualClock - unref/ref basic functionality', async () => {
 
   // Timer should be refed by default
   await clock.advanceTime(1000);
-  assert(executed, 'should execute refed timer');
+  expect(executed).toBe(true);
 
   // Reset for next test
   executed = false;
@@ -305,7 +304,7 @@ test('VirtualClock - unref/ref basic functionality', async () => {
 
   clock.unref(_timerId2);
   await clock.advanceTime(2000);
-  assert(executed, 'should execute unref timer in manual mode');
+  expect(executed).toBe(true);
 });
 
 test('VirtualClock - automated mode - unref behavior', async () => {
@@ -324,9 +323,9 @@ test('VirtualClock - automated mode - unref behavior', async () => {
   clock.unref(unrefedTimerId);
 
   await clock.run();
-  assert(refedExecuted, 'should execute refed timer');
-  assert(!unrefedExecuted, 'should not execute unrefed timer');
-  assert(clock.now() === 1000, 'time should advance to refed timer only');
+  expect(refedExecuted).toBe(true);
+  expect(!unrefedExecuted).toBe(true);
+  expect(clock.now() === 1000).toBe(true);
 });
 
 test('VirtualClock - automated mode - ref after unref', async () => {
@@ -341,8 +340,8 @@ test('VirtualClock - automated mode - ref after unref', async () => {
   clock.ref(_timerId);
 
   await clock.run();
-  assert(executed, 'should execute re-refed timer');
-  assert(clock.now() === 3000, 'time should advance to re-refed timer');
+  expect(executed).toBe(true);
+  expect(clock.now() === 3000).toBe(true);
 });
 
 test('SystemClock - unref/ref cross-platform', async () => {
@@ -358,7 +357,7 @@ test('SystemClock - unref/ref cross-platform', async () => {
   clock.ref(timerId);
 
   await new Promise(resolve => setTimeout(resolve, 150));
-  assert(executed, 'should execute timer regardless of unref/ref');
+  expect(executed).toBe(true);
 });
 
 test('SystemClock - delayUnref', async () => {
@@ -370,7 +369,7 @@ test('SystemClock - delayUnref', async () => {
   });
 
   await new Promise(resolve => setTimeout(resolve, 150));
-  assert(executed, 'should execute delayUnref');
+  expect(executed).toBe(true);
 });
 
 test('VirtualClock - delayUnref basic functionality', async () => {
@@ -382,7 +381,7 @@ test('VirtualClock - delayUnref basic functionality', async () => {
   });
 
   await clock.advanceTime(2000);
-  assert(executed, 'should execute delayUnref in manual mode');
+  expect(executed).toBe(true);
 });
 
 test('VirtualClock - automated mode - delayUnref behavior', async () => {
@@ -399,9 +398,9 @@ test('VirtualClock - automated mode - delayUnref behavior', async () => {
   });
 
   await clock.run();
-  assert(refedExecuted, 'should execute refed delay');
-  assert(!unrefedExecuted, 'should not execute unrefed delay');
-  assert(clock.now() === 1000, 'time should advance to refed timer only');
+  expect(refedExecuted).toBe(true);
+  expect(!unrefedExecuted).toBe(true);
+  expect(clock.now() === 1000).toBe(true);
 });
 
 test('VirtualClock - manual mode - timer callback with logging', async () => {
@@ -413,7 +412,7 @@ test('VirtualClock - manual mode - timer callback with logging', async () => {
   }, 50);
 
   await clock.advanceTime(50);
-  assert(callbackExecuted, 'callback should execute and be logged');
+  expect(callbackExecuted).toBe(true);
 });
 
 test('VirtualClock - automated mode - timer callback execution', async () => {
@@ -425,21 +424,21 @@ test('VirtualClock - automated mode - timer callback execution', async () => {
   }, 50);
 
   await clock.run();
-  assert(callbackExecuted, 'should execute callback in automated mode');
+  expect(callbackExecuted).toBe(true);
 });
 
 test('VirtualClock - unref on non-existent timer', async () => {
   const clock = new VirtualClock();
   // Should not throw
   clock.unref(99999);
-  assert(true, 'should not throw on non-existent timer id');
+  expect(true).toBe(true);
 });
 
 test('VirtualClock - ref on non-existent timer', async () => {
   const clock = new VirtualClock();
   // Should not throw
   clock.ref(99999);
-  assert(true, 'should not throw on non-existent timer id');
+  expect(true).toBe(true);
 });
 
 test('VirtualClock - advanceTime on automated mode should throw', async () => {
@@ -454,7 +453,7 @@ test('VirtualClock - advanceTime on automated mode should throw', async () => {
       error.message === 'Cannot manually advance time in automated mode';
   }
 
-  assert(thrown, 'should throw when calling advanceTime on automated clock');
+  expect(thrown).toBe(true);
 });
 
 test('VirtualClock - run on manual mode should throw', async () => {
@@ -469,7 +468,7 @@ test('VirtualClock - run on manual mode should throw', async () => {
       error.message === 'Cannot run manual clock in automated mode';
   }
 
-  assert(thrown, 'should throw when calling run on manual clock');
+  expect(thrown).toBe(true);
 });
 
 test('VirtualClock - run called twice returns immediately', async () => {
@@ -486,14 +485,14 @@ test('VirtualClock - run called twice returns immediately', async () => {
   const promise2 = clock.run();
 
   await Promise.all([promise1, promise2]);
-  assert(count === 1, 'should not execute twice');
+  expect(count === 1).toBe(true);
 });
 
 test('VirtualClock - stop when not running', async () => {
   const clock = new VirtualClock({ automated: true });
   // Should not throw
   clock.stop();
-  assert(true, 'should not throw when stop called while not running');
+  expect(true).toBe(true);
 });
 
 test('VirtualClock - multiple timers at same executeTime', async () => {
@@ -505,7 +504,7 @@ test('VirtualClock - multiple timers at same executeTime', async () => {
   clock.setTimeout(() => order.push(3), 50);
 
   await clock.advanceTime(50);
-  assert(order.length === 3, 'should execute all timers at same time');
+  expect(order.length === 3).toBe(true);
 });
 
 test('VirtualClock - setInterval execution', async () => {
@@ -517,7 +516,7 @@ test('VirtualClock - setInterval execution', async () => {
   }, 50);
 
   await clock.advanceTime(100);
-  assert(callCount === 2, 'should execute interval twice');
+  expect(callCount === 2).toBe(true);
 });
 
 test('VirtualClock - timer cleared during execution', async () => {
@@ -530,5 +529,5 @@ test('VirtualClock - timer cleared during execution', async () => {
   }, 50);
 
   await clock.advanceTime(50);
-  assert(executed, 'should execute even when clearing non-existent timer');
+  expect(executed).toBe(true);
 });

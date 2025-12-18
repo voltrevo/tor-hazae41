@@ -1,6 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { test } from '../hazae41/phobos/mod';
-import { assert } from './assert';
+import { test, expect } from 'vitest';
 import { isMiddleRelay, isExitRelay } from './relayFilters';
 
 interface MockRelay {
@@ -19,55 +18,55 @@ test('isMiddleRelay: should accept relay with required flags', async () => {
     'Guard',
     'Exit',
   ]) as any;
-  assert(isMiddleRelay(relay), 'Should accept relay with Fast, Stable, V2Dir');
+  expect(isMiddleRelay(relay)).toBe(true);
 });
 
 test('isMiddleRelay: should reject relay missing V2Dir flag', async () => {
   const relay = createRelay(['Fast', 'Stable', 'Guard']) as any;
-  assert(!isMiddleRelay(relay), 'Should reject relay missing V2Dir');
+  expect(!isMiddleRelay(relay)).toBe(true);
 });
 
 test('isMiddleRelay: should reject relay missing Stable flag', async () => {
   const relay = createRelay(['Fast', 'V2Dir']) as any;
-  assert(!isMiddleRelay(relay), 'Should reject relay missing Stable');
+  expect(!isMiddleRelay(relay)).toBe(true);
 });
 
 test('isMiddleRelay: should reject relay missing Fast flag', async () => {
   const relay = createRelay(['Stable', 'V2Dir']) as any;
-  assert(!isMiddleRelay(relay), 'Should reject relay missing Fast');
+  expect(!isMiddleRelay(relay)).toBe(true);
 });
 
 test('isMiddleRelay: should reject relay with empty flags', async () => {
   const relay = createRelay([]) as any;
-  assert(!isMiddleRelay(relay), 'Should reject relay with empty flags');
+  expect(!isMiddleRelay(relay)).toBe(true);
 });
 
 test('isExitRelay: should accept relay with required flags', async () => {
   const relay = createRelay(['Fast', 'Stable', 'Exit', 'Guard']) as any;
-  assert(isExitRelay(relay), 'Should accept relay with Fast, Stable, Exit');
+  expect(isExitRelay(relay)).toBe(true);
 });
 
 test('isExitRelay: should reject relay with BadExit flag', async () => {
   const relay = createRelay(['Fast', 'Stable', 'Exit', 'BadExit']) as any;
-  assert(!isExitRelay(relay), 'Should reject relay with BadExit flag');
+  expect(!isExitRelay(relay)).toBe(true);
 });
 
 test('isExitRelay: should reject relay missing Exit flag', async () => {
   const relay = createRelay(['Fast', 'Stable', 'Guard']) as any;
-  assert(!isExitRelay(relay), 'Should reject relay missing Exit');
+  expect(!isExitRelay(relay)).toBe(true);
 });
 
 test('isExitRelay: should reject relay missing Stable flag', async () => {
   const relay = createRelay(['Fast', 'Exit']) as any;
-  assert(!isExitRelay(relay), 'Should reject relay missing Stable');
+  expect(!isExitRelay(relay)).toBe(true);
 });
 
 test('isExitRelay: should reject relay missing Fast flag', async () => {
   const relay = createRelay(['Stable', 'Exit']) as any;
-  assert(!isExitRelay(relay), 'Should reject relay missing Fast');
+  expect(!isExitRelay(relay)).toBe(true);
 });
 
 test('isExitRelay: should reject relay with empty flags', async () => {
   const relay = createRelay([]) as any;
-  assert(!isExitRelay(relay), 'Should reject relay with empty flags');
+  expect(!isExitRelay(relay)).toBe(true);
 });

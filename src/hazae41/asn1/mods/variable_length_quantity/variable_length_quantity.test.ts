@@ -1,7 +1,7 @@
 import { Writable } from '../../../binary/mod';
 import { Bytes } from '../../../bytes';
 import { Cursor } from '../../../cursor/mod';
-import { assert, test } from '../../../phobos/mod';
+import { test, expect } from 'vitest';
 import { VLQ } from './variable_length_quantity';
 
 function hexToCursor(hex: string) {
@@ -16,16 +16,16 @@ function hexToVLQ(hex: string) {
 }
 
 test('Read', async () => {
-  assert(hexToVLQ('00') === 0);
-  assert(hexToVLQ('7F') === 127);
-  assert(hexToVLQ('81 00') === 128);
-  assert(hexToVLQ('C0 00') === 8192);
-  assert(hexToVLQ('FF 7F') === 16383);
-  assert(hexToVLQ('81 80 00') === 16384);
-  assert(hexToVLQ('FF FF 7F') === 2097151);
-  assert(hexToVLQ('81 80 80 00') === 2097152);
-  assert(hexToVLQ('C0 80 80 00') === 134217728);
-  assert(hexToVLQ('FF FF FF 7F') === 268435455);
+  expect(hexToVLQ('00') === 0).toBe(true);
+  expect(hexToVLQ('7F') === 127).toBe(true);
+  expect(hexToVLQ('81 00') === 128).toBe(true);
+  expect(hexToVLQ('C0 00') === 8192).toBe(true);
+  expect(hexToVLQ('FF 7F') === 16383).toBe(true);
+  expect(hexToVLQ('81 80 00') === 16384).toBe(true);
+  expect(hexToVLQ('FF FF 7F') === 2097151).toBe(true);
+  expect(hexToVLQ('81 80 80 00') === 2097152).toBe(true);
+  expect(hexToVLQ('C0 80 80 00') === 134217728).toBe(true);
+  expect(hexToVLQ('FF FF FF 7F') === 268435455).toBe(true);
 });
 
 function checkReadWriteVLQ(hex: string) {
@@ -37,14 +37,14 @@ function checkReadWriteVLQ(hex: string) {
 }
 
 test('Read then write', async () => {
-  assert(checkReadWriteVLQ('00'));
-  assert(checkReadWriteVLQ('7F'));
-  assert(checkReadWriteVLQ('81 00'));
-  assert(checkReadWriteVLQ('C0 00'));
-  assert(checkReadWriteVLQ('FF 7F'));
-  assert(checkReadWriteVLQ('81 80 00'));
-  assert(checkReadWriteVLQ('FF FF 7F'));
-  assert(checkReadWriteVLQ('81 80 80 00'));
-  assert(checkReadWriteVLQ('C0 80 80 00'));
-  assert(checkReadWriteVLQ('FF FF FF 7F'));
+  expect(checkReadWriteVLQ('00')).toBe(true);
+  expect(checkReadWriteVLQ('7F')).toBe(true);
+  expect(checkReadWriteVLQ('81 00')).toBe(true);
+  expect(checkReadWriteVLQ('C0 00')).toBe(true);
+  expect(checkReadWriteVLQ('FF 7F')).toBe(true);
+  expect(checkReadWriteVLQ('81 80 00')).toBe(true);
+  expect(checkReadWriteVLQ('FF FF 7F')).toBe(true);
+  expect(checkReadWriteVLQ('81 80 80 00')).toBe(true);
+  expect(checkReadWriteVLQ('C0 80 80 00')).toBe(true);
+  expect(checkReadWriteVLQ('FF FF FF 7F')).toBe(true);
 });

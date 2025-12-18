@@ -6,8 +6,7 @@
  * library correctly computes shared secrets and handles key operations.
  */
 
-import { test } from '../../../phobos/mod';
-import { assert } from '../../../../utils/assert';
+import { test, expect } from 'vitest';
 import { X25519 } from './x25519';
 import { Bytes } from '../../../bytes';
 
@@ -45,10 +44,10 @@ test('X25519: PublicKey.import consistency', async () => {
     const exported = importedKey.exportOrThrow();
     const exportedHex = uint8ArrayToHex(exported.bytes as Bytes);
 
-    assert(
+    expect(
       exportedHex === inputKeyHex,
       `PublicKey.import ${i}: exported key should match input`
-    );
+    ).toBe(true);
   }
 });
 
@@ -109,10 +108,10 @@ test('X25519: PrivateKey.compute with known test vectors', async () => {
     const secretHex = uint8ArrayToHex(secretExported.bytes as Bytes);
 
     // Verify the computed secret matches what was recorded
-    assert(
+    expect(
       secretHex === vector.expectedSecretHex,
       `PrivateKey.compute ${i}: computed shared secret should match expected value (got ${secretHex})`
-    );
+    ).toBe(true);
   }
 });
 
@@ -129,10 +128,7 @@ test('X25519: PrivateKey.random generates valid keys', async () => {
     const publicKeyHex = uint8ArrayToHex(exported.bytes as Bytes);
 
     // Verify it's 32 bytes
-    assert(
-      publicKeyHex.length === 64,
-      'Generated public key should be 64 hex chars (32 bytes)'
-    );
+    expect(publicKeyHex.length === 64).toBe(true);
 
     // Verify we can import it back
     const importedKey = await X25519.PublicKey.importOrThrow(
@@ -142,10 +138,10 @@ test('X25519: PrivateKey.random generates valid keys', async () => {
     const reimported = await importedKey.exportOrThrow();
     const reimportedHex = uint8ArrayToHex(reimported.bytes as Bytes);
 
-    assert(
+    expect(
       reimportedHex === publicKeyHex,
       `Generated key ${i} should re-import identically`
-    );
+    ).toBe(true);
   }
 });
 
@@ -162,10 +158,7 @@ test('X25519: circuit extension sequence', async () => {
     ephemeralPublicKeyExported.bytes as Bytes
   );
 
-  assert(
-    ephemeralKeyHex.length === 64,
-    'Ephemeral public key should be 32 bytes'
-  );
+  expect(ephemeralKeyHex.length === 64).toBe(true);
 
   // Simulate getting relay public keys and computing shared secrets
   const relayPublicKeys = [
@@ -186,6 +179,6 @@ test('X25519: circuit extension sequence', async () => {
     const secretHex = uint8ArrayToHex(secretExported.bytes as Bytes);
 
     // Verify we got a valid secret
-    assert(secretHex.length === 64, 'Shared secret should be 32 bytes');
+    expect(secretHex.length === 64).toBe(true);
   }
 });

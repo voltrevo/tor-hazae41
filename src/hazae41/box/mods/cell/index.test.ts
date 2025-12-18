@@ -1,5 +1,4 @@
-import { assert } from '../../../../utils/assert';
-import { test } from '../../../phobos/mod';
+import { test, expect } from 'vitest';
 import { Cell } from '.';
 
 function alloc(_value: number) {}
@@ -41,10 +40,10 @@ test('slot', async () => {
       using _ = b;
     }
   } catch (e) {
-    assert((e as Error).message === 'msg');
+    expect((e as Error).message === 'msg').toBe(true);
     threw = true;
   }
 
-  assert(threw);
-  assert(result.get().value === 1 + 123 + 456);
+  expect(threw).toBe(true);
+  expect(result.get().value === 1 + 123 + 456).toBe(true);
 });

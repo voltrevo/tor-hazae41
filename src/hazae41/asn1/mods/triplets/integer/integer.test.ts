@@ -1,6 +1,6 @@
 import { Readable, Writable } from '../../../../binary/mod';
 import { Bytes } from '../../../../bytes';
-import { assert, test } from '../../../../phobos/mod';
+import { test } from 'vitest';
 import { Integer } from './integer';
 
 function hexToBytes(hex: string) {

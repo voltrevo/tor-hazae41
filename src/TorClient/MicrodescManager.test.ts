@@ -1,5 +1,4 @@
-import { test } from '../hazae41/phobos/mod';
-import { assert } from '../utils/assert';
+import { test, expect } from 'vitest';
 import { MicrodescManager } from './MicrodescManager';
 import { MemoryStorage } from '../storage';
 import { Log } from '../Log';
@@ -64,15 +63,12 @@ test('MicrodescManager: saveToCache and retrieval', async () => {
 
     // Verify it's in storage
     const cachedData = await storage.read('microdesc:test-hash-save');
-    assert(cachedData !== undefined, 'Microdesc should be cached in storage');
+    expect(cachedData !== undefined).toBe(true);
 
     // Verify we can parse it back
     const text = new TextDecoder().decode(cachedData);
     const parsed = JSON.parse(text);
-    assert(
-      parsed.microdesc === 'test-hash-save',
-      'Should deserialize correctly'
-    );
+    expect(parsed.microdesc === 'test-hash-save').toBe(true);
   } finally {
     microdescManager.close();
   }
@@ -99,10 +95,10 @@ test('MicrodescManager: cache size limit enforcement', async () => {
 
     // Only the most recent 2 should remain (FIFO eviction)
     const remaining = await storage.list('microdesc:');
-    assert(
+    expect(
       remaining.length <= 2,
       `Cache size should be limited to maxCached (2), but found ${remaining.length}`
-    );
+    ).toBe(true);
   } finally {
     microdescManager.close();
   }
@@ -131,12 +127,15 @@ test('MicrodescManager: multiple microdescs in cache', async () => {
 
     // Verify all are in storage
     const remaining = await storage.list('microdesc:');
-    assert(remaining.length === 5, 'All 5 microdescs should be cached');
+    expect(remaining.length === 5).toBe(true);
 
     // Verify we can read them back
     for (let i = 0; i < 5; i++) {
       const cachedData = await storage.read(`microdesc:hash-${i}`);
-      assert(cachedData !== undefined, `Microdesc hash-${i} should be cached`);
+      expect(
+        cachedData !== undefined,
+        `Microdesc hash-${i} should be cached`
+      ).toBe(true);
     }
   } finally {
     microdescManager.close();

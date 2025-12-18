@@ -1,5 +1,4 @@
-import { test } from '../hazae41/phobos/mod';
-import { assert } from '../utils/assert';
+import { test, expect } from 'vitest';
 import { WebCryptoAes128Ctr } from './WebCryptoAes128Ctr';
 import { Bytes } from '../hazae41/bytes';
 
@@ -145,10 +144,10 @@ test('WebCryptoAes128Ctr: apply_keystream with non-zero data', async () => {
       // Verify each byte: result should be input XOR keystream
       for (let i = 0; i < 100; i++) {
         const expected = testData[i] ^ expectedKeystream[i];
-        assert(
+        expect(
           input[i] === expected,
           `Byte ${i} XOR mismatch: expected ${expected}, got ${input[i]}`
-        );
+        ).toBe(true);
       }
     } finally {
       cipher[Symbol.dispose]();

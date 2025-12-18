@@ -1,4 +1,4 @@
-import { assert, rejects, test, throws } from '../../../phobos/mod';
+import { expect, test } from 'vitest';
 import { Mutex, Semaphore } from './mod';
 
 test('run', async () => {
@@ -38,29 +38,24 @@ test('run', async () => {
 
   promises.push(
     (async () => {
-      assert(
-        throws(() => mutex.getOrThrow()),
-        `lock should err`
-      );
+      expect(() => mutex.getOrThrow()).toThrow();
     })()
   );
 
   await Promise.all(promises);
 
-  assert(mutex.locked === false, `should be unlocked`);
+  expect(mutex.locked).toBe(false);
 
   await mutex.runOrWait(order => {
-    assert(
-      JSON.stringify(order) ===
-        JSON.stringify([
-          'first start',
-          'first end',
-          'second start',
-          'second end',
-          'third start',
-          'third end',
-        ]),
-      `unexpected order`
+    expect(JSON.stringify(order)).toBe(
+      JSON.stringify([
+        'first start',
+        'first end',
+        'second start',
+        'second end',
+        'third start',
+        'third end',
+      ])
     );
   });
 });
@@ -100,29 +95,24 @@ test('acquire', async () => {
 
   promises.push(
     (async () => {
-      assert(
-        await rejects(() => mutex.runOrThrow(async () => {})),
-        `tryLock should err`
-      );
+      await expect(mutex.runOrThrow(async () => {})).rejects.toThrow();
     })()
   );
 
   await Promise.all(promises);
 
-  assert(mutex.locked === false, `should be unlocked`);
+  expect(mutex.locked).toBe(false);
 
   await mutex.runOrWait(order => {
-    assert(
-      JSON.stringify(order) ===
-        JSON.stringify([
-          'first start',
-          'first end',
-          'second start',
-          'second end',
-          'third start',
-          'third end',
-        ]),
-      `unexpected order`
+    expect(JSON.stringify(order)).toBe(
+      JSON.stringify([
+        'first start',
+        'first end',
+        'second start',
+        'second end',
+        'third start',
+        'third end',
+      ])
     );
   });
 });

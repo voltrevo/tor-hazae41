@@ -1,5 +1,4 @@
-import { test } from '../../../../phobos/mod';
-import { assert } from '../../../../../utils/assert';
+import { test, expect } from 'vitest';
 import { TurboFrame } from './frame.js';
 import { Bytes } from '../../../../bytes';
 import { Readable, Unknown, Writable } from '../../../../binary/mod';
@@ -12,5 +11,5 @@ test('turbo frame', async () => {
   const bytes = Writable.writeToBytesOrThrow(frame);
   const frame2 = Readable.readFromBytesOrThrow(TurboFrame, bytes);
 
-  assert(Bytes.equals2(frame.fragment.bytes, frame2.fragment.bytes));
+  expect(Bytes.equals2(frame.fragment.bytes, frame2.fragment.bytes)).toBe(true);
 });

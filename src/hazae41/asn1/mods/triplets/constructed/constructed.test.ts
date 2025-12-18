@@ -1,7 +1,7 @@
 import { Writable } from '../../../../binary/mod';
 import { Bytes } from '../../../../bytes';
 import { Cursor } from '../../../../cursor/mod';
-import { assert, test } from '../../../../phobos/mod';
+import { test, expect } from 'vitest';
 import { Constructed } from './constructed';
 
 function hexToCursor(hex: string) {
@@ -14,12 +14,12 @@ function checkReadWrite(hex: string) {
   const input = hexToCursor(hex);
   const triplet = Constructed.DER.readOrThrow(input);
 
-  assert(triplet instanceof Constructed);
+  expect(triplet instanceof Constructed).toBe(true);
 
   const output = Writable.writeToBytesOrThrow(triplet);
   return Bytes.equals(input.bytes, output);
 }
 
 test('Read then write', async () => {
-  assert(checkReadWrite('A0 03 02 01 02'));
+  expect(checkReadWrite('A0 03 02 01 02')).toBe(true);
 });

@@ -1,7 +1,7 @@
 import { Writable } from '../../../../binary/mod';
 import { Bytes } from '../../../../bytes';
 import { Cursor } from '../../../../cursor/mod';
-import { assert, test } from '../../../../phobos/mod';
+import { test, expect } from 'vitest';
 import { ObjectIdentifier } from './object_identifier';
 
 function hexToCursor(hex: string) {
@@ -19,6 +19,6 @@ function checkReadWriteOID(hex: string) {
 }
 
 test('Read then write', async () => {
-  assert(checkReadWriteOID('06 09 2A 86 48 86 F7 0D 01 01 0B'));
-  assert(checkReadWriteOID('06 03 55 04 0A'));
+  expect(checkReadWriteOID('06 09 2A 86 48 86 F7 0D 01 01 0B')).toBe(true);
+  expect(checkReadWriteOID('06 03 55 04 0A')).toBe(true);
 });

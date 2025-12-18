@@ -1,6 +1,6 @@
 import { Writable, Unknown } from '../../../binary/mod';
 import { HalfDuplex } from '../../../cascade';
-import { test } from '../../../phobos/mod';
+import { test } from 'vitest';
 import { Bytes } from '../../../bytes';
 import { KcpDuplex } from './stream';
 

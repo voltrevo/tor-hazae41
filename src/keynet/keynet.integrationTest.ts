@@ -1,4 +1,4 @@
-import { test } from '../hazae41/phobos/mod';
+import { test } from 'vitest';
 import { Log, TorClient } from '../TorClient/versions/standard';
 
 test('Keynet connection through TorClient (transparent)', async () => {

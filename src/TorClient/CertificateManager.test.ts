@@ -1,5 +1,4 @@
-import { test } from '../hazae41/phobos/mod';
-import { assert } from '../utils/assert';
+import { test, expect } from 'vitest';
 import { CertificateManager } from './CertificateManager';
 import { MemoryStorage } from '../storage';
 import { Log } from '../Log';
@@ -72,15 +71,12 @@ test('CertificateManager: basic functionality', async () => {
       'test-fp-basic'
     );
 
-    assert(
-      result.fingerprint === 'test-fp-basic',
-      'Should return correct certificate'
-    );
-    assert(fetchCallCount === 1, 'Should call fetchOrThrow once');
+    expect(result.fingerprint === 'test-fp-basic').toBe(true);
+    expect(fetchCallCount === 1).toBe(true);
 
     // Verify certificate was cached
     const cachedData = await app.get('Storage').read('cert:test-fp-basic');
-    assert(cachedData !== undefined, 'Certificate should be cached');
+    expect(cachedData !== undefined).toBe(true);
 
     // Restore original method
     Echalote.Consensus.Certificate.fetchOrThrow = originalFetchOrThrow;

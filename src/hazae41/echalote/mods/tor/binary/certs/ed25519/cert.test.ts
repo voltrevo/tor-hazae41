@@ -1,5 +1,4 @@
-import { test } from '../../../../../../phobos/mod';
-import { assert } from '../../../../../../../utils/assert';
+import { test, expect } from 'vitest';
 import { Ed25519Cert } from './cert.js';
 import { Bytes } from '../../../../../../bytes';
 import { Cursor } from '../../../../../../cursor/mod';
@@ -26,32 +25,29 @@ test('Ed25519Cert.readOrThrow - ED_TO_SIGN certificate (type 4)', async () => {
   const cert = Ed25519Cert.readOrThrow(cursor);
 
   // Verify basic structure
-  assert(cert.type === 4, 'Certificate type should be 4 (ED_TO_SIGN)');
-  assert(cert.version === 1, 'Certificate version should be 1');
-  assert(cert.certType === 4, 'Cert type should be 4');
+  expect(cert.type === 4).toBe(true);
+  expect(cert.version === 1).toBe(true);
+  expect(cert.certType === 4).toBe(true);
 
   // Verify expiration date
-  assert(cert.expiration instanceof Date, 'Expiration should be a Date');
-  assert(cert.expiration.getTime() > 0, 'Expiration should be a valid date');
+  expect(cert.expiration instanceof Date).toBe(true);
+  expect(cert.expiration.getTime() > 0).toBe(true);
 
   // Verify cert key
-  assert(cert.certKeyType === 1, 'Cert key type should be 1 (Ed25519)');
-  assert(cert.certKey.length === 32, 'Cert key should be 32 bytes');
+  expect(cert.certKeyType === 1).toBe(true);
+  expect(cert.certKey.length === 32).toBe(true);
 
   // Verify signature
-  assert(cert.signature.length === 64, 'Signature should be 64 bytes');
+  expect(cert.signature.length === 64).toBe(true);
 
   // Verify extensions
-  assert(cert.extensions.signer !== undefined, 'Should have signer extension');
+  expect(cert.extensions.signer !== undefined).toBe(true);
   if (cert.extensions.signer) {
-    assert(
-      cert.extensions.signer.key.length === 32,
-      'Signer key should be 32 bytes'
-    );
+    expect(cert.extensions.signer.key.length === 32).toBe(true);
   }
 
   // Verify payload exists
-  assert(cert.payload.length > 0, 'Payload should not be empty');
+  expect(cert.payload.length > 0).toBe(true);
 });
 
 test('Ed25519Cert.readOrThrow - SIGN_TO_TLS certificate (type 5)', async () => {
@@ -61,29 +57,26 @@ test('Ed25519Cert.readOrThrow - SIGN_TO_TLS certificate (type 5)', async () => {
   const cert = Ed25519Cert.readOrThrow(cursor);
 
   // Verify basic structure
-  assert(cert.type === 5, 'Certificate type should be 5 (SIGN_TO_TLS)');
-  assert(cert.version === 1, 'Certificate version should be 1');
-  assert(cert.certType === 5, 'Cert type should be 5');
+  expect(cert.type === 5).toBe(true);
+  expect(cert.version === 1).toBe(true);
+  expect(cert.certType === 5).toBe(true);
 
   // Verify expiration date
-  assert(cert.expiration instanceof Date, 'Expiration should be a Date');
-  assert(cert.expiration.getTime() > 0, 'Expiration should be a valid date');
+  expect(cert.expiration instanceof Date).toBe(true);
+  expect(cert.expiration.getTime() > 0).toBe(true);
 
   // Verify cert key
-  assert(cert.certKeyType === 3, 'Cert key type should be 3');
-  assert(cert.certKey.length === 32, 'Cert key should be 32 bytes');
+  expect(cert.certKeyType === 3).toBe(true);
+  expect(cert.certKey.length === 32).toBe(true);
 
   // Verify signature
-  assert(cert.signature.length === 64, 'Signature should be 64 bytes');
+  expect(cert.signature.length === 64).toBe(true);
 
   // Verify no signer extension (SIGN_TO_TLS certs are self-signed)
-  assert(
-    cert.extensions.signer === undefined,
-    'Should not have signer extension'
-  );
+  expect(cert.extensions.signer === undefined).toBe(true);
 
   // Verify payload exists
-  assert(cert.payload.length > 0, 'Payload should not be empty');
+  expect(cert.payload.length > 0).toBe(true);
 });
 
 test('Ed25519Cert.readOrThrow - cursor advances correctly', async () => {
@@ -95,17 +88,14 @@ test('Ed25519Cert.readOrThrow - cursor advances correctly', async () => {
   const endOffset = cursor.offset;
 
   // Cursor should have advanced past the entire certificate
-  assert(endOffset > startOffset, 'Cursor should advance after reading');
-  assert(endOffset === bytes.length, 'Cursor should be at end of data');
+  expect(endOffset > startOffset).toBe(true);
+  expect(endOffset === bytes.length).toBe(true);
 });
 
 test('Ed25519Cert - constants', async () => {
-  assert(Ed25519Cert.types.ED_TO_SIGN === 4, 'ED_TO_SIGN type should be 4');
-  assert(Ed25519Cert.types.SIGN_TO_TLS === 5, 'SIGN_TO_TLS type should be 5');
-  assert(Ed25519Cert.types.SIGN_TO_AUTH === 6, 'SIGN_TO_AUTH type should be 6');
+  expect(Ed25519Cert.types.ED_TO_SIGN === 4).toBe(true);
+  expect(Ed25519Cert.types.SIGN_TO_TLS === 5).toBe(true);
+  expect(Ed25519Cert.types.SIGN_TO_AUTH === 6).toBe(true);
 
-  assert(
-    Ed25519Cert.flags.AFFECTS_VALIDATION === 1,
-    'AFFECTS_VALIDATION flag should be 1'
-  );
+  expect(Ed25519Cert.flags.AFFECTS_VALIDATION === 1).toBe(true);
 });

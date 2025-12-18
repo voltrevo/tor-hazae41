@@ -1,7 +1,7 @@
 import { Writable } from '../../../binary/mod';
 import { Bytes } from '../../../bytes';
 import { Cursor } from '../../../cursor/mod';
-import { assert, test } from '../../../phobos/mod';
+import { test, expect } from 'vitest';
 import { Length } from './length';
 
 function hexToCursor(hex: string) {
@@ -17,8 +17,8 @@ function hexToLength(hex: string) {
 }
 
 test('Read', async () => {
-  assert(hexToLength('82 01 7F') === 383);
-  assert(hexToLength('82 04 92') === 1170);
+  expect(hexToLength('82 01 7F') === 383).toBe(true);
+  expect(hexToLength('82 04 92') === 1170).toBe(true);
 });
 
 function checkReadWrite(hex: string) {
@@ -30,6 +30,6 @@ function checkReadWrite(hex: string) {
 }
 
 test('Read then write', async () => {
-  assert(checkReadWrite('82 01 7F'));
-  assert(checkReadWrite('82 04 92'));
+  expect(checkReadWrite('82 01 7F')).toBe(true);
+  expect(checkReadWrite('82 04 92')).toBe(true);
 });

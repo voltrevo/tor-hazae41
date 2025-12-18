@@ -1,26 +1,25 @@
-import { test } from '../../../phobos/mod';
-import { assert } from '../../../../utils/assert';
+import { test, expect } from 'vitest';
 import { Console } from './index.js';
 
 test('Console.debugging is false by default', async () => {
-  assert(Console.debugging === false);
+  expect(Console.debugging === false).toBe(true);
 });
 
 test('Console.debug with debugging disabled (returns early)', async () => {
   // This is tricky to test since debug returns early
   // We can only verify it doesn't throw
   Console.debug('message');
-  assert(true);
+  expect(true).toBe(true);
 });
 
 test('Console.debug with multiple parameters', async () => {
   Console.debug('test', 123, { key: 'value' }, [1, 2, 3]);
-  assert(true);
+  expect(true).toBe(true);
 });
 
 test('Console.debug with no parameters', async () => {
   Console.debug();
-  assert(true);
+  expect(true).toBe(true);
 });
 
 test('Console.debug with various types', async () => {
@@ -41,5 +40,5 @@ test('Console.debug with various types', async () => {
     Console.debug(testCase);
   }
 
-  assert(true);
+  expect(true).toBe(true);
 });

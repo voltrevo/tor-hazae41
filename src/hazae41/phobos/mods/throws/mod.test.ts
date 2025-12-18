@@ -1,4 +1,4 @@
-import { assert, rejects, test, throws } from '../mod';
+import { test, expect, describe } from 'vitest';
 
 function throwable() {
   throw new Error('lol');
@@ -6,13 +6,13 @@ function throwable() {
 
 function notThrowable() {}
 
-test('throws', async ({ test }) => {
-  await test('should throw', () => {
-    assert(throws(() => throwable()) === true, 'it should throw!!!');
+describe('throws', () => {
+  test('should throw', () => {
+    expect(() => throwable()).toThrow();
   });
 
-  await test('should not throw', () => {
-    assert(throws(() => notThrowable()) === false, 'it should not throw!!!');
+  test('should not throw', () => {
+    expect(() => notThrowable()).not.toThrow();
   });
 });
 
@@ -24,15 +24,13 @@ async function rejectable() {
 // deno-lint-ignore require-await
 async function notRejectable() {}
 
-test('rejects', async ({ test }) => {
-  await test('should reject', async () => {
-    assert((await rejects(() => rejectable())) === true, 'it should reject!!!');
+describe('rejects', () => {
+  test('should reject', async () => {
+    await expect(rejectable()).rejects.toThrow();
   });
 
-  await test('should not reject', async () => {
-    assert(
-      (await rejects(() => notRejectable())) === false,
-      'it should reject!!!'
-    );
+  test('should not reject', async () => {
+    // This promise resolves successfully, so it should not reject
+    await expect(notRejectable()).resolves.toBeUndefined();
   });
 });

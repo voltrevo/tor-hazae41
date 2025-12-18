@@ -1,11 +1,10 @@
-import { assert } from '../../../../utils/assert.js';
 import { CCADB } from './CCADB.js';
 import { MemoryStorage } from '../../../../storage/index.js';
 import { Log } from '../../../../Log/index.js';
 import { App } from '../../../../TorClient/App.js';
 import { VirtualClock } from '../../../../clock/index.js';
 import { Bytes } from '../../../bytes/index.js';
-import { test } from '../../../phobos/mod.js';
+import { test, expect } from 'vitest';
 
 // Mock base64 certificates (raw form for storage)
 const mockBase64Certs = ['YWJjMTIz', 'ZGVmNDU2'];
@@ -46,10 +45,7 @@ test('CCADB: load from storage and re-validate', async () => {
   const certs = await ccadb.get();
 
   // Should be empty because the mock base64 strings are not valid certs
-  assert(
-    Object.keys(certs).length === 0,
-    'Invalid mock base64 certs should result in empty validated set'
-  );
+  expect(Object.keys(certs).length === 0).toBe(true);
 });
 
 test('CCADB: does not fetch when cache is available', async () => {
@@ -77,17 +73,11 @@ test('CCADB: does not fetch when cache is available', async () => {
 
   // First get() - should load from storage, not fetch
   await ccadb.get();
-  assert(
-    fetchCallCount === 0,
-    'Should not fetch when storage cache is available'
-  );
+  expect(fetchCallCount === 0).toBe(true);
 
   // Second get() - should use in-memory cache, not fetch
   await ccadb.get();
-  assert(
-    fetchCallCount === 0,
-    'Should not fetch when in-memory cache is available'
-  );
+  expect(fetchCallCount === 0).toBe(true);
 });
 
 test('CCADB: 30-day expiry enforcement', async () => {
@@ -107,10 +97,7 @@ test('CCADB: 30-day expiry enforcement', async () => {
   // Load them into a CCADB instance - should get from storage
   let ccadb = new CCADB(app);
   let certs = await ccadb.get();
-  assert(
-    Object.keys(certs).length === 0,
-    'Should load cache at time 0 (even though it validates to empty)'
-  );
+  expect(Object.keys(certs).length === 0).toBe(true);
 
   // Now advance the clock past 30 days
   const thirtyOneDaysMs = 31 * 24 * 60 * 60 * 1000;
@@ -122,14 +109,11 @@ test('CCADB: 30-day expiry enforcement', async () => {
   certs = await ccadb.get();
 
   // Should be empty because fetchCerts returns [] and cache was detected as stale
-  assert(
-    Object.keys(certs).length === 0,
-    'Expired cache should be bypassed and fresh fetch used'
-  );
+  expect(Object.keys(certs).length === 0).toBe(true);
 
   // Verify the old stale data is still in storage (we dont delete it)
   const storedData = await storage.read('ccadb:cached');
-  assert(storedData !== undefined, 'Storage should still contain old cache');
+  expect(storedData !== undefined).toBe(true);
 });
 
 test('CCADB: cache miss when storage is empty', async () => {
@@ -139,15 +123,12 @@ test('CCADB: cache miss when storage is empty', async () => {
   // Storage is empty, so get() should fetch fresh and cache empty result
   const certs = await ccadb.get();
 
-  assert(
-    Object.keys(certs).length === 0,
-    'Should return empty certs when no storage and no fetch results'
-  );
+  expect(Object.keys(certs).length === 0).toBe(true);
 
   // Verify something was written to storage (even if empty)
   const storage = app.get('Storage');
   const storedData = await storage.read('ccadb:cached');
-  assert(storedData !== undefined, 'Should save to storage after fetch');
+  expect(storedData !== undefined).toBe(true);
 });
 
 test('CCADB: clearCache() removes memory and storage', async () => {
@@ -173,14 +154,11 @@ test('CCADB: clearCache() removes memory and storage', async () => {
 
   // Verify storage is cleared
   const keys = await storage.list('ccadb:');
-  assert(keys.length === 0, 'Storage should be cleared after clearCache()');
+  expect(keys.length === 0).toBe(true);
 
   // Call get() again - should fetch fresh (empty) since storage is cleared
   const certsAfterClear = await ccadb.get();
-  assert(
-    Object.keys(certsAfterClear).length === 0,
-    'Should fetch fresh empty certs after clear'
-  );
+  expect(Object.keys(certsAfterClear).length === 0).toBe(true);
 });
 
 test('CCADB: storage parse error falls back to fresh fetch', async () => {
@@ -199,10 +177,7 @@ test('CCADB: storage parse error falls back to fresh fetch', async () => {
   // get() should handle the parse error gracefully and fetch fresh
   const certs = await ccadb.get();
 
-  assert(
-    Object.keys(certs).length === 0,
-    'Should fetch fresh on storage parse error'
-  );
+  expect(Object.keys(certs).length === 0).toBe(true);
 });
 
 test('CCADB: in-memory cache on subsequent calls', async () => {
@@ -222,20 +197,14 @@ test('CCADB: in-memory cache on subsequent calls', async () => {
 
   // First call loads from storage into memory
   let certs = await ccadb.get();
-  assert(
-    Object.keys(certs).length === 0,
-    'First call should load and validate cache'
-  );
+  expect(Object.keys(certs).length === 0).toBe(true);
 
   // Clear storage to verify second call uses in-memory cache
   await storage.remove('ccadb:cached');
 
   // Second call should still work from in-memory cache
   certs = await ccadb.get();
-  assert(
-    Object.keys(certs).length === 0,
-    'Second call should use in-memory cache'
-  );
+  expect(Object.keys(certs).length === 0).toBe(true);
 });
 
 test('CCADB: fresh fetch saves base64 certs to storage', async () => {
@@ -250,19 +219,16 @@ test('CCADB: fresh fetch saves base64 certs to storage', async () => {
 
   // Verify storage was populated
   const keys = await storage.list('ccadb:');
-  assert(
-    keys.length === 1 && keys[0] === 'ccadb:cached',
-    'Should save to storage after fresh fetch'
-  );
+  expect(keys.length === 1 && keys[0] === 'ccadb:cached').toBe(true);
 
   // Parse and verify structure
   const storedData = await storage.read('ccadb:cached');
   const text = new TextDecoder().decode(storedData);
   const payload = JSON.parse(text);
-  assert(payload.version === 1, 'Should have version 1 in storage payload');
-  assert(typeof payload.savedAt === 'string', 'Should have savedAt timestamp');
-  assert(Array.isArray(payload.base64Certs), 'Should have base64Certs array');
-  assert(payload.base64Certs.length === 2, 'Should have stored 2 base64 certs');
+  expect(payload.version === 1).toBe(true);
+  expect(typeof payload.savedAt === 'string').toBe(true);
+  expect(Array.isArray(payload.base64Certs)).toBe(true);
+  expect(payload.base64Certs.length === 2).toBe(true);
 });
 
 // ============================================================================
@@ -276,18 +242,9 @@ test('CCADB: validateAndParseCerts with empty cert list', async () => {
   // fetchCerts returns empty list by default
   const result = await ccadb.validateAndParseCerts();
 
-  assert(
-    Object.keys(result.certificates).length === 0,
-    'Should return empty certificates'
-  );
-  assert(
-    result.diagnostics.matched === 0,
-    'Should have 0 matched certificates'
-  );
-  assert(
-    result.diagnostics.unrecognized === 0,
-    'Should have 0 unrecognized certificates'
-  );
+  expect(Object.keys(result.certificates).length === 0).toBe(true);
+  expect(result.diagnostics.matched === 0).toBe(true);
+  expect(result.diagnostics.unrecognized === 0).toBe(true);
 });
 
 test('CCADB: validateAndParseCerts returns diagnostics structure', async () => {
@@ -303,18 +260,9 @@ test('CCADB: validateAndParseCerts returns diagnostics structure', async () => {
   const result = await ccadb.validateAndParseCerts();
 
   // Verify diagnostics structure exists
-  assert(
-    typeof result.diagnostics.matched === 'number',
-    'Should have matched count'
-  );
-  assert(
-    typeof result.diagnostics.unrecognized === 'number',
-    'Should have unrecognized count'
-  );
-  assert(
-    typeof result.diagnostics.notFound === 'number',
-    'Should have notFound count'
-  );
+  expect(typeof result.diagnostics.matched === 'number').toBe(true);
+  expect(typeof result.diagnostics.unrecognized === 'number').toBe(true);
+  expect(typeof result.diagnostics.notFound === 'number').toBe(true);
 });
 
 // ============================================================================
@@ -345,7 +293,7 @@ test('CCADB: get() validates cached base64 certs', async () => {
 
   // Call get() - should load from storage (no fetch) but still validate
   await ccadb.get();
-  assert(fetchCallCount === 0, 'Should not fetch when loading from storage');
+  expect(fetchCallCount === 0).toBe(true);
 });
 
 test('CCADB: clearCache() forces fresh validation', async () => {
@@ -360,17 +308,14 @@ test('CCADB: clearCache() forces fresh validation', async () => {
 
   // First call
   await ccadb.get();
-  assert(state.fetchCallCount > 0, 'First call should fetch');
+  expect(state.fetchCallCount > 0).toBe(true);
 
   const firstCallCount = state.fetchCallCount;
 
   // Clear and try again
   await ccadb.clearCache();
   await ccadb.get();
-  assert(
-    state.fetchCallCount > firstCallCount,
-    'After clearCache should fetch again'
-  );
+  expect(state.fetchCallCount > firstCallCount).toBe(true);
 });
 
 test('CCADB: storage persists base64 certs across instances', async () => {
@@ -386,14 +331,8 @@ test('CCADB: storage persists base64 certs across instances', async () => {
   const storedData = await storage.read('ccadb:cached');
   const text = new TextDecoder().decode(storedData);
   const payload = JSON.parse(text);
-  assert(
-    Array.isArray(payload.base64Certs),
-    'Storage should contain base64Certs array'
-  );
-  assert(
-    payload.base64Certs.length === 2,
-    'Storage should contain 2 base64 certs'
-  );
+  expect(Array.isArray(payload.base64Certs)).toBe(true);
+  expect(payload.base64Certs.length === 2).toBe(true);
 
   // Instance 2: new instance should load and re-validate same certs
   let fetchCallCount = 0;
@@ -405,8 +344,5 @@ test('CCADB: storage persists base64 certs across instances', async () => {
 
   ccadb = new CCADB(app);
   await ccadb.get();
-  assert(
-    fetchCallCount === 0,
-    'Instance 2 should load from storage, not fetch'
-  );
+  expect(fetchCallCount === 0).toBe(true);
 });

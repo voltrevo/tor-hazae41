@@ -3,7 +3,7 @@
  * Tests cryptographic signature verification against 15 real Tor network vectors
  */
 
-import { test } from '../../../phobos/mod';
+import { test, expect } from 'vitest';
 import { RsaBigInt } from './RsaBigInt.js';
 import { assert } from '../../../../utils/assert.js';
 import testVectors from './rsa-test-vectors.json' assert { type: 'json' };
@@ -34,20 +34,14 @@ test('RSA BigInt: Memory initializes from ArrayBuffer', async () => {
   view[0] = 42;
 
   const memory = new RsaBigInt.Memory(buffer);
-  assert(memory.bytes[0] === 42, 'ArrayBuffer initialization should work');
+  expect(memory.bytes[0] === 42).toBe(true);
   assert(memory.len() === 8, 'ArrayBuffer len() should return 8');
 });
 
 test('RSA BigInt: RsaPublicKey interface exists', async () => {
-  assert(RsaBigInt.RsaPublicKey !== undefined, 'RsaPublicKey should exist');
-  assert(
-    RsaBigInt.RsaPublicKey.from_public_key_der !== undefined,
-    'from_public_key_der method should exist'
-  );
-  assert(
-    RsaBigInt.RsaPublicKey.from_pkcs1_der !== undefined,
-    'from_pkcs1_der method should exist'
-  );
+  expect(RsaBigInt.RsaPublicKey !== undefined).toBe(true);
+  expect(RsaBigInt.RsaPublicKey.from_public_key_der !== undefined).toBe(true);
+  expect(RsaBigInt.RsaPublicKey.from_pkcs1_der !== undefined).toBe(true);
 });
 
 test('RSA BigInt: handles invalid DER gracefully', async () => {
@@ -94,10 +88,10 @@ test('RSA BigInt: Test vector from real Tor certificate (captured from integrati
     );
 
     // Verify test vector format
-    assert(
+    expect(
       publicKeyDer.length > 0,
       `Vector ${vectorIdx}: Public key DER should be non-empty`
-    );
+    ).toBe(true);
     assert(
       testHash.length === 32 || testHash.length === 20,
       `Vector ${vectorIdx}: Hash should be 32 bytes (SHA-256) or 20 bytes (SHA-1)`
@@ -114,10 +108,10 @@ test('RSA BigInt: Test vector from real Tor certificate (captured from integrati
     const publicKey =
       RsaBigInt.RsaPublicKey.from_public_key_der(publicKeyMemory);
 
-    assert(
+    expect(
       publicKey !== null,
       `Vector ${vectorIdx}: Public key should parse successfully from DER`
-    );
+    ).toBe(true);
 
     // Verify the signature using BigInt implementation
     const hashMemory = new RsaBigInt.Memory(testHash);
@@ -127,10 +121,10 @@ test('RSA BigInt: Test vector from real Tor certificate (captured from integrati
       signatureMemory
     );
 
-    assert(
+    expect(
       verified === true,
       `Vector ${vectorIdx}: BigInt RSA verification should succeed with real test vector`
-    );
+    ).toBe(true);
 
     // Test corruption: flip bits in hash at various positions
     // Use positions appropriate for hash size (20 or 32 bytes)
@@ -146,10 +140,10 @@ test('RSA BigInt: Test vector from real Tor certificate (captured from integrati
         signatureMemory
       );
 
-      assert(
+      expect(
         corruptedVerified === false,
         `Vector ${vectorIdx}: Corruption at hash byte ${pos} should fail verification`
-      );
+      ).toBe(true);
     }
 
     // Test corruption: flip bits in signature at various positions
@@ -166,10 +160,10 @@ test('RSA BigInt: Test vector from real Tor certificate (captured from integrati
         corruptedSignatureMemory
       );
 
-      assert(
+      expect(
         corruptedVerified === false,
         `Vector ${vectorIdx}: Corruption at signature byte ${pos} should fail verification`
-      );
+      ).toBe(true);
     }
 
     // Test corruption: flip single bit at various positions
@@ -184,10 +178,10 @@ test('RSA BigInt: Test vector from real Tor certificate (captured from integrati
         corruptedSignatureMemory
       );
 
-      assert(
+      expect(
         corruptedVerified === false,
         `Vector ${vectorIdx}: Single bit corruption at signature byte ${pos} should fail verification`
-      );
+      ).toBe(true);
     }
   }
 });

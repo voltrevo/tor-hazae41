@@ -1,26 +1,22 @@
-import { test } from '../hazae41/phobos/mod';
-import { assert } from './assert';
+import { test, expect } from 'vitest';
 import { selectRandomElement } from './random';
 
 test('selectRandomElement: should return the only element from single-element array', async () => {
   const array = ['only'];
   const result = selectRandomElement(array);
-  assert(result === 'only', 'Should return the only element');
+  expect(result === 'only').toBe(true);
 });
 
 test('selectRandomElement: should return an element from a multi-element array', async () => {
   const array = ['a', 'b', 'c', 'd', 'e'];
   const result = selectRandomElement(array);
-  assert(
-    array.includes(result),
-    'Should return an element that exists in the array'
-  );
+  expect(array.includes(result)).toBe(true);
 });
 
 test('selectRandomElement: should work with different types', async () => {
   const array = [1, 2, 3, 4, 5];
   const result = selectRandomElement(array);
-  assert(array.includes(result), 'Should work with number arrays');
+  expect(array.includes(result)).toBe(true);
 });
 
 test('selectRandomElement: should throw error for empty array', async () => {
@@ -31,7 +27,7 @@ test('selectRandomElement: should throw error for empty array', async () => {
   } catch {
     threwError = true;
   }
-  assert(threwError, 'Should throw error for empty array');
+  expect(threwError).toBe(true);
 });
 
 test('selectRandomElement: should have reasonable distribution across multiple calls', async () => {
@@ -46,8 +42,5 @@ test('selectRandomElement: should have reasonable distribution across multiple c
 
   // Each element should be selected at least a few times out of 300 iterations
   // With random selection, we expect roughly 100 of each
-  assert(
-    counts.a > 0 && counts.b > 0 && counts.c > 0,
-    'All elements should be selected at least once in 300 iterations'
-  );
+  expect(counts.a > 0 && counts.b > 0 && counts.c > 0).toBe(true);
 });

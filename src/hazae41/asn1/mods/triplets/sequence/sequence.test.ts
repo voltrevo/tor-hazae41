@@ -1,7 +1,7 @@
 import { Writable } from '../../../../binary/mod';
 import { Bytes } from '../../../../bytes';
 import { Cursor } from '../../../../cursor/mod';
-import { assert, test } from '../../../../phobos/mod';
+import { test, expect } from 'vitest';
 import { DER } from '../../resolvers/der';
 import { Sequence } from './sequence';
 
@@ -15,12 +15,14 @@ function checkReadWrite(hex: string) {
   const input = hexToCursor(hex);
   const triplet = DER.readOrThrow(input);
 
-  assert(triplet instanceof Sequence);
+  expect(triplet instanceof Sequence).toBe(true);
 
   const output = Writable.writeToBytesOrThrow(triplet);
   return Bytes.equals(input.bytes, output);
 }
 
 test('Read then write', async () => {
-  assert(checkReadWrite('30 0D 06 09 2A 86 48 86 F7 0D 01 01 01 05 00'));
+  expect(checkReadWrite('30 0D 06 09 2A 86 48 86 F7 0D 01 01 01 05 00')).toBe(
+    true
+  );
 });

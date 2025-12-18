@@ -1,14 +1,14 @@
-import { assert, spy, test } from '../mod';
+import { test, expect, describe, vi } from 'vitest';
 
-test('spyer', async ({ test }) => {
-  await test('a simple boolean-not function', () => {
-    const f = spy((param: boolean) => !param);
+describe('spyer', () => {
+  test('a simple boolean-not function', () => {
+    const impl = (param: boolean) => !param;
+    const f = vi.fn(impl);
 
-    const result = f.call(true);
-    assert(result === false, `result should be false`);
+    const result = f(true);
+    expect(result).toBe(false);
 
-    assert(f.calls.length === 1, `should have been called 1 time`);
-    assert(f.calls[0].params[0] === true, `should have been called with true`);
-    assert(f.calls[0].result === false, `should have resulted in false`);
+    expect(f).toHaveBeenCalledTimes(1);
+    expect(f).toHaveBeenCalledWith(true);
   });
 });

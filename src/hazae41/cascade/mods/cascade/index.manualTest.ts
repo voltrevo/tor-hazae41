@@ -1,4 +1,4 @@
-import { test } from '../../../phobos/mod';
+import { test } from 'vitest';
 import { FullDuplex } from '.';
 
 class A {

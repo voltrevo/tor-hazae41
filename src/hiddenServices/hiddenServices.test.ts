@@ -1,5 +1,4 @@
-import { test } from '../hazae41/phobos/mod';
-import { assert } from '../utils/assert';
+import { test, expect } from 'vitest';
 import { never } from './never.js';
 import { hash } from './hash.js';
 import { decodeOnionPubKey } from './decodeOnionPubkey.js';
@@ -12,57 +11,57 @@ test('never() throws with message', async () => {
     // Use a variable to bypass TypeScript's type narrowing
     const value: unknown = 'invalid';
     never(value as never);
-    assert(false, 'should have thrown');
+    expect(false).toBe(true);
   } catch (error) {
-    assert(error instanceof Error);
+    expect(error instanceof Error).toBe(true);
     assert((error as Error).message.includes('Unexpected value'));
   }
 });
 
 test('hash() with string input', async () => {
   const result = await hash('hello');
-  assert(result instanceof Uint8Array);
+  expect(result instanceof Uint8Array).toBe(true);
   assert(result.length === 32); // SHA3-256 produces 32 bytes
 });
 
 test('hash() with number input', async () => {
   const result = await hash(12345);
-  assert(result instanceof Uint8Array);
-  assert(result.length === 32);
+  expect(result instanceof Uint8Array).toBe(true);
+  expect(result.length === 32).toBe(true);
 });
 
 test('hash() with Bytes input', async () => {
   const input = Bytes.from([1, 2, 3, 4, 5]);
   const result = await hash(input);
-  assert(result instanceof Uint8Array);
-  assert(result.length === 32);
+  expect(result instanceof Uint8Array).toBe(true);
+  expect(result.length === 32).toBe(true);
 });
 
 test('hash() with mixed inputs', async () => {
   const result = await hash('hello', 12345, Bytes.from([1, 2, 3]));
-  assert(result instanceof Uint8Array);
-  assert(result.length === 32);
+  expect(result instanceof Uint8Array).toBe(true);
+  expect(result.length === 32).toBe(true);
 });
 
 test('hash() with multiple strings', async () => {
   const result = await hash('hello', 'world');
-  assert(result instanceof Uint8Array);
-  assert(result.length === 32);
+  expect(result instanceof Uint8Array).toBe(true);
+  expect(result.length === 32).toBe(true);
 });
 
 test('hash() with empty inputs', async () => {
   const result = await hash();
-  assert(result instanceof Uint8Array);
-  assert(result.length === 32);
+  expect(result instanceof Uint8Array).toBe(true);
+  expect(result.length === 32).toBe(true);
 });
 
 test('hash() deterministic', async () => {
   const result1 = await hash('test');
   const result2 = await hash('test');
 
-  assert(result1.length === result2.length);
+  expect(result1.length === result2.length).toBe(true);
   for (let i = 0; i < result1.length; i++) {
-    assert(result1[i] === result2[i], `Hash mismatch at index ${i}`);
+    expect(result1[i] === result2[i], `Hash mismatch at index ${i}`).toBe(true);
   }
 });
 
@@ -93,19 +92,19 @@ test('decodeOnionPubkey() with valid .onion address', async () => {
   const hostname = Base32.toString(fullData);
   const result = await decodeOnionPubKey(hostname + '.onion');
 
-  assert(result instanceof Uint8Array);
-  assert(result.length === 32);
+  expect(result instanceof Uint8Array).toBe(true);
+  expect(result.length === 32).toBe(true);
   for (let i = 0; i < 32; i++) {
-    assert(result[i] === pubkey[i], `Pubkey mismatch at index ${i}`);
+    expect(result[i] === pubkey[i], `Pubkey mismatch at index ${i}`).toBe(true);
   }
 });
 
 test('decodeOnionPubkey() rejects non-.onion address', async () => {
   try {
     await decodeOnionPubKey('notvalid.com');
-    assert(false, 'should have thrown');
+    expect(false).toBe(true);
   } catch (error) {
-    assert(error instanceof Error);
+    expect(error instanceof Error).toBe(true);
     assert((error as Error).message.includes('not a .onion address'));
   }
 });
@@ -113,18 +112,18 @@ test('decodeOnionPubkey() rejects non-.onion address', async () => {
 test('decodeOnionPubkey() with invalid hostname format', async () => {
   try {
     await decodeOnionPubKey('short.onion'); // Too short
-    assert(false, 'should have thrown');
+    expect(false).toBe(true);
   } catch (error) {
-    assert(error instanceof Error);
+    expect(error instanceof Error).toBe(true);
   }
 });
 
 test('decodeOnionStylePubkey() with invalid format - wrong length', async () => {
   try {
     await decodeOnionStylePubKey('short');
-    assert(false, 'should have thrown');
+    expect(false).toBe(true);
   } catch (error) {
-    assert(error instanceof Error);
+    expect(error instanceof Error).toBe(true);
     assert((error as Error).message.includes('56 base32 chars'));
   }
 });
@@ -134,9 +133,9 @@ test('decodeOnionStylePubkey() with invalid format - invalid characters', async 
     // 56 chars but with invalid base32 chars
     const invalid = 'a'.repeat(55) + '!'; // '!' is not valid base32
     await decodeOnionStylePubKey(invalid);
-    assert(false, 'should have thrown');
+    expect(false).toBe(true);
   } catch (error) {
-    assert(error instanceof Error);
+    expect(error instanceof Error).toBe(true);
   }
 });
 
@@ -158,9 +157,9 @@ test('decodeOnionStylePubkey() with invalid version', async () => {
 
   try {
     await decodeOnionStylePubKey(hostname);
-    assert(false, 'should have thrown');
+    expect(false).toBe(true);
   } catch (error) {
-    assert(error instanceof Error);
+    expect(error instanceof Error).toBe(true);
     assert(
       (error as Error).message.includes(
         'Unsupported tor pubkey onion-style version'
@@ -195,9 +194,9 @@ test('decodeOnionStylePubkey() with correct checksum', async () => {
   const hostname = Base32.toString(fullData);
   const result = await decodeOnionStylePubKey(hostname);
 
-  assert(result instanceof Uint8Array);
-  assert(result.length === 32);
+  expect(result instanceof Uint8Array).toBe(true);
+  expect(result.length === 32).toBe(true);
   for (let i = 0; i < 32; i++) {
-    assert(result[i] === pubkey[i], `Pubkey mismatch at index ${i}`);
+    expect(result[i] === pubkey[i], `Pubkey mismatch at index ${i}`).toBe(true);
   }
 });

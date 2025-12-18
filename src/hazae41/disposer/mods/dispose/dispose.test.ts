@@ -1,6 +1,6 @@
 import '../../../symbol-dispose-polyfill/mod';
 
-import { test } from '../../../phobos/mod';
+import { test } from 'vitest';
 import { AsyncDisposer, Disposer } from './dispose';
 
 test('sync', async () => {

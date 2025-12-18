@@ -1,4 +1,4 @@
-import { assert, test } from '../../../phobos/mod';
+import { test, expect } from 'vitest';
 import { Future } from './future';
 
 test('future', async () => {
@@ -10,5 +10,5 @@ test('future', async () => {
   await future.promise;
 
   const delay = Date.now() - start;
-  assert(delay > 1000);
+  expect(delay > 1000).toBe(true);
 });

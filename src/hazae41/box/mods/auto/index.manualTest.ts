@@ -1,7 +1,7 @@
 import '../../../symbol-dispose-polyfill/mod';
 
 import { Future } from '../../../future';
-import { test } from '../../../phobos/mod';
+import { test } from 'vitest';
 import { Auto } from '.';
 
 class Resource implements Disposable {
@@ -13,8 +13,8 @@ class Resource implements Disposable {
   }
 }
 
-test('auto', async ({ name }) => {
-  console.log(`--- ${name} ---`);
+test('auto', async ({ task }) => {
+  console.log(`--- ${task.name} ---`);
 
   const resource = new Resource();
 

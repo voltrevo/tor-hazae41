@@ -1,5 +1,4 @@
-import { test } from '../hazae41/phobos/mod';
-import { assert } from './assert';
+import { test, expect } from 'vitest';
 import {
   bitwise_pack_left,
   bitwise_pack_right,
@@ -83,15 +82,12 @@ function assertBytesEqual(
   expected: number[],
   message?: string
 ): void {
-  assert(
-    actual.length === expected.length,
-    `${message || ''} length mismatch: ${actual.length} !== ${expected.length}`
-  );
+  expect(actual.length === expected.length).toBe(true);
+  if (message) {
+    expect(actual.length).toBe(expected.length);
+  }
   for (let i = 0; i < actual.length; i++) {
-    assert(
-      actual[i] === expected[i],
-      `${message || ''} byte ${i}: ${actual[i]} !== ${expected[i]}`
-    );
+    expect(actual[i] === expected[i]).toBe(true);
   }
 }
 
@@ -151,7 +147,7 @@ test('WebSocket scenario: opcode extraction', async () => {
 
   // Extract last 4 bits (as the code does)
   const opcodeOnly = opcodeBits.subarray(4); // [1, 0, 1, 0]
-  assert(opcodeOnly.length === 4, `length ${opcodeOnly.length} !== 4`);
-  assert(opcodeOnly[0] === 1, `opcodeOnly[0] ${opcodeOnly[0]} !== 1`);
-  assert(opcodeOnly[3] === 0, `opcodeOnly[3] ${opcodeOnly[3]} !== 0`);
+  expect(opcodeOnly.length === 4).toBe(true);
+  expect(opcodeOnly[0] === 1).toBe(true);
+  expect(opcodeOnly[3] === 0).toBe(true);
 });

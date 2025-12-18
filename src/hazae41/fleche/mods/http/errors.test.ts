@@ -1,5 +1,4 @@
-import { test } from '../../../phobos/mod';
-import { assert } from '../../../../utils/assert';
+import { test, expect } from 'vitest';
 import {
   InvalidHttpStateError,
   UnsupportedContentEncoding,
@@ -10,31 +9,31 @@ import {
 test('InvalidHttpStateError - constructor', async () => {
   const error = new InvalidHttpStateError();
 
-  assert(error instanceof Error);
-  assert(error instanceof InvalidHttpStateError);
-  assert(error.name === 'InvalidHttpStateError');
-  assert(error.message === 'Invalid state');
+  expect(error instanceof Error).toBe(true);
+  expect(error instanceof InvalidHttpStateError).toBe(true);
+  expect(error.name === 'InvalidHttpStateError').toBe(true);
+  expect(error.message === 'Invalid state').toBe(true);
 });
 
 test('InvalidHttpStateError - is throwable', async () => {
   try {
     throw new InvalidHttpStateError();
   } catch (e) {
-    assert(e instanceof InvalidHttpStateError);
-    assert((e as Error).message === 'Invalid state');
+    expect(e instanceof InvalidHttpStateError).toBe(true);
+    expect((e as Error).message === 'Invalid state').toBe(true);
   }
 });
 
 test('UnsupportedContentEncoding - constructor with type', async () => {
   const error = new UnsupportedContentEncoding('gzip');
 
-  assert(error instanceof Error);
-  assert(error instanceof UnsupportedContentEncoding);
-  assert(error.name === 'UnsupportedContentEncoding');
-  assert(error.type === 'gzip');
-  assert(
+  expect(error instanceof Error).toBe(true);
+  expect(error instanceof UnsupportedContentEncoding).toBe(true);
+  expect(error.name === 'UnsupportedContentEncoding').toBe(true);
+  expect(error.type === 'gzip').toBe(true);
+  expect(
     error.message === 'Unsupported "Content-Encoding" header value "gzip"'
-  );
+  ).toBe(true);
 });
 
 test('UnsupportedContentEncoding - with different types', async () => {
@@ -42,8 +41,8 @@ test('UnsupportedContentEncoding - with different types', async () => {
 
   for (const type of testCases) {
     const error = new UnsupportedContentEncoding(type);
-    assert(error.type === type);
-    assert(error.message.includes(type));
+    expect(error.type === type).toBe(true);
+    expect(error.message.includes(type)).toBe(true);
   }
 });
 
@@ -51,21 +50,21 @@ test('UnsupportedContentEncoding - is throwable', async () => {
   try {
     throw new UnsupportedContentEncoding('unknown');
   } catch (e) {
-    assert(e instanceof UnsupportedContentEncoding);
-    assert((e as UnsupportedContentEncoding).type === 'unknown');
+    expect(e instanceof UnsupportedContentEncoding).toBe(true);
+    expect((e as UnsupportedContentEncoding).type === 'unknown').toBe(true);
   }
 });
 
 test('UnsupportedTransferEncoding - constructor with type', async () => {
   const error = new UnsupportedTransferEncoding('chunked');
 
-  assert(error instanceof Error);
-  assert(error instanceof UnsupportedTransferEncoding);
-  assert(error.name === 'UnsupportedTransferEncoding');
-  assert(error.type === 'chunked');
-  assert(
+  expect(error instanceof Error).toBe(true);
+  expect(error instanceof UnsupportedTransferEncoding).toBe(true);
+  expect(error.name === 'UnsupportedTransferEncoding').toBe(true);
+  expect(error.type === 'chunked').toBe(true);
+  expect(
     error.message === 'Unsupported "Transfer-Encoding" header value "chunked"'
-  );
+  ).toBe(true);
 });
 
 test('UnsupportedTransferEncoding - with different types', async () => {
@@ -73,8 +72,8 @@ test('UnsupportedTransferEncoding - with different types', async () => {
 
   for (const type of testCases) {
     const error = new UnsupportedTransferEncoding(type);
-    assert(error.type === type);
-    assert(error.message.includes(type));
+    expect(error.type === type).toBe(true);
+    expect(error.message.includes(type)).toBe(true);
   }
 });
 
@@ -82,50 +81,50 @@ test('UnsupportedTransferEncoding - is throwable', async () => {
   try {
     throw new UnsupportedTransferEncoding('custom');
   } catch (e) {
-    assert(e instanceof UnsupportedTransferEncoding);
-    assert((e as UnsupportedTransferEncoding).type === 'custom');
+    expect(e instanceof UnsupportedTransferEncoding).toBe(true);
+    expect((e as UnsupportedTransferEncoding).type === 'custom').toBe(true);
   }
 });
 
 test('ContentLengthOverflowError - constructor with values', async () => {
   const error = new ContentLengthOverflowError(100, 150);
 
-  assert(error instanceof Error);
-  assert(error instanceof ContentLengthOverflowError);
-  assert(error.name === 'ContentLengthOverflowError');
-  assert(error.offset === 100);
-  assert(error.length === 150);
-  assert(
+  expect(error instanceof Error).toBe(true);
+  expect(error instanceof ContentLengthOverflowError).toBe(true);
+  expect(error.name === 'ContentLengthOverflowError').toBe(true);
+  expect(error.offset === 100).toBe(true);
+  expect(error.length === 150).toBe(true);
+  expect(
     error.message ===
       'Received 100 bytes but "Content-Length" header said it was 150 bytes'
-  );
+  ).toBe(true);
 });
 
 test('ContentLengthOverflowError - with zero offset', async () => {
   const error = new ContentLengthOverflowError(0, 100);
 
-  assert(error.offset === 0);
-  assert(error.length === 100);
-  assert(error.message.includes('0 bytes'));
+  expect(error.offset === 0).toBe(true);
+  expect(error.length === 100).toBe(true);
+  expect(error.message.includes('0 bytes')).toBe(true);
 });
 
 test('ContentLengthOverflowError - with large numbers', async () => {
   const error = new ContentLengthOverflowError(1000000, 2000000);
 
-  assert(error.offset === 1000000);
-  assert(error.length === 2000000);
-  assert(error.message.includes('1000000'));
-  assert(error.message.includes('2000000'));
+  expect(error.offset === 1000000).toBe(true);
+  expect(error.length === 2000000).toBe(true);
+  expect(error.message.includes('1000000')).toBe(true);
+  expect(error.message.includes('2000000')).toBe(true);
 });
 
 test('ContentLengthOverflowError - is throwable', async () => {
   try {
     throw new ContentLengthOverflowError(50, 100);
   } catch (e) {
-    assert(e instanceof ContentLengthOverflowError);
+    expect(e instanceof ContentLengthOverflowError).toBe(true);
     const error = e as ContentLengthOverflowError;
-    assert(error.offset === 50);
-    assert(error.length === 100);
+    expect(error.offset === 50).toBe(true);
+    expect(error.length === 100).toBe(true);
   }
 });
 
@@ -138,9 +137,9 @@ test('Error hierarchy - all extend Error', async () => {
   ];
 
   for (const error of errors) {
-    assert(error instanceof Error);
-    assert(typeof error.message === 'string');
-    assert(typeof error.name === 'string');
+    expect(error instanceof Error).toBe(true);
+    expect(typeof error.message === 'string').toBe(true);
+    expect(typeof error.name === 'string').toBe(true);
   }
 });
 
@@ -153,6 +152,9 @@ test('Error messages are non-empty', async () => {
   ];
 
   for (const error of errors) {
-    assert(error.message.length > 0, `Error ${error.name} has empty message`);
+    expect(
+      error.message.length > 0,
+      `Error ${error.name} has empty message`
+    ).toBe(true);
   }
 });

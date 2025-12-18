@@ -1,4 +1,4 @@
-import { test } from '../../../../phobos/mod';
+import { test } from 'vitest';
 import { readFile, readdir } from 'fs/promises';
 import { join } from 'path';
 import { computeSignedPartHash } from './diff.js';

@@ -1,5 +1,5 @@
 // deno-lint-ignore-file require-await
-import { assert, test, throws } from '../../../phobos/mod';
+import { test, expect } from 'vitest';
 import { Cursor } from './mod';
 import { Bytes } from '../../../bytes';
 
@@ -8,22 +8,22 @@ test('write then read', async () => {
   const cursor = new Cursor(Bytes.alloc(bytes.length));
 
   cursor.writeOrThrow(bytes);
-  assert(cursor.offset === bytes.length);
-  assert(Bytes.equals(cursor.bytes, bytes));
+  expect(cursor.offset === bytes.length).toBe(true);
+  expect(Bytes.equals(cursor.bytes, bytes)).toBe(true);
 
   cursor.offset = 0;
 
   const bytes2 = cursor.readOrThrow(bytes.length);
-  assert(cursor.offset === bytes.length);
-  assert(Bytes.equals(cursor.bytes, bytes2));
+  expect(cursor.offset === bytes.length).toBe(true);
+  expect(Bytes.equals(cursor.bytes, bytes2)).toBe(true);
 
-  assert(bytes.length === bytes2.length);
-  assert(Bytes.equals(bytes, bytes2));
+  expect(bytes.length === bytes2.length).toBe(true);
+  expect(Bytes.equals(bytes, bytes2)).toBe(true);
 
   const overflowing = Bytes.from([1, 2, 3, 4, 5]);
 
-  assert(throws(() => cursor.writeOrThrow(overflowing)));
-  assert(throws(() => cursor.readOrThrow(overflowing.length)));
+  expect(() => cursor.writeOrThrow(overflowing)).toThrow();
+  expect(() => cursor.readOrThrow(overflowing.length)).toThrow();
 });
 
 test('writeUint8 then readUint8', async () => {
@@ -32,18 +32,18 @@ test('writeUint8 then readUint8', async () => {
   const n = 42;
 
   cursor.writeUint8OrThrow(n);
-  assert(cursor.offset === 1);
-  assert(cursor.length === 1);
-  assert(Bytes.equals(cursor.bytes, Bytes.from([n])));
+  expect(cursor.offset === 1).toBe(true);
+  expect(cursor.length === 1).toBe(true);
+  expect(Bytes.equals(cursor.bytes, Bytes.from([n]))).toBe(true);
 
   cursor.offset = 0;
 
   const n2 = cursor.readUint8OrThrow();
-  assert(cursor.offset === 1);
-  assert(cursor.length === 1);
-  assert(Bytes.equals(cursor.bytes, Bytes.from([n])));
+  expect(cursor.offset === 1).toBe(true);
+  expect(cursor.length === 1).toBe(true);
+  expect(Bytes.equals(cursor.bytes, Bytes.from([n]))).toBe(true);
 
-  assert(n === n2);
+  expect(n === n2).toBe(true);
 
   cursor.offset = 0;
 
@@ -57,16 +57,16 @@ test('writeUint16 then readUint16', async () => {
   const n = 42;
 
   cursor.writeUint16OrThrow(n);
-  assert(cursor.offset === 2);
-  assert(cursor.length === 2);
+  expect(cursor.offset === 2).toBe(true);
+  expect(cursor.length === 2).toBe(true);
 
   cursor.offset = 0;
 
   const n2 = cursor.readUint16OrThrow();
-  assert(cursor.offset === 2);
-  assert(cursor.length === 2);
+  expect(cursor.offset === 2).toBe(true);
+  expect(cursor.length === 2).toBe(true);
 
-  assert(n === n2);
+  expect(n === n2).toBe(true);
 
   cursor.offset = 0;
 
@@ -80,16 +80,16 @@ test('writeUint24 then readUint24', async () => {
   const n = 42;
 
   cursor.writeUint24OrThrow(n);
-  assert(cursor.offset === 3);
-  assert(cursor.length === 3);
+  expect(cursor.offset === 3).toBe(true);
+  expect(cursor.length === 3).toBe(true);
 
   cursor.offset = 0;
 
   const n2 = cursor.readUint24OrThrow();
-  assert(cursor.offset === 3);
-  assert(cursor.length === 3);
+  expect(cursor.offset === 3).toBe(true);
+  expect(cursor.length === 3).toBe(true);
 
-  assert(n === n2);
+  expect(n === n2).toBe(true);
 
   cursor.offset = 0;
 
@@ -99,7 +99,7 @@ test('writeUint24 then readUint24', async () => {
   // Verify the written value is 42 as big-endian uint24
   const bytes = cursor.bytes;
   const value = (bytes[0] << 16) | (bytes[1] << 8) | bytes[2];
-  assert(value === 42);
+  expect(value === 42).toBe(true);
 });
 
 test('writeUint32 then readUint32', async () => {
@@ -108,16 +108,16 @@ test('writeUint32 then readUint32', async () => {
   const n = 42;
 
   cursor.writeUint32OrThrow(n);
-  assert(cursor.offset === 4);
-  assert(cursor.length === 4);
+  expect(cursor.offset === 4).toBe(true);
+  expect(cursor.length === 4).toBe(true);
 
   cursor.offset = 0;
 
   const n2 = cursor.readUint32OrThrow();
-  assert(cursor.offset === 4);
-  assert(cursor.length === 4);
+  expect(cursor.offset === 4).toBe(true);
+  expect(cursor.length === 4).toBe(true);
 
-  assert(n === n2);
+  expect(n === n2).toBe(true);
 
   cursor.offset = 0;
 

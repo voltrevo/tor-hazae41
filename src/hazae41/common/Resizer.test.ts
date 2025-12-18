@@ -1,5 +1,4 @@
-import { test } from '../phobos/mod';
-import { assert } from '../../utils/assert';
+import { test, expect } from 'vitest';
 import { Resizer } from './Resizer.js';
 import { Bytes } from '../bytes';
 import { Cursor } from '../cursor/mod';
@@ -7,20 +6,17 @@ import { Writable } from '../binary/mod';
 
 test('Resizer - constructor with defaults', async () => {
   const resizer = new Resizer();
-  assert(resizer.minimum === 2 ** 10, 'minimum should be 1024');
-  assert(resizer.maximum === 2 ** 20, 'maximum should be 1048576');
-  assert(resizer.inner instanceof Cursor);
-  assert(
-    resizer.inner.length === 2 ** 10,
-    'initial buffer should match minimum'
-  );
+  expect(resizer.minimum === 2 ** 10).toBe(true);
+  expect(resizer.maximum === 2 ** 20).toBe(true);
+  expect(resizer.inner instanceof Cursor).toBe(true);
+  expect(resizer.inner.length === 2 ** 10).toBe(true);
 });
 
 test('Resizer - constructor with custom min/max', async () => {
   const resizer = new Resizer(512, 4096);
-  assert(resizer.minimum === 512);
-  assert(resizer.maximum === 4096);
-  assert(resizer.inner.length === 512);
+  expect(resizer.minimum === 512).toBe(true);
+  expect(resizer.maximum === 4096).toBe(true);
+  expect(resizer.inner.length === 512).toBe(true);
 });
 
 test('Resizer - writeOrThrow with small chunk', async () => {
@@ -28,7 +24,7 @@ test('Resizer - writeOrThrow with small chunk', async () => {
   const chunk = Bytes.from([1, 2, 3, 4, 5]);
 
   resizer.writeOrThrow(chunk);
-  assert(resizer.inner.offset === 5, 'offset should advance by chunk length');
+  expect(resizer.inner.offset === 5).toBe(true);
 });
 
 test('Resizer - writeOrThrow multiple times within buffer', async () => {
@@ -40,10 +36,10 @@ test('Resizer - writeOrThrow multiple times within buffer', async () => {
   chunk2[0] = 20;
 
   resizer.writeOrThrow(chunk1);
-  assert(resizer.inner.offset === 100);
+  expect(resizer.inner.offset === 100).toBe(true);
 
   resizer.writeOrThrow(chunk2);
-  assert(resizer.inner.offset === (200 as number));
+  expect(resizer.inner.offset === (200 as number)).toBe(true);
 });
 
 test('Resizer - writeOrThrow triggers resize when needed', async () => {
@@ -53,11 +49,8 @@ test('Resizer - writeOrThrow triggers resize when needed', async () => {
   const largeChunk = Bytes.alloc(150);
   resizer.writeOrThrow(largeChunk);
 
-  assert(resizer.inner.length >= 150, 'buffer should be resized');
-  assert(
-    resizer.inner.offset === 150,
-    'offset should be at end of written data'
-  );
+  expect(resizer.inner.length >= 150).toBe(true);
+  expect(resizer.inner.offset === 150).toBe(true);
 });
 
 test('Resizer - writeOrThrow preserves previous data on resize', async () => {
@@ -72,10 +65,10 @@ test('Resizer - writeOrThrow preserves previous data on resize', async () => {
 
   // Verify first chunk is still there
   const buffer = resizer.inner.before;
-  assert(buffer[0] === 1);
-  assert(buffer[1] === 2);
-  assert(buffer[2] === 3);
-  assert(resizer.inner.offset === offsetAfterFirst + 150);
+  expect(buffer[0] === 1).toBe(true);
+  expect(buffer[1] === 2).toBe(true);
+  expect(buffer[2] === 3).toBe(true);
+  expect(resizer.inner.offset === offsetAfterFirst + 150).toBe(true);
 });
 
 test('Resizer - writeOrThrow throws when exceeding maximum', async () => {
@@ -87,10 +80,12 @@ test('Resizer - writeOrThrow throws when exceeding maximum', async () => {
     resizer.writeOrThrow(chunk);
     resizer.writeOrThrow(chunk); // This should exceed maximum
 
-    assert(false, 'should have thrown');
+    expect(false).toBe(true);
   } catch (error) {
-    assert(error instanceof Error);
-    assert((error as Error).message.includes('Maximum size exceeded'));
+    expect(error instanceof Error).toBe(true);
+    expect((error as Error).message.includes('Maximum size exceeded')).toBe(
+      true
+    );
   }
 });
 
@@ -100,10 +95,12 @@ test('Resizer - writeOrThrow throws when single chunk exceeds maximum', async ()
   try {
     const chunk = Bytes.alloc(250); // Exceeds maximum
     resizer.writeOrThrow(chunk);
-    assert(false, 'should have thrown');
+    expect(false).toBe(true);
   } catch (error) {
-    assert(error instanceof Error);
-    assert((error as Error).message.includes('Maximum size exceeded'));
+    expect(error instanceof Error).toBe(true);
+    expect((error as Error).message.includes('Maximum size exceeded')).toBe(
+      true
+    );
   }
 });
 
@@ -121,7 +118,7 @@ test('Resizer - writeFromOrThrow with Writable', async () => {
   };
 
   resizer.writeFromOrThrow(writable);
-  assert(resizer.inner.offset === 20, 'offset should be 20 after write');
+  expect(resizer.inner.offset === 20).toBe(true);
 });
 
 test('Resizer - writeFromOrThrow triggers resize', async () => {
@@ -136,8 +133,8 @@ test('Resizer - writeFromOrThrow triggers resize', async () => {
   };
 
   resizer.writeFromOrThrow(writable);
-  assert(resizer.inner.length >= 150);
-  assert(resizer.inner.offset === 150);
+  expect(resizer.inner.length >= 150).toBe(true);
+  expect(resizer.inner.offset === 150).toBe(true);
 });
 
 test('Resizer - writeFromOrThrow throws on maximum exceeded', async () => {
@@ -150,10 +147,12 @@ test('Resizer - writeFromOrThrow throws on maximum exceeded', async () => {
 
   try {
     resizer.writeFromOrThrow(writable);
-    assert(false, 'should have thrown');
+    expect(false).toBe(true);
   } catch (error) {
-    assert(error instanceof Error);
-    assert((error as Error).message.includes('Maximum size exceeded'));
+    expect(error instanceof Error).toBe(true);
+    expect((error as Error).message.includes('Maximum size exceeded')).toBe(
+      true
+    );
   }
 });
 
@@ -180,10 +179,10 @@ test('Resizer - writeFromOrThrow preserves data from previous writes', async () 
   resizer.writeFromOrThrow(writable2);
 
   const buffer = resizer.inner.before;
-  assert(buffer[0] === 5);
-  assert(buffer[9] === 14);
-  assert(buffer[10] === 15);
-  assert(buffer[14] === 19);
+  expect(buffer[0] === 5).toBe(true);
+  expect(buffer[9] === 14).toBe(true);
+  expect(buffer[10] === 15).toBe(true);
+  expect(buffer[14] === 19).toBe(true);
 });
 
 test('Resizer - sequential writes and multiple resizes', async () => {
@@ -195,9 +194,9 @@ test('Resizer - sequential writes and multiple resizes', async () => {
     resizer.writeOrThrow(chunk);
   }
 
-  assert(resizer.inner.offset === 200);
-  assert(resizer.inner.length >= 200);
-  assert(resizer.inner.length <= 500);
+  expect(resizer.inner.offset === 200).toBe(true);
+  expect(resizer.inner.length >= 200).toBe(true);
+  expect(resizer.inner.length <= 500).toBe(true);
 });
 
 test('Resizer - exact maximum size fits', async () => {
@@ -205,8 +204,8 @@ test('Resizer - exact maximum size fits', async () => {
   const chunk = Bytes.alloc(100);
 
   resizer.writeOrThrow(chunk);
-  assert(resizer.inner.offset === 100);
-  assert(resizer.inner.length === 100);
+  expect(resizer.inner.offset === 100).toBe(true);
+  expect(resizer.inner.length === 100).toBe(true);
 });
 
 test('Resizer - exceeding by 1 byte beyond maximum throws', async () => {
@@ -215,18 +214,20 @@ test('Resizer - exceeding by 1 byte beyond maximum throws', async () => {
   try {
     const chunk = Bytes.alloc(101);
     resizer.writeOrThrow(chunk);
-    assert(false, 'should have thrown');
+    expect(false).toBe(true);
   } catch (error) {
-    assert(error instanceof Error);
-    assert((error as Error).message.includes('Maximum size exceeded'));
+    expect(error instanceof Error).toBe(true);
+    expect((error as Error).message.includes('Maximum size exceeded')).toBe(
+      true
+    );
   }
 });
 
 test('Resizer - constructor with custom min/max', async () => {
   const resizer = new Resizer(512, 4096);
-  assert(resizer.minimum === 512);
-  assert(resizer.maximum === 4096);
-  assert(resizer.inner.length === 512);
+  expect(resizer.minimum === 512).toBe(true);
+  expect(resizer.maximum === 4096).toBe(true);
+  expect(resizer.inner.length === 512).toBe(true);
 });
 
 test('Resizer - writeOrThrow with small chunk', async () => {
@@ -234,7 +235,7 @@ test('Resizer - writeOrThrow with small chunk', async () => {
   const chunk = Bytes.from([1, 2, 3, 4, 5]);
 
   resizer.writeOrThrow(chunk);
-  assert(resizer.inner.offset === 5, 'offset should advance by chunk length');
+  expect(resizer.inner.offset === 5).toBe(true);
 });
 
 test('Resizer - writeOrThrow multiple times within buffer', async () => {
@@ -246,10 +247,10 @@ test('Resizer - writeOrThrow multiple times within buffer', async () => {
   chunk2[0] = 20;
 
   resizer.writeOrThrow(chunk1);
-  assert(resizer.inner.offset === 100);
+  expect(resizer.inner.offset === 100).toBe(true);
 
   resizer.writeOrThrow(chunk2);
-  assert(resizer.inner.offset === (200 as number));
+  expect(resizer.inner.offset === (200 as number)).toBe(true);
 });
 
 test('Resizer - writeOrThrow triggers resize when needed', async () => {
@@ -259,11 +260,8 @@ test('Resizer - writeOrThrow triggers resize when needed', async () => {
   const largeChunk = Bytes.alloc(150);
   resizer.writeOrThrow(largeChunk);
 
-  assert(resizer.inner.length >= 150, 'buffer should be resized');
-  assert(
-    resizer.inner.offset === 150,
-    'offset should be at end of written data'
-  );
+  expect(resizer.inner.length >= 150).toBe(true);
+  expect(resizer.inner.offset === 150).toBe(true);
 });
 
 test('Resizer - writeOrThrow preserves previous data on resize', async () => {
@@ -278,10 +276,10 @@ test('Resizer - writeOrThrow preserves previous data on resize', async () => {
 
   // Verify first chunk is still there
   const buffer = resizer.inner.before;
-  assert(buffer[0] === 1);
-  assert(buffer[1] === 2);
-  assert(buffer[2] === 3);
-  assert(resizer.inner.offset === offsetAfterFirst + 150);
+  expect(buffer[0] === 1).toBe(true);
+  expect(buffer[1] === 2).toBe(true);
+  expect(buffer[2] === 3).toBe(true);
+  expect(resizer.inner.offset === offsetAfterFirst + 150).toBe(true);
 });
 
 test('Resizer - writeOrThrow throws when exceeding maximum', async () => {
@@ -293,10 +291,12 @@ test('Resizer - writeOrThrow throws when exceeding maximum', async () => {
     resizer.writeOrThrow(chunk);
     resizer.writeOrThrow(chunk); // This should exceed maximum
 
-    assert(false, 'should have thrown');
+    expect(false).toBe(true);
   } catch (error) {
-    assert(error instanceof Error);
-    assert((error as Error).message.includes('Maximum size exceeded'));
+    expect(error instanceof Error).toBe(true);
+    expect((error as Error).message.includes('Maximum size exceeded')).toBe(
+      true
+    );
   }
 });
 
@@ -306,10 +306,12 @@ test('Resizer - writeOrThrow throws when single chunk exceeds maximum', async ()
   try {
     const chunk = Bytes.alloc(250); // Exceeds maximum
     resizer.writeOrThrow(chunk);
-    assert(false, 'should have thrown');
+    expect(false).toBe(true);
   } catch (error) {
-    assert(error instanceof Error);
-    assert((error as Error).message.includes('Maximum size exceeded'));
+    expect(error instanceof Error).toBe(true);
+    expect((error as Error).message.includes('Maximum size exceeded')).toBe(
+      true
+    );
   }
 });
 
@@ -327,7 +329,7 @@ test('Resizer - writeFromOrThrow with Writable', async () => {
   };
 
   resizer.writeFromOrThrow(writable);
-  assert(resizer.inner.offset === 20, 'offset should be 20 after write');
+  expect(resizer.inner.offset === 20).toBe(true);
 });
 
 test('Resizer - writeFromOrThrow triggers resize', async () => {
@@ -342,8 +344,8 @@ test('Resizer - writeFromOrThrow triggers resize', async () => {
   };
 
   resizer.writeFromOrThrow(writable);
-  assert(resizer.inner.length >= 150);
-  assert(resizer.inner.offset === 150);
+  expect(resizer.inner.length >= 150).toBe(true);
+  expect(resizer.inner.offset === 150).toBe(true);
 });
 
 test('Resizer - writeFromOrThrow throws on maximum exceeded', async () => {
@@ -356,10 +358,12 @@ test('Resizer - writeFromOrThrow throws on maximum exceeded', async () => {
 
   try {
     resizer.writeFromOrThrow(writable);
-    assert(false, 'should have thrown');
+    expect(false).toBe(true);
   } catch (error) {
-    assert(error instanceof Error);
-    assert((error as Error).message.includes('Maximum size exceeded'));
+    expect(error instanceof Error).toBe(true);
+    expect((error as Error).message.includes('Maximum size exceeded')).toBe(
+      true
+    );
   }
 });
 
@@ -386,10 +390,10 @@ test('Resizer - writeFromOrThrow preserves data from previous writes', async () 
   resizer.writeFromOrThrow(writable2);
 
   const buffer = resizer.inner.before;
-  assert(buffer[0] === 5);
-  assert(buffer[9] === 14);
-  assert(buffer[10] === 15);
-  assert(buffer[14] === 19);
+  expect(buffer[0] === 5).toBe(true);
+  expect(buffer[9] === 14).toBe(true);
+  expect(buffer[10] === 15).toBe(true);
+  expect(buffer[14] === 19).toBe(true);
 });
 
 test('Resizer - sequential writes and multiple resizes', async () => {
@@ -401,9 +405,9 @@ test('Resizer - sequential writes and multiple resizes', async () => {
     resizer.writeOrThrow(chunk);
   }
 
-  assert(resizer.inner.offset === 200);
-  assert(resizer.inner.length >= 200);
-  assert(resizer.inner.length <= 500);
+  expect(resizer.inner.offset === 200).toBe(true);
+  expect(resizer.inner.length >= 200).toBe(true);
+  expect(resizer.inner.length <= 500).toBe(true);
 });
 
 test('Resizer - exact maximum size fits', async () => {
@@ -411,8 +415,8 @@ test('Resizer - exact maximum size fits', async () => {
   const chunk = Bytes.alloc(100);
 
   resizer.writeOrThrow(chunk);
-  assert(resizer.inner.offset === 100);
-  assert(resizer.inner.length === 100);
+  expect(resizer.inner.offset === 100).toBe(true);
+  expect(resizer.inner.length === 100).toBe(true);
 });
 
 test('Resizer - exceeding by 1 byte beyond maximum throws', async () => {
@@ -421,9 +425,11 @@ test('Resizer - exceeding by 1 byte beyond maximum throws', async () => {
   try {
     const chunk = Bytes.alloc(101);
     resizer.writeOrThrow(chunk);
-    assert(false, 'should have thrown');
+    expect(false).toBe(true);
   } catch (error) {
-    assert(error instanceof Error);
-    assert((error as Error).message.includes('Maximum size exceeded'));
+    expect(error instanceof Error).toBe(true);
+    expect((error as Error).message.includes('Maximum size exceeded')).toBe(
+      true
+    );
   }
 });

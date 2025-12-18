@@ -1,5 +1,4 @@
-import { test } from '../hazae41/phobos/mod';
-import { assert } from '../utils/assert';
+import { test, expect } from 'vitest';
 import { Base32 } from './Base32.js';
 import { Bytes } from '../hazae41/bytes';
 
@@ -7,16 +6,16 @@ test('Base32.toString', async () => {
   // Test basic encoding
   const data = Bytes.from([0x8b, 0x1a, 0x9b, 0x5b, 0xcd]);
   const result = Base32.toString(data);
-  assert(typeof result === 'string');
-  assert(result.length > 0);
+  expect(typeof result === 'string').toBe(true);
+  expect(result.length > 0).toBe(true);
 });
 
 test('Base32.fromString', async () => {
   // Test basic decoding
   const encoded = Base32.toString(Bytes.from([0x8b, 0x1a, 0x9b, 0x5b, 0xcd]));
   const decoded = Base32.fromString(encoded);
-  assert(decoded instanceof Uint8Array);
-  assert(decoded.length === 5);
+  expect(decoded instanceof Uint8Array).toBe(true);
+  expect(decoded.length === 5).toBe(true);
 });
 
 test('Base32 round-trip', async () => {
@@ -32,16 +31,16 @@ test('Base32 round-trip', async () => {
     const encoded = Base32.toString(originalData);
     const decoded = Base32.fromString(encoded);
 
-    assert(
+    expect(
       decoded.length === originalData.length,
       `Length mismatch: ${decoded.length} !== ${originalData.length}`
-    );
+    ).toBe(true);
 
     for (let i = 0; i < originalData.length; i++) {
-      assert(
+      expect(
         decoded[i] === originalData[i],
         `Byte mismatch at index ${i}: ${decoded[i]} !== ${originalData[i]}`
-      );
+      ).toBe(true);
     }
   }
 });
@@ -66,20 +65,23 @@ test('Base32 known values', async () => {
 
   for (const { decoded, encoded } of testVectors) {
     const result = Base32.toString(decoded);
-    assert(result === encoded, `Encoding mismatch: ${result} !== ${encoded}`);
+    expect(
+      result === encoded,
+      `Encoding mismatch: ${result} !== ${encoded}`
+    ).toBe(true);
 
     if (encoded) {
       const roundTrip = Base32.fromString(encoded);
-      assert(
+      expect(
         roundTrip.length === decoded.length,
         `Round-trip length mismatch: ${roundTrip.length} !== ${decoded.length}`
-      );
+      ).toBe(true);
 
       for (let i = 0; i < decoded.length; i++) {
-        assert(
+        expect(
           roundTrip[i] === decoded[i],
           `Round-trip byte mismatch at index ${i}: ${roundTrip[i]} !== ${decoded[i]}`
-        );
+        ).toBe(true);
       }
     }
   }
@@ -92,17 +94,19 @@ test('Base32 case insensitivity', async () => {
   const decodedMixed = Base32.fromString('MzXw6YtBoI');
 
   for (let i = 0; i < decodedUpper.length; i++) {
-    assert(decodedUpper[i] === decodedLower[i]);
-    assert(decodedUpper[i] === decodedMixed[i]);
+    expect(decodedUpper[i] === decodedLower[i]).toBe(true);
+    expect(decodedUpper[i] === decodedMixed[i]).toBe(true);
   }
 });
 
 test('Base32 invalid character', async () => {
   try {
     Base32.fromString('INVALID!@#');
-    assert(false, 'Should have thrown an error');
+    expect(false).toBe(true);
   } catch (error) {
-    assert(error instanceof Error);
-    assert((error as Error).message.includes('Invalid Base32 character'));
+    expect(error instanceof Error).toBe(true);
+    expect((error as Error).message.includes('Invalid Base32 character')).toBe(
+      true
+    );
   }
 });

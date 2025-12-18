@@ -1,5 +1,4 @@
-import { test } from '../../../../phobos/mod';
-import { assert } from '../../../../../utils/assert';
+import { test, expect } from 'vitest';
 import { applyDiffOrThrow, parseDiffOrThrow } from './diff.js';
 
 // Create a simple test consensus
@@ -29,10 +28,10 @@ valid-after 2025-12-01 01:00:00
 
   const diff = parseDiffOrThrow(testDiff);
 
-  assert(diff.version === 1, 'Version should be 1');
-  assert(diff.fromHash === 'abcd1234', 'fromHash should be abcd1234');
-  assert(diff.toHash === 'efgh5678', 'toHash should be efgh5678');
-  assert(diff.commands.length === 2, 'Should have 2 commands');
+  expect(diff.version === 1).toBe(true);
+  expect(diff.fromHash === 'abcd1234').toBe(true);
+  expect(diff.toHash === 'efgh5678').toBe(true);
+  expect(diff.commands.length === 2).toBe(true);
 });
 
 test('Consensus diff: applying diff', async () => {
@@ -52,36 +51,36 @@ valid-after 2025-12-01 01:00:00
   const lines = result.split('\n');
 
   // Check that old lines are removed
-  assert(
-    !lines.includes('vote-status consensus'),
+  expect(
+    lines.includes('vote-status consensus'),
     'Old line "vote-status consensus" should have been replaced'
-  );
-  assert(
-    !lines.includes('consensus-method 33'),
+  ).toBe(false);
+  expect(
+    lines.includes('consensus-method 33'),
     'Old line "consensus-method 33" should have been replaced'
-  );
-  assert(
-    !lines.includes('valid-after 2025-12-01 00:00:00'),
+  ).toBe(false);
+  expect(
+    lines.includes('valid-after 2025-12-01 00:00:00'),
     'Old line "valid-after 2025-12-01 00:00:00" should have been replaced'
-  );
-  assert(
-    !lines.includes('params test=1'),
+  ).toBe(false);
+  expect(
+    lines.includes('params test=1'),
     'Old line "params test=1" should have been replaced'
-  );
+  ).toBe(false);
 
   // Check that new lines are present
-  assert(
+  expect(
     lines.includes('vote-status updated'),
     'New line "vote-status updated" should be present'
-  );
-  assert(
+  ).toBe(true);
+  expect(
     lines.includes('consensus-method 34'),
     'New line "consensus-method 34" should be present'
-  );
-  assert(
+  ).toBe(true);
+  expect(
     lines.includes('params test=2 new=3'),
     'New line "params test=2 new=3" should be present'
-  );
+  ).toBe(true);
 });
 
 test('Consensus diff: delete command', async () => {
@@ -96,14 +95,8 @@ hash test1 test2
 
   const deleteLines = deleteResult.split('\n');
 
-  assert(
-    !deleteLines.includes('consensus-method 33'),
-    'Deleted line should not be present'
-  );
-  assert(
-    !deleteLines.includes('valid-after 2025-12-01 00:00:00'),
-    'Deleted line should not be present'
-  );
+  expect(!deleteLines.includes('consensus-method 33')).toBe(true);
+  expect(!deleteLines.includes('valid-after 2025-12-01 00:00:00')).toBe(true);
 });
 
 test('Consensus diff: append command', async () => {
@@ -121,12 +114,6 @@ another-field another-value
 
   const appendLines = appendResult.split('\n');
 
-  assert(
-    appendLines.includes('new-field added-value'),
-    'Appended line should be present'
-  );
-  assert(
-    appendLines.includes('another-field another-value'),
-    'Appended line should be present'
-  );
+  expect(appendLines.includes('new-field added-value')).toBe(true);
+  expect(appendLines.includes('another-field another-value')).toBe(true);
 });

@@ -1,5 +1,5 @@
 import { Readable, Writable, Unknown } from '../../../../binary/mod';
-import { assert, test } from '../../../../phobos/mod';
+import { test, expect } from 'vitest';
 import { SmuxSegment } from '.';
 import { Bytes } from '../../../../bytes';
 
@@ -18,5 +18,7 @@ test('kcp segment', async () => {
   const bytes = Writable.writeToBytesOrThrow(segment);
   const frame2 = Readable.readFromBytesOrThrow(SmuxSegment, bytes);
 
-  assert(Bytes.equals(segment.fragment.bytes, frame2.fragment.bytes));
+  expect(Bytes.equals(segment.fragment.bytes, frame2.fragment.bytes)).toBe(
+    true
+  );
 });

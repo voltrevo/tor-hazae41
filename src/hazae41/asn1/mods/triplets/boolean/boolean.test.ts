@@ -1,7 +1,7 @@
 import { Writable } from '../../../../binary/mod';
 import { Bytes } from '../../../../bytes';
 import { Cursor } from '../../../../cursor/mod';
-import { assert, test } from '../../../../phobos/mod';
+import { test, expect } from 'vitest';
 import { Boolean } from './boolean';
 
 function hexToCursor(hex: string) {
@@ -19,7 +19,7 @@ function checkReadWrite(hex: string) {
 }
 
 test('Read then write', async () => {
-  assert(checkReadWrite('01 01 00'));
-  assert(checkReadWrite('01 01 01'));
-  assert(checkReadWrite('01 01 FF'));
+  expect(checkReadWrite('01 01 00')).toBe(true);
+  expect(checkReadWrite('01 01 01')).toBe(true);
+  expect(checkReadWrite('01 01 FF')).toBe(true);
 });

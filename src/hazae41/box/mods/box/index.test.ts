@@ -1,6 +1,6 @@
 import '../../../symbol-dispose-polyfill/mod';
 
-import { assert, test } from '../../../phobos/mod';
+import { test, expect } from 'vitest';
 import { Borrow, Borrowable } from '../borrow';
 import { Box } from '.';
 
@@ -45,7 +45,7 @@ test('holder', async () => {
     using _b = a.toB();
   }
 
-  assert(resource.disposed);
+  expect(resource.disposed).toBe(true);
 });
 
 test('dummy', async () => {
@@ -57,10 +57,10 @@ test('dummy', async () => {
   {
     using _box = Box.wrap(resource);
 
-    assert(!resource.disposed);
+    expect(!resource.disposed).toBe(true);
   }
 
-  assert(resource.disposed);
+  expect(resource.disposed).toBe(true);
 });
 
 test('borrow', async () => {
@@ -69,24 +69,24 @@ test('borrow', async () => {
   async function borrow(parent: Borrowable<Resource>) {
     using borrow = Borrow.from(parent.borrowOrThrow());
 
-    assert(borrow.get() === resource);
+    expect(borrow.get() === resource).toBe(true);
 
-    assert(borrow.borrowed === false);
-    assert(parent.borrowed === true);
+    expect(borrow.borrowed === false).toBe(true);
+    expect(parent.borrowed === true).toBe(true);
 
     await borrow2(borrow);
 
-    assert(borrow.borrowed === false);
-    assert(parent.borrowed === true);
+    expect(borrow.borrowed === false).toBe(true);
+    expect(parent.borrowed === true).toBe(true);
   }
 
   async function borrow2(parent: Borrowable<Resource>) {
     using borrow = Borrow.from(parent.borrowOrThrow());
 
-    assert(borrow.get() === resource);
+    expect(borrow.get() === resource).toBe(true);
 
-    assert(borrow.borrowed === false);
-    assert(parent.borrowed === true);
+    expect(borrow.borrowed === false).toBe(true);
+    expect(parent.borrowed === true).toBe(true);
   }
 
   {
@@ -94,8 +94,8 @@ test('borrow', async () => {
 
     await borrow(box);
 
-    assert(box.borrowed === false);
+    expect(box.borrowed === false).toBe(true);
   }
 
-  assert(resource.disposed);
+  expect(resource.disposed).toBe(true);
 });

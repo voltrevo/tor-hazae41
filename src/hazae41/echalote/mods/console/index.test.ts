@@ -1,69 +1,68 @@
-import { test } from '../../../phobos/mod';
-import { assert } from '../../../../utils/assert';
+import { test, expect } from 'vitest';
 import { Console } from './index.js';
 
 test('Console.debugging is false by default', async () => {
-  assert(Console.debugging === false);
+  expect(Console.debugging === false).toBe(true);
 });
 
 test('Console.log with debugging disabled (returns early)', async () => {
   Console.log('message');
-  assert(true);
+  expect(true).toBe(true);
 });
 
 test('Console.debug with debugging disabled (returns early)', async () => {
   Console.debug('message');
-  assert(true);
+  expect(true).toBe(true);
 });
 
 test('Console.error with debugging disabled (returns early)', async () => {
   Console.error('message');
-  assert(true);
+  expect(true).toBe(true);
 });
 
 test('Console.warn with debugging disabled (returns early)', async () => {
   Console.warn('message');
-  assert(true);
+  expect(true).toBe(true);
 });
 
 test('Console.log with no parameters', async () => {
   Console.log();
-  assert(true);
+  expect(true).toBe(true);
 });
 
 test('Console.debug with no parameters', async () => {
   Console.debug();
-  assert(true);
+  expect(true).toBe(true);
 });
 
 test('Console.error with no parameters', async () => {
   Console.error();
-  assert(true);
+  expect(true).toBe(true);
 });
 
 test('Console.warn with no parameters', async () => {
   Console.warn();
-  assert(true);
+  expect(true).toBe(true);
 });
 
 test('Console.log with multiple parameters', async () => {
   Console.log('test', 123, { key: 'value' });
-  assert(true);
+  expect(true).toBe(true);
 });
 
 test('Console.debug with multiple parameters', async () => {
   Console.debug('debug', 456, [1, 2, 3]);
-  assert(true);
+  expect(true).toBe(true);
 });
 
 test('Console.error with multiple parameters', async () => {
   Console.error('error', new Error('test'));
-  assert(true);
+  expect(true).toBe(true);
 });
 
 test('Console.warn with multiple parameters', async () => {
   Console.warn('warning', false, null);
-  assert(true);
+  expect(true).toBe(true);
 });
 
 test('Console methods with various types', async () => {
@@ -87,12 +86,12 @@ test('Console methods with various types', async () => {
     Console.warn(testCase);
   }
 
-  assert(true);
+  expect(true).toBe(true);
 });
 
 test('Console all methods exist', async () => {
-  assert(typeof Console.log === 'function');
-  assert(typeof Console.debug === 'function');
-  assert(typeof Console.error === 'function');
-  assert(typeof Console.warn === 'function');
+  expect(typeof Console.log === 'function').toBe(true);
+  expect(typeof Console.debug === 'function').toBe(true);
+  expect(typeof Console.error === 'function').toBe(true);
+  expect(typeof Console.warn === 'function').toBe(true);
 });
