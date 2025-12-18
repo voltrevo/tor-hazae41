@@ -105,7 +105,7 @@ async function runTests() {
     // Wait for any pending microtasks and macrotasks
     await clock.delay(3000);
 
-    log('\n✅ Test runner completed');
+    log('\nTest runner completed');
 
     // Signal to playwright that tests are done
     (window as WindowWithTests).__tests_completed = true;
