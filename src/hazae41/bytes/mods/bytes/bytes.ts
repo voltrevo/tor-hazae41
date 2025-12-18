@@ -1,7 +1,6 @@
 import { assert } from '../../../../utils/assert';
 import { ArrayLike } from '../../../arrays/index';
 import { Ascii } from '../../libs/ascii/ascii';
-import { Buffers } from '../../libs/buffers/index';
 import { Utf8 } from '../../libs/utf8/utf8';
 
 export type Bytes<N extends number = number> =
@@ -65,7 +64,7 @@ export namespace Bytes {
   }
 
   /**
-   * Equality check (using indexedDB.cmp on browsers, Buffer.equals on Node)
+   * Equality check
    * @param a
    * @param b
    * @returns
@@ -74,13 +73,23 @@ export namespace Bytes {
     a: Bytes,
     b: Bytes<N>
   ): a is Bytes<N> {
-    if ('indexedDB' in globalThis) return indexedDB.cmp(a, b) === 0;
-    if ('process' in globalThis) return Buffers.fromView(a).equals(b);
-    throw new Error(`Could not compare bytes`);
+    if (a.length !== b.length) {
+      return false;
+    }
+
+    const len = a.length;
+
+    for (let i = 0; i < len; i++) {
+      if (a[i] !== b[i]) {
+        return false;
+      }
+    }
+
+    return true;
   }
 
   /**
-   * Equality check (using indexedDB.cmp on browsers, Buffer.equals on Node)
+   * Equality check
    * @param a
    * @param b
    * @returns
@@ -134,23 +143,20 @@ export namespace Bytes {
   }
 
   /**
-   * Ascii decoding (using Buffer.from on Node, TextEncoder on others)
+   * Ascii decoding
    * @param bytes
    * @returns
    */
   export function fromAscii(text: string): Bytes {
-    if ('process' in globalThis) return fromView(Buffer.from(text, 'ascii'));
     return Ascii.encoder.encode(text) as Uint8Array<ArrayBuffer>;
   }
 
   /**
-   * Ascii encoding (using Buffer.toString on Node, TextDecoder on others)
+   * Ascii encoding
    * @param bytes
    * @returns
    */
   export function toAscii(bytes: Bytes): string {
-    if ('process' in globalThis)
-      return Buffers.fromView(bytes).toString('ascii');
     return Ascii.decoder.decode(bytes);
   }
 
@@ -196,13 +202,11 @@ export namespace Bytes {
   }
 
   /**
-   * Concatenation (using Buffer.concat on Node, home-made on others)
+   * Concatenation
    * @param list
    * @returns
    */
   export function concat(...list: Bytes[]) {
-    if ('process' in globalThis) return fromView(Buffer.concat(list));
-
     const length = list.reduce((p, c) => p + c.length, 0);
     const result = alloc(length);
 
@@ -288,17 +292,6 @@ export namespace Bytes {
    * @returns base64 string
    */
   export function toBase64(bytes: Bytes, options?: Base64Options): string {
-    if ('process' in globalThis) {
-      let encoded = Buffers.fromView(bytes).toString('base64');
-      if (options?.alphabet === 'base64url') {
-        encoded = encoded.replace(/\+/g, '-').replace(/\//g, '_');
-      }
-      if (options?.omitPadding) {
-        encoded = encoded.replace(/=/g, '');
-      }
-      return encoded;
-    }
-
     // Browser implementation
     let binary = '';
     for (let i = 0; i < bytes.length; i++) {
@@ -322,11 +315,6 @@ export namespace Bytes {
    * @returns bytes
    */
   export function fromBase64(text: string, options?: Base64Options): Bytes {
-    if ('process' in globalThis) {
-      return fromView(Buffer.from(text, 'base64') as any) as Bytes;
-    }
-
-    // Browser implementation
     let normalized = text;
     if (options?.alphabet === 'base64url') {
       normalized = normalized.replace(/-/g, '+').replace(/_/g, '/');
