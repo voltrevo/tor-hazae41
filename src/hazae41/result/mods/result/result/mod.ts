@@ -1,5 +1,5 @@
 import { Awaitable } from '../../../../common/Awaitable';
-import type { Nullable } from '../../../libs/nullable/mod';
+import { Nullable } from '../../../../common/Nullable';
 import { Catched } from '../catched/mod';
 import { Err } from '../err/mod';
 import { Ok } from '../ok/mod';

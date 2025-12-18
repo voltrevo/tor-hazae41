@@ -10,7 +10,7 @@ import {
   Type,
 } from '../../../../asn1/index';
 import { Readable, Writable } from '../../../../binary/mod';
-import { Nullable } from '../../../libs/nullable/index';
+import { Nullable } from '../../../../common/Nullable';
 import { OIDs } from '../../oids/oids';
 import { SubjectAltName } from './subject_alt_name/subject_alt_name';
 

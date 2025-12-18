@@ -6,13 +6,13 @@ import {
   Sequence,
   Type,
 } from '../../../../asn1/index';
-import { Nullable } from '../../../libs/nullable/index';
 import { AlgorithmIdentifier } from '../algorithm_identifier/algorithm_identifier';
 import { Name } from '../name/name';
 import { SubjectPublicKeyInfo } from '../subject_public_key_info/subject_public_key_info';
 import { TBSCertificateVersion } from './tbs_certificate_version';
 import { Validity } from '../validity/validity';
 import { Extensions } from '../extensions/extensions';
+import { Nullable } from '../../../../common/Nullable';
 
 export class TBSCertificate {
   constructor(

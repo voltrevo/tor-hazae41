@@ -1,5 +1,5 @@
 import { Awaitable } from '../../../common/Awaitable';
-import type { Nullable } from '../../libs/nullable/mod';
+import { Nullable } from '../../../common/Nullable';
 
 export class LockedError extends Error {
   readonly #class = LockedError;

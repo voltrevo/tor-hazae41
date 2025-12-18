@@ -5,7 +5,7 @@ import {
   Integer,
   Type,
 } from '../../../../asn1/index';
-import { Nullable } from '../../../libs/nullable/index';
+import { Nullable } from '../../../../common/Nullable';
 
 export class TBSCertificateVersion {
   readonly #class = TBSCertificateVersion;

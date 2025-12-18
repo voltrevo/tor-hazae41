@@ -4,7 +4,7 @@ import {
   ObjectIdentifier,
   Sequence,
 } from '../../../../asn1/index';
-import { Nullable } from '../../../libs/nullable/index';
+import { Nullable } from '../../../../common/Nullable';
 
 export class AlgorithmIdentifier {
   constructor(
