@@ -1,5 +1,5 @@
-import type { Closure } from '../../../mods/runner/closure/mod';
-import { Context } from '../../../mods/runner/context/mod';
+import type { Closure } from './closure';
+import { Context } from './context';
 
 /**
  * Run a test block

@@ -1,5 +1,5 @@
 import { assert, test, throws } from '../../../phobos/mod';
-import { Err, Ok, Result } from '../../mods/result/mod';
+import { Err, Ok, Result } from './result';
 
 test('try-catch', async () => {
   assert(

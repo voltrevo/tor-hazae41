@@ -1,6 +1,6 @@
-import { Cursor } from '../../cursor/mod';
-import { Bytes } from '../../bytes';
-import { Nullable } from '../../common/Nullable';
+import { Cursor } from '../cursor/mod';
+import { Bytes } from '../bytes';
+import { Nullable } from '../common/Nullable';
 
 export type ReadError = ReadUnderflowError | ReadUnknownError;
 

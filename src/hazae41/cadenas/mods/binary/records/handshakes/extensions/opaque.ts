@@ -3,7 +3,7 @@ import { ReadableVector } from '../../../vectors/readable.js';
 import { Extension } from './extension.js';
 import { Cursor } from '../../../../../../cursor/mod.js';
 import { Unknown } from '../../../../../../binary/mod.js';
-import { SafeUnknown } from '../../../../../../binary/safe-unknown/mod.js';
+import { SafeUnknown } from '../../../../../../binary/safe-unknown';
 
 export namespace OpaqueExtension {
   export function readOrThrow(cursor: Cursor): Extension<Unknown> {

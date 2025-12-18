@@ -1,7 +1,7 @@
-import type { Cursor } from '../../cursor/mod';
-import { Bytes } from '../../bytes';
-import { Readable } from '../readable/mod';
-import { Writable } from '../writable/mod';
+import type { Cursor } from '../cursor/mod';
+import { Bytes } from '../bytes';
+import { Readable } from './readable';
+import { Writable } from './writable';
 
 export class SafeUnknown<N extends number = number> {
   constructor(readonly bytes: Bytes<N>) {}

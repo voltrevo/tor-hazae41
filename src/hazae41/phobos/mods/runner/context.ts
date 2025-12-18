@@ -1,5 +1,5 @@
-import type { Closure } from '../closure/mod';
-import { TestError } from '../error/mod';
+import type { Closure } from './closure';
+import { TestError } from './error';
 
 export interface Context {
   readonly name: string;

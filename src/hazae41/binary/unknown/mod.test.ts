@@ -1,6 +1,6 @@
 // deno-lint-ignore-file no-unused-vars require-await
 import { assert, test } from '../../phobos/mod';
-import { Readable } from '../readable/mod';
+import { Readable } from '../readable';
 import { Unknown } from './mod';
 import { Bytes } from '../../bytes';
 

@@ -8,7 +8,7 @@ import { ServerNameList } from './server_name/server_name_list.js';
 import { SignatureAlgorithms } from './signature_algorithms/signature_algorithms.js';
 import { Cursor } from '../../../../../../cursor/mod.js';
 import { Unknown } from '../../../../../../binary/mod.js';
-import { SafeUnknown } from '../../../../../../binary/safe-unknown/mod.js';
+import { SafeUnknown } from '../../../../../../binary/safe-unknown';
 
 export type ResolvedExtension =
   | ServerNameList

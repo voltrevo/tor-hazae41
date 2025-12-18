@@ -1,1 +1,1 @@
-export * from './result/mod';
+export * from './result/result';

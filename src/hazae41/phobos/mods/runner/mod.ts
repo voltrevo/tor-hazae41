@@ -1,3 +1,3 @@
-export * from './closure/mod';
-export * from './context/mod';
-export * from './global/mod';
+export * from './closure';
+export * from './context';
+export * from './global';

@@ -1,4 +1,4 @@
-export * from './assert/mod';
+export * from './assert';
 export * from './runner/mod';
 export * from './spyer/mod';
 export * from './throws/mod';

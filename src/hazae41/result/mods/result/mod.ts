@@ -2,7 +2,7 @@
  * @module
  */
 
-export * from './catched/mod';
-export * from './err/mod';
-export * from './ok/mod';
-export * from './result/mod';
+export * from './catched';
+export * from './err';
+export * from './ok';
+export * from './result';

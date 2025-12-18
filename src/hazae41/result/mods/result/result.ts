@@ -1,8 +1,10 @@
-import { Awaitable } from '../../../../common/Awaitable';
-import { Nullable } from '../../../../common/Nullable';
-import { Catched } from '../catched/mod';
-import { Err } from '../err/mod';
-import { Ok } from '../ok/mod';
+import { Awaitable } from '../../../common/Awaitable';
+import { Nullable } from '../../../common/Nullable';
+import { Catched } from './catched';
+import { Err } from './err';
+import { Ok } from './ok';
+
+export { Err, Ok };
 
 export interface Unwrappable<T = unknown> {
   getOrThrow(): T;

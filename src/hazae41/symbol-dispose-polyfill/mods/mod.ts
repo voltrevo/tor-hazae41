@@ -1,1 +1,1 @@
-import './symbol-dispose-polyfill/mod';
+import './symbol-dispose-polyfill';
