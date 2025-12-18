@@ -16,7 +16,7 @@ export function resolveOnAbort(signal: AbortSignal) {
 
   signal.addEventListener('abort', onAbort, { passive: true });
 
-  resolveOnAbort.promise.then(onClean);
+  resolveOnAbort.promise.finally(onClean);
 
   return resolveOnAbort.promise;
 }
@@ -31,7 +31,7 @@ export function rejectOnAbort(signal: AbortSignal) {
 
   signal.addEventListener('abort', onAbort, { passive: true });
 
-  rejectOnAbort.promise.then(onClean);
+  rejectOnAbort.promise.finally(onClean);
 
   return rejectOnAbort.promise;
 }

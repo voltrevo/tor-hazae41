@@ -11,7 +11,7 @@ const directory = resolve('./dist/test/');
 const { pathname } = new URL(import.meta.url);
 console.log(relative(directory, pathname.replace('.mjs', '.ts')));
 
-test('AsyncEventTarget', async ({ test, wait }) => {
+test('AsyncEventTarget', async () => {
   const target = new SuperEventTarget<{
     test: (order: 'first' | 'second') => number;
     error: (reason: unknown) => void;
@@ -48,7 +48,7 @@ test('AsyncEventTarget', async ({ test, wait }) => {
     { passive: true }
   );
 
-  test('wait', async () => {
+  const innerTestPromise = test('wait', async () => {
     const signal = AbortSignal.timeout(1000);
 
     const first = await waitWithCloseAndErrorOrThrow(
@@ -90,7 +90,7 @@ test('AsyncEventTarget', async ({ test, wait }) => {
 
   stack.push('done');
 
-  await wait();
+  await innerTestPromise;
 
   assert(stack.length === 3);
   assert(stack[0] === 'first');

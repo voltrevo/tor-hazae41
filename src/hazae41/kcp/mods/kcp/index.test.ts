@@ -1,10 +1,9 @@
-import { Writable } from '../../../binary/mod';
+import { Writable, Unknown } from '../../../binary/mod';
 import { HalfDuplex } from '../../../cascade/index';
 import { test } from '../../../phobos/mod';
 import { Bytes } from '../../../bytes/index';
 import { relative, resolve } from 'path';
 import { KcpDuplex } from './stream/index';
-import { OpaqueTriplet } from '../../../asn1/mods/triplets/opaque/opaque';
 
 const directory = resolve('./dist/test/');
 const { pathname } = new URL(import.meta.url);
@@ -12,10 +11,8 @@ console.log(relative(directory, pathname.replace('.mjs', '.ts')));
 
 const conversation = 12345;
 
-function pipeToKcp(raw: {
-  outer: ReadableWritablePair<OpaqueTriplet, Writable>;
-}): {
-  outer: ReadableWritablePair<OpaqueTriplet, Writable>;
+function pipeToKcp(raw: { outer: ReadableWritablePair<Unknown, Writable> }): {
+  outer: ReadableWritablePair<Unknown, Writable>;
 } {
   const kcp = new KcpDuplex({ conversation });
 
@@ -28,7 +25,7 @@ function pipeToKcp(raw: {
 
 function pipeToDummy(
   prefix: string,
-  kcp: { outer: ReadableWritablePair<OpaqueTriplet, Writable> }
+  kcp: { outer: ReadableWritablePair<Unknown, Writable> }
 ) {
   const dummy = new Dummy(prefix);
 
@@ -39,12 +36,12 @@ function pipeToDummy(
   return dummy;
 }
 
-class Dummy extends HalfDuplex<OpaqueTriplet, Writable> {
+class Dummy extends HalfDuplex<Unknown, Writable> {
   constructor(readonly prefix: string) {
     super({ input: { write: m => this.#onMessage(m) } });
   }
 
-  #onMessage(data: OpaqueTriplet) {
+  #onMessage(data: Unknown) {
     console.log(this.prefix, data.bytes);
   }
 
@@ -54,13 +51,13 @@ class Dummy extends HalfDuplex<OpaqueTriplet, Writable> {
 }
 
 test('kcp', async () => {
-  const forward = new TransformStream<Writable, OpaqueTriplet>({
+  const forward = new TransformStream<Writable, Unknown>({
     transform: (chunk, controller) =>
-      controller.enqueue(OpaqueTriplet.writeFromOrThrow(chunk)),
+      controller.enqueue(Unknown.writeFromOrThrow(chunk)),
   });
-  const backward = new TransformStream<Writable, OpaqueTriplet>({
+  const backward = new TransformStream<Writable, Unknown>({
     transform: (chunk, controller) =>
-      controller.enqueue(OpaqueTriplet.writeFromOrThrow(chunk)),
+      controller.enqueue(Unknown.writeFromOrThrow(chunk)),
   });
 
   const rawA = {
@@ -76,6 +73,6 @@ test('kcp', async () => {
   const dummyA = pipeToDummy('a', kcpA);
   const dummyB = pipeToDummy('b', kcpB);
 
-  dummyA.send(new OpaqueTriplet(Bytes.from([1, 2, 3])));
-  dummyB.send(new OpaqueTriplet(Bytes.from([4, 5, 6])));
+  dummyA.send(new Unknown(Bytes.from([1, 2, 3])));
+  dummyB.send(new Unknown(Bytes.from([4, 5, 6])));
 });

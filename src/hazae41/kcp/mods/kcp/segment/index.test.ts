@@ -1,8 +1,7 @@
-import { Readable, Writable } from '../../../../binary/mod';
+import { Readable, Writable, Unknown } from '../../../../binary/mod';
 import { assert, test } from '../../../../phobos/mod';
 import { relative, resolve } from 'path';
 import { KcpSegment } from './index';
-import { OpaqueTriplet } from '../../../../asn1/mods/triplets/opaque/opaque';
 import { Bytes } from '../../../../bytes';
 
 const directory = resolve('./dist/test/');
@@ -17,7 +16,7 @@ test('kcp segment', async () => {
   const timestamp = Date.now() / 1000;
   const serial = 0;
   const unackSerial = 0;
-  const fragment = new OpaqueTriplet(crypto.getRandomValues(Bytes.alloc(130)));
+  const fragment = new Unknown(crypto.getRandomValues(Bytes.alloc(130)));
 
   const segment = KcpSegment.newOrThrow({
     conversation,
