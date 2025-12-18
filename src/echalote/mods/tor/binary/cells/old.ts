@@ -47,7 +47,7 @@ export namespace OldCell {
       if (this.circuit === 0)
         return new Circuitless(undefined, this.command, this.fragment);
 
-      const circuit = tor.circuits.inner.get(this.circuit);
+      const circuit = tor.circuits.value.get(this.circuit);
 
       if (circuit == null) return undefined;
 

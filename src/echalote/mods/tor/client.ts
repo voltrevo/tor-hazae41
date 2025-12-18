@@ -436,7 +436,7 @@ export class SecretTorClientDuplex {
 
     Console.debug(cell2);
 
-    this.circuits.inner.delete(cell2.circuit.id);
+    this.circuits.value.delete(cell2.circuit.id);
 
     await this.events.emit('DESTROY', cell2);
   }

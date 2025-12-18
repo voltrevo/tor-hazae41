@@ -1,5 +1,6 @@
 import { Base16 } from '../../../../base16/index';
 import { Readable } from '../../../../binary/mod';
+import { Nullable } from '../../../../binary/libs/nullable/mod';
 import { Cursor } from '../../../../cursor/mod';
 import { Length } from '../../length/length';
 import { DERTriplet } from '../../resolvers/der/triplet';
@@ -46,7 +47,7 @@ export class OpaqueTriplet {
 
   readIntoOrNull<T extends Readable.Infer<T>>(
     readable: T
-  ): Readable.Output<T> | undefined {
+  ): Nullable<Readable.Output<T>> {
     return Readable.readFromBytesOrNull(readable, this.bytes);
   }
 

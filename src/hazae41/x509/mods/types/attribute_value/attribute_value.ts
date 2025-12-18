@@ -1,5 +1,6 @@
 import { DER, DERTriplet, DERable } from '../../../../asn1/index';
 import { Base16 } from '../../../../base16/index';
+import { Bytes } from '../../../../bytes/index';
 import { Readable, Writable } from '../../../../binary/mod';
 import { InvalidFormatError } from '../../errors';
 import { DirectoryString } from '../directory_string/directory_string';

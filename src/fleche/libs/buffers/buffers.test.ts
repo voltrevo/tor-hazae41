@@ -47,7 +47,7 @@ test('Buffers.fromView with Int8Array', async () => {
 
 test('Buffers.fromView with offset ArrayBuffer', async () => {
   const ab = new ArrayBuffer(10);
-  const view = Bytes.from(ab, 2, 5); // offset 2, length 5
+  const view = new Uint8Array(ab, 2, 5); // offset 2, length 5
   view[0] = 100;
   view[1] = 101;
 

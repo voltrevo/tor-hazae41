@@ -40,9 +40,9 @@ await test('count', async ({ name }) => {
     }
   }
 
-  assert(resource.disposed === false);
+  assert(!resource.disposed);
 
   await new Promise(resolve => setTimeout(resolve, 2000));
 
-  assert(resource.disposed === true);
+  assert(resource.disposed);
 });

@@ -1,4 +1,4 @@
-import { Empty } from '../../../../binary/mod';
+import { Empty, Readable } from '../../../../binary/mod';
 import { Bytes } from '../../../../bytes';
 import { Cursor } from '../../../../cursor/mod';
 import { SmuxSegment, SmuxUpdate } from '../segment/index';

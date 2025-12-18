@@ -1,6 +1,7 @@
 import { Writable } from '../../../binary/mod';
 import { HalfDuplex } from '../../../cascade/index';
 import { test } from '../../../phobos/mod';
+import { Bytes } from '../../../bytes/index';
 import { relative, resolve } from 'path';
 import { KcpDuplex } from './stream/index';
 import { OpaqueTriplet } from '../../../asn1/mods/triplets/opaque/opaque';
