@@ -1,4 +1,4 @@
-import { Circuit, Echalote } from '../echalote';
+import { Circuit, Echalote } from '../hazae41/echalote';
 import { IStorage } from '../storage';
 import { Log } from '../Log';
 import { App } from './App';

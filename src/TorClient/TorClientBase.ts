@@ -1,7 +1,7 @@
 import '../hazae41/symbol-dispose-polyfill/mod';
 
-import { Ciphers, TlsClientDuplex } from '../cadenas';
-import { fetch } from '../fleche';
+import { Ciphers, TlsClientDuplex } from '../hazae41/cadenas';
+import { fetch } from '../hazae41/fleche';
 
 import { CircuitManager } from './CircuitManager';
 import { getErrorDetails } from '../utils/getErrorDetails';

@@ -16,8 +16,8 @@ import type { CircuitBuilder, CircuitBuilderOptions } from './CircuitBuilder';
 import type { IStorage } from '../storage';
 import type { CircuitManager } from './CircuitManager';
 import { AbstractApp } from '../utils/AbstractApp';
-import type { CCADB } from '../cadenas/mods/ccadb/CCADB';
-import { type FetchCerts } from '../cadenas/mods/ccadb/fetchCerts';
+import type { CCADB } from '../hazae41/cadenas/mods/ccadb/CCADB';
+import { type FetchCerts } from '../hazae41/cadenas/mods/ccadb/fetchCerts';
 
 type LogConstructorParams = ConstructorParameters<typeof Log>[0];
 

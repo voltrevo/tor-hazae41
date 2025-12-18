@@ -1,4 +1,4 @@
-import { Consensus } from '../echalote/index.js';
+import { Consensus } from '../hazae41/echalote/index.js';
 import { hash } from './hash.js';
 import { assert } from '../utils/assert.js';
 import { Bytes } from '../hazae41/bytes/index.js';

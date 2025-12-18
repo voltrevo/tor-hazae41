@@ -1,16 +1,16 @@
 import { test } from '../hazae41/phobos/mod';
-import { Circuit, Echalote, TorClientDuplex } from '../echalote';
+import { Circuit, Echalote, TorClientDuplex } from '../hazae41/echalote';
 import { WebSocketDuplex } from './WebSocketDuplex';
-import { createSnowflakeStream } from '../echalote';
-import { computeFullConsensusHash } from '../echalote/mods/tor/consensus/diff';
+import { createSnowflakeStream } from '../hazae41/echalote';
+import { computeFullConsensusHash } from '../hazae41/echalote/mods/tor/consensus/diff';
 import { ConsensusManager } from './ConsensusManager';
 import { Log } from '../Log';
 import { SystemClock } from '../clock';
 import { App } from './App';
 import { MemoryStorage } from '../storage';
 import { CertificateManager } from './CertificateManager';
-import { staticCerts } from '../cadenas/mods/ccadb/staticCerts';
-import { CCADB } from '../cadenas/mods/ccadb/CCADB';
+import { staticCerts } from '../hazae41/cadenas/mods/ccadb/staticCerts';
+import { CCADB } from '../hazae41/cadenas/mods/ccadb/CCADB';
 import { CircuitManager } from './CircuitManager';
 
 function createApp() {

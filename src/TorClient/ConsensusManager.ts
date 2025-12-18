@@ -1,6 +1,6 @@
-import { Consensus, Echalote } from '../echalote';
+import { Consensus, Echalote } from '../hazae41/echalote';
 import { IStorage } from '../storage';
-import { computeFullConsensusHash } from '../echalote/mods/tor/consensus/diff';
+import { computeFullConsensusHash } from '../hazae41/echalote/mods/tor/consensus/diff';
 import { getErrorDetails } from '../utils/getErrorDetails';
 import { IClock } from '../clock';
 import { CertificateManager } from './CertificateManager';

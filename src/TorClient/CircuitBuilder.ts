@@ -1,4 +1,9 @@
-import { Circuit, Consensus, Echalote, TorClientDuplex } from '../echalote';
+import {
+  Circuit,
+  Consensus,
+  Echalote,
+  TorClientDuplex,
+} from '../hazae41/echalote';
 import { Log } from '../Log';
 import { selectRandomElement } from '../utils/random';
 import { isMiddleRelay, isExitRelay } from '../utils/relayFilters';

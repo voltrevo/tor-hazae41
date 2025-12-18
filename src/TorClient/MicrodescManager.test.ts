@@ -3,7 +3,7 @@ import { assert } from '../utils/assert';
 import { MicrodescManager } from './MicrodescManager';
 import { MemoryStorage } from '../storage';
 import { Log } from '../Log';
-import { Echalote } from '../echalote';
+import { Echalote } from '../hazae41/echalote';
 import { App } from './App';
 import { VirtualClock } from '../clock';
 

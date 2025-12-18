@@ -1,4 +1,4 @@
-import { Echalote } from '../echalote';
+import { Echalote } from '../hazae41/echalote';
 
 /**
  * Predicate function to check if a relay is suitable for middle hop.

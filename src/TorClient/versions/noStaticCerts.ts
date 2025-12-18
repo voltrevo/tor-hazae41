@@ -8,8 +8,8 @@ import { MicrodescManager } from '../MicrodescManager';
 import { ConsensusManager } from '../ConsensusManager';
 import { CircuitBuilder } from '../CircuitBuilder';
 import { CircuitManager } from '../CircuitManager';
-import { CCADB } from '../../cadenas/mods/ccadb/CCADB';
-import { fetchCerts } from '../../cadenas/mods/ccadb/fetchCerts';
+import { CCADB } from '../../hazae41/cadenas/mods/ccadb/CCADB.js';
+import { fetchCerts } from '../../hazae41/cadenas/mods/ccadb/fetchCerts.js';
 import { getStorageName } from '../../storage/getStorageName.js';
 
 export { type TorClientOptions } from '../TorClientBase';

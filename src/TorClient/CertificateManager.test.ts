@@ -3,8 +3,8 @@ import { assert } from '../utils/assert';
 import { CertificateManager } from './CertificateManager';
 import { MemoryStorage } from '../storage';
 import { Log } from '../Log';
-import { Circuit } from '../echalote';
-import { Echalote } from '../echalote';
+import { Circuit } from '../hazae41/echalote';
+import { Echalote } from '../hazae41/echalote';
 import { App } from './App';
 import { SystemClock } from '../clock';
 

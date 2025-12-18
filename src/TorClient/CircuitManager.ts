@@ -1,4 +1,8 @@
-import { Circuit, createSnowflakeStream, TorClientDuplex } from '../echalote';
+import {
+  Circuit,
+  createSnowflakeStream,
+  TorClientDuplex,
+} from '../hazae41/echalote';
 import { Log } from '../Log';
 import { IClock } from '../clock';
 import { CircuitBuilder } from './CircuitBuilder';
