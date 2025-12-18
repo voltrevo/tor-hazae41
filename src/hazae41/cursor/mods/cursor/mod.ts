@@ -1,5 +1,4 @@
 import { Bytes } from '../../../bytes';
-import { Data } from '../../libs/dataviews/mod';
 
 export type CursorError = CursorReadError | CursorWriteError;
 
@@ -104,7 +103,7 @@ export class Cursor<N extends number = number> {
    * @param offset
    */
   constructor(readonly bytes: Bytes<N>) {
-    this.data = Data.fromView(bytes);
+    this.data = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
   }
 
   /**

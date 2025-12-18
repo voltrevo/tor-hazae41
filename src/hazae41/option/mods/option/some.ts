@@ -1,5 +1,5 @@
+import { Awaitable } from '../../../common/Awaitable';
 import { Ok } from '../../../result/mod';
-import { Awaitable } from '../../libs/awaitable/index';
 import { None } from './none';
 import { Option } from './option';
 

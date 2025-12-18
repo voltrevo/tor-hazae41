@@ -1,4 +1,4 @@
-import type { Awaitable } from '../../../libs/awaitable/mod';
+import { Awaitable } from '../../../../common/Awaitable';
 import { Ok } from '../../../mods/result/mod';
 import { None } from '../none/mod';
 import type { Option } from '../option/mod';

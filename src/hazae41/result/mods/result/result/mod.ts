@@ -1,4 +1,4 @@
-import type { Awaitable } from '../../../libs/awaitable/mod';
+import { Awaitable } from '../../../../common/Awaitable';
 import type { Nullable } from '../../../libs/nullable/mod';
 import { Catched } from '../catched/mod';
 import { Err } from '../err/mod';

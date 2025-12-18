@@ -1,4 +1,4 @@
-import type { Awaitable } from '../../libs/awaitable/mod';
+import { Awaitable } from '../../../common/Awaitable';
 import type { Nullable } from '../../libs/nullable/mod';
 
 export class LockedError extends Error {
