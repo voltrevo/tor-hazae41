@@ -1,6 +1,6 @@
-import { test } from '../../../phobos/mod';
-import { assert } from '../../../../utils/assert';
-import { Strings } from './strings.js';
+import { test } from '../phobos/mod';
+import { assert } from '../../utils/assert';
+import { Strings } from './Strings.js';
 
 test('Strings.equalsIgnoreCase with identical strings', async () => {
   const result = Strings.equalsIgnoreCase('hello', 'hello');

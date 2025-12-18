@@ -1,7 +1,7 @@
 import { bitwise_pack_right, bitwise_unpack } from '../../../../utils/bitwise';
 import { rejectOnAbort } from '../../../signals/mods/signals';
-import { Iterators } from '../../libs/iterables/iterators';
-import { Strings } from '../../libs/strings/strings';
+import { Iterators } from '../../../common/Iterators';
+import { Strings } from '../../../common/Strings';
 import { Console } from '../console/index';
 import { HttpClientDuplex } from '../http/client';
 import { WebSocketClose } from './close.js';

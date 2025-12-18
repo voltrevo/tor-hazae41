@@ -4,7 +4,7 @@ import {
   SuperReadableStream,
   SuperWritableStream,
 } from '../../../cascade';
-import { Strings } from '../../libs/strings/strings';
+import { Strings } from '../../../common/Strings';
 import { Console } from '../console/index';
 import {
   ContentLengthOverflowError,
