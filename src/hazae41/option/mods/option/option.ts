@@ -1,7 +1,6 @@
+import { Nullable } from '../../../common/Nullable';
 import { None, NoneInit } from './none';
 import { Some, SomeInit } from './some';
-
-export type Nullable<T> = T | undefined | null;
 
 export type Optional<T> = T | undefined;
 

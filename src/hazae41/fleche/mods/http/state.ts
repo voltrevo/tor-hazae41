@@ -1,6 +1,6 @@
-import { Nullable } from '../../libs/nullable/index';
 import { Bytes } from '../../../bytes';
 import { SuperReadableStream } from '../../../cascade';
+import { Nullable } from '../../../common/Nullable';
 import { Resizer } from '../../../common/Resizer';
 
 export type HttpState =

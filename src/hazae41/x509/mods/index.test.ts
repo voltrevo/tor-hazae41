@@ -6,7 +6,7 @@ import {
   writeToBytesOrThrow,
 } from './types/index';
 import { Bytes } from '../../bytes';
-import { TestCerts } from '../../TestCerts';
+import { TestCerts } from '../../common/TestCerts';
 
 test('Cert Ed25519', async () => {
   const bytes = PEM.decodeOrThrow(TestCerts.ed25519);

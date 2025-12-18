@@ -1,5 +1,5 @@
 import { DERTriplet, ObjectIdentifier } from '../../../../asn1/index';
-import { invert } from '../../../libs/invert/index';
+import { invert } from '../../../../common/invert';
 import { OIDs } from '../../oids/oids';
 
 export namespace KnownAttributeTypes {

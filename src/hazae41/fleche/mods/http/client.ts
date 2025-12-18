@@ -4,7 +4,6 @@ import {
   SuperReadableStream,
   SuperWritableStream,
 } from '../../../cascade';
-import { Nullable } from '../../libs/nullable/index';
 import { Strings } from '../../libs/strings/strings';
 import { Console } from '../console/index';
 import {
@@ -26,6 +25,7 @@ import { Unknown, Writable } from '../../../binary/mod';
 import { Future } from '../../../future';
 import { Awaitable } from '../../../common/Awaitable';
 import { Resizer } from '../../../common/Resizer';
+import { Nullable } from '../../../common/Nullable';
 
 export namespace Lines {
   export const rn = Bytes.encodeUtf8('\r\n');

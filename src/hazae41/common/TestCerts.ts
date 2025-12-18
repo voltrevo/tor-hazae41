@@ -1,4 +1,4 @@
-import { Bytes } from './bytes';
+import { Bytes } from '../bytes';
 
 export namespace TestCerts {
   export const ed25519 = `-----BEGIN CERTIFICATE-----

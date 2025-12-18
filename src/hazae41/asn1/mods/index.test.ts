@@ -2,7 +2,7 @@ import { Readable, Writable } from '../../binary/mod';
 import { assert, test } from '../../phobos/mod';
 import { DER } from './resolvers/der/index';
 import { Bytes } from '../../bytes';
-import { TestCerts } from '../../TestCerts';
+import { TestCerts } from '../../common/TestCerts';
 
 export namespace PEM {
   export const header = `-----BEGIN CERTIFICATE-----`;

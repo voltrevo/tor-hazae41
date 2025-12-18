@@ -1,5 +1,5 @@
 import { Awaitable } from '../../../../common/Awaitable';
-import { None, Some } from '../../../mods/option/mod';
+import { None, Some } from '../../../../option';
 
 export namespace Ok {
   /**

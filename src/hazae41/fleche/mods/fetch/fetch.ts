@@ -1,10 +1,10 @@
 import { rejectOnAbort } from '../../../signals/mods/signals';
-import { Nullable } from '../../libs/nullable/index';
 import { HttpClientDuplex } from '../http/client';
 import { Bytes } from '../../../bytes';
 import { Unknown, Writable } from '../../../binary/mod';
 import { Disposer } from '../../../disposer';
 import { Future } from '../../../future';
+import { Nullable } from '../../../common/Nullable';
 
 export interface FetchParams {
   readonly stream: ReadableWritablePair<Unknown, Writable>;
