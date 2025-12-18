@@ -1,3 +1,4 @@
+import { assert } from '../../../../utils/assert';
 import { test } from '../../../phobos/mod';
 import { Cell } from './index';
 
@@ -22,14 +23,15 @@ class Pointer {
 function* getPointersOrThrow() {
   yield new Pointer(123);
   yield new Pointer(456);
-  throw new Error();
+  throw new Error('msg');
   yield new Pointer(789);
 }
 
 test('slot', async () => {
-  try {
-    using result = new Cell(new Pointer(1));
+  using result = new Cell(new Pointer(1));
+  let threw = false;
 
+  try {
     for (const pointer of getPointersOrThrow()) {
       using a = pointer;
       const b = result.get();
@@ -38,7 +40,11 @@ test('slot', async () => {
 
       using _ = b;
     }
-  } catch {
-    console.error('fixme');
+  } catch (e) {
+    assert((e as Error).message === 'msg');
+    threw = true;
   }
+
+  assert(threw);
+  assert(result.get().value === 1 + 123 + 456);
 });
