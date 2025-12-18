@@ -36,9 +36,7 @@ class Dummy extends HalfDuplex<Unknown, Writable> {
     super({ input: { write: m => this.#onMessage(m) } });
   }
 
-  #onMessage(data: Unknown) {
-    console.log(this.prefix, data.bytes);
-  }
+  #onMessage(_data: Unknown) {}
 
   send(data: Writable) {
     this.output.enqueue(data);

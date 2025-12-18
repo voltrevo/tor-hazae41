@@ -1,13 +1,9 @@
 import { test } from '../../../phobos/mod';
 import { Cell } from './index';
 
-function alloc(value: number) {
-  console.log(`alloc(${value})`);
-}
+function alloc(_value: number) {}
 
-function free(value: number) {
-  console.log(`free(${value})`);
-}
+function free(_value: number) {}
 
 class Pointer {
   constructor(readonly value: number) {
@@ -26,15 +22,12 @@ class Pointer {
 function* getPointersOrThrow() {
   yield new Pointer(123);
   yield new Pointer(456);
-  console.log('throwing');
   throw new Error();
   yield new Pointer(789);
 }
 
-test('slot', async ({ name }) => {
+test('slot', async () => {
   try {
-    console.log(`--- ${name} ---`);
-
     using result = new Cell(new Pointer(1));
 
     for (const pointer of getPointersOrThrow()) {
@@ -45,8 +38,6 @@ test('slot', async ({ name }) => {
 
       using _ = b;
     }
-
-    console.log(result.get().value);
   } catch {
     console.error('fixme');
   }

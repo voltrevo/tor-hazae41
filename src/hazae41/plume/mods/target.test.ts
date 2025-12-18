@@ -18,8 +18,6 @@ test('AsyncEventTarget', async () => {
   target.on(
     'test',
     async order => {
-      console.log('on first', order);
-
       if (order !== 'first') return;
 
       stack.push(order);
@@ -32,8 +30,6 @@ test('AsyncEventTarget', async () => {
   target.on(
     'test',
     async order => {
-      console.log('on second', order);
-
       if (order !== 'second') return;
 
       stack.push(order);
@@ -46,7 +42,7 @@ test('AsyncEventTarget', async () => {
   const innerTestPromise = test('wait', async () => {
     const signal = AbortSignal.timeout(1000);
 
-    const first = await waitWithCloseAndErrorOrThrow(
+    await waitWithCloseAndErrorOrThrow(
       target,
       'test',
       (future: Future<string>, order) => {
@@ -55,11 +51,9 @@ test('AsyncEventTarget', async () => {
       signal
     );
 
-    console.log('wait first', first);
-
     const signal2 = AbortSignal.timeout(1000);
 
-    const second = await waitWithCloseAndErrorOrThrow(
+    await waitWithCloseAndErrorOrThrow(
       target,
       'test',
       (future: Future<string>, order) => {
@@ -67,20 +61,16 @@ test('AsyncEventTarget', async () => {
       },
       signal2
     );
-
-    console.log('wait second', second);
   });
 
   await new Promise(ok => setTimeout(ok, 100));
 
   const first = await target.emit('test', 'first');
-  console.log('emit first', first);
   assert(first.isSome(), 'Event has not been handled');
 
   await new Promise(ok => setTimeout(ok, 100));
 
   const second = await target.emit('test', 'second');
-  console.log('emit second', second);
   assert(second.isSome(), 'Event has not been handled');
 
   stack.push('done');

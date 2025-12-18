@@ -36,11 +36,7 @@ class B<T extends Disposable> {
   }
 }
 
-test('holder', async ({ name }) => {
-  console.log(`--- ${name} ---`);
-
-  console.log(name);
-
+test('holder', async () => {
   const resource = new Resource();
   const box = Box.wrap(resource);
 
@@ -52,9 +48,7 @@ test('holder', async ({ name }) => {
   assert(resource.disposed);
 });
 
-test('dummy', async ({ name }) => {
-  console.log(`--- ${name} ---`);
-
+test('dummy', async () => {
   const resource = new Resource();
 
   /**
@@ -69,9 +63,7 @@ test('dummy', async ({ name }) => {
   assert(resource.disposed);
 });
 
-test('borrow', async ({ name }) => {
-  console.log(`--- ${name} ---`);
-
+test('borrow', async () => {
   const resource = new Resource();
 
   async function borrow(parent: Borrowable<Resource>) {
@@ -86,8 +78,6 @@ test('borrow', async ({ name }) => {
 
     assert(borrow.borrowed === false);
     assert(parent.borrowed === true);
-
-    console.log('returning first borrow');
   }
 
   async function borrow2(parent: Borrowable<Resource>) {
@@ -97,8 +87,6 @@ test('borrow', async ({ name }) => {
 
     assert(borrow.borrowed === false);
     assert(parent.borrowed === true);
-
-    console.log('returning second borrow');
   }
 
   {

@@ -1,7 +1,7 @@
 import { assert, test, throws } from '../../../phobos/mod';
 import { Err, Ok, Result } from '../../mods/result/mod';
 
-test('try-catch', async ({ name }) => {
+test('try-catch', async () => {
   assert(
     throws(() =>
       Result.unthrowSync(_t => {
@@ -21,8 +21,6 @@ test('try-catch', async ({ name }) => {
     ),
     `Should have been catched`
   );
-
-  console.log(name);
 });
 
 function* okGenerator() {

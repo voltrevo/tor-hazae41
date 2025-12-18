@@ -9,9 +9,7 @@ class Resource implements Disposable {
   }
 }
 
-test('count', async ({ name }) => {
-  console.log(`--- ${name} ---`);
-
+test('count', async () => {
   const resource = new Resource();
 
   {
