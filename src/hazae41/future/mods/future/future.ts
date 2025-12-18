@@ -28,11 +28,12 @@ export class Future<T> {
 
   static resolve<T>(value: T | PromiseLike<T>): Future<Awaited<T>>;
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   static resolve(value?: any) {
     return new Future(Promise.resolve(value));
   }
 
-  static reject<T = never>(reason?: any): Future<T> {
+  static reject<T = never>(reason?: unknown): Future<T> {
     return new Future<T>(Promise.reject<T>(reason));
   }
 

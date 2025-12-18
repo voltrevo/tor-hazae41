@@ -21,7 +21,7 @@ export class PrintableString {
     /**
      * a-z, A-Z, ' () +,-.?:/= and SPACE
      */
-    return /^[a-zA-Z0-9'()+,\-.\/:=? ]+$/g.test(value);
+    return /^[a-zA-Z0-9'()+,\-./:=? ]+$/g.test(value);
   }
 
   static createOrThrow(type = this.type, value: string) {

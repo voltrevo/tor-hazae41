@@ -1,7 +1,7 @@
 import { assert, test } from '../../../phobos/mod';
 import { Future } from './future';
 
-test('future', async ({ test }) => {
+test('future', async () => {
   const future = new Future<void>();
 
   const start = Date.now();

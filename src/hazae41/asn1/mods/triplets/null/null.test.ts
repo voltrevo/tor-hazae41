@@ -10,7 +10,7 @@ function hexToCursor(hex: string) {
   return new Cursor(buffer);
 }
 
-function checkReadWrite(hex: string) {
+function checkReadWrite(_hex: string) {
   const input = hexToCursor('05 00');
   const triplet = Null.DER.readOrThrow(input);
 

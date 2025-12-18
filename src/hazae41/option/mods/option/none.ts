@@ -8,6 +8,7 @@ export class NoneError extends Error {
   }
 }
 
+// eslint-disable-next-line @typescript-eslint/no-empty-object-type
 export interface NoneInit {
   /* Nothing */
 }
@@ -22,7 +23,7 @@ export class None {
     return new None();
   }
 
-  static from(init: NoneInit) {
+  static from(_init: NoneInit) {
     return new None();
   }
 
@@ -30,6 +31,7 @@ export class None {
    * Returns an iterator over the possibly contained value
    * @yields `this.inner` if `Some`
    */
+  // eslint-disable-next-line require-yield
   *[Symbol.iterator](): Iterator<never, void> {
     return;
   }
@@ -47,7 +49,7 @@ export class None {
    * @param somePredicate
    * @returns `true` if `Some` and `await somePredicate(this.inner)`, `None` otherwise
    */
-  async isSomeAnd(somePredicate: unknown): Promise<false> {
+  async isSomeAnd(_somePredicate: unknown): Promise<false> {
     return false;
   }
 
@@ -56,7 +58,7 @@ export class None {
    * @param somePredicate
    * @returns `true` if `Some` and `somePredicate(this.inner)`, `None` otherwise
    */
-  isSomeAndSync(somePredicate: unknown): false {
+  isSomeAndSync(_somePredicate: unknown): false {
     return false;
   }
 
@@ -159,7 +161,7 @@ export class None {
    * @param somePredicate
    * @returns `Some` if `Some` and `await somePredicate(this.inner)`, `None` otherwise
    */
-  async filter(somePredicate: unknown): Promise<this> {
+  async filter(_somePredicate: unknown): Promise<this> {
     return this;
   }
 
@@ -168,7 +170,7 @@ export class None {
    * @param somePredicate
    * @returns `Some` if `Some` and `somePredicate(this.inner)`, `None` otherwise
    */
-  filterSync(somePredicate: unknown): this {
+  filterSync(_somePredicate: unknown): this {
     return this;
   }
 
@@ -185,7 +187,7 @@ export class None {
    * @param value
    * @returns `true` if `Some` and `this.inner === value`, `None` otherwise
    */
-  contains(value: unknown): false {
+  contains(_value: unknown): false {
     return false;
   }
 
@@ -194,7 +196,7 @@ export class None {
    * @param someCallback
    * @returns `this`
    */
-  async inspect(someCallback: unknown): Promise<this> {
+  async inspect(_someCallback: unknown): Promise<this> {
     return this;
   }
 
@@ -203,7 +205,7 @@ export class None {
    * @param someCallback
    * @returns `this`
    */
-  inspectSync(someCallback: unknown): this {
+  inspectSync(_someCallback: unknown): this {
     return this;
   }
 
@@ -212,7 +214,7 @@ export class None {
    * @param someMapper
    * @returns `Some(await someMapper(this.inner))` if `Some`, `this` if `None`
    */
-  async map(someMapper: unknown): Promise<this> {
+  async map(_someMapper: unknown): Promise<this> {
     return this;
   }
 
@@ -221,7 +223,7 @@ export class None {
    * @param someMapper
    * @returns `Some(someMapper(this.inner))` if `Some`, `this` if `None`
    */
-  mapSync(someMapper: unknown): this {
+  mapSync(_someMapper: unknown): this {
     return this;
   }
 
@@ -231,7 +233,7 @@ export class None {
    * @param someMapper
    * @returns `value` if `None`, `await someMapper(this.inner)` if `Some`
    */
-  async mapOr<U>(value: U, someMapper: unknown): Promise<U> {
+  async mapOr<U>(value: U, _someMapper: unknown): Promise<U> {
     return value;
   }
 
@@ -241,7 +243,7 @@ export class None {
    * @param someMapper
    * @returns `value` if `None`, `someMapper(this.inner)` if `Some`
    */
-  mapOrSync<U>(value: U, someMapper: unknown): U {
+  mapOrSync<U>(value: U, _someMapper: unknown): U {
     return value;
   }
 
@@ -253,7 +255,7 @@ export class None {
    */
   async mapOrElse<U>(
     noneCallback: () => Awaitable<U>,
-    someMapper: unknown
+    _someMapper: unknown
   ): Promise<U> {
     return await noneCallback();
   }
@@ -264,7 +266,7 @@ export class None {
    * @param someMapper
    * @returns `someMapper(this.inner)` if `Some`, `noneCallback()` if `None`
    */
-  mapOrElseSync<U>(noneCallback: () => U, someMapper: unknown): U {
+  mapOrElseSync<U>(noneCallback: () => U, _someMapper: unknown): U {
     return noneCallback();
   }
 
@@ -273,7 +275,7 @@ export class None {
    * @param value
    * @returns `None` if `None`, `value` if `Some`
    */
-  and(value: unknown): this {
+  and(_value: unknown): this {
     return this;
   }
 
@@ -282,7 +284,7 @@ export class None {
    * @param someMapper
    * @returns `None` if `None`, `await someMapper(this.inner)` if `Some`
    */
-  async andThen(someMapper: unknown): Promise<this> {
+  async andThen(_someMapper: unknown): Promise<this> {
     return this;
   }
 
@@ -291,7 +293,7 @@ export class None {
    * @param someMapper
    * @returns `None` if `None`, `someMapper(this.inner)` if `Some`
    */
-  andThenSync(someMapper: unknown): this {
+  andThenSync(_someMapper: unknown): this {
     return this;
   }
 
@@ -336,7 +338,7 @@ export class None {
    * @param other
    * @returns `Some([this.inner, other.inner])` if both are `Some`, `None` if one of them is `None`
    */
-  zip(other: unknown): None {
+  zip(_other: unknown): None {
     return this;
   }
 }

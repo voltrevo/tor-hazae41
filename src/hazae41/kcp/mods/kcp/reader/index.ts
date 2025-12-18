@@ -1,4 +1,4 @@
-import { Empty, /*any,*/ Readable } from '../../../../binary/mod';
+import { Empty, /*any,*/ Readable, Writable } from '../../../../binary/mod';
 import { Cursor } from '../../../../cursor/mod';
 import { Console } from '../../console/index';
 import { KcpSegment } from '../segment/index';
@@ -25,14 +25,16 @@ export class UnknownKcpCommandError extends Error {
 }
 
 export type SecretKcpReaderEvents = {
-  ack: (segment: KcpSegment<any>) => void;
+  ack: (segment: KcpSegment<Writable>) => void;
 };
 
 export class SecretKcpReader {
-  readonly #buffer = new Map<number, KcpSegment<any>>();
+  readonly #buffer = new Map<number, KcpSegment<Writable>>();
 
   constructor(readonly parent: SecretKcpDuplex) {}
 
+  // fixme
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   async onWrite(chunk: any) {
     const cursor = new Cursor(chunk.bytes);
 
@@ -44,7 +46,7 @@ export class SecretKcpReader {
     return;
   }
 
-  async #onSegment(segment: KcpSegment<any>) {
+  async #onSegment(segment: KcpSegment<Writable>) {
     if (segment.conversation !== this.parent.conversation) return;
 
     if (segment.command === KcpSegment.commands.push)
@@ -57,7 +59,7 @@ export class SecretKcpReader {
     throw new UnknownKcpCommandError();
   }
 
-  async #onPushSegment(segment: KcpSegment<any>) {
+  async #onPushSegment(segment: KcpSegment<Writable>) {
     const conversation = this.parent.conversation;
     const command = KcpSegment.commands.ack;
     const timestamp = segment.timestamp;
@@ -91,7 +93,7 @@ export class SecretKcpReader {
 
     this.parent.recvCounter++;
 
-    let next: KcpSegment<any> | undefined;
+    let next: KcpSegment<Writable> | undefined;
 
     while ((next = this.#buffer.get(this.parent.recvCounter))) {
       Console.debug(`Unblocked next KCP segment`);
@@ -103,7 +105,7 @@ export class SecretKcpReader {
     }
   }
 
-  async #onAckSegment(segment: KcpSegment<any>) {
+  async #onAckSegment(segment: KcpSegment<Writable>) {
     const future = this.parent.resolveOnAckBySerial.get(segment.serial);
 
     if (future == null) return;
@@ -112,7 +114,7 @@ export class SecretKcpReader {
     future.resolve();
   }
 
-  async #onWaskSegment(segment: KcpSegment<any>) {
+  async #onWaskSegment(_segment: KcpSegment<Writable>) {
     const conversation = this.parent.conversation;
     const command = KcpSegment.commands.wins;
     const serial = 0;

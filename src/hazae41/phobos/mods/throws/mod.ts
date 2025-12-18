@@ -9,7 +9,7 @@ export function throws(closure: () => unknown): boolean {
   try {
     closure();
     return false;
-  } catch (_: unknown) {
+  } catch {
     return true;
   }
 }
@@ -25,7 +25,7 @@ export async function rejects(
   try {
     await closure();
     return false;
-  } catch (_: unknown) {
+  } catch {
     return true;
   }
 }

@@ -95,7 +95,7 @@ export class Some<T> {
    * @param value
    * @returns `this.inner` if `Some`, `value` if `None`
    */
-  getOr(value: unknown): T {
+  getOr(_value: unknown): T {
     return this.inner;
   }
 
@@ -104,7 +104,7 @@ export class Some<T> {
    * @param noneCallback
    * @returns `this.inner` if `Some`, `await noneCallback()` if `None`
    */
-  async getOrElse(noneCallback: unknown): Promise<T> {
+  async getOrElse(_noneCallback: unknown): Promise<T> {
     return this.inner;
   }
 
@@ -113,7 +113,7 @@ export class Some<T> {
    * @param noneCallback
    * @returns `this.inner` if `Some`, `noneCallback()` if `None`
    */
-  getOrElseSync(noneCallback: unknown): T {
+  getOrElseSync(_noneCallback: unknown): T {
     return this.inner;
   }
 
@@ -130,7 +130,7 @@ export class Some<T> {
    * @param error
    * @returns `Ok(this.inner)` if `Some`, `Err(error)` if `None`
    */
-  okOr(error: unknown): Ok<T> {
+  okOr(_error: unknown): Ok<T> {
     return new Ok(this.inner);
   }
 
@@ -139,7 +139,7 @@ export class Some<T> {
    * @param noneCallback
    * @returns `Ok(this.inner)` if `Some`, `Err(await noneCallback())` is `None`
    */
-  async okOrElse(noneCallback: unknown): Promise<Ok<T>> {
+  async okOrElse(_noneCallback: unknown): Promise<Ok<T>> {
     return new Ok(this.inner);
   }
 
@@ -148,7 +148,7 @@ export class Some<T> {
    * @param noneCallback
    * @returns `Ok(this.inner)` if `Some`, `Err(noneCallback())` is `None`
    */
-  okOrElseSync(noneCallback: unknown): Ok<T> {
+  okOrElseSync(_noneCallback: unknown): Ok<T> {
     return new Ok(this.inner);
   }
 
@@ -304,7 +304,7 @@ export class Some<T> {
    * @param value
    * @returns `this` if `Some`, `value` if `None`
    */
-  or(value: unknown): this {
+  or(_value: unknown): this {
     return this;
   }
 
@@ -313,7 +313,7 @@ export class Some<T> {
    * @param noneCallback
    * @returns `this` if `Some`, `await noneCallback()` if `None`
    */
-  async orElse(noneCallback: unknown): Promise<this> {
+  async orElse(_noneCallback: unknown): Promise<this> {
     return this;
   }
 
@@ -322,7 +322,7 @@ export class Some<T> {
    * @param noneCallback
    * @returns `this` if `Some`, `noneCallback()` if `None`
    */
-  orElseSync(noneCallback: unknown): this {
+  orElseSync(_noneCallback: unknown): this {
     return this;
   }
 

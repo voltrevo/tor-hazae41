@@ -123,11 +123,15 @@ export class Simplex<W, R = W> {
 
     try {
       this.#reader.close();
-    } catch {}
+    } catch {
+      // fixme
+    }
 
     try {
       this.#writer.error();
-    } catch {}
+    } catch {
+      // fixme
+    }
 
     this.#closed = {};
   }
@@ -141,11 +145,15 @@ export class Simplex<W, R = W> {
     } finally {
       try {
         this.#writer.error(reason);
-      } catch {}
+      } catch {
+        // fixme
+      }
 
       try {
         this.#reader.error(reason);
-      } catch {}
+      } catch {
+        // fixme
+      }
 
       this.#errored = { reason };
     }
@@ -163,7 +171,9 @@ export class Simplex<W, R = W> {
   enqueue(chunk?: R) {
     try {
       this.#reader.enqueue(chunk);
-    } catch {}
+    } catch {
+      // fixme
+    }
   }
 
   error(reason?: unknown) {

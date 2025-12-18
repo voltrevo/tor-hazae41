@@ -1,4 +1,4 @@
-import { Empty, Readable } from '../../../../binary/mod';
+import { Empty, Readable, Writable } from '../../../../binary/mod';
 import { Bytes } from '../../../../bytes';
 import { Cursor } from '../../../../cursor/mod';
 import { SmuxSegment, SmuxUpdate } from '../segment/index';
@@ -39,6 +39,8 @@ export class InvalidSmuxStreamError extends Error {
 export class SecretSmuxReader {
   constructor(readonly parent: SecretSmuxDuplex) {}
 
+  // fixme
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   async onWrite(chunk: any) {
     if (this.parent.buffer.offset)
       return await this.#onReadBuffered(chunk.bytes);
@@ -57,11 +59,11 @@ export class SecretSmuxReader {
     const cursor = new Cursor(chunk);
 
     while (cursor.remaining) {
-      let segment: SmuxSegment<any>;
+      let segment: SmuxSegment<Writable>;
 
       try {
         segment = Readable.readOrRollbackAndThrow(SmuxSegment, cursor);
-      } catch (e: unknown) {
+      } catch {
         this.parent.buffer.writeOrThrow(cursor.after);
         break;
       }
@@ -70,7 +72,7 @@ export class SecretSmuxReader {
     }
   }
 
-  async #onSegment(segment: SmuxSegment<any>) {
+  async #onSegment(segment: SmuxSegment<Writable>) {
     if (segment.version !== 2)
       throw new InvalidSmuxVersionError(segment.version);
 
@@ -88,6 +90,8 @@ export class SecretSmuxReader {
     throw new UnknownSmuxCommandError();
   }
 
+  // fixme
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   async #onPshSegment(segment: SmuxSegment<any>) {
     if (segment.stream !== this.parent.stream)
       throw new InvalidSmuxStreamError(segment.stream);
@@ -119,7 +123,7 @@ export class SecretSmuxReader {
     }
   }
 
-  async #onNopSegment(ping: SmuxSegment<any>) {
+  async #onNopSegment(ping: SmuxSegment<Writable>) {
     const version = 2;
     const command = SmuxSegment.commands.nop;
     const stream = ping.stream;
@@ -130,6 +134,8 @@ export class SecretSmuxReader {
     this.parent.output.enqueue(pong);
   }
 
+  // fixme
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   async #onUpdSegment(segment: SmuxSegment<any>) {
     if (segment.stream !== this.parent.stream)
       throw new InvalidSmuxStreamError(segment.stream);
@@ -140,7 +146,7 @@ export class SecretSmuxReader {
     this.parent.peerWindow = update.window;
   }
 
-  async #onFinSegment(segment: SmuxSegment<any>) {
+  async #onFinSegment(segment: SmuxSegment<Writable>) {
     if (segment.stream !== this.parent.stream)
       throw new InvalidSmuxStreamError(segment.stream);
 

@@ -4,7 +4,7 @@ import { Err, Ok, Result } from '../../mods/result/mod';
 test('try-catch', async ({ name }) => {
   assert(
     throws(() =>
-      Result.unthrowSync(t => {
+      Result.unthrowSync(_t => {
         throw new Error();
       })
     ),

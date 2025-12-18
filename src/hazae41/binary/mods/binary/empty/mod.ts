@@ -8,7 +8,7 @@ export class Empty {
   }
 
   // deno-lint-ignore no-unused-vars
-  writeOrThrow(cursor: Cursor) {
+  writeOrThrow(_cursor: Cursor) {
     return;
   }
 
@@ -18,7 +18,7 @@ export class Empty {
 }
 
 export namespace Empty {
-  export function readOrThrow(cursor: Cursor): Empty {
+  export function readOrThrow(_cursor: Cursor): Empty {
     return new Empty();
   }
 }

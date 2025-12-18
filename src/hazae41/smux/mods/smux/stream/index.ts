@@ -54,6 +54,8 @@ export class SmuxDuplex {
 }
 
 export class SecretSmuxDuplex {
+  // fixme
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   readonly duplex: FullDuplex<any, Writable>;
 
   readonly reader: SecretSmuxReader;
@@ -80,7 +82,7 @@ export class SecretSmuxDuplex {
     this.reader = new SecretSmuxReader(this);
     this.writer = new SecretSmuxWriter(this);
 
-    this.duplex = new FullDuplex<any, Writable>({
+    this.duplex = new FullDuplex<unknown, Writable>({
       input: {
         write: m => this.reader.onWrite(m),
       },

@@ -1,10 +1,12 @@
-import { Option } from './option';
+import { assert } from '../../../../utils/assert';
+import { test } from '../../../phobos/mod';
 import { Some } from './some';
 
-async function doNoRun(option: Option<number>) {
-  const mapped = option
+test('option methods', async () => {
+  const mapped = new Some(3)
     .mapSync(x => x + 2)
     .mapSync(x => x * 2)
-    .zip(new Some('lol'))
-    .mapSync(([x, y]) => {}).inner;
-}
+    .zip(new Some('lol')).inner;
+
+  assert(JSON.stringify(mapped) === '[10,"lol"]');
+});

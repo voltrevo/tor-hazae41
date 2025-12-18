@@ -8,7 +8,7 @@ export class NoneError extends Error {
   }
 }
 
-// deno-lint-ignore no-empty-interface
+// eslint-disable-next-line @typescript-eslint/no-empty-object-type
 export interface NoneInit {
   /* Nothing */
 }
@@ -32,6 +32,7 @@ export class None {
    * @yields `this.inner` if `Some`
    */
   // deno-lint-ignore require-yield
+  // eslint-disable-next-line require-yield
   *[Symbol.iterator](): Iterator<never, void> {
     return;
   }

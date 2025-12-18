@@ -5,6 +5,7 @@ import { WeakParameters } from '../libs/parameters/index';
 import { Awaitable } from '../libs/promises/index';
 import { Voidable } from '../libs/voidable/index';
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type SuperEventDescriptor = (...args: any) => any;
 
 export type SuperEventMap = Record<string, SuperEventDescriptor>;
@@ -21,7 +22,10 @@ export type SuperEventWaiter<T extends SuperEventDescriptor, R> = (
 export class SuperEventTarget<M extends SuperEventMap> {
   readonly #listeners = new Map<
     keyof M,
-    Map<SuperEventListener<any>, AddEventListenerOptions & Disposable>
+    Map<
+      SuperEventListener<SuperEventDescriptor>,
+      AddEventListenerOptions & Disposable
+    >
   >();
 
   get listeners() {
@@ -44,7 +48,7 @@ export class SuperEventTarget<M extends SuperEventMap> {
 
     if (listeners === undefined) {
       listeners = new Map<
-        SuperEventListener<any>,
+        SuperEventListener<SuperEventDescriptor>,
         AddEventListenerOptions & Disposable
       >();
       this.#listeners.set(type, listeners);

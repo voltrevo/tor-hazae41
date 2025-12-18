@@ -23,7 +23,7 @@ export class Extensions {
 
   constructor(readonly extensions: Extension[]) {}
 
-  toDER(): Constructed.DER<any> {
+  toDER(): Constructed.DER {
     return Constructed.create(Extensions.type, [
       Sequence.create(
         undefined,
@@ -55,7 +55,7 @@ export class Extension<T extends DERable = DERable> {
     readonly extnValue: T
   ) {}
 
-  toDER(): Sequence.DER<any> {
+  toDER(): Sequence.DER {
     const bytes = Writable.writeToBytesOrThrow(this.extnValue.toDER());
     const extnValue = OctetString.create(undefined, bytes);
 

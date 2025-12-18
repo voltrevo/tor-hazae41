@@ -163,7 +163,7 @@ export class Err<T = unknown> {
    * Returns an iterator over the possibly contained value
    * @yields `this.inner` if `Ok`
    */
-  // deno-lint-ignore require-yield
+  // eslint-disable-next-line require-yield
   *[Symbol.iterator](): Iterator<never, void> {
     return;
   }

@@ -61,6 +61,8 @@ export class KcpDuplex {
 }
 
 export class SecretKcpDuplex {
+  // fixme
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   readonly duplex: FullDuplex<any, Writable>;
 
   readonly reader: SecretKcpReader;
@@ -88,7 +90,7 @@ export class SecretKcpDuplex {
     this.reader = new SecretKcpReader(this);
     this.writer = new SecretKcpWriter(this);
 
-    this.duplex = new FullDuplex<any, Writable>({
+    this.duplex = new FullDuplex<unknown, Writable>({
       input: {
         write: m => this.reader.onWrite(m),
       },

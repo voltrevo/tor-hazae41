@@ -92,7 +92,7 @@ export namespace Readable {
       if (cursor.remaining) return undefined;
 
       return output;
-    } catch (e: unknown) {
+    } catch {
       return;
     }
   }
