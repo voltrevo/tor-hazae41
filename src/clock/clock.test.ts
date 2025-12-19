@@ -350,13 +350,13 @@ test('SystemClock - unref/ref cross-platform', async () => {
 
   const timerId = clock.setTimeout(() => {
     executed = true;
-  }, 100);
+  }, 50);
 
   // Should not throw in browser environment
   clock.unref(timerId);
   clock.ref(timerId);
 
-  await new Promise(resolve => setTimeout(resolve, 150));
+  await new Promise(resolve => setTimeout(resolve, 100));
   expect(executed).toBe(true);
 });
 
@@ -364,11 +364,11 @@ test('SystemClock - delayUnref', async () => {
   const clock = new SystemClock();
   let executed = false;
 
-  clock.delayUnref(100).then(() => {
+  clock.delayUnref(50).then(() => {
     executed = true;
   });
 
-  await new Promise(resolve => setTimeout(resolve, 150));
+  await new Promise(resolve => setTimeout(resolve, 100));
   expect(executed).toBe(true);
 });
 
