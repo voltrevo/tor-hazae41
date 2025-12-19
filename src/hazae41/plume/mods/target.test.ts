@@ -68,12 +68,12 @@ describe('AsyncEventTarget', () => {
       })();
     });
 
-    await new Promise(ok => setTimeout(ok, 100));
+    await new Promise(ok => setTimeout(ok, 0));
 
     const first = await target.emit('test', 'first');
     expect(first.isSome()).toBe(true);
 
-    await new Promise(ok => setTimeout(ok, 100));
+    await new Promise(ok => setTimeout(ok, 0));
 
     const second = await target.emit('test', 'second');
     expect(second.isSome()).toBe(true);
