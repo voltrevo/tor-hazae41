@@ -9,6 +9,10 @@ export default defineConfig({
     include: ['src/**/*.test.ts'],
     exclude: ['node_modules', 'dist'],
     testTimeout: 5000,
+    sequence: {
+      concurrent: true,
+    },
+    maxConcurrency: 10,
     coverage: {
       provider: 'v8',
       include: ['src/**/*.ts'],
