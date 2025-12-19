@@ -310,9 +310,15 @@ async function main() {
     }
 
     die(`Request failed: ${message}`, 7);
-  } finally {
-    tor?.close();
   }
+
+  // Read the response body BEFORE closing the Tor client
+  // The response body is a stream that depends on the Tor circuit being open
+  const arrayBuf = await res.arrayBuffer();
+  const buf = Bytes.from(arrayBuf);
+
+  // Now safe to close the Tor client
+  tor?.close();
 
   const headerBlock = (() => {
     const lines: string[] = [];
@@ -325,10 +331,6 @@ async function main() {
     stderr.write(`${headerBlock}\n`);
     if (opts.include) stderr.write('\n');
   }
-
-  // Body
-  const arrayBuf = await res.arrayBuffer();
-  const buf = Bytes.from(arrayBuf);
 
   if (opts.output) {
     writeFileSync(opts.output, buf);
