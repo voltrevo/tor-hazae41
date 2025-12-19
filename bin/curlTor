@@ -9,7 +9,6 @@ const tsxPath = join(__dirname, '../src/bin/curlTor.ts');
 
 const result = spawnSync('npx', ['tsx', tsxPath, ...process.argv.slice(2)], {
   stdio: 'inherit',
-  shell: true,
 });
 
 process.exit(result.status || 0);
