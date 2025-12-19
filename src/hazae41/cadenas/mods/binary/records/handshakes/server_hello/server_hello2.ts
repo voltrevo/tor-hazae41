@@ -9,7 +9,7 @@ import { Handshake } from '../handshake.js';
 import { ReadableVector } from '../../../vectors/readable.js';
 import { Vector } from '../../../vectors/writable.js';
 import { ResolvedExtension } from '../extensions/resolved.js';
-import { Cursor } from '../../../../../../cursor/mod.js';
+import { Cursor } from '../../../../../../cursor/index.js';
 import { Unknown } from '../../../../../../binary/mod.js';
 import { SafeUnknown } from '../../../../../../binary/safe-unknown';
 

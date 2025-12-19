@@ -3,7 +3,7 @@ import { ReadableVector } from '../../../../vectors/readable.js';
 import { Vector } from '../../../../vectors/writable.js';
 import { NameType } from './name_type.js';
 import { Bytes } from '../../../../../../../bytes/index.js';
-import { Cursor } from '../../../../../../../cursor/mod.js';
+import { Cursor } from '../../../../../../../cursor/index.js';
 import { Unknown } from '../../../../../../../binary/mod.js';
 import { SafeUnknown } from '../../../../../../../binary/safe-unknown';
 

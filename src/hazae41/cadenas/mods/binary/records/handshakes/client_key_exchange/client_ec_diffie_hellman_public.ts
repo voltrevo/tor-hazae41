@@ -1,6 +1,6 @@
 import { ECPoint } from '../server_key_exchange/ec_point.js';
 import { Bytes } from '../../../../../../bytes/index.js';
-import { Cursor } from '../../../../../../cursor/mod.js';
+import { Cursor } from '../../../../../../cursor/index.js';
 
 export class ClientECDiffieHellmanPublic {
   constructor(readonly ecdh_Yc: ECPoint) {}

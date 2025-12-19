@@ -1,4 +1,4 @@
-import { Bytes } from '../../../bytes';
+import { Bytes } from '../bytes';
 
 export type CursorError = CursorReadError | CursorWriteError;
 

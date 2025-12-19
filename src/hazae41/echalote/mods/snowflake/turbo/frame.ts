@@ -1,4 +1,4 @@
-import { Cursor } from '../../../../cursor/mod';
+import { Cursor } from '../../../../cursor';
 import { Unknown, Writable } from '../../../../binary/mod';
 import { Bitset } from '../../../../bitset';
 

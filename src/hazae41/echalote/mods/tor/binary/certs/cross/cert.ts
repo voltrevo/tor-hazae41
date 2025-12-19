@@ -1,7 +1,7 @@
 import { ExpiredCertError } from '../../../certs/certs';
 import { Unimplemented } from '../../../errors';
 import { Bytes } from '../../../../../../bytes';
-import { Cursor } from '../../../../../../cursor/mod';
+import { Cursor } from '../../../../../../cursor';
 
 export class CrossCert {
   readonly #class = CrossCert;

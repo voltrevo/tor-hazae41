@@ -1,4 +1,4 @@
-import { Cursor } from '../../../../../../cursor/mod.js';
+import { Cursor } from '../../../../../../cursor/index.js';
 import { ECParameters } from './ec_parameters.js';
 import { ECPoint } from './ec_point.js';
 

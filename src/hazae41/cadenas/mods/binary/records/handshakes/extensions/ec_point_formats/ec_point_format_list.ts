@@ -1,4 +1,4 @@
-import { Cursor } from '../../../../../../../cursor/mod.js';
+import { Cursor } from '../../../../../../../cursor/index.js';
 import { ReadableList } from '../../../../lists/readable.js';
 import { List } from '../../../../lists/writable.js';
 import { Number8 } from '../../../../numbers/number8.js';

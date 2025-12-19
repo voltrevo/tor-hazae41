@@ -1,4 +1,4 @@
-import { Cursor } from '../../../cursor/mod';
+import { Cursor } from '../../../cursor';
 import { Unimplemented } from '../errors/errors';
 
 export class Type {

@@ -1,5 +1,5 @@
 import { Readable } from '../../../../binary/mod';
-import { Cursor } from '../../../../cursor/mod';
+import { Cursor } from '../../../../cursor';
 import { Length } from '../../length/length';
 import { DERTriplet } from '../../resolvers/der/triplet';
 import { Boolean } from '../boolean/boolean';

@@ -3,7 +3,7 @@ import { Cipher } from './ciphers/cipher.js';
 import { TlsClientNoneState, TlsClientState } from './state.js';
 import { App } from '../../../TorClient/App.js';
 import { Bytes } from '../../bytes/index.js';
-import { Cursor } from '../../cursor/mod.js';
+import { Cursor } from '../../cursor/index.js';
 import { Readable, Unknown, Writable } from '../../binary/mod.js';
 import { X509 } from '../../x509/index.js';
 import { FullDuplex } from '../../cascade/index.js';

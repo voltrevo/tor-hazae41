@@ -50,7 +50,7 @@ import { Extensions } from './extensions.js';
 import { App } from '../../../TorClient/App.js';
 import { CCADB } from './ccadb/CCADB.js';
 import { Bytes } from '../../bytes/index.js';
-import { Cursor } from '../../cursor/mod.js';
+import { Cursor } from '../../cursor/index.js';
 import { Readable, Unknown, Writable } from '../../binary/mod.js';
 import { bigModularExponent } from '../../common/bigModularExponent';
 

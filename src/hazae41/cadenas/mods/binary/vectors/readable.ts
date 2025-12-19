@@ -1,6 +1,6 @@
 import { NumberClass, NumberX } from '../numbers/number.js';
 import { Vector } from './writable.js';
-import { Cursor } from '../../../../cursor/mod.js';
+import { Cursor } from '../../../../cursor/index.js';
 import { Readable, Writable } from '../../../../binary/mod.js';
 
 export const ReadableVector = <L extends NumberX, W extends Writable>(

@@ -1,6 +1,6 @@
 import { Writable } from '../../../../binary/mod';
 import { Bytes } from '../../../../bytes';
-import { Cursor } from '../../../../cursor/mod';
+import { Cursor } from '../../../../cursor';
 import { test, expect } from 'vitest';
 import { Constructed } from './constructed';
 

@@ -1,5 +1,5 @@
 import { Bytes } from '../../../bytes';
-import { Cursor } from '../../../cursor/mod';
+import { Cursor } from '../../../cursor';
 import { test, expect } from 'vitest';
 import { Sequence } from '../triplets/sequence/sequence';
 import { Type } from './type';

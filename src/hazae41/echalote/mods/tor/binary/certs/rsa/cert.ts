@@ -1,6 +1,6 @@
 import { ExpiredCertError, PrematureCertError } from '../../../certs/certs';
 import { Bytes } from '../../../../../../bytes';
-import { Cursor } from '../../../../../../cursor/mod';
+import { Cursor } from '../../../../../../cursor';
 import { X509 } from '../../../../../../x509';
 
 export class RsaCert {

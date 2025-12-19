@@ -5,7 +5,7 @@ import {
   bitwise_xor_mod,
 } from '../../../../utils/bitwise';
 import { Bytes } from '../../../bytes';
-import { Cursor } from '../../../cursor/mod';
+import { Cursor } from '../../../cursor';
 import { ReadUnderflowError } from '../../../binary/mod';
 
 export class WebSocketFrame {

@@ -1,6 +1,6 @@
 import { Handshake } from '../handshake.js';
 import { Bytes } from '../../../../../../bytes/index.js';
-import { Cursor } from '../../../../../../cursor/mod.js';
+import { Cursor } from '../../../../../../cursor/index.js';
 
 export class Finished2 {
   readonly #class = Finished2;

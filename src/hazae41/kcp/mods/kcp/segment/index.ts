@@ -1,6 +1,6 @@
 import { Empty, Writable, Unknown } from '../../../../binary/mod';
 import { Bytes } from '../../../../bytes';
-import { Cursor } from '../../../../cursor/mod';
+import { Cursor } from '../../../../cursor';
 
 export interface KcpSegmentParams<Fragment extends Writable> {
   readonly conversation: number;

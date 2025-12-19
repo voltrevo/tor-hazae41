@@ -1,4 +1,4 @@
-import { Cursor } from '../../../../cursor/mod';
+import { Cursor } from '../../../../cursor';
 import { OpaqueTriplet } from '../../triplets/opaque/opaque';
 
 export namespace DER {

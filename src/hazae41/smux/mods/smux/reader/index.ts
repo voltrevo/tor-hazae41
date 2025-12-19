@@ -1,6 +1,6 @@
 import { Empty, Readable, Writable } from '../../../../binary/mod';
 import { Bytes } from '../../../../bytes';
-import { Cursor } from '../../../../cursor/mod';
+import { Cursor } from '../../../../cursor';
 import { SmuxSegment, SmuxUpdate } from '../segment';
 import { SecretSmuxDuplex } from '../stream';
 

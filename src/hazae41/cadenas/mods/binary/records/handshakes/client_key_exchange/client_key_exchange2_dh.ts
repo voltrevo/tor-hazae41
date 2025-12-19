@@ -1,7 +1,7 @@
 import { ClientDiffieHellmanPublic } from './client_diffie_hellman_public.js';
 import { Handshake } from '../handshake.js';
 import { Bytes } from '../../../../../../bytes/index.js';
-import { Cursor } from '../../../../../../cursor/mod.js';
+import { Cursor } from '../../../../../../cursor/index.js';
 
 export class ClientKeyExchange2DH {
   readonly #class = ClientKeyExchange2DH;

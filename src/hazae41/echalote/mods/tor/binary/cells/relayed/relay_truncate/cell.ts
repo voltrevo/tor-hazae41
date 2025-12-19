@@ -1,4 +1,4 @@
-import { Cursor } from '../../../../../../../cursor/mod';
+import { Cursor } from '../../../../../../../cursor';
 import { DestroyCell } from '../../direct/destroy/cell';
 
 export class RelayTruncateCell {

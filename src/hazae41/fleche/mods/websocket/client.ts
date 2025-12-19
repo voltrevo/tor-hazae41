@@ -14,7 +14,7 @@ import {
 import { WebSocketFrame } from './frame.js';
 import { IClock } from '../../../../clock';
 import { Bytes } from '../../../bytes';
-import { Cursor } from '../../../cursor/mod';
+import { Cursor } from '../../../cursor';
 import { Readable, Writable } from '../../../binary/mod';
 import { HalfDuplex } from '../../../cascade';
 import { Future } from '../../../future';

@@ -1,5 +1,5 @@
 import { Empty, /*any,*/ Readable, Writable } from '../../../../binary/mod';
-import { Cursor } from '../../../../cursor/mod';
+import { Cursor } from '../../../../cursor';
 import { Console } from '../../console';
 import { KcpSegment } from '../segment';
 import { SecretKcpDuplex } from '../stream';

@@ -1,7 +1,7 @@
 import { test, expect } from 'vitest';
 import { Resizer } from './Resizer.js';
 import { Bytes } from '../bytes';
-import { Cursor } from '../cursor/mod';
+import { Cursor } from '../cursor';
 import { Writable } from '../binary/mod';
 
 test('Resizer - constructor with defaults', async () => {

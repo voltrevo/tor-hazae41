@@ -1,7 +1,7 @@
 import { Writable } from '../../../../binary/mod';
 import { Bytes } from '../../../../bytes';
 import { FullDuplex } from '../../../../cascade';
-import { Cursor } from '../../../../cursor/mod';
+import { Cursor } from '../../../../cursor';
 import { Future } from '../../../../future';
 import { SecretSmuxReader } from '../reader';
 import { SecretSmuxWriter } from '../writer';

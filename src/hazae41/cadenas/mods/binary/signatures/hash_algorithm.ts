@@ -1,4 +1,4 @@
-import { Cursor } from '../../../../cursor/mod';
+import { Cursor } from '../../../../cursor';
 
 export class HashAlgorithm {
   static readonly types = {

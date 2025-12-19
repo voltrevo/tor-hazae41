@@ -6,7 +6,7 @@ import { ECPointFormats } from './ec_point_formats/ec_point_formats.js';
 import { EllipticCurves } from './elliptic_curves/elliptic_curves.js';
 import { ServerNameList } from './server_name/server_name_list.js';
 import { SignatureAlgorithms } from './signature_algorithms/signature_algorithms.js';
-import { Cursor } from '../../../../../../cursor/mod.js';
+import { Cursor } from '../../../../../../cursor/index.js';
 import { Unknown } from '../../../../../../binary/mod.js';
 import { SafeUnknown } from '../../../../../../binary/safe-unknown';
 

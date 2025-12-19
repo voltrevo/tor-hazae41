@@ -8,7 +8,7 @@ import {
   UnknownCertError,
 } from '../../../../certs/certs';
 import { Unimplemented } from '../../../../errors';
-import { Cursor } from '../../../../../../../cursor/mod';
+import { Cursor } from '../../../../../../../cursor';
 import { Readable } from '../../../../../../../binary/mod';
 
 export class CertsCell {

@@ -1,7 +1,7 @@
 // deno-lint-ignore-file require-await
 import { test, expect } from 'vitest';
-import { Cursor } from './mod';
-import { Bytes } from '../../../bytes';
+import { Cursor } from './index';
+import { Bytes } from '../bytes';
 
 test('write then read', async () => {
   const bytes = Bytes.from([1, 2, 3, 4]);

@@ -1,4 +1,4 @@
-import { Cursor } from '../../../../../../../cursor/mod.js';
+import { Cursor } from '../../../../../../../cursor/index.js';
 import { ECPointFormatList } from './ec_point_format_list.js';
 import { Extension } from '../extension.js';
 

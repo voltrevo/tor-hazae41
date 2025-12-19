@@ -1,4 +1,4 @@
-import { Cursor } from '../../../../../../cursor/mod.js';
+import { Cursor } from '../../../../../../cursor/index.js';
 import { NamedCurve } from '../extensions/elliptic_curves/named_curve.js';
 import { ECCurveType } from './ec_curve_type.js';
 

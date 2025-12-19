@@ -1,4 +1,4 @@
-import { Cursor } from '../../../../../../../cursor/mod';
+import { Cursor } from '../../../../../../../cursor';
 import { Dates } from '../../../../../../../common/Dates';
 import { Address4, Address6 } from '../../../address';
 import { Unimplemented } from '../../../../errors';

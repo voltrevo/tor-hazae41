@@ -1,4 +1,4 @@
-import { Cursor } from '../../../../../../../cursor/mod';
+import { Cursor } from '../../../../../../../cursor';
 import { TypedAddress } from '../../../address';
 
 export class NetinfoCell {

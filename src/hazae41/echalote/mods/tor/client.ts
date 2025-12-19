@@ -54,7 +54,7 @@ import {
 import { invariant } from '../../../../utils/debug';
 import { App } from '../../../../TorClient/App';
 import { Bytes } from '../../../bytes';
-import { Cursor } from '../../../cursor/mod';
+import { Cursor } from '../../../cursor';
 import { Readable, Unknown, Writable } from '../../../binary/mod';
 import { X509 } from '../../../x509';
 import { Bitset } from '../../../bitset';

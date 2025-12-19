@@ -1,6 +1,6 @@
 import { Unimplemented } from '../../../../errors';
 import { Bytes } from '../../../../../../../bytes';
-import { Cursor } from '../../../../../../../cursor/mod';
+import { Cursor } from '../../../../../../../cursor';
 
 export class AuthChallengeCell {
   readonly #class = AuthChallengeCell;

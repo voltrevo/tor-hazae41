@@ -5,7 +5,7 @@ import {
   InvalidCommandError,
   UnexpectedCircuitError,
 } from './errors.js';
-import { Cursor } from '../../../../../cursor/mod';
+import { Cursor } from '../../../../../cursor';
 import { Readable, Unknown, Writable } from '../../../../../binary/mod';
 
 export interface Cellable {

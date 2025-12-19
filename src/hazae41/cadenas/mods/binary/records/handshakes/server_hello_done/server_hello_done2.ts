@@ -1,4 +1,4 @@
-import { Cursor } from '../../../../../../cursor/mod.js';
+import { Cursor } from '../../../../../../cursor/index.js';
 import { Handshake } from '../handshake.js';
 
 export class ServerHelloDone2 {

@@ -10,7 +10,7 @@ import {
   RelayEndReasonOther,
 } from './binary/cells/relayed/relay_end/reason.js';
 import { RelaySendmeStreamCell } from './binary/cells/relayed/relay_sendme/cell.js';
-import { Cursor } from '../../../cursor/mod';
+import { Cursor } from '../../../cursor';
 import { Unknown, Writable } from '../../../binary/mod';
 import { FullDuplex } from '../../../cascade';
 

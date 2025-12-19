@@ -1,5 +1,5 @@
 import { NumberClass, NumberX } from '../numbers/number.js';
-import { Cursor } from '../../../../cursor/mod.js';
+import { Cursor } from '../../../../cursor/index.js';
 import { Writable } from '../../../../binary/mod.js';
 
 export interface Vector<

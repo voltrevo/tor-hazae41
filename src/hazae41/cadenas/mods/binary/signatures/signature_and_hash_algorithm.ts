@@ -1,4 +1,4 @@
-import { Cursor } from '../../../../cursor/mod.js';
+import { Cursor } from '../../../../cursor/index.js';
 import { HashAlgorithm } from './hash_algorithm.js';
 import { SignatureAlgorithm } from './signature_algorithm.js';
 

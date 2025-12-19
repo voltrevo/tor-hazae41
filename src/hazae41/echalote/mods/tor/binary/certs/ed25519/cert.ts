@@ -5,7 +5,7 @@ import {
   InvalidSignatureError,
 } from '../../../certs/certs.js';
 import { Bytes } from '../../../../../../bytes/index.js';
-import { Cursor } from '../../../../../../cursor/mod.js';
+import { Cursor } from '../../../../../../cursor/index.js';
 
 export interface Extensions {
   signer?: SignedWithEd25519Key;

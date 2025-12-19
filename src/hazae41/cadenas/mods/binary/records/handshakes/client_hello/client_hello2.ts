@@ -16,7 +16,7 @@ import { Cipher } from '../../../../ciphers/cipher.js';
 import { ServerName } from '../extensions/server_name/server_name.js';
 import { ServerNameList } from '../extensions/server_name/server_name_list.js';
 import { Bytes } from '../../../../../../bytes/index.js';
-import { Cursor } from '../../../../../../cursor/mod.js';
+import { Cursor } from '../../../../../../cursor/index.js';
 import { Unknown } from '../../../../../../binary/mod.js';
 import { SafeUnknown } from '../../../../../../binary/safe-unknown';
 

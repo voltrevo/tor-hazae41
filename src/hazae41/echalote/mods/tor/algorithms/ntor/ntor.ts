@@ -1,6 +1,6 @@
 import { HASH_LEN, KEY_LEN } from '../../constants';
 import { Bytes } from '../../../../../bytes';
-import { Cursor } from '../../../../../cursor/mod';
+import { Cursor } from '../../../../../cursor';
 
 export class InvalidNtorAuthError extends Error {
   readonly #class = InvalidNtorAuthError;

@@ -1,4 +1,4 @@
-import { Cursor } from '../../../../cursor/mod';
+import { Cursor } from '../../../../cursor';
 
 export class Number8 {
   readonly #class = Number8;

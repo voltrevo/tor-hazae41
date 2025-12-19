@@ -1,4 +1,4 @@
-import type { Cursor } from '../cursor/mod';
+import type { Cursor } from '../cursor';
 import { Bytes } from '../bytes';
 import { Readable } from './readable';
 import { Writable } from './writable';

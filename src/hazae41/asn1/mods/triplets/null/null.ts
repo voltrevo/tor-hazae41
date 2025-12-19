@@ -1,4 +1,4 @@
-import { Cursor } from '../../../../cursor/mod';
+import { Cursor } from '../../../../cursor';
 import { InvalidLengthError } from '../../errors/errors';
 import { Length } from '../../length/length';
 import { DERTriplet } from '../../resolvers/der/triplet';

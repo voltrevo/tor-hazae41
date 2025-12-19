@@ -1,4 +1,4 @@
-import { Cursor } from '../../../../../cursor/mod.js';
+import { Cursor } from '../../../../../cursor/index.js';
 import { Record } from '../record.js';
 
 export class Alert {

@@ -2,7 +2,7 @@ import { Handshake } from '../handshake.js';
 import { DigitallySigned } from '../../../signatures/digitally_signed.js';
 import { ServerECDHParams } from './server_ecdh_params.js';
 import { Bytes } from '../../../../../../bytes/index.js';
-import { Cursor } from '../../../../../../cursor/mod.js';
+import { Cursor } from '../../../../../../cursor/index.js';
 
 export class ServerKeyExchange2ECDHSigned {
   static readonly type = Handshake.types.server_key_exchange;

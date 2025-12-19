@@ -1,5 +1,5 @@
 import { Bytes } from '../../../../../../../bytes';
-import { Cursor } from '../../../../../../../cursor/mod';
+import { Cursor } from '../../../../../../../cursor';
 
 export class Create2Cell {
   readonly #class = Create2Cell;

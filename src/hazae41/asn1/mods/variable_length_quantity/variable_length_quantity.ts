@@ -1,4 +1,4 @@
-import { Cursor } from '../../../cursor/mod';
+import { Cursor } from '../../../cursor';
 
 export class VLQ {
   constructor(readonly value: number) {}

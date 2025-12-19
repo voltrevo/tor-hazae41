@@ -1,5 +1,5 @@
 import { Unknown, Writable } from '../../../../../../../binary/mod';
-import { Cursor } from '../../../../../../../cursor/mod';
+import { Cursor } from '../../../../../../../cursor';
 
 export class RelayDataCell<T extends Writable> {
   readonly #class = RelayDataCell;

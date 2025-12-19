@@ -1,4 +1,4 @@
-import { Cursor } from '../../../../cursor/mod';
+import { Cursor } from '../../../../cursor';
 import { DERable } from '../../resolvers/der/derable';
 import { InvalidTypeError } from '../../errors/errors';
 import { Length } from '../../length/length';

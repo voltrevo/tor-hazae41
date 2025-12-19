@@ -1,7 +1,7 @@
 import { AEADCiphertextRecord, PlaintextRecord } from '../../record.js';
 import { AEADEncrypter } from '../../../../ciphers/encryptions/encryption.js';
 import { Bytes } from '../../../../../../bytes/index.js';
-import { Cursor } from '../../../../../../cursor/mod.js';
+import { Cursor } from '../../../../../../cursor/index.js';
 import { Unknown, Writable } from '../../../../../../binary/mod.js';
 
 export class GenericAEADCipher {

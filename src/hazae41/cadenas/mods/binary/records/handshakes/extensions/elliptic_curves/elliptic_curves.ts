@@ -1,4 +1,4 @@
-import { Cursor } from '../../../../../../../cursor/mod.js';
+import { Cursor } from '../../../../../../../cursor/index.js';
 import { NamedCurveList } from './named_curve_list.js';
 import { Extension } from '../extension.js';
 

@@ -1,4 +1,4 @@
-import { Cursor } from '../../../../cursor/mod';
+import { Cursor } from '../../../../cursor';
 import { DERable } from '../../resolvers/der/derable';
 import { Length } from '../../length/length';
 import { DERTriplet } from '../../resolvers/der/triplet';

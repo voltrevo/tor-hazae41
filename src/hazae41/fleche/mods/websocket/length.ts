@@ -1,5 +1,5 @@
 import { Bytes } from '../../../bytes';
-import { Cursor } from '../../../cursor/mod';
+import { Cursor } from '../../../cursor';
 import { bitwise_unpack } from '../../../../utils/bitwise';
 
 export class Length {

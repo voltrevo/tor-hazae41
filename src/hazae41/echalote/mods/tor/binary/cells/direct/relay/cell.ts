@@ -1,4 +1,4 @@
-import { Cursor } from '../../../../../../../cursor/mod';
+import { Cursor } from '../../../../../../../cursor';
 import { Cell } from '../../cell';
 import { SecretCircuit } from '../../../../circuit';
 import { SecretTorStreamDuplex } from '../../../../stream';

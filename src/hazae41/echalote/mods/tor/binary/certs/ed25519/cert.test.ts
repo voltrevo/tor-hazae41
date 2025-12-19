@@ -1,7 +1,7 @@
 import { test, expect } from 'vitest';
 import { Ed25519Cert } from './cert.js';
 import { Bytes } from '../../../../../../bytes';
-import { Cursor } from '../../../../../../cursor/mod';
+import { Cursor } from '../../../../../../cursor';
 
 // Test data captured from real Tor network communication
 const edToSignCertHex =

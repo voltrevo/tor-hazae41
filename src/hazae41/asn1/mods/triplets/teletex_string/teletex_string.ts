@@ -1,5 +1,5 @@
 import { Bytes } from '../../../../bytes';
-import { Cursor } from '../../../../cursor/mod';
+import { Cursor } from '../../../../cursor';
 import { Length } from '../../length/length';
 import { DERTriplet } from '../../resolvers/der/triplet';
 import { Type } from '../../type/type';
