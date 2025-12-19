@@ -1,6 +1,6 @@
 import { relative, resolve } from 'path';
 import { Bitset } from '../../../bitset';
-import { benchSync } from '../../../deimos/mod';
+import { benchSync } from '../../../deimos';
 
 const samples = 100_000;
 
