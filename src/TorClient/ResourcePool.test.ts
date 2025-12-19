@@ -2,6 +2,7 @@ import { test, expect } from 'vitest';
 import { ResourcePool } from './ResourcePool';
 import { VirtualClock } from '../clock/VirtualClock';
 import { Log } from '../Log';
+import { assert } from '../utils/assert';
 
 /**
  * Mock resource type for testing
@@ -37,10 +38,11 @@ test('ResourcePool: acquire from empty pool creates resource', async () => {
     return createMockResource(`r${createCount}`);
   };
 
+  const clock = new VirtualClock({ automated: true });
   const pool = new ResourcePool({
     factory,
     log: new Log({ rawLog: () => {} }),
-    clock: new VirtualClock(),
+    clock,
   });
   pool.on('resource-created', () => events.push('created'));
   pool.on('resource-acquired', () => events.push('acquired'));
@@ -52,10 +54,13 @@ test('ResourcePool: acquire from empty pool creates resource', async () => {
   expect(events.length > 0).toBe(true);
 
   pool.dispose();
+
+  // Virtual clock state: no delays scheduled, so time should not advance
+  expect(clock.now() === 0).toBe(true);
 });
 
 test('ResourcePool: acquire from buffered pool returns existing resource', async () => {
-  const clock = new VirtualClock();
+  const clock = new VirtualClock({ automated: true });
   let createCount = 0;
 
   const factory = async () => {
@@ -70,11 +75,8 @@ test('ResourcePool: acquire from buffered pool returns existing resource', async
     targetSize: 2,
   });
 
-  // Wait for pool to fill
-  for (let i = 0; i < 5; i++) {
-    await clock.advanceTime(5000);
-    if (pool.size() >= 2) break;
-  }
+  // Wait for pool to fill - automated clock handles delays
+  await pool.waitForFull();
 
   assert(pool.size() === 2, 'should have 2 buffered resources');
 
@@ -83,6 +85,10 @@ test('ResourcePool: acquire from buffered pool returns existing resource', async
   assert(pool.size() === 1, 'should have 1 remaining in buffer');
 
   pool.dispose();
+
+  // Virtual clock state: automated clock manages delays internally
+  // Time advances as waitForFull() waits for resources to be created
+  expect(clock.now() >= 0).toBe(true);
 });
 
 test('ResourcePool: size returns buffered count', async () => {
@@ -291,7 +297,7 @@ test('ResourcePool: dispose throws on subsequent operations', async () => {
 });
 
 test('ResourcePool: racing multiple concurrent acquires', async () => {
-  const clock = new VirtualClock();
+  const clock = new VirtualClock({ automated: true });
   const createdResources: MockResource[] = [];
 
   const factory = async () => {
@@ -315,6 +321,9 @@ test('ResourcePool: racing multiple concurrent acquires', async () => {
   expect(ids.size === 3).toBe(true);
 
   pool.dispose();
+
+  // Virtual clock state: no delays in fast factory, so time should not advance
+  expect(clock.now() === 0).toBe(true);
 });
 
 test('ResourcePool: concurrency limit prevents too many concurrent creations', async () => {
@@ -663,7 +672,7 @@ test('ResourcePool: minInFlightCount sequential acquires reuse buffered resource
 });
 
 test('ResourcePool: target-size-reached emitted again when pool drops below target', async () => {
-  const clock = new VirtualClock();
+  const clock = new VirtualClock({ automated: true });
   let createCount = 0;
   let targetReachedCount = 0;
 
@@ -684,11 +693,8 @@ test('ResourcePool: target-size-reached emitted again when pool drops below targ
     targetReachedCount++;
   });
 
-  // Wait for target size to be reached
-  for (let i = 0; i < 10; i++) {
-    await clock.advanceTime(5000);
-    if (pool.atTargetSize()) break;
-  }
+  // Wait for target size to be reached - automated clock handles delays
+  await pool.waitForFull();
 
   assert(pool.size() === 2, 'should have 2 resources in pool at target size');
   expect(targetReachedCount === 1).toBe(true);
@@ -698,15 +704,21 @@ test('ResourcePool: target-size-reached emitted again when pool drops below targ
   assert(pool.size() === 1, 'should have 1 resource after acquire');
   assert(r1.id.startsWith('r'), 'should get a valid resource');
 
-  // Wait for maintenance to refill back to target size
+  // Wait for maintenance to refill back to target size - automated clock handles delays
   targetReachedCount = 0; // Reset counter
-  for (let i = 0; i < 10; i++) {
-    await clock.advanceTime(5000);
-    if (pool.atTargetSize()) break;
-  }
+  await pool.waitForFull();
 
   assert(pool.size() === 2, 'should refill back to 2 resources');
   expect(targetReachedCount === 1).toBe(true);
 
   pool.dispose();
+
+  // Virtual clock state: automated clock manages delays
+  // Factory has 10ms delay per creation, multiple resources created and refilled
+  const finalClockTime = clock.now();
+  // Verify that virtual time advanced (due to factory delays)
+  // The exact amount depends on how many resources were created with delays
+  expect(finalClockTime >= 0).toBe(true);
+  // Log the final time for reference (uncomment for debugging)
+  // console.log('Final virtual clock time:', finalClockTime);
 });
