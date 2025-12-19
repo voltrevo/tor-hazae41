@@ -42,6 +42,14 @@ export class VirtualClock implements IClock {
     return this.currentTime;
   }
 
+  isRunning(): boolean {
+    return this.running;
+  }
+
+  isAutomated(): boolean {
+    return this.automated;
+  }
+
   delay(ms: number): Promise<void> {
     return new Promise(resolve => {
       this.setTimeout(() => resolve(), ms);

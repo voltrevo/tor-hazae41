@@ -56,7 +56,8 @@ test('ResourcePool: acquire from empty pool creates resource', async () => {
   pool.dispose();
 
   // Virtual clock state: no delays scheduled, so time should not advance
-  expect(clock.now() === 0).toBe(true);
+  expect(clock.now()).toBe(0);
+  expect(clock.isRunning()).toBe(false);
 });
 
 test('ResourcePool: acquire from buffered pool returns existing resource', async () => {
@@ -86,9 +87,9 @@ test('ResourcePool: acquire from buffered pool returns existing resource', async
 
   pool.dispose();
 
-  // Virtual clock state: automated clock manages delays internally
-  // Time advances as waitForFull() waits for resources to be created
-  expect(clock.now() >= 0).toBe(true);
+  // Virtual clock state: no delays in this test (default minInFlightCount)
+  expect(clock.now()).toBe(0);
+  expect(clock.isRunning()).toBe(false);
 });
 
 test('ResourcePool: size returns buffered count', async () => {
@@ -323,7 +324,8 @@ test('ResourcePool: racing multiple concurrent acquires', async () => {
   pool.dispose();
 
   // Virtual clock state: no delays in fast factory, so time should not advance
-  expect(clock.now() === 0).toBe(true);
+  expect(clock.now()).toBe(0);
+  expect(clock.isRunning()).toBe(false);
 });
 
 test('ResourcePool: concurrency limit prevents too many concurrent creations', async () => {
@@ -713,12 +715,7 @@ test('ResourcePool: target-size-reached emitted again when pool drops below targ
 
   pool.dispose();
 
-  // Virtual clock state: automated clock manages delays
-  // Factory has 10ms delay per creation, multiple resources created and refilled
-  const finalClockTime = clock.now();
-  // Verify that virtual time advanced (due to factory delays)
-  // The exact amount depends on how many resources were created with delays
-  expect(finalClockTime >= 0).toBe(true);
-  // Log the final time for reference (uncomment for debugging)
-  // console.log('Final virtual clock time:', finalClockTime);
+  // Virtual clock state: factory has 10ms delay, 2 resources created twice (20ms total)
+  expect(clock.now()).toBe(20);
+  expect(clock.isRunning()).toBe(false);
 });
