@@ -1,5 +1,5 @@
 import { expect, test } from 'vitest';
-import { Mutex, Semaphore } from './mod';
+import { Mutex, Semaphore } from './index';
 
 test('run', async () => {
   const promises = new Array<Promise<void>>();

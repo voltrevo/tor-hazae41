@@ -60,7 +60,7 @@ import { X509 } from '../../../x509';
 import { Bitset } from '../../../bitset';
 import { HalfDuplex } from '../../../cascade';
 import { Future } from '../../../future';
-import { Mutex } from '../../../mutex/mod';
+import { Mutex } from '../../../mutex';
 
 export interface Guard {
   readonly identity: Bytes<20>;
