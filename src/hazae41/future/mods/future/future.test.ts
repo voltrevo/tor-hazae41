@@ -1,17 +1,16 @@
 import { test, expect } from 'vitest';
+import { VirtualClock } from '../../../../clock/VirtualClock';
 import { Future } from './future';
 
 test('future', async () => {
+  const clock = new VirtualClock({ automated: true });
   const future = new Future<void>();
 
-  const start = Date.now();
-  setTimeout(() => future.resolve(), 1000);
+  const start = clock.now();
+  clock.setTimeout(() => future.resolve(), 1000);
 
   await future.promise;
 
-  const delay = Date.now() - start;
-  // Skip strict timing check in browser (browser timings can be faster/differ)
-  if (typeof window === 'undefined') {
-    expect(delay > 1000).toBe(true);
-  }
+  const delay = clock.now() - start;
+  expect(delay).toBe(1000);
 });

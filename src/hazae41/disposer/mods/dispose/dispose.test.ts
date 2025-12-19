@@ -1,12 +1,17 @@
 import '../../../symbol-dispose-polyfill/mod';
 
 import { test } from 'vitest';
+import { VirtualClock } from '../../../../clock/VirtualClock';
 import { AsyncDisposer, Disposer } from './dispose';
 
 test('sync', async () => {
+  const clock = new VirtualClock({ automated: true });
+
   function f(_i: number) {
     const create = async () => {
-      await new Promise(ok => setTimeout(ok, 1000 - 1 * 100));
+      await new Promise<void>(ok =>
+        clock.setTimeout(() => ok(), 1000 - 1 * 100)
+      );
     };
 
     const dispose = () => {};
@@ -22,13 +27,19 @@ test('sync', async () => {
 });
 
 test('async', async () => {
+  const clock = new VirtualClock({ automated: true });
+
   function f(_i: number) {
     const create = async () => {
-      await new Promise(ok => setTimeout(ok, 1000 - 1 * 100));
+      await new Promise<void>(ok =>
+        clock.setTimeout(() => ok(), 1000 - 1 * 100)
+      );
     };
 
     const dispose = async () => {
-      await new Promise(ok => setTimeout(ok, 1000 - 1 * 100));
+      await new Promise<void>(ok =>
+        clock.setTimeout(() => ok(), 1000 - 1 * 100)
+      );
     };
 
     return new AsyncDisposer(create(), dispose);

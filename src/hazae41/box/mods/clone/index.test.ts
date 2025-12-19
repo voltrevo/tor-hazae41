@@ -1,4 +1,5 @@
 import { test, expect } from 'vitest';
+import { VirtualClock } from '../../../../clock/VirtualClock';
 import { Clone } from '.';
 
 class Resource implements Disposable {
@@ -10,6 +11,7 @@ class Resource implements Disposable {
 }
 
 test('count', async () => {
+  const clock = new VirtualClock({ automated: true });
   const resource = new Resource();
 
   {
@@ -29,7 +31,9 @@ test('count', async () => {
       async function use(count: Clone<Resource>) {
         using _ = count.clone();
 
-        await new Promise(resolve => setTimeout(resolve, 1000));
+        await new Promise<void>(resolve =>
+          clock.setTimeout(() => resolve(), 1000)
+        );
 
         return;
       }
@@ -40,7 +44,7 @@ test('count', async () => {
 
   expect(!resource.disposed).toBe(true);
 
-  await new Promise(resolve => setTimeout(resolve, 2000));
+  await new Promise<void>(resolve => clock.setTimeout(() => resolve(), 2000));
 
   expect(resource.disposed).toBe(true);
 });
