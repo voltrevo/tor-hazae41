@@ -131,8 +131,17 @@ export class ResourcePool<R> extends EventEmitter<ResourcePoolEvents<R>> {
       throw new Error('ResourcePool is disposed');
     }
 
+    // Only call ensureInFlight once per pop() to avoid redundant creations
+    // when multiple concurrent pops wake up from the same update event.
+    // AND only start new creations if both pool and inFlight are empty -
+    // don't start new creations if we already have pending creations from a previous pop()
+    let ensureInFlightCalled = false;
+
     while (this.pool.length === 0) {
-      this.ensureInFlight();
+      if (!ensureInFlightCalled && this.inFlight.length === 0) {
+        this.ensureInFlight();
+        ensureInFlightCalled = true;
+      }
       await this.nextUpdate();
     }
 

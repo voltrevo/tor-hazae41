@@ -480,13 +480,13 @@ test('ResourcePool: minInFlightCount error handling ignores failures from race',
   let createCount = 0;
 
   const factory = async () => {
-    createCount++;
+    const id = ++createCount;
     await clock.delay(5);
     // Only second creation fails, first and third succeed
-    if (createCount === 2) {
+    if (id === 2) {
       throw new Error('Simulated failure');
     }
-    return createMockResource(`r${createCount}`);
+    return createMockResource(`r${id}`);
   };
 
   const pool = new ResourcePool({
@@ -634,9 +634,9 @@ test('ResourcePool: minInFlightCount sequential acquires reuse buffered resource
   let createCount = 0;
 
   const factory = async () => {
-    createCount++;
+    const id = ++createCount;
     await clock.delay(10);
-    return createMockResource(`r${createCount}`);
+    return createMockResource(`r${id}`);
   };
 
   const pool = new ResourcePool({
