@@ -1,23 +1,23 @@
-import { Awaitable } from '../../../common/Awaitable';
-import { None, Some } from '../../../option';
+import { Awaitable } from '../common/Awaitable';
+import { None, Some } from '../option';
 
-export namespace Ok {
+export namespace Err {
   /**
-   * Force inference of Ok and its generic type
+   * Force inference of Err and its generic type
    */
-  export type Infer<S, T = unknown> = Ok<T & Ok.Inner<S>>;
+  export type Infer<S, E = unknown> = Err<E & Err.Inner<S>>;
 
   /**
-   * Get the inner type of an Ok
+   * Get the inner type of an Err
    */
-  export type Inner<S> = S extends Ok<infer T> ? T : never;
+  export type Inner<S> = S extends Err<infer E> ? E : never;
 }
 
-export class Ok<T = unknown> {
+export class Err<T = unknown> {
   #inner: T;
 
   /**
-   * A success
+   * A failure
    * @param inner
    */
   constructor(inner: T) {
@@ -25,31 +25,41 @@ export class Ok<T = unknown> {
   }
 
   /**
-   * Create an empty `Ok`
-   * @returns `Ok(void)`
+   * Create an empty `Err`
+   * @returns `Err(void)`
    */
-  static void(): Ok<void> {
-    return new Ok<void>(undefined);
+  static void(): Err<void> {
+    return new Err<void>(undefined);
   }
 
   /**
-   * Create an `Ok`
+   * Create an `Err`
    * @param inner
-   * @returns `Ok(inner)`
+   * @returns `Err(inner)`
    */
-  static create<T>(inner: T): Ok<T> {
-    return new Ok<T>(inner);
+  static create<T>(inner: T): Err<T> {
+    return new Err(inner);
+  }
+
+  /**
+   * Create an `Err` with an `Error` inside
+   * @param message
+   * @param options
+   * @returns `Err<Error>`
+   */
+  static error(message: string, options?: ErrorOptions): Err<Error> {
+    return new Err(new Error(message, options));
   }
 
   get inner(): T {
     return this.#inner;
   }
 
-  [Symbol.dispose](this: Ok<Disposable>) {
+  [Symbol.dispose](this: Err<Disposable>) {
     this.#inner[Symbol.dispose]();
   }
 
-  async [Symbol.asyncDispose](this: Ok<AsyncDisposable>) {
+  async [Symbol.asyncDispose](this: Err<AsyncDisposable>) {
     await this.#inner[Symbol.asyncDispose]();
   }
 
@@ -57,54 +67,54 @@ export class Ok<T = unknown> {
    * Type guard for `Ok`
    * @returns `true` if `Ok`, `false` if `Err`
    */
-  isOk(): this is Ok<T> {
-    return true;
+  isOk(): false {
+    return false;
   }
 
   /**
    * Returns true if the result is `Ok` and the value inside of it matches a predicate
-   * @param okPredicate
+   * @param _okPredicate
    * @returns `true` if `Ok` and `await okPredicate(this.inner)`, `false` otherwise
    */
-  async isOkAnd(
-    okPredicate: (inner: T) => Awaitable<boolean>
-  ): Promise<boolean> {
-    return await okPredicate(this.inner);
+  isOkAnd(_okPredicate: unknown): false {
+    return false;
   }
 
   /**
    * Returns true if the result is `Ok` and the value inside of it matches a predicate
-   * @param okPredicate
+   * @param _okPredicate
    * @returns `true` if `Ok` and `await okPredicate(this.inner)`, `false` otherwise
    */
-  isOkAndSync(okPredicate: (inner: T) => boolean): boolean {
-    return okPredicate(this.inner);
+  isOkAndSync(_okPredicate: unknown): false {
+    return false;
   }
 
   /**
    * Type guard for `Err`
    * @returns `true` if `Err`, `false` if `Ok`
    */
-  isErr(): false {
-    return false;
+  isErr(): this is Err<T> {
+    return true;
   }
 
   /**
    * Returns true if the result is `Err` and the value inside of it matches a predicate
-   * @param _errPredicate
+   * @param errPredicate
    * @returns `true` if `Err` and `await errPredicate(this.inner)`, `false` otherwise
    */
-  isErrAnd(_errPredicate: unknown): false {
-    return false;
+  async isErrAnd(
+    errPredicate: (inner: T) => Awaitable<boolean>
+  ): Promise<boolean> {
+    return await errPredicate(this.inner);
   }
 
   /**
    * Returns true if the result is `Err` and the value inside of it matches a predicate
-   * @param _errPredicate
+   * @param errPredicate
    * @returns `true` if `Err` and `await errPredicate(this.inner)`, `false` otherwise
    */
-  isErrAndSync(_errPredicate: unknown): false {
-    return false;
+  isErrAndSync(errPredicate: (inner: T) => boolean): boolean {
+    return errPredicate(this.inner);
   }
 
   /**
@@ -112,8 +122,8 @@ export class Ok<T = unknown> {
    * @returns `this.inner`
    * @throws if `this` is `Err`
    */
-  get(): T {
-    return this.inner;
+  get(this: [T] extends [never] ? unknown : never): never {
+    throw new Error();
   }
 
   /**
@@ -121,8 +131,8 @@ export class Ok<T = unknown> {
    * @returns `this.inner`
    * @throws if `this` is `Ok`
    */
-  getErr(this: [T] extends [never] ? unknown : never): never {
-    throw new Error();
+  getErr(): T {
+    return this.inner;
   }
 
   /**
@@ -137,61 +147,64 @@ export class Ok<T = unknown> {
    * Transform `Result<T, E>` into `Option<T>`
    * @returns `Some(this.inner)` if `Ok`, `None` if `Err`
    */
-  ok(): Some<T> {
-    return new Some(this.inner);
+  ok(): None {
+    return new None();
   }
 
   /**
    * Transform `Result<T, E>` into `Option<E>`
    * @returns `Some(this.inner)` if `Err`, `None` if `Ok`
    */
-  err(): None {
-    return new None();
+  err(): Some<T> {
+    return new Some(this.inner);
   }
 
   /**
    * Returns an iterator over the possibly contained value
    * @yields `this.inner` if `Ok`
    */
-  *[Symbol.iterator](): Iterator<T, void> {
-    yield this.inner;
+  // eslint-disable-next-line require-yield
+  *[Symbol.iterator](): Iterator<never, void> {
+    return;
   }
 
   /**
    * Transform `Result<T,E>` into `[T,E]`
    * @returns `[this.inner, undefined]` if `Ok`, `[undefined, this.inner]` if `Err`
    */
-  split(): [T, undefined] {
-    return [this.inner, undefined];
+  split(): [undefined, T] {
+    return [undefined, this.inner];
   }
 
   /**
    * Returns true if the result is an `Ok` value containing the given value
-   * @param value
+   * @param _value
    * @returns `true` if `Ok` and `this.inner === value`, `false` otherwise
    */
-  contains(value: T): boolean {
-    return this.inner === value;
-  }
-
-  /**
-   * Returns true if the result is an `Err` value containing the given value
-   * @param _value
-   * @returns `true` if `Err` and `this.inner === value`, `false` otherwise
-   */
-  containsErr(_value: unknown): false {
+  contains(_value: unknown): false {
     return false;
   }
 
   /**
-   * Just like `unwrap` but it throws to the closest `Result.unthrow`
+   * Returns true if the result is an `Err` value containing the given value
+   * @param value
+   * @returns `true` if `Err` and `this.inner === value`, `false` otherwise
+   */
+  containsErr(value: T): boolean {
+    return this.inner === value;
+  }
+
+  /**
+   * Get the inner value or throw to the closest `Result.unthrow`
+   * @param thrower The thrower from `Result.unthrow`
    * @returns `this.inner` if `Ok`
-   * @throws `this` if `Err`
+   * @throws `undefined` if `Err`
    * @see Result.unthrow
    * @see Result.unthrowSync
    */
-  throw(_thrower: unknown): T {
-    return this.inner;
+  throw(thrower: (e: Err<T>) => void): never {
+    thrower(this);
+    throw this;
   }
 
   /**
@@ -199,8 +212,8 @@ export class Ok<T = unknown> {
    * @returns `this.inner` if `Ok`
    * @throws `this.inner` if `Err`
    */
-  getOrThrow(): T {
-    return this.inner;
+  getOrThrow(): never {
+    throw this.inner;
   }
 
   /**
@@ -208,324 +221,326 @@ export class Ok<T = unknown> {
    * @returns `this.inner` if `Err`
    * @throws `this.inner` if `Ok`
    */
-  getErrOrThrow(): never {
-    throw this.inner;
+  getErrOrThrow(): T {
+    return this.inner;
   }
 
   /**
    * Get the inner value if Ok or null if Err
    * @returns `this.inner` if `Ok`, `null` if `Err`
    */
-  getOrNull(): T {
-    return this.inner;
+  getOrNull(): null {
+    return null;
   }
 
   /**
    * Get the inner error if Err or null if Ok
    * @returns `this.inner` if `Err`, `null` if `Ok`
    */
-  getErrOrNull(): null {
-    return null;
+  getErrOrNull(): T {
+    return this.inner;
   }
 
   /**
    * Get the inner value or a default one
-   * @param _value
+   * @param value
    * @returns `this.inner` if `Ok`, `value` if `Err`
    */
-  getOr(_value: unknown): T {
-    return this.inner;
+  getOr<U>(value: U): U {
+    return value;
   }
 
   /**
    * Get the inner value or compute a default one from the inner error
-   * @param _errMapper
+   * @param errMapper
    * @returns `this.inner` if `Ok`, `await errMapper(this.inner)` if `Err`
    * @throws if `await errMapper(this.inner)` throws
    */
-  getOrElse(_errMapper: unknown): T {
-    return this.inner;
+  async getOrElse<U>(errMapper: (inner: T) => Awaitable<U>): Promise<U> {
+    return await errMapper(this.inner);
   }
 
   /**
    * Get the inner value or compute a default one from the inner error
-   * @param _errMapper
+   * @param errMapper
    * @returns `this.inner` if `Ok`, `errMapper(this.inner)` if `Err`
    * @throws if `errMapper(this.inner)` throws
    */
-  getOrElseSync(_errMapper: unknown): T {
-    return this.inner;
+  getOrElseSync<U>(errMapper: (inner: T) => U): U {
+    return errMapper(this.inner);
   }
 
   /**
    * Get this if Ok or throw the inner error
    * @returns
    */
-  checkOrThrow(): this {
-    return this;
+  checkOrThrow(): never {
+    throw this.inner;
   }
 
   /**
    * Get this if Err or throw the inner value
+   * @returns
    */
-  checkErrOrThrow(): never {
-    throw this.inner;
+  checkErrOrThrow(): this {
+    return this;
   }
 
   /**
    * Get this if Ok or return null
    * @returns
    */
-  checkOrNull(): this {
-    return this;
+  checkOrNull(): null {
+    return null;
   }
 
   /**
    * Get this if Err or return null
+   * @returns
    */
-  checkErrOrNull(): null {
-    return null;
+  checkErrOrNull(): this {
+    return this;
   }
 
   /**
    * Transform Result<Promise<T>, E> into Promise<Result<T, E>>
    * @returns `await this.inner` if `Ok`, `this` if `Err`
    */
-  async await<T>(this: Ok<PromiseLike<T>>): Promise<Ok<Awaited<T>>> {
-    return new Ok(await this.inner);
+  await(): this {
+    return this;
   }
 
   /**
    * Transform Result<T, Promise<E>> into Promise<Result<T, E>>
    * @returns `await this.inner` if `Err`, `this` if `Ok`
    */
-  awaitErr(): this {
-    return this;
+  async awaitErr<T>(this: Err<PromiseLike<T>>): Promise<Err<Awaited<T>>> {
+    return new Err(await this.inner);
   }
 
   /**
    * Transform Result<Promise<T>, Promise<E>> into Promise<Result<T, E>>
    * @returns `await this.inner`
    */
-  async awaitAll<T>(this: Ok<PromiseLike<T>>): Promise<Ok<Awaited<T>>> {
-    return await this.await();
+  async awaitAll<T>(this: Err<PromiseLike<T>>): Promise<Err<Awaited<T>>> {
+    return await this.awaitErr();
   }
 
   /**
    * Transform `Result<T, E>` into `Result<void, E>`
    * @returns `Ok<void>` if `Ok<T>`, `Err<E>` if `E<E>`
    */
-  clear(): Ok<void> {
-    return Ok.void();
+  clear(): this {
+    return this;
   }
 
   /**
    * Transform `Result<T, E>` into `Result<T, void>`
    * @returns `Ok<T>` if `Ok<T>`, `Err<void>` if `E<E>`
    */
-  clearErr(): this {
+  clearErr(): Err<void> {
+    return Err.void();
+  }
+
+  /**
+   * Calls the given callback with the inner value if `Ok`
+   * @param _okCallback
+   * @returns `this`
+   */
+  inspect(_okCallback: unknown): this {
     return this;
   }
 
   /**
    * Calls the given callback with the inner value if `Ok`
-   * @param okCallback
+   * @param _okCallback
    * @returns `this`
    */
-  async inspect(okCallback: (inner: T) => Awaitable<void>): Promise<this> {
-    await okCallback(this.inner);
-    return this;
-  }
-
-  /**
-   * Calls the given callback with the inner value if `Ok`
-   * @param okCallback
-   * @returns `this`
-   */
-  inspectSync(okCallback: (inner: T) => void): this {
-    okCallback(this.inner);
+  inspectSync(_okCallback: unknown): this {
     return this;
   }
 
   /**
    * Calls the given callback with the inner value if `Err`
-   * @param _errCallback
+   * @param errCallback
    * @returns `this`
    */
-  inspectErr(_errCallback: unknown): this {
+  async inspectErr(errCallback: (inner: T) => Awaitable<void>): Promise<this> {
+    await errCallback(this.inner);
     return this;
   }
 
   /**
    * Calls the given callback with the inner value if `Err`
-   * @param _errCallback
+   * @param errCallback
    * @returns `this`
    */
-  inspectErrSync(_errCallback: unknown): this {
+  inspectErrSync(errCallback: (inner: T) => void): this {
+    errCallback(this.inner);
     return this;
   }
 
   /**
    * Return a new `Ok` but with the given `inner`
-   * @param inner
+   * @param _inner
    * @returns `Ok(inner)` if `Ok`, `this` if `Err`
    */
-  set<U>(inner: U): Ok<U> {
-    return new Ok(inner);
+  set(_inner: unknown): this {
+    return this;
   }
 
   /**
    * Return a new `Err` but with the given `inner`
-   * @param _inner
+   * @param inner
    * @returns `Err(inner)` if `Err`, `this` if `Ok`
    */
-  setErr(_inner: unknown): this {
-    return this;
+  setErr<U>(inner: U): Err<U> {
+    return new Err(inner);
   }
 
   /**
    * Map the inner value into another
-   * @param okMapper
+   * @param _okMapper
    * @returns `Ok(await okMapper(this.inner))` if `Ok`, `this` if `Err`
    * @throws if `await okMapper(this.inner)` throws
    */
-  async map<U>(okMapper: (inner: T) => Awaitable<U>): Promise<Ok<U>> {
-    return new Ok<U>(await okMapper(this.inner));
+  map(_okMapper: unknown): this {
+    return this;
   }
 
   /**
    * Map the inner value into another
-   * @param okMapper
+   * @param _okMapper
    * @returns `Ok(okMapper(this.inner))` if `Ok`, `this` if `Err`
    * @throws if `okMapper(this.inner)` throws
    */
-  mapSync<U>(okMapper: (inner: T) => U): Ok<U> {
-    return new Ok<U>(okMapper(this.inner));
+  mapSync(_okMapper: unknown): this {
+    return this;
   }
 
   /**
    * Map the inner error into another
-   * @param _errMapper
+   * @param errMapper
    * @returns `Err(await errMapper(this.inner))` if `Err`, `this` if `Ok`
    * @throws if `await errMapper(this.inner)` throws
    */
-  mapErr(_errMapper: unknown): this {
-    return this;
+  async mapErr<U>(errMapper: (inner: T) => Awaitable<U>): Promise<Err<U>> {
+    return new Err<U>(await errMapper(this.inner));
   }
 
   /**
    * Map the inner error into another
-   * @param _errMapper
+   * @param errMapper
    * @returns `Err(errMapper(this.inner))` if `Err`, `this` if `Ok`
    * @throws if `errMapper(this.inner)` throws
    */
-  mapErrSync(_errMapper: unknown): this {
-    return this;
+  mapErrSync<U>(errMapper: (inner: T) => U): Err<U> {
+    return new Err<U>(errMapper(this.inner));
   }
 
   /**
    * Map the inner value into another, or a default one
-   * @param _value
-   * @param okMapper
+   * @param value
+   * @param _okMapper
    * @returns `await okMapper(this.inner)` if `Ok`, `value` if `Err`
    * @throws if `await okMapper(this.inner)` throws
    */
-  async mapOr<U>(_value: U, okMapper: (inner: T) => Awaitable<U>): Promise<U> {
-    return await okMapper(this.inner);
-  }
-
-  /**
-   * Map the inner value into another, or a default one
-   * @param _value
-   * @param okMapper
-   * @returns `okMapper(this.inner)` if `Ok`, `value` if `Err`
-   * @throws if `okMapper(this.inner)` throws
-   */
-  mapOrSync<U>(_value: U, okMapper: (inner: T) => U): U {
-    return okMapper(this.inner);
-  }
-
-  /**
-   * Map the inner value into another, or a default one
-   * @param _errMapper
-   * @param okMapper
-   * @returns `await okMapper(this.inner)` if `Ok`, `await errMapper(this.inner)` if `Err`
-   * @throws if `await okMapper(this.inner)` or `await errMapper(this.inner)` throws
-   */
-  async mapOrElse<U>(
-    _errMapper: unknown,
-    okMapper: (inner: T) => Awaitable<U>
-  ): Promise<U> {
-    return await okMapper(this.inner);
-  }
-
-  /**
-   * Map the inner value into another, or a default one
-   * @param _errMapper
-   * @param okMapper
-   * @returns `okMapper(this.inner)` if `Ok`, `errMapper(this.inner)` if `Err`
-   * @throws if `okMapper(this.inner)` or `errMapper(this.inner)` throws
-   */
-  mapOrElseSync<U>(_errMapper: unknown, okMapper: (inner: T) => U): U {
-    return okMapper(this.inner);
-  }
-
-  /**
-   * Return `value` if `Ok`, return `this` if `Err`
-   * @param value
-   * @returns `value` if `Ok`, `this` if `Err`
-   */
-  and<U>(value: U): U {
+  mapOr<U>(value: U, _okMapper: unknown): U {
     return value;
   }
 
   /**
+   * Map the inner value into another, or a default one
+   * @param value
+   * @param _okMapper
+   * @returns `okMapper(this.inner)` if `Ok`, `value` if `Err`
+   * @throws if `okMapper(this.inner)` throws
+   */
+  mapOrSync<U>(value: U, _okMapper: unknown): U {
+    return value;
+  }
+
+  /**
+   * Map the inner value into another, or a default one
+   * @param errMapper
+   * @param _okMapper
+   * @returns `await okMapper(this.inner)` if `Ok`, `await errMapper(this.inner)` if `Err`
+   * @throws if `await okMapper(this.inner)` or `await errMapper(this.inner)` throws
+   */
+  async mapOrElse<U>(
+    errMapper: (inner: T) => Awaitable<U>,
+    _okMapper: unknown
+  ): Promise<U> {
+    return await errMapper(this.inner);
+  }
+
+  /**
+   * Map the inner value into another, or a default one
+   * @param errMapper
+   * @param _okMapper
+   * @returns `okMapper(this.inner)` if `Ok`, `errMapper(this.inner)` if `Err`
+   * @throws if `okMapper(this.inner)` or `errMapper(this.inner)` throws
+   */
+  mapOrElseSync<U>(errMapper: (inner: T) => U, _okMapper: unknown): U {
+    return errMapper(this.inner);
+  }
+
+  /**
+   * Return `value` if `Ok`, return `this` if `Err`
+   * @param _value
+   * @returns `value` if `Ok`, `this` if `Err`
+   */
+  and(_value: unknown): this {
+    return this;
+  }
+
+  /**
    * Return `await okMapper(this.inner)` if `Ok`, return `this` if `Err`
-   * @param okMapper
+   * @param _okMapper
    * @returns `await okMapper(this.inner)` if `Ok`, `this` if `Err`
    * @throws if `await okMapper(this.inner)` throws
    */
-  async andThen<U>(okMapper: (inner: T) => Awaitable<U>): Promise<U> {
-    return await okMapper(this.inner);
+  andThen(_okMapper: unknown): this {
+    return this;
   }
 
   /**
    * Return `okMapper(this.inner)` if `Ok`, return `this` if `Err`
-   * @param okMapper
+   * @param _okMapper
    * @returns `okMapper(this.inner)` if `Ok`, `this` if `Err`
    * @throws if `okMapper(this.inner)` throws
    */
-  andThenSync<U>(okMapper: (inner: T) => U): U {
-    return okMapper(this.inner);
+  andThenSync(_okMapper: unknown): this {
+    return this;
   }
 
   /**
    * Return `value` if `Err`, return `this` if `Ok`
-   * @param _value
+   * @param value
    * @returns `value` if `Err`, `this` if `Ok`
    */
-  or(_value: unknown): this {
-    return this;
+  or<U>(value: U): U {
+    return value;
   }
 
   /**
    * Return `await errMapper(this.inner)` if `Err`, return `this` if `Ok`
-   * @param _errMapper
+   * @param errMapper
    * @returns `await errMapper(this.inner)` if `Err`, `this` if `Ok`
    * @throws if `await errMapper(this.inner)` throws
    */
-  orElse(_errMapper: unknown): this {
-    return this;
+  async orElse<U>(errMapper: (inner: T) => Awaitable<U>): Promise<U> {
+    return await errMapper(this.inner);
   }
 
   /**
    * Return `errMapper(this.inner)` if `Err`, return `this` if `Ok`
-   * @param _errMapper
+   * @param errMapper
    * @returns `errMapper(this.inner)` if `Err`, `this` if `Ok`
    * @throws if `errMapper(this.inner)` throws
    */
-  orElseSync(_errMapper: unknown): this {
-    return this;
+  orElseSync<U>(errMapper: (inner: T) => U): U {
+    return errMapper(this.inner);
   }
 
   /**
@@ -533,7 +548,7 @@ export class Ok<T = unknown> {
    * @param result
    * @returns `this` if `Err`, `this.inner` if `Ok`
    */
-  flatten(): T {
-    return this.inner;
+  flatten(): this {
+    return this;
   }
 }

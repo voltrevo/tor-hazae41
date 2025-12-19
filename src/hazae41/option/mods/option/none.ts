@@ -1,5 +1,5 @@
 import { Awaitable } from '../../../common/Awaitable';
-import { Err } from '../../../result/mod';
+import { Err } from '../../../result';
 import { Option } from './option';
 
 export class NoneError extends Error {

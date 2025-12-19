@@ -1,5 +1,5 @@
-import { Awaitable } from '../../../common/Awaitable';
-import { Nullable } from '../../../common/Nullable';
+import { Awaitable } from '../common/Awaitable';
+import { Nullable } from '../common/Nullable';
 import { Catched } from './catched';
 import { Err } from './err';
 import { Ok } from './ok';
