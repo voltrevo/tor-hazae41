@@ -26,21 +26,38 @@ export interface ISharedSecret {
 }
 
 class PrivateKey implements IPrivateKey {
+  private disposed = false;
+
   constructor(private keyBytes: Bytes) {}
 
   getPublicKeyOrThrow(): IPublicKey {
-    // Use @noble/curves to derive public key from private key
+    if (this.disposed) {
+      throw new Error('PrivateKey has been disposed');
+    }
     const publicKeyBytes = x25519.getPublicKey(this.keyBytes);
     return new PublicKey(Bytes.from(publicKeyBytes));
   }
 
   async computeOrThrow(publicKey: IPublicKey): Promise<ISharedSecret> {
-    // Extract the public key bytes from the exported data
+    if (this.disposed) {
+      throw new Error('PrivateKey has been disposed');
+    }
     const exported = await publicKey.exportOrThrow();
     const publicKeyBytes = exported.bytes;
-    // Use @noble/curves to compute shared secret
-    const sharedSecret = x25519.getSharedSecret(this.keyBytes, publicKeyBytes);
-    return new SharedSecret(Bytes.from(sharedSecret));
+    const sharedSecretBytes = x25519.getSharedSecret(
+      this.keyBytes,
+      publicKeyBytes
+    );
+    const sharedSecretBytesCopy = Bytes.from(sharedSecretBytes);
+    sharedSecretBytes.fill(0);
+    return new SharedSecret(sharedSecretBytesCopy);
+  }
+
+  dispose(): void {
+    if (!this.disposed) {
+      Bytes.zeroize(this.keyBytes);
+      this.disposed = true;
+    }
   }
 }
 
@@ -55,12 +72,24 @@ class PublicKey implements IPublicKey {
 }
 
 class SharedSecret implements ISharedSecret {
+  private disposed = false;
+
   constructor(private keyBytes: Bytes) {}
 
   exportOrThrow(): IExportable<Bytes> {
+    if (this.disposed) {
+      throw new Error('SharedSecret has been disposed');
+    }
     return {
       bytes: Bytes.from(this.keyBytes),
     };
+  }
+
+  dispose(): void {
+    if (!this.disposed) {
+      Bytes.zeroize(this.keyBytes);
+      this.disposed = true;
+    }
   }
 }
 
@@ -71,9 +100,10 @@ class SharedSecret implements ISharedSecret {
 export const X25519 = {
   PrivateKey: {
     randomOrThrow: async (): Promise<IPrivateKey> => {
-      // Generate 32 random bytes for private key using browser-compatible random
       const privateKeyBytes = Bytes.random(32);
-      return new PrivateKey(Bytes.from(privateKeyBytes));
+      const key = new PrivateKey(Bytes.from(privateKeyBytes));
+      Bytes.zeroize(privateKeyBytes);
+      return key;
     },
 
     importOrThrow: async (bytes: Bytes): Promise<IPrivateKey> => {
