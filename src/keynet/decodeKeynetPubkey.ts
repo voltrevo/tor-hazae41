@@ -3,7 +3,7 @@ import { decodeOnionStylePubKey } from '../hiddenServices/decodeOnionStylePubkey
 import { Bytes } from '../hazae41/bytes/index.js';
 
 export async function decodeKeynetPubKey(host: string): Promise<Bytes> {
-  assert(host.endsWith('.keynet'), 'not a .keynet address');
+  assert(host.toLowerCase().endsWith('.keynet'), 'not a .keynet address');
 
   const encodedKey = host.slice(0, -'.keynet'.length);
 

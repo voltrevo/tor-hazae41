@@ -276,7 +276,7 @@ export class CircuitManager {
   private async allocateCircuitToHost(hostname: string): Promise<Circuit> {
     let circuit: Circuit;
 
-    if (!hostname.endsWith('.keynet')) {
+    if (!hostname.toLowerCase().endsWith('.keynet')) {
       // Use ResourcePool to acquire a circuit
       this.log.info(`[${hostname}] Allocating circuit from pool`);
       circuit = await this.circuitPool.acquire();
