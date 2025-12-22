@@ -2,7 +2,6 @@ import { rejectOnAbort } from '../../../signals/mods/signals';
 import { HttpClientDuplex } from '../http/client';
 import { Bytes } from '../../../bytes';
 import { Unknown, Writable } from '../../../binary/mod';
-import { Disposer } from '../../../disposer';
 import { Nullable } from '../../../common/Nullable';
 
 export interface FetchParams {
@@ -49,7 +48,12 @@ namespace Pipe {
         .close()
         .catch(cause => rejectOnError.reject(new Error('Errored', { cause })));
 
-    return new Disposer(rejectOnError.promise, () => controller.abort());
+    return {
+      promise: rejectOnError.promise,
+      [Symbol.dispose]() {
+        controller.abort();
+      },
+    };
   }
 }
 
@@ -132,6 +136,6 @@ export async function fetch(
     rejectOnClose.promise,
     rejectOnError.promise,
     rejectPin.get(),
-    rejectOnPipe.get(),
+    rejectOnPipe.promise,
   ]);
 }
