@@ -1,4 +1,3 @@
-import { ASN1 } from '../../../../asn1';
 import { fetch } from '../../../../fleche';
 import { OIDs, X509 } from '../../../../x509';
 import { Mutable } from '../../../../common/Mutable';
@@ -14,6 +13,7 @@ import {
 } from './diff.js';
 import { Log } from '../../../../../Log';
 import { Bytes } from '../../../../bytes';
+import { BitString, Null, ObjectIdentifier } from '../../../../asn1';
 
 export interface Consensus {
   readonly type: string;
@@ -698,15 +698,15 @@ export namespace Consensus {
 
       const signingKey = Bytes.fromBase64(certificate.signingKey);
 
-      const algorithmAsn1 = ASN1.ObjectIdentifier.create(
+      const algorithmAsn1 = ObjectIdentifier.create(
         undefined,
         OIDs.keys.rsaEncryption
       ).toDER();
       const algorithmId = new X509.AlgorithmIdentifier(
         algorithmAsn1,
-        ASN1.Null.create().toDER()
+        Null.create().toDER()
       );
-      const subjectPublicKey = ASN1.BitString.create(
+      const subjectPublicKey = BitString.create(
         undefined,
         0,
         signingKey
@@ -813,15 +813,15 @@ export namespace Consensus {
       const signed = Bytes.encodeUtf8(cert.preimage);
       const hashed = Bytes.from(await crypto.subtle.digest('SHA-1', signed));
 
-      const algorithmAsn1 = ASN1.ObjectIdentifier.create(
+      const algorithmAsn1 = ObjectIdentifier.create(
         undefined,
         OIDs.keys.rsaEncryption
       ).toDER();
       const algorithmId = new X509.AlgorithmIdentifier(
         algorithmAsn1,
-        ASN1.Null.create().toDER()
+        Null.create().toDER()
       );
-      const subjectPublicKey = ASN1.BitString.create(
+      const subjectPublicKey = BitString.create(
         undefined,
         0,
         identityKey
