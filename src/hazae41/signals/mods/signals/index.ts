@@ -1,3 +1,4 @@
+import { Pin } from '../../../box';
 import { Future } from '../../../future';
 
 export class AbortError extends Error {
@@ -7,7 +8,7 @@ export class AbortError extends Error {
 }
 
 export function resolveOnAbort(signal: AbortSignal) {
-  if (signal.aborted) return Promise.resolve(signal.reason);
+  if (signal.aborted) return Pin.with(Promise.resolve(signal.reason), () => {});
 
   const resolveOnAbort = new Future<unknown>();
 
@@ -16,13 +17,14 @@ export function resolveOnAbort(signal: AbortSignal) {
 
   signal.addEventListener('abort', onAbort, { passive: true });
 
-  resolveOnAbort.promise.finally(onClean);
+  resolveOnAbort.promise.then(onClean);
 
-  return resolveOnAbort.promise;
+  return Pin.with(resolveOnAbort.promise, onClean);
 }
 
 export function rejectOnAbort(signal: AbortSignal) {
-  if (signal.aborted) return Promise.reject(new AbortError(signal));
+  if (signal.aborted)
+    return Pin.with(Promise.reject(new AbortError(signal)), () => {});
 
   const rejectOnAbort = new Future<never>();
 
@@ -31,7 +33,7 @@ export function rejectOnAbort(signal: AbortSignal) {
 
   signal.addEventListener('abort', onAbort, { passive: true });
 
-  rejectOnAbort.promise.finally(onClean);
+  rejectOnAbort.promise.catch(onClean);
 
-  return rejectOnAbort.promise;
+  return Pin.with(rejectOnAbort.promise, onClean);
 }

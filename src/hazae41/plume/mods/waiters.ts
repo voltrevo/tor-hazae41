@@ -13,10 +13,10 @@ export async function waitOrThrow<
   callback: SuperEventWaiter<M[K], R>,
   signal = new AbortController().signal
 ): Promise<R> {
-  const abort = Signals.rejectOnAbort(signal);
+  using abort = Signals.rejectOnAbort(signal);
   using event = target.wait(type, callback);
 
-  return await Promise.race([abort, event.get()]);
+  return await Promise.race([abort.get(), event.get()]);
 }
 
 export async function waitWithCloseAndErrorOrThrow<
@@ -29,10 +29,15 @@ export async function waitWithCloseAndErrorOrThrow<
   callback: SuperEventWaiter<M[K], R>,
   signal = new AbortController().signal
 ): Promise<R> {
-  const abort = Signals.rejectOnAbort(signal);
+  using abort = Signals.rejectOnAbort(signal);
   using error = rejectOnError(target);
   using close = rejectOnClose(target);
   using event = target.wait(type, callback);
 
-  return await Promise.race([abort, error.get(), close.get(), event.get()]);
+  return await Promise.race([
+    abort.get(),
+    error.get(),
+    close.get(),
+    event.get(),
+  ]);
 }

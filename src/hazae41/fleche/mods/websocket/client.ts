@@ -364,13 +364,13 @@ export class WebSocketClientDuplex extends EventTarget implements WebSocket {
       throw new Error('Errored', { cause });
     });
 
-    const abortPromise = rejectOnAbort(AbortSignal.timeout(10_000));
+    using abortPin = rejectOnAbort(AbortSignal.timeout(10_000));
 
     await Promise.race([
       this.#resolveOnPong.promise,
       rejectOnError,
       rejectOnClose,
-      abortPromise,
+      abortPin.get(),
     ]);
   }
 

@@ -125,14 +125,14 @@ export async function fetch(
     .pipeTo(stream.writable, { signal, preventClose, preventAbort })
     .catch(() => {});
 
-  const rejectPromise = rejectOnAbort(signal);
+  using rejectPin = rejectOnAbort(signal);
   using rejectOnPipe = Pipe.rejectOnError(http, body);
 
   return await Promise.race([
     resolveOnHead.promise,
     rejectOnClose.promise,
     rejectOnError.promise,
-    rejectPromise,
+    rejectPin.get(),
     rejectOnPipe.get(),
   ]);
 }
