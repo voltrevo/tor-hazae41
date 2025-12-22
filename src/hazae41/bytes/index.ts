@@ -10,6 +10,21 @@ export type Bytes<N extends number = number> =
     length: N;
   };
 
+function ensureCryptoAvailable(): void {
+  if (
+    typeof crypto === 'undefined' ||
+    typeof crypto.getRandomValues !== 'function'
+  ) {
+    throw new Error(
+      'crypto.getRandomValues is not available. ' +
+        'tor-js requires a secure random number generator (CSPRNG). ' +
+        'Ensure you are running in a modern browser or Node.js 15+ environment.'
+    );
+  }
+}
+
+ensureCryptoAvailable();
+
 export namespace Bytes {
   const encoder = new TextEncoder();
   const decoder = new TextDecoder();
@@ -53,6 +68,15 @@ export namespace Bytes {
     const bytes = alloc(length);
     crypto.getRandomValues(bytes);
     return bytes;
+  }
+
+  /**
+   * Securely zero out sensitive byte data.
+   * Overwrites the buffer with zeros to prevent sensitive data from lingering in memory.
+   * @param bytes The bytes to zeroize
+   */
+  export function zeroize(bytes: Bytes): void {
+    bytes.fill(0);
   }
 
   /**
