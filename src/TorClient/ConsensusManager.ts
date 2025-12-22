@@ -8,7 +8,6 @@ import { Log } from '../Log';
 import { App } from './App';
 import { CircuitManager } from './CircuitManager';
 import { Bytes } from '../hazae41/bytes';
-import { Future } from '../hazae41/future';
 
 export interface ConsensusManagerOptions {
   app: App;
@@ -130,7 +129,7 @@ export class ConsensusManager {
       return this.consensusCache;
     }
 
-    const cacheLoadingFuture = new Future<void>();
+    const cacheLoadingFuture = Promise.withResolvers<void>();
     this.cacheLoading = cacheLoadingFuture.promise;
 
     try {

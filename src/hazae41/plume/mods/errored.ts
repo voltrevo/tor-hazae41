@@ -1,4 +1,3 @@
-import { Future } from '../../future';
 import { SuperEventTarget } from './target';
 
 export type ErrorEvents = {
@@ -8,7 +7,9 @@ export type ErrorEvents = {
 export function rejectOnError<M extends ErrorEvents>(
   target: SuperEventTarget<M>
 ) {
-  return target.wait('error', (future: Future<never>, ...[cause]) =>
-    future.reject(new Error('Errored', { cause }))
+  return target.wait(
+    'error',
+    (future: PromiseWithResolvers<never>, ...[cause]) =>
+      future.reject(new Error('Errored', { cause }))
   );
 }

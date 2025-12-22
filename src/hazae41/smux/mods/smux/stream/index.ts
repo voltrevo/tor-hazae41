@@ -2,7 +2,6 @@ import { Writable } from '../../../../binary/mod';
 import { Bytes } from '../../../../bytes';
 import { FullDuplex } from '../../../../cascade';
 import { Cursor } from '../../../../cursor';
-import { Future } from '../../../../future';
 import { SecretSmuxReader } from '../reader';
 import { SecretSmuxWriter } from '../writer';
 
@@ -72,7 +71,7 @@ export class SecretSmuxDuplex {
   peerConsumed = 0;
   peerWindow = 65_535;
 
-  readonly resolveOnStart = new Future<void>();
+  readonly resolveOnStart = Promise.withResolvers<void>();
 
   constructor(readonly params: SmuxDuplexParams = {}) {
     const { stream = 3 } = params;

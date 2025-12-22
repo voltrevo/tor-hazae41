@@ -1,4 +1,3 @@
-import { Future } from '../../future';
 import { SuperEventTarget } from './target';
 
 export type CloseEvents = {
@@ -8,7 +7,9 @@ export type CloseEvents = {
 export function rejectOnClose<M extends CloseEvents>(
   target: SuperEventTarget<M>
 ) {
-  return target.wait('close', (future: Future<never>, ...[cause]) =>
-    future.reject(new Error('Closed', { cause }))
+  return target.wait(
+    'close',
+    (future: PromiseWithResolvers<never>, ...[cause]) =>
+      future.reject(new Error('Closed', { cause }))
   );
 }

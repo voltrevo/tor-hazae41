@@ -40,7 +40,6 @@ import { getErrorDetails } from '../../../../utils/getErrorDetails';
 import { Bytes } from '../../../bytes';
 import { Unknown } from '../../../binary/mod';
 import { Bitset } from '../../../bitset';
-import { Future } from '../../../future';
 
 export const IPv6 = {
   always: 3,
@@ -445,7 +444,9 @@ export class SecretCircuit {
       this.events,
       'RELAY_EXTENDED2',
       (
-        future: Future<RelayCell.Streamless<RelayExtended2Cell<Unknown>>>,
+        future: PromiseWithResolvers<
+          RelayCell.Streamless<RelayExtended2Cell<Unknown>>
+        >,
         e
       ) => {
         future.resolve(e);
@@ -530,7 +531,10 @@ export class SecretCircuit {
     await Plume.waitWithCloseAndErrorOrThrow(
       this.events,
       'RELAY_TRUNCATED',
-      (future: Future<RelayCell.Streamless<RelayTruncatedCell>>, e) => {
+      (
+        future: PromiseWithResolvers<RelayCell.Streamless<RelayTruncatedCell>>,
+        e
+      ) => {
         future.resolve(e);
       },
       signal
@@ -570,7 +574,7 @@ export class SecretCircuit {
     await Plume.waitWithCloseAndErrorOrThrow(
       stream.events,
       'connected',
-      (future: Future<void>) => {
+      (future: PromiseWithResolvers<void>) => {
         future.resolve();
       },
       signal
@@ -622,7 +626,7 @@ export class SecretCircuit {
     await Plume.waitWithCloseAndErrorOrThrow(
       stream.events,
       'connected',
-      (future: Future<void>) => {
+      (future: PromiseWithResolvers<void>) => {
         future.resolve();
       },
       signal

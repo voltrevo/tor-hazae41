@@ -1,6 +1,5 @@
 import { Pin } from '../../box';
 import { Awaitable } from '../../common/Awaitable';
-import { Future } from '../../future';
 import { None, Option, Some } from '../../option';
 
 export type Voidable<T> = T | void;
@@ -26,7 +25,7 @@ export type SuperEventListener<T extends SuperEventDescriptor> = (
 ) => Awaitable<Voidable<Option<ReturnType<T>>>>;
 
 export type SuperEventWaiter<T extends SuperEventDescriptor, R> = (
-  future: Future<R>,
+  future: PromiseWithResolvers<R>,
   ...params: WeakParameters<T>
 ) => Awaitable<Voidable<Option<ReturnType<T>>>>;
 
@@ -163,7 +162,7 @@ export class SuperEventTarget<M extends SuperEventMap> {
    * @returns
    */
   wait<K extends keyof M, R>(type: K, callback: SuperEventWaiter<M[K], R>) {
-    const future = new Future<R>();
+    const future = Promise.withResolvers<R>();
 
     const dispose = this.on(
       type,

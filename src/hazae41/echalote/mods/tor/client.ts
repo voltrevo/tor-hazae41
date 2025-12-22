@@ -59,7 +59,6 @@ import { Readable, Unknown, Writable } from '../../../binary/mod';
 import { X509 } from '../../../x509';
 import { Bitset } from '../../../bitset';
 import { HalfDuplex } from '../../../cascade';
-import { Future } from '../../../future';
 import { Mutex } from '../../../mutex';
 
 export interface Guard {
@@ -144,8 +143,9 @@ export class SecretTorClientDuplex {
 
   readonly #buffer = new Resizer();
 
-  readonly #resolveOnStart = new Future<void>();
-  readonly #resolveOnTlsCertificates = new Future<X509.Certificate[]>();
+  readonly #resolveOnStart = Promise.withResolvers<void>();
+  readonly #resolveOnTlsCertificates =
+    Promise.withResolvers<X509.Certificate[]>();
 
   #state: TorState = { type: 'none' };
 
@@ -229,7 +229,7 @@ export class SecretTorClientDuplex {
     await Plume.waitWithCloseAndErrorOrThrow(
       this.events,
       'handshaked',
-      (future: Future<void>) => future.resolve()
+      (future: PromiseWithResolvers<void>) => future.resolve()
     );
   }
 
@@ -586,7 +586,7 @@ export class SecretTorClientDuplex {
     await Plume.waitWithCloseAndErrorOrThrow(
       this.events,
       'handshaked',
-      (future: Future<void>) => future.resolve(),
+      (future: PromiseWithResolvers<void>) => future.resolve(),
       signal
     );
   }
@@ -622,7 +622,10 @@ export class SecretTorClientDuplex {
     return await Plume.waitWithCloseAndErrorOrThrow(
       this.events,
       'CREATED_FAST',
-      async (future: Future<Cell.Circuitful<CreatedFastCell>>, e) => {
+      async (
+        future: PromiseWithResolvers<Cell.Circuitful<CreatedFastCell>>,
+        e
+      ) => {
         if (e.circuit !== circuit) return;
         future.resolve(e);
       },

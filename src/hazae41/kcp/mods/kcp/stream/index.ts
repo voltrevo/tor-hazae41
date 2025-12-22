@@ -3,7 +3,6 @@ import { Bytes } from '../../../../bytes';
 import { FullDuplex } from '../../../../cascade';
 import { Awaitable } from '../../../../common/Awaitable';
 import { Cursor } from '../../../../cursor';
-import { Future } from '../../../../future';
 import { SecretKcpReader } from '../reader';
 import { SecretKcpWriter } from '../writer';
 
@@ -70,10 +69,10 @@ export class SecretKcpDuplex {
 
   readonly conversation: number;
 
-  readonly resolveOnClose = new Future<void>();
-  readonly resolveOnError = new Future<unknown>();
+  readonly resolveOnClose = Promise.withResolvers<void>();
+  readonly resolveOnError = Promise.withResolvers<unknown>();
 
-  readonly resolveOnAckBySerial = new Map<number, Future<void>>();
+  readonly resolveOnAckBySerial = new Map<number, PromiseWithResolvers<void>>();
 
   sendCounter = 0;
   recvCounter = 0;

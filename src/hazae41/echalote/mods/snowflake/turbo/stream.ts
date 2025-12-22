@@ -3,7 +3,6 @@ import { SecretTurboWriter } from './writer.js';
 import { Bytes } from '../../../../bytes';
 import { Unknown, Writable } from '../../../../binary/mod';
 import { FullDuplex } from '../../../../cascade';
-import { Future } from '../../../../future';
 import { Awaitable } from '../../../../common/Awaitable.js';
 
 export interface TurboDuplexParams {
@@ -67,7 +66,7 @@ export class SecretTurboDuplex {
 
   readonly client: Bytes;
 
-  readonly resolveOnStart = new Future<void>();
+  readonly resolveOnStart = Promise.withResolvers<void>();
 
   constructor(readonly params: TurboDuplexParams = {}) {
     const { client = Bytes.random(8) } = params;

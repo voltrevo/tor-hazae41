@@ -17,7 +17,6 @@ import { Bytes } from '../../../bytes';
 import { Cursor } from '../../../cursor';
 import { Readable, Writable } from '../../../binary/mod';
 import { HalfDuplex } from '../../../cascade';
-import { Future } from '../../../future';
 import { assert } from '../../../../utils/assert';
 import { Resizer } from '../../../common/Resizer';
 
@@ -57,10 +56,10 @@ export class WebSocketClientDuplex extends EventTarget implements WebSocket {
   readonly extensions = '';
   readonly protocol = '';
 
-  readonly #resolveOnClose = new Future<void>();
-  readonly #resolveOnError = new Future<unknown>();
+  readonly #resolveOnClose = Promise.withResolvers<void>();
+  readonly #resolveOnError = Promise.withResolvers<unknown>();
 
-  #resolveOnPong = new Future<void>();
+  #resolveOnPong = Promise.withResolvers<void>();
 
   readonly #clock: IClock;
 
@@ -353,7 +352,7 @@ export class WebSocketClientDuplex extends EventTarget implements WebSocket {
 
     const ping = WebSocketFrame.from({ final, opcode, payload, mask });
 
-    this.#resolveOnPong = new Future<void>();
+    this.#resolveOnPong = Promise.withResolvers<void>();
 
     await this.#writeOrThrow(ping);
 

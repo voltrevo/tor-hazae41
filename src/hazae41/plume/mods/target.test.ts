@@ -1,6 +1,5 @@
 import '../../symbol-dispose-polyfill/mod';
 
-import { Future } from '../../future';
 import { Some } from '../../option';
 import { test, expect, describe } from 'vitest';
 import { SuperEventTarget } from './target';
@@ -47,7 +46,7 @@ describe('AsyncEventTarget', () => {
         await waitWithCloseAndErrorOrThrow(
           target,
           'test',
-          (future: Future<string>, order) => {
+          (future: PromiseWithResolvers<string>, order) => {
             future.resolve(order);
           },
           signal
@@ -58,7 +57,7 @@ describe('AsyncEventTarget', () => {
         await waitWithCloseAndErrorOrThrow(
           target,
           'test',
-          (future: Future<string>, order) => {
+          (future: PromiseWithResolvers<string>, order) => {
             future.resolve(order);
           },
           signal2

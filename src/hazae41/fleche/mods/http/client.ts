@@ -22,7 +22,6 @@ import {
 } from './state.js';
 import { Bytes } from '../../../bytes';
 import { Unknown, Writable } from '../../../binary/mod';
-import { Future } from '../../../future';
 import { Awaitable } from '../../../common/Awaitable';
 import { Resizer } from '../../../common/Resizer';
 import { Nullable } from '../../../common/Nullable';
@@ -53,7 +52,7 @@ export class HttpClientDuplex {
 
   readonly duplex: FullDuplex<Unknown, Writable, Bytes, Bytes>;
 
-  #resolveOnStart = new Future<void>();
+  #resolveOnStart = Promise.withResolvers<void>();
 
   #state: HttpState = { type: 'none' };
 

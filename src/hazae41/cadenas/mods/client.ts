@@ -7,7 +7,6 @@ import { Cursor } from '../../cursor/index.js';
 import { Readable, Unknown, Writable } from '../../binary/mod.js';
 import { X509 } from '../../x509/index.js';
 import { FullDuplex } from '../../cascade/index.js';
-import { Future } from '../../future/index.js';
 import { Awaitable } from '../../common/Awaitable.js';
 import { Resizer } from '../../common/Resizer.js';
 
@@ -58,10 +57,10 @@ export class TlsClientDuplex {
 
   state: TlsClientState;
 
-  readonly resolveOnStart = new Future<void>();
-  readonly resolveOnClose = new Future<void>();
-  readonly resolveOnError = new Future<unknown>();
-  readonly resolveOnHandshake = new Future<void>();
+  readonly resolveOnStart = Promise.withResolvers<void>();
+  readonly resolveOnClose = Promise.withResolvers<void>();
+  readonly resolveOnError = Promise.withResolvers<unknown>();
+  readonly resolveOnHandshake = Promise.withResolvers<void>();
 
   constructor(
     readonly app: App,

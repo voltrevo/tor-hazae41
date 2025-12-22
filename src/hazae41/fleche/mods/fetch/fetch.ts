@@ -3,7 +3,6 @@ import { HttpClientDuplex } from '../http/client';
 import { Bytes } from '../../../bytes';
 import { Unknown, Writable } from '../../../binary/mod';
 import { Disposer } from '../../../disposer';
-import { Future } from '../../../future';
 import { Nullable } from '../../../common/Nullable';
 
 export interface FetchParams {
@@ -36,7 +35,7 @@ namespace Pipe {
     http: HttpClientDuplex,
     body: Nullable<ReadableStream<Uint8Array>>
   ) {
-    const rejectOnError = new Future<never>();
+    const rejectOnError = Promise.withResolvers<never>();
 
     const controller = new AbortController();
     const { signal } = controller;
@@ -83,10 +82,10 @@ export async function fetch(
   if (!headers.has('Accept-Encoding'))
     headers.set('Accept-Encoding', 'gzip, deflate');
 
-  const resolveOnHead = new Future<Response>();
+  const resolveOnHead = Promise.withResolvers<Response>();
 
-  const rejectOnClose = new Future<never>();
-  const rejectOnError = new Future<never>();
+  const rejectOnClose = Promise.withResolvers<never>();
+  const rejectOnError = Promise.withResolvers<never>();
 
   const http = new HttpClientDuplex({
     method,

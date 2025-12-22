@@ -1,5 +1,4 @@
 import { Writable } from '../../../../binary/mod';
-import { Future } from '../../../../future';
 import { KcpSegment } from '../segment';
 import { SecretKcpDuplex } from '../stream';
 
@@ -44,7 +43,7 @@ export class SecretKcpWriter {
 
     const { resolveOnClose, resolveOnError } = this.parent;
 
-    const resolveOnAck = new Future<void>();
+    const resolveOnAck = Promise.withResolvers<void>();
 
     Promise.race([
       resolveOnAck.promise,
