@@ -1,5 +1,4 @@
 import { Awaitable } from '../../../common/Awaitable';
-import { Ok } from '../../../result';
 import { None } from './none';
 import { Option } from './option';
 
@@ -115,41 +114,6 @@ export class Some<T> {
    */
   getOrElseSync(_noneCallback: unknown): T {
     return this.inner;
-  }
-
-  /**
-   * Transform `Option<T>` into `Result<T, NoneError>`
-   * @returns `Ok(this.inner)` if `Some`, `Err(NoneError)` if `None`
-   */
-  ok(): Ok<T> {
-    return new Ok(this.inner);
-  }
-
-  /**
-   * Transform `Option<T>` into `Result<T, E>`
-   * @param error
-   * @returns `Ok(this.inner)` if `Some`, `Err(error)` if `None`
-   */
-  okOr(_error: unknown): Ok<T> {
-    return new Ok(this.inner);
-  }
-
-  /**
-   * Transforms the `Option<T>` into a `Result<T, E>`, mapping `Some(v)` to `Ok(v)` and `None` to `Err(err())`
-   * @param noneCallback
-   * @returns `Ok(this.inner)` if `Some`, `Err(await noneCallback())` is `None`
-   */
-  async okOrElse(_noneCallback: unknown): Promise<Ok<T>> {
-    return new Ok(this.inner);
-  }
-
-  /**
-   * Transforms the `Option<T>` into a `Result<T, E>`, mapping `Some(v)` to `Ok(v)` and `None` to `Err(err())`
-   * @param noneCallback
-   * @returns `Ok(this.inner)` if `Some`, `Err(noneCallback())` is `None`
-   */
-  okOrElseSync(_noneCallback: unknown): Ok<T> {
-    return new Ok(this.inner);
   }
 
   /**
