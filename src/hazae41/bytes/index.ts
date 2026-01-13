@@ -89,6 +89,26 @@ export namespace Bytes {
   }
 
   /**
+   * Checks whether Uint8Array is local (backed by ArrayBuffer rather than
+   * SharedArrayBuffer), such that TypeScript knows if this returns true then
+   * buf must be the more narrow Bytes type.
+   *
+   * This can be paired with assert:
+   * buf; // Uint8Array (==Uint8Array<ArrayBufferLike>)
+   * assert(Bytes.isLocal(buf));
+   * buf; // Bytes (==Uint8Array<ArrayBuffer>)
+   *
+   * Or used in a condition:
+   * buf; // Uint8Array (==Uint8Array<ArrayBufferLike>)
+   * if (Bytes.isLocal(buf)) {
+   *   buf; // Bytes (==Uint8Array<ArrayBuffer>)
+   * }
+   */
+  export function isLocal(buf: Uint8Array): buf is Bytes {
+    return buf.buffer instanceof ArrayBuffer;
+  }
+
+  /**
    * Equality check
    * @param a
    * @param b

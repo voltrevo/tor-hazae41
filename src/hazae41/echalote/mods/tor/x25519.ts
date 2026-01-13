@@ -7,6 +7,7 @@
 
 import { x25519 } from '@noble/curves/ed25519.js';
 import { Bytes } from '../../../bytes';
+import { assert } from '../../../../utils/assert';
 
 export interface IExportable<T> {
   readonly bytes: T;
@@ -48,9 +49,8 @@ class PrivateKey implements IPrivateKey {
       this.keyBytes,
       publicKeyBytes
     );
-    const sharedSecretBytesCopy = Bytes.from(sharedSecretBytes);
-    sharedSecretBytes.fill(0);
-    return new SharedSecret(sharedSecretBytesCopy);
+    assert(Bytes.isLocal(sharedSecretBytes));
+    return new SharedSecret(sharedSecretBytes);
   }
 
   dispose(): void {
@@ -100,10 +100,7 @@ class SharedSecret implements ISharedSecret {
 export const X25519 = {
   PrivateKey: {
     randomOrThrow: async (): Promise<IPrivateKey> => {
-      const privateKeyBytes = Bytes.random(32);
-      const key = new PrivateKey(Bytes.from(privateKeyBytes));
-      Bytes.zeroize(privateKeyBytes);
-      return key;
+      return new PrivateKey(Bytes.random(32));
     },
 
     importOrThrow: async (bytes: Bytes): Promise<IPrivateKey> => {
