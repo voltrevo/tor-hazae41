@@ -10,20 +10,16 @@ export type Bytes<N extends number = number> =
     length: N;
   };
 
-function ensureCryptoAvailable(): void {
-  if (
-    typeof crypto === 'undefined' ||
-    typeof crypto.getRandomValues !== 'function'
-  ) {
-    throw new Error(
-      'crypto.getRandomValues is not available. ' +
-        'tor-js requires a secure random number generator (CSPRNG). ' +
-        'Ensure you are running in a modern browser or Node.js 15+ environment.'
-    );
-  }
+if (
+  typeof crypto === 'undefined' ||
+  typeof crypto.getRandomValues !== 'function'
+) {
+  throw new Error(
+    'crypto.getRandomValues is not available. ' +
+      'tor-js requires a secure random number generator (CSPRNG). ' +
+      'Ensure you are running in a modern browser or Node.js 15+ environment.'
+  );
 }
-
-ensureCryptoAvailable();
 
 export namespace Bytes {
   const encoder = new TextEncoder();
